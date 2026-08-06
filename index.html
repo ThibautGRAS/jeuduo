@@ -192,7 +192,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.6 · 2026-08-06</div>
+  <div id="version">DUO v7.7 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -268,7 +268,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.6";
+const VERSION = "7.7";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -301,15 +301,29 @@ const SERVEURS_STUN = [
 ];
 const CONFIG_PEER = { config: { iceServers: SERVEURS_STUN.slice() } };
 
-(async function chargerRelais(){
+const etatRelais = { fait: false, ok: false, n: 0, detail: "" };
+const promesseRelais = (async function chargerRelais(){
   try{
-    const rep = await fetch(METERED_URL, { signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined });
-    if (!rep.ok) return;
+    const rep = await fetch(METERED_URL, { signal: AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined });
+    if (!rep.ok){
+      etatRelais.detail = "API Metered : HTTP " + rep.status +
+        (rep.status === 401 || rep.status === 403 ? " (clé refusée)" : (rep.status === 404 ? " (sous-domaine inconnu ?)" : ""));
+      return;
+    }
     const serveurs = await rep.json();
     if (Array.isArray(serveurs) && serveurs.length){
       CONFIG_PEER.config.iceServers = SERVEURS_STUN.concat(serveurs);
+      etatRelais.ok = true;
+      etatRelais.n = serveurs.length;
+      etatRelais.detail = serveurs.length + " serveurs relais reçus";
+    } else {
+      etatRelais.detail = "API Metered : réponse vide";
     }
-  } catch(e){ /* repli STUN seul */ }
+  } catch(e){
+    etatRelais.detail = "API Metered injoignable (" + (e && e.name === "TimeoutError" ? "délai dépassé" : "réseau/CORS") + ")";
+  } finally {
+    etatRelais.fait = true;
+  }
 })();
 
 const CO_MOI = "#22D3EE", CO_ADV = "#F471B5", CO_BALLE = "#EAF0FF";
@@ -580,14 +594,22 @@ $("btnDiag").addEventListener("click", async () => {
   res.classList.remove("cache");
   $("btnDiag").disabled = true;
   const lignes = {
+    api:  '<span class="attente">… Identifiants relais (Metered)</span>',
     sig:  '<span class="attente">… Signalisation (mise en relation)</span>',
     stun: '<span class="attente">… STUN (connexion directe)</span>',
     turn: '<span class="attente">… TURN (relais de secours)</span>',
   };
   const rendre = verdict => {
-    res.innerHTML = lignes.sig + "<br>" + lignes.stun + "<br>" + lignes.turn +
+    res.innerHTML = lignes.api + "<br>" + lignes.sig + "<br>" + lignes.stun + "<br>" + lignes.turn +
       (verdict ? '<div class="verdict">' + verdict + "</div>" : "");
   };
+  rendre();
+
+  /* 0 — chargement des identifiants relais (on attend qu'il soit terminé) */
+  try{ await promesseRelais; }catch(e){}
+  lignes.api = etatRelais.ok
+    ? '<span class="ok">✓ Relais Metered : ' + etatRelais.detail + '</span>'
+    : '<span class="ko">✗ Relais Metered : ' + (etatRelais.detail || "échec") + '</span>';
   rendre();
 
   /* 1 — serveur de signalisation PeerJS */
@@ -631,7 +653,8 @@ $("btnDiag").addEventListener("click", async () => {
     : '<span class="ko">✗ TURN : INDISPONIBLE</span>';
 
   let verdict = "";
-  if (!sigOK) verdict = "La mise en relation est bloquée sur ce réseau : rien ne peut fonctionner ici. Essayez un autre réseau ou un VPN.";
+  if (!etatRelais.ok && !turnOK) verdict = "Les identifiants relais n'ont pas pu être récupérés (" + etatRelais.detail + ") : vérifiez le sous-domaine et la clé API sur dashboard.metered.ca. " + (sigOK ? "" : "De plus, la mise en relation est bloquée.");
+  else if (!sigOK) verdict = "La mise en relation est bloquée sur ce réseau : rien ne peut fonctionner ici. Essayez un autre réseau ou un VPN.";
   else if (!stunOK && !turnOK) verdict = "Mise en relation OK mais aucune voie de données : réseau très restrictif. Un VPN devrait débloquer.";
   else if (!turnOK) verdict = "Pas de relais disponible : la connexion ne marchera qu'entre réseaux « ouverts ». Si l'adversaire est sur un réseau strict, ça échouera.";
   else if (!stunOK) verdict = "Le direct est bloqué mais le relais fonctionne : les parties passeront par le relais (latence plus élevée).";
