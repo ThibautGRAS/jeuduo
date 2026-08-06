@@ -192,7 +192,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.9 · 2026-08-06</div>
+  <div id="version">DUO v7.10 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -268,7 +268,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.9";
+const VERSION = "7.10";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -541,6 +541,33 @@ function sonFin(gagne){
   notes.forEach((f, i) => setTimeout(() => bip(f, 0.16, "sine", 0.3), i * 130));
 }
 
+/* ================= RÉSILIENCE MOBILE =================
+   iOS suspend la page dès qu'on change d'app : la liaison au serveur de mise
+   en relation meurt et l'hôte devient introuvable. Parades :
+   1) reconnexion automatique au retour au premier plan ;
+   2) écran maintenu allumé pendant l'attente et le jeu (Wake Lock). */
+function blinderPeer(p){
+  p.on("disconnected", () => {
+    try{ if (!p.destroyed) p.reconnect(); }catch(e){}
+  });
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible"){
+    try{ if (peer && peer.disconnected && !peer.destroyed) peer.reconnect(); }catch(e){}
+    try{ if (mmPeerCourant && mmPeerCourant.disconnected && !mmPeerCourant.destroyed) mmPeerCourant.reconnect(); }catch(e){}
+    demanderEcranAllume();
+  }
+});
+let verrouEcran = null;
+async function demanderEcranAllume(){
+  try{
+    if ("wakeLock" in navigator && !verrouEcran){
+      verrouEcran = await navigator.wakeLock.request("screen");
+      verrouEcran.addEventListener("release", () => { verrouEcran = null; });
+    }
+  }catch(e){}
+}
+
 /* ================= LOBBY ================= */
 function genCode(){
   const c = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -568,6 +595,8 @@ $("btnCreer").addEventListener("click", () => {
   $("btnCreer").disabled = true;
   etatLobby.textContent = "Création de la partie…";
   peer = new Peer(PREFIXE + code, CONFIG_PEER);
+  blinderPeer(peer);
+  demanderEcranAllume();
   peer.on("open", () => {
     codePartie.textContent = code;
     codePartie.classList.remove("cache");
@@ -742,6 +771,8 @@ function sonderCreneau(k){
 function prendreCreneau(k){
   if (mmAnnule || partieEnCours) return;
   const p = new Peer(PREFIXE + "mm-" + k, CONFIG_PEER);
+  blinderPeer(p);
+  demanderEcranAllume();
   mmPeerCourant = p;
   p.on("open", () => {
     if (mmAnnule){ p.destroy(); return; }
@@ -803,6 +834,8 @@ $("btnRejoindre").addEventListener("click", () => {
   $("btnRejoindre").disabled = true;
   etatLobby.textContent = "Connexion…";
   peer = new Peer(CONFIG_PEER);
+  blinderPeer(peer);
+  demanderEcranAllume();
   peer.on("open", () => {
     codeRejoint = code;
     conn = peer.connect(PREFIXE + code, { reliable: false });
@@ -815,10 +848,10 @@ $("btnRejoindre").addEventListener("click", () => {
     brancherConnexion();
     setTimeout(() => {
       if (!partieEnCours){
-        etatLobby.textContent = "Partie introuvable. Vérifiez le code.";
+        etatLobby.textContent = "Partie introuvable. Vérifiez le code — et que l'hôte est bien resté sur la page.";
         $("btnRejoindre").disabled = false;
       }
-    }, 8000);
+    }, 15000);
   });
   peer.on("error", erreurLobby);
 });
@@ -851,6 +884,7 @@ function brancherConnexion(){
 
 function demarrerPartie(){
   partieEnCours = true;
+  demanderEcranAllume();
   lobby.style.display = "none";
   jeu.style.display = "flex";
   elRole.textContent = modeSolo ? ("SOLO · " + niveauIA.toUpperCase()) : (estHote ? "HÔTE" : "INVITÉ");
