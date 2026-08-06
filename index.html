@@ -192,7 +192,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.7 · 2026-08-06</div>
+  <div id="version">DUO v7.8 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -268,7 +268,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.7";
+const VERSION = "7.8";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -294,37 +294,27 @@ const PREFIXE = "duo-pong-tg-";
 /* Relais TURN : identifiants frais demandés à Metered au chargement.
    En cas d'échec (API injoignable, quota), repli silencieux sur STUN seul :
    le direct continue de fonctionner. La clé est conçue pour être côté client. */
-const METERED_URL = "https://tgrey.metered.live/api/v1/turn/credentials?apiKey=UiN7nYUIQEnLPNro-eVeHpk5YBbvlygf6W3oDqk7FRLmPKwZ";
 const SERVEURS_STUN = [
   { urls: "stun:stun.l.google.com:19302" },
   { urls: "stun:stun1.l.google.com:19302" },
 ];
-const CONFIG_PEER = { config: { iceServers: SERVEURS_STUN.slice() } };
-
-const etatRelais = { fait: false, ok: false, n: 0, detail: "" };
-const promesseRelais = (async function chargerRelais(){
-  try{
-    const rep = await fetch(METERED_URL, { signal: AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined });
-    if (!rep.ok){
-      etatRelais.detail = "API Metered : HTTP " + rep.status +
-        (rep.status === 401 || rep.status === 403 ? " (clé refusée)" : (rep.status === 404 ? " (sous-domaine inconnu ?)" : ""));
-      return;
-    }
-    const serveurs = await rep.json();
-    if (Array.isArray(serveurs) && serveurs.length){
-      CONFIG_PEER.config.iceServers = SERVEURS_STUN.concat(serveurs);
-      etatRelais.ok = true;
-      etatRelais.n = serveurs.length;
-      etatRelais.detail = serveurs.length + " serveurs relais reçus";
-    } else {
-      etatRelais.detail = "API Metered : réponse vide";
-    }
-  } catch(e){
-    etatRelais.detail = "API Metered injoignable (" + (e && e.name === "TimeoutError" ? "délai dépassé" : "réseau/CORS") + ")";
-  } finally {
-    etatRelais.fait = true;
-  }
-})();
+/* Identifiants TURN STATIQUES (section "TURN Servers" du tableau de bord Metered :
+   username/credential conçus pour être embarqués côté client — PAS la Secret Key). */
+const SERVEURS_TURN = [
+  /* à remplir, exemple :
+  { urls: "turn:global.relay.metered.ca:80",  username: "...", credential: "..." },
+  { urls: "turn:global.relay.metered.ca:443", username: "...", credential: "..." },
+  { urls: "turns:global.relay.metered.ca:443?transport=tcp", username: "...", credential: "..." },
+  */
+];
+const CONFIG_PEER = { config: { iceServers: SERVEURS_STUN.concat(SERVEURS_TURN) } };
+const etatRelais = {
+  fait: true,
+  ok: SERVEURS_TURN.length > 0,
+  n: SERVEURS_TURN.length,
+  detail: SERVEURS_TURN.length ? SERVEURS_TURN.length + " serveurs relais configurés" : "identifiants relais non configurés",
+};
+const promesseRelais = Promise.resolve();
 
 const CO_MOI = "#22D3EE", CO_ADV = "#F471B5", CO_BALLE = "#EAF0FF";
 const CO_FEU = "#FB7185", CO_OR = "#FBBF24", CO_VICE = "#A78BFA";
