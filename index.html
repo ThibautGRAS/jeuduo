@@ -192,7 +192,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.5 · 2026-08-06</div>
+  <div id="version">DUO v7.6 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -268,7 +268,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.5";
+const VERSION = "7.6";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -645,8 +645,11 @@ $("btnDiag").addEventListener("click", async () => {
    1) on tente de s'y connecter en invité (quelqu'un attend ?) ;
    2) sinon on tente de le prendre en hôte et on attend le prochain chercheur.
    Un hôte déjà en partie refuse les connexions, le chercheur passe au suivant. */
-const MM_SLOTS = 5, MM_TIMEOUT = 2500;
-let mmAnnule = false, mmPeerCourant = null;
+const MM_SLOTS = 5, MM_TIMEOUT = 2200;
+const MM_DUREE_MIN = 30000;          /* la recherche insiste au moins 30 s */
+const MM_RESONDAGE = 8000;           /* en attente sur un créneau haut : re-sonde les bas */
+let mmAnnule = false, mmPeerCourant = null, mmDebut = 0;
+let mmTicker = 0, mmResondeur = 0, mmTentativeSlot = 0;
 
 function uiRecherche(active, texte){
   $("btnTrouver").classList.toggle("cache", active);
@@ -656,25 +659,48 @@ function uiRecherche(active, texte){
   etatLobby.textContent = texte || "";
   etatLobby.classList.toggle("pulse", active);
 }
+function mmSecondes(){ return Math.floor((performance.now() - mmDebut) / 1000); }
+function mmStatut(texte){ etatLobby.textContent = texte + " · " + mmSecondes() + " s"; }
+function mmNettoyer(){
+  clearInterval(mmTicker); mmTicker = 0;
+  clearInterval(mmResondeur); mmResondeur = 0;
+  if (mmPeerCourant){ try{ mmPeerCourant.destroy(); }catch(e){} mmPeerCourant = null; }
+}
 
 $("btnTrouver").addEventListener("click", () => {
   mmAnnule = false;
-  uiRecherche(true, "Recherche d'un adversaire…");
+  mmDebut = performance.now();
+  mmTentativeSlot = 0;
+  uiRecherche(true, "Recherche d'un adversaire… · 0 s");
+  mmTicker = setInterval(() => { if (!mmAnnule && !partieEnCours) mmStatut(etatLobby.textContent.split(" · ")[0]); }, 1000);
   sonderCreneau(0);
 });
 $("btnAnnulerMM").addEventListener("click", () => {
   mmAnnule = true;
-  if (mmPeerCourant){ try{ mmPeerCourant.destroy(); }catch(e){} mmPeerCourant = null; }
+  mmNettoyer();
   uiRecherche(false, "Recherche annulée.");
 });
 
+function mmAdopter(p, c, k){
+  mmNettoyer();
+  peer = p; conn = c; estHote = false;
+  brancherConnexion();
+  uiRecherche(false, "");
+  demarrerPartie();
+  connVoix = p.connect(PREFIXE + "mm-" + k, { reliable: true, label: "voix" });
+  connVoix.on("data", jouerVoix);
+}
+
 function sonderCreneau(k){
-  if (mmAnnule) return;
+  if (mmAnnule || partieEnCours) return;
   if (k >= MM_SLOTS){
-    uiRecherche(false, "Personne pour l'instant — réessayez dans une minute.");
+    /* passe complète sans résultat : on insiste tant que les 30 s ne sont pas écoulées */
+    if (performance.now() - mmDebut < MM_DUREE_MIN){ mmTentativeSlot = 0; sonderCreneau(0); return; }
+    mmNettoyer();
+    uiRecherche(false, "Personne trouvé en " + mmSecondes() + " s — réessayez.");
     return;
   }
-  etatLobby.textContent = "Recherche d'un adversaire… (" + (k+1) + "/" + MM_SLOTS + ")";
+  mmStatut("Recherche d'un adversaire… (créneau " + (k+1) + "/" + MM_SLOTS + ")");
   const p = new Peer(CONFIG_PEER);
   mmPeerCourant = p;
   let regle = false;
@@ -687,39 +713,74 @@ function sonderCreneau(k){
       prendreCreneau(k);
     }, MM_TIMEOUT);
     c.on("open", () => {
-      /* l'hôte occupé ferme aussitôt : on confirme après un court délai */
       setTimeout(() => {
         if (regle || mmAnnule || !c.open) return;
         regle = true; clearTimeout(minuterie);
-        peer = p; conn = c; estHote = false;
-        brancherConnexion();
-        uiRecherche(false, "");
-        demarrerPartie();
-        connVoix = p.connect(PREFIXE + "mm-" + k, { reliable: true, label: "voix" });
-        connVoix.on("data", jouerVoix);
+        mmAdopter(p, c, k);
       }, 400);
     });
-    c.on("close", () => { if (!regle && !mmAnnule){ regle = true; clearTimeout(minuterie); try{ p.destroy(); }catch(e){} sonderCreneau(k+1); } });
-    c.on("error", () => { if (!regle && !mmAnnule){ regle = true; clearTimeout(minuterie); try{ p.destroy(); }catch(e){} sonderCreneau(k+1); } });
+    const suivant = () => { if (!regle && !mmAnnule){ regle = true; clearTimeout(minuterie); try{ p.destroy(); }catch(e){} mmTentativeSlot = 0; sonderCreneau(k+1); } };
+    c.on("close", suivant);
+    c.on("error", suivant);
   });
-  p.on("error", () => { if (!regle && !mmAnnule){ regle = true; sonderCreneau(k+1); } });
+  p.on("error", () => { if (!regle && !mmAnnule){ regle = true; mmTentativeSlot = 0; sonderCreneau(k+1); } });
 }
 
 function prendreCreneau(k){
-  if (mmAnnule) return;
+  if (mmAnnule || partieEnCours) return;
   const p = new Peer(PREFIXE + "mm-" + k, CONFIG_PEER);
   mmPeerCourant = p;
   p.on("open", () => {
     if (mmAnnule){ p.destroy(); return; }
     peer = p; estHote = true;
-    etatLobby.textContent = "En attente du premier joueur qui se connecte…";
-    p.on("connection", gestionnaireConnexion);
+    mmStatut("En attente d'un joueur (créneau " + (k+1) + ")");
+    p.on("connection", c => { mmNettoyerResondage(); gestionnaireConnexion(c); });
+    /* anti-croisement : posté sur un créneau haut, on re-sonde périodiquement
+       les créneaux PLUS BAS ; si quelqu'un y attend, c'est nous qui bougeons.
+       Départage déterministe (haut -> bas), donc pas d'interblocage. */
+    if (k > 0){
+      mmResondeur = setInterval(() => resonderBas(k), MM_RESONDAGE);
+    }
   });
   p.on("error", e => {
     if (mmAnnule) return;
-    /* créneau pris entre-temps (course) : on repart en chercheur sur le suivant */
-    sonderCreneau(k + 1);
+    if (e.type === "unavailable-id" && mmTentativeSlot < 1){
+      /* quelqu'un vient de prendre ce créneau : il y attend peut-être -> on re-sonde CE créneau */
+      mmTentativeSlot++;
+      sonderCreneau(k);
+    } else {
+      mmTentativeSlot = 0;
+      sonderCreneau(k + 1);
+    }
   });
+}
+function mmNettoyerResondage(){ clearInterval(mmResondeur); mmResondeur = 0; clearInterval(mmTicker); mmTicker = 0; }
+
+function resonderBas(monSlot){
+  if (mmAnnule || partieEnCours || conn) { mmNettoyerResondage(); return; }
+  let k = 0;
+  const essayer = () => {
+    if (k >= monSlot || mmAnnule || partieEnCours || conn) return;
+    const p2 = new Peer(CONFIG_PEER);
+    let regle = false;
+    p2.on("open", () => {
+      const c = p2.connect(PREFIXE + "mm-" + k, { reliable: false });
+      const minuterie = setTimeout(() => { if (!regle){ regle = true; try{ p2.destroy(); }catch(e){} k++; essayer(); } }, 1800);
+      c.on("open", () => {
+        setTimeout(() => {
+          if (regle || mmAnnule || !c.open || conn) { return; }
+          regle = true; clearTimeout(minuterie);
+          const slotTrouve = k;
+          mmAdopter(p2, c, slotTrouve);   /* détruit notre créneau d'attente via mmNettoyer */
+        }, 400);
+      });
+      const rate = () => { if (!regle){ regle = true; clearTimeout(minuterie); try{ p2.destroy(); }catch(e){} k++; essayer(); } };
+      c.on("close", rate);
+      c.on("error", rate);
+    });
+    p2.on("error", () => { if (!regle){ regle = true; k++; essayer(); } });
+  };
+  essayer();
 }
 
 $("btnRejoindre").addEventListener("click", () => {
