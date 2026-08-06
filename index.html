@@ -192,7 +192,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.14 · 2026-08-06</div>
+  <div id="version">DUO v7.15 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -268,7 +268,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.14";
+const VERSION = "7.15";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -1136,6 +1136,9 @@ function toucherMur(b, cote, murX){
 }
 
 function physique(){
+  etat.raqBas = maRaquette;          /* position réelle, à CHAQUE pas de physique
+                                        (avant : rafraîchie seulement à l'envoi réseau,
+                                        donc jamais en solo -> raquette fantôme au centre) */
   const maintenant = performance.now();
   majEffets(maintenant);
   if (phase === "compte"){
@@ -1492,21 +1495,37 @@ function majScore(pop){
   dots2.textContent = "○".repeat(MANCHES_GAGNANTES - md) + "●".repeat(md);
 }
 
+const PAS_MS = 1000/60;            /* pas de physique fixe : identique à 60 ou 120 Hz */
+let horlogePrec = 0, accumulateur = 0;
+
 function boucle(){
-  vitRaqLisse = vitRaqLisse * 0.7 + (maRaquette - raqPrecedente) * 0.3;
+  const maintenant = performance.now();
+  const dtMs = horlogePrec ? Math.min(100, maintenant - horlogePrec) : PAS_MS;
+  horlogePrec = maintenant;
+
+  /* vitesse de raquette normalisée en px par pas de 16,7 ms (indépendante de l'écran) */
+  const deltaRaq = (maRaquette - raqPrecedente) * (PAS_MS / Math.max(dtMs, 1));
+  vitRaqLisse = vitRaqLisse * 0.7 + deltaRaq * 0.3;
   raqPrecedente = maRaquette;
 
-  /* smash : la raquette immobile se charge, mobile elle se décharge */
+  /* smash : charge en temps réel (1 s immobile), décharge 3x plus vite en mouvement */
   if (phase === "jeu"){
-    if (Math.abs(vitRaqLisse) < SEUIL_CHARGE) chargeLocal = Math.min(1, chargeLocal + 1/60);
-    else chargeLocal = Math.max(0, chargeLocal - 3/60);
+    if (Math.abs(vitRaqLisse) < SEUIL_CHARGE) chargeLocal = Math.min(1, chargeLocal + dtMs/1000);
+    else chargeLocal = Math.max(0, chargeLocal - 3*dtMs/1000);
   }
   chargesAffichees[0] = chargeLocal;
   if (estHote) chargesAffichees[1] = chargeHaut;
 
   if (estHote){
-    if (modeSolo && (phase === "jeu" || phase === "compte")) iaJouer();
-    physique();
+    accumulateur += dtMs;
+    let pas = 0;
+    while (accumulateur >= PAS_MS && pas < 5){
+      if (modeSolo && (phase === "jeu" || phase === "compte")) iaJouer();
+      physique();
+      accumulateur -= PAS_MS;
+      pas++;
+    }
+    if (pas === 5) accumulateur = 0;   /* rattrapage borné après une longue pause */
     majBoutonVice(!!vices[0]);
   } else if (phase === "jeu"){
     const dt = (performance.now() - cibleT) / (1000/60);
