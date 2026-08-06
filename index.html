@@ -192,7 +192,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.10 · 2026-08-06</div>
+  <div id="version">DUO v7.11 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -268,7 +268,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.10";
+const VERSION = "7.11";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -688,10 +688,13 @@ $("btnDiag").addEventListener("click", async () => {
    2) sinon on tente de le prendre en hôte et on attend le prochain chercheur.
    Un hôte déjà en partie refuse les connexions, le chercheur passe au suivant. */
 const MM_SLOTS = 5, MM_TIMEOUT = 2200;
-const MM_DUREE_MIN = 30000;          /* la recherche insiste au moins 30 s */
-const MM_RESONDAGE = 8000;           /* en attente sur un créneau haut : re-sonde les bas */
+const MM_DUREE_MIN = 30000;
+const MM_RESONDAGE = 9000;
 let mmAnnule = false, mmPeerCourant = null, mmDebut = 0;
 let mmTicker = 0, mmResondeur = 0, mmTentativeSlot = 0;
+/* UNE SEULE connexion au serveur de mise en relation pour tout le sondage :
+   le serveur gratuit limite par IP, il faut être économe. */
+let mmProbe = null, mmMode = "", mmSlotEnCours = -1, mmMinuterie = 0;
 
 function uiRecherche(active, texte){
   $("btnTrouver").classList.toggle("cache", active);
@@ -703,10 +706,17 @@ function uiRecherche(active, texte){
 }
 function mmSecondes(){ return Math.floor((performance.now() - mmDebut) / 1000); }
 function mmStatut(texte){ etatLobby.textContent = texte + " · " + mmSecondes() + " s"; }
-function mmNettoyer(){
+function mmDetruire(x){ if (x && !x.destroyed){ try{ x.destroy(); }catch(e){} } }
+function mmNettoyer(saufPeer){
   clearInterval(mmTicker); mmTicker = 0;
   clearInterval(mmResondeur); mmResondeur = 0;
-  if (mmPeerCourant){ try{ mmPeerCourant.destroy(); }catch(e){} mmPeerCourant = null; }
+  clearTimeout(mmMinuterie); mmMinuterie = 0;
+  mmSlotEnCours = -1; mmMode = "";
+  for (const x of [mmProbe, mmPeerCourant]){
+    if (x && x !== saufPeer) mmDetruire(x);
+  }
+  if (mmProbe !== saufPeer) mmProbe = null;
+  if (mmPeerCourant !== saufPeer) mmPeerCourant = null;
 }
 
 $("btnTrouver").addEventListener("click", () => {
@@ -719,12 +729,14 @@ $("btnTrouver").addEventListener("click", () => {
 });
 $("btnAnnulerMM").addEventListener("click", () => {
   mmAnnule = true;
-  mmNettoyer();
+  mmNettoyer(null);
   uiRecherche(false, "Recherche annulée.");
 });
 
 function mmAdopter(p, c, k){
-  mmNettoyer();
+  const ancienHote = (peer && peer !== p) ? peer : null;
+  mmNettoyer(p);
+  mmDetruire(ancienHote);
   peer = p; conn = c; estHote = false;
   brancherConnexion();
   uiRecherche(false, "");
@@ -733,43 +745,67 @@ function mmAdopter(p, c, k){
   connVoix.on("data", jouerVoix);
 }
 
+/* connexion de sondage unique, avec routage des erreurs "peer-unavailable"
+   selon le mode courant (sonde initiale ou re-sondage anti-croisement) */
+function obtenirProbe(pret){
+  if (mmProbe && !mmProbe.destroyed && mmProbe.open){ pret(); return; }
+  if (mmProbe && !mmProbe.destroyed){ mmProbe.on("open", pret); return; }
+  mmProbe = new Peer(CONFIG_PEER);
+  blinderPeer(mmProbe);
+  mmPeerCourant = mmProbe;
+  mmProbe.on("open", pret);
+  mmProbe.on("error", e => {
+    if (e.type !== "peer-unavailable" || mmSlotEnCours < 0 || mmAnnule || partieEnCours) return;
+    const k = mmSlotEnCours;
+    mmSlotEnCours = -1;
+    clearTimeout(mmMinuterie);
+    if (mmMode === "sonde") prendreCreneau(k);          /* créneau vide -> on le prend */
+    else if (mmMode === "resonde") resonderSuite(k + 1); /* re-sondage : créneau suivant */
+  });
+}
+
 function sonderCreneau(k){
   if (mmAnnule || partieEnCours) return;
   if (k >= MM_SLOTS){
-    /* passe complète sans résultat : on insiste tant que les 30 s ne sont pas écoulées */
     if (performance.now() - mmDebut < MM_DUREE_MIN){ mmTentativeSlot = 0; sonderCreneau(0); return; }
-    mmNettoyer();
+    mmNettoyer(null);
     uiRecherche(false, "Personne trouvé en " + mmSecondes() + " s — réessayez.");
     return;
   }
   mmStatut("Recherche d'un adversaire… (créneau " + (k+1) + "/" + MM_SLOTS + ")");
-  const p = new Peer(CONFIG_PEER);
-  mmPeerCourant = p;
-  let regle = false;
-  p.on("open", () => {
-    if (mmAnnule){ p.destroy(); return; }
-    const c = p.connect(PREFIXE + "mm-" + k, { reliable: false });
-    const minuterie = setTimeout(() => {
+  obtenirProbe(() => {
+    if (mmAnnule || partieEnCours) return;
+    mmMode = "sonde"; mmSlotEnCours = k;
+    const c = mmProbe.connect(PREFIXE + "mm-" + k, { reliable: false });
+    let regle = false;
+    mmMinuterie = setTimeout(() => {
       if (regle || mmAnnule) return;
-      regle = true; try{ p.destroy(); }catch(e){}
+      regle = true; mmSlotEnCours = -1;
+      try{ c.close(); }catch(e){}
       prendreCreneau(k);
     }, MM_TIMEOUT);
     c.on("open", () => {
       setTimeout(() => {
         if (regle || mmAnnule || !c.open) return;
-        regle = true; clearTimeout(minuterie);
-        mmAdopter(p, c, k);
+        regle = true; clearTimeout(mmMinuterie); mmSlotEnCours = -1;
+        mmAdopter(mmProbe, c, k);
       }, 400);
     });
-    const suivant = () => { if (!regle && !mmAnnule){ regle = true; clearTimeout(minuterie); try{ p.destroy(); }catch(e){} mmTentativeSlot = 0; sonderCreneau(k+1); } };
+    const suivant = () => {
+      if (regle || mmAnnule) return;
+      regle = true; clearTimeout(mmMinuterie); mmSlotEnCours = -1;
+      mmTentativeSlot = 0;
+      sonderCreneau(k + 1);
+    };
     c.on("close", suivant);
     c.on("error", suivant);
   });
-  p.on("error", () => { if (!regle && !mmAnnule){ regle = true; mmTentativeSlot = 0; sonderCreneau(k+1); } });
 }
 
 function prendreCreneau(k){
   if (mmAnnule || partieEnCours) return;
+  /* on libère la connexion de sondage avant d'ouvrir celle d'hôte */
+  mmDetruire(mmProbe); mmProbe = null;
   const p = new Peer(PREFIXE + "mm-" + k, CONFIG_PEER);
   blinderPeer(p);
   demanderEcranAllume();
@@ -778,18 +814,14 @@ function prendreCreneau(k){
     if (mmAnnule){ p.destroy(); return; }
     peer = p; estHote = true;
     mmStatut("En attente d'un joueur (créneau " + (k+1) + ")");
-    p.on("connection", c => { mmNettoyerResondage(); gestionnaireConnexion(c); });
-    /* anti-croisement : posté sur un créneau haut, on re-sonde périodiquement
-       les créneaux PLUS BAS ; si quelqu'un y attend, c'est nous qui bougeons.
-       Départage déterministe (haut -> bas), donc pas d'interblocage. */
+    p.on("connection", c => { clearInterval(mmResondeur); mmResondeur = 0; clearInterval(mmTicker); mmTicker = 0; gestionnaireConnexion(c); });
     if (k > 0){
-      mmResondeur = setInterval(() => resonderBas(k), MM_RESONDAGE);
+      mmResondeur = setInterval(() => { if (!conn && !partieEnCours && !mmAnnule) resonderSuite(0, k); }, MM_RESONDAGE);
     }
   });
   p.on("error", e => {
     if (mmAnnule) return;
     if (e.type === "unavailable-id" && mmTentativeSlot < 1){
-      /* quelqu'un vient de prendre ce créneau : il y attend peut-être -> on re-sonde CE créneau */
       mmTentativeSlot++;
       sonderCreneau(k);
     } else {
@@ -798,33 +830,40 @@ function prendreCreneau(k){
     }
   });
 }
-function mmNettoyerResondage(){ clearInterval(mmResondeur); mmResondeur = 0; clearInterval(mmTicker); mmTicker = 0; }
 
-function resonderBas(monSlot){
-  if (mmAnnule || partieEnCours || conn) { mmNettoyerResondage(); return; }
-  let k = 0;
-  const essayer = () => {
-    if (k >= monSlot || mmAnnule || partieEnCours || conn) return;
-    const p2 = new Peer(CONFIG_PEER);
+/* re-sondage anti-croisement : depuis le créneau haut, visite des créneaux bas
+   avec LA MÊME connexion de sondage — le plus haut bouge, jamais les deux */
+let mmResonPlafond = 0;
+function resonderSuite(k, plafond){
+  if (plafond !== undefined) mmResonPlafond = plafond;
+  if (mmAnnule || partieEnCours || conn) return;
+  if (k >= mmResonPlafond) return;
+  obtenirProbe(() => {
+    if (mmAnnule || partieEnCours || conn) return;
+    mmMode = "resonde"; mmSlotEnCours = k;
+    const c = mmProbe.connect(PREFIXE + "mm-" + k, { reliable: false });
     let regle = false;
-    p2.on("open", () => {
-      const c = p2.connect(PREFIXE + "mm-" + k, { reliable: false });
-      const minuterie = setTimeout(() => { if (!regle){ regle = true; try{ p2.destroy(); }catch(e){} k++; essayer(); } }, 1800);
-      c.on("open", () => {
-        setTimeout(() => {
-          if (regle || mmAnnule || !c.open || conn) { return; }
-          regle = true; clearTimeout(minuterie);
-          const slotTrouve = k;
-          mmAdopter(p2, c, slotTrouve);   /* détruit notre créneau d'attente via mmNettoyer */
-        }, 400);
-      });
-      const rate = () => { if (!regle){ regle = true; clearTimeout(minuterie); try{ p2.destroy(); }catch(e){} k++; essayer(); } };
-      c.on("close", rate);
-      c.on("error", rate);
+    mmMinuterie = setTimeout(() => {
+      if (regle) return;
+      regle = true; mmSlotEnCours = -1;
+      try{ c.close(); }catch(e){}
+      resonderSuite(k + 1);
+    }, 1800);
+    c.on("open", () => {
+      setTimeout(() => {
+        if (regle || mmAnnule || !c.open || conn) return;
+        regle = true; clearTimeout(mmMinuterie); mmSlotEnCours = -1;
+        mmAdopter(mmProbe, c, k);
+      }, 400);
     });
-    p2.on("error", () => { if (!regle){ regle = true; k++; essayer(); } });
-  };
-  essayer();
+    const rate = () => {
+      if (regle) return;
+      regle = true; clearTimeout(mmMinuterie); mmSlotEnCours = -1;
+      resonderSuite(k + 1);
+    };
+    c.on("close", rate);
+    c.on("error", rate);
+  });
 }
 
 $("btnRejoindre").addEventListener("click", () => {
