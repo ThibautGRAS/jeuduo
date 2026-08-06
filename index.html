@@ -173,7 +173,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.0 · 2026-08-06</div>
+  <div id="version">DUO v7.1 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -249,7 +249,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.0";
+const VERSION = "7.1";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -272,6 +272,17 @@ const SMASH_MUR = 20.5;                            // vitesse minimale qui fissu
 const FISSURE_PORTEE = 60, FISSURE_TROU = 3;       // regroupement des impacts / niveau "troué"
 const MAX_DEBRIS = 8, DEBRIS_R_MIN = 6, DEBRIS_R_MAX = 12;
 const PREFIXE = "duo-pong-tg-";
+const CONFIG_PEER = {
+  config: {
+    iceServers: [
+      { urls: "stun:stun.l.google.com:19302" },
+      { urls: "stun:stun1.l.google.com:19302" },
+      { urls: "turn:openrelay.metered.ca:80",  username: "openrelayproject", credential: "openrelayproject" },
+      { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
+      { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
+    ],
+  },
+};
 
 const CO_MOI = "#22D3EE", CO_ADV = "#F471B5", CO_BALLE = "#EAF0FF";
 const CO_FEU = "#FB7185", CO_OR = "#FBBF24", CO_VICE = "#A78BFA";
@@ -511,7 +522,7 @@ $("btnCreer").addEventListener("click", () => {
   estHote = true;
   $("btnCreer").disabled = true;
   etatLobby.textContent = "Création de la partie…";
-  peer = new Peer(PREFIXE + code);
+  peer = new Peer(PREFIXE + code, CONFIG_PEER);
   peer.on("open", () => {
     codePartie.textContent = code;
     codePartie.classList.remove("cache");
@@ -537,7 +548,7 @@ $("btnRejoindre").addEventListener("click", () => {
   estHote = false;
   $("btnRejoindre").disabled = true;
   etatLobby.textContent = "Connexion…";
-  peer = new Peer();
+  peer = new Peer(CONFIG_PEER);
   peer.on("open", () => {
     codeRejoint = code;
     conn = peer.connect(PREFIXE + code, { reliable: false });
