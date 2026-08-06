@@ -65,6 +65,7 @@ input{
   background:rgba(5,8,16,.6);border:1px solid var(--bord);border-radius:12px;color:var(--texte);padding:13px;width:100%;
 }
 input:focus{outline:none;border-color:var(--moi)}
+#champNom{font-size:17px;letter-spacing:.12em}
 #codePartie{
   font-family:"JetBrains Mono",monospace;font-size:38px;font-weight:700;letter-spacing:.42em;margin-left:.42em;
   text-align:center;color:var(--moi);text-shadow:0 0 18px rgba(34,211,238,.55);
@@ -159,6 +160,11 @@ canvas{
   <p class="sous">Duel néon réflexe, pair-à-pair.<br>Manches de 5 points, au meilleur des 3 — avec vices secrets.</p>
 
   <div class="carte">
+    <h2>VOTRE NOM</h2>
+    <input id="champNom" maxlength="12" placeholder="JOUEUR" autocomplete="nickname">
+  </div>
+
+  <div class="carte">
     <h2>CRÉER UNE PARTIE</h2>
     <button id="btnCreer">Générer un code</button>
     <div id="codePartie" class="cache"></div>
@@ -186,7 +192,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.12 · 2026-08-06</div>
+  <div id="version">DUO v7.13 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -262,7 +268,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.12";
+const VERSION = "7.13";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -329,6 +335,8 @@ const VICE_DEFS = {
 let peer = null, conn = null;
 let estHote = false, partieEnCours = false;
 let modeSolo = false, niveauIA = "moyen";
+let monNom = "JOUEUR", nomAdverse = "";
+function assainirNom(s){ return String(s || "").replace(/[<>&"'`]/g, "").trim().toUpperCase().slice(0, 12) || "JOUEUR"; }
 const IA_NIVEAUX = {
   facile:    { vit: 3.2,  err: 95, anticipe: false, smash: false, zone: 0.52 },
   moyen:     { vit: 5.6,  err: 34, anticipe: false, smash: false, zone: 0.85 },
@@ -425,7 +433,7 @@ function jouerVoix(m){
     const a = new Audio(url);
     a.play().catch(() => {});
     a.onended = () => URL.revokeObjectURL(url);
-    annoncer("🎙 L'ADVERSAIRE VOUS PARLE", "#8AB4FF");
+    annoncer("🎙 " + (nomAdverse || "L'ADVERSAIRE") + " VOUS PARLE", "#8AB4FF");
   } catch(e){}
 }
 
@@ -582,7 +590,21 @@ function gestionnaireConnexion(c){
   brancherConnexion();
 }
 
+(function initNom(){
+  try{ const memo = localStorage.getItem("duo_nom"); if (memo) $("champNom").value = memo; }catch(e){}
+  $("champNom").addEventListener("change", () => {
+    monNom = assainirNom($("champNom").value);
+    $("champNom").value = monNom;
+    try{ localStorage.setItem("duo_nom", monNom); }catch(e){}
+  });
+})();
+function figerNom(){
+  monNom = assainirNom($("champNom").value);
+  try{ localStorage.setItem("duo_nom", monNom); }catch(e){}
+}
+
 $("btnCreer").addEventListener("click", () => {
+  figerNom();
   const code = genCode();
   estHote = true;
   $("btnCreer").disabled = true;
@@ -678,6 +700,7 @@ $("btnDiag").addEventListener("click", async () => {
 
 
 $("btnRejoindre").addEventListener("click", () => {
+  figerNom();
   const code = $("champCode").value.trim().toUpperCase();
   if (code.length !== 4){ etatLobby.textContent = "Code à 4 caractères requis."; return; }
   estHote = false;
@@ -708,9 +731,11 @@ $("btnRejoindre").addEventListener("click", () => {
 
 for (const b of document.querySelectorAll(".btnSolo")){
   b.addEventListener("click", () => {
+    figerNom();
     modeSolo = true;
     estHote = true;
     niveauIA = b.dataset.niveau;
+    nomAdverse = "IA " + b.dataset.niveau.toUpperCase();
     demarrerPartie();
   });
 }
@@ -737,7 +762,8 @@ function demarrerPartie(){
   demanderEcranAllume();
   lobby.style.display = "none";
   jeu.style.display = "flex";
-  elRole.textContent = modeSolo ? ("SOLO · " + niveauIA.toUpperCase()) : (estHote ? "HÔTE" : "INVITÉ");
+  majNoms();
+  if (!modeSolo && conn && conn.open) conn.send({ t: "nm", n: monNom });
   phase = "regles";
   panRegles.classList.remove("cache");
   if (modeSolo){
@@ -840,6 +866,12 @@ function recevoir(m){
       break;
     }
     case "r": etat.raqHaut = m.r; vitRaqHaut = m.v || 0; chargeHaut = (m.c || 0)/100; chargesAffichees[1] = chargeHaut; break;
+    case "nm":
+      nomAdverse = assainirNom(m.n);
+      majNoms();
+      if (conn && conn.open) conn.send({ t: "nm2", n: monNom });
+      break;
+    case "nm2": nomAdverse = assainirNom(m.n); majNoms(); break;
     case "lu": if (estHote){ lus[1] = true; verifierLus(); } break;
     case "vc": if (estHote && viceGagnant === 1){ vices[1] = m.k; viceGagnant = -1; mancheSuivante(); } break;
     case "va": if (estHote) activerVice(1); break;
@@ -1326,8 +1358,10 @@ function afficherFin(){
   const moi = estHote ? 0 : 1;
   const jAiGagne = manches[moi] >= MANCHES_GAGNANTES;
   masquerPanneaux();
+  const mMoi = estHote ? manches[0] : manches[1];
+  const mAdv = estHote ? manches[1] : manches[0];
   montrerVoile(jAiGagne ? "VICTOIRE" : "DÉFAITE",
-    "MANCHES " + manches[0] + " — " + manches[1] + (estHote ? "" : " (HÔTE EN PREMIER)"), true);
+    monNom + " " + mMoi + " — " + mAdv + " " + (nomAdverse || "ADVERSAIRE"), true);
   voileTitre.style.filter = jAiGagne
     ? "drop-shadow(0 0 26px rgba(251,191,36,.6))"
     : "drop-shadow(0 0 20px rgba(124,138,165,.4))";
@@ -1371,6 +1405,10 @@ cv.addEventListener("touchmove",  e => { e.preventDefault(); posDepuisEvenement(
 cv.addEventListener("mousemove",  e => posDepuisEvenement(e.clientX));
 
 /* ================= RENDU ================= */
+function majNoms(){
+  elRole.textContent = monNom + (nomAdverse ? " vs " + nomAdverse : (estHote ? " · HÔTE" : " · INVITÉ"));
+}
+
 function majScore(pop){
   const [sH, sI] = etat.score;
   const g = estHote ? sH : sI, d = estHote ? sI : sH;
