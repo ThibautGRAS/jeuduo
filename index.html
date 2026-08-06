@@ -192,7 +192,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.8 · 2026-08-06</div>
+  <div id="version">DUO v7.9 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -268,7 +268,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.8";
+const VERSION = "7.9";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -301,11 +301,11 @@ const SERVEURS_STUN = [
 /* Identifiants TURN STATIQUES (section "TURN Servers" du tableau de bord Metered :
    username/credential conçus pour être embarqués côté client — PAS la Secret Key). */
 const SERVEURS_TURN = [
-  /* à remplir, exemple :
-  { urls: "turn:global.relay.metered.ca:80",  username: "...", credential: "..." },
-  { urls: "turn:global.relay.metered.ca:443", username: "...", credential: "..." },
-  { urls: "turns:global.relay.metered.ca:443?transport=tcp", username: "...", credential: "..." },
-  */
+  { urls: "stun:stun.relay.metered.ca:80" },
+  { urls: "turn:global.relay.metered.ca:80",                 username: "f5eb9a36832219a0779eca03", credential: "BuMMDJGBeV9FVCFQ" },
+  { urls: "turn:global.relay.metered.ca:80?transport=tcp",   username: "f5eb9a36832219a0779eca03", credential: "BuMMDJGBeV9FVCFQ" },
+  { urls: "turn:global.relay.metered.ca:443",                username: "f5eb9a36832219a0779eca03", credential: "BuMMDJGBeV9FVCFQ" },
+  { urls: "turns:global.relay.metered.ca:443?transport=tcp", username: "f5eb9a36832219a0779eca03", credential: "BuMMDJGBeV9FVCFQ" },
 ];
 const CONFIG_PEER = { config: { iceServers: SERVEURS_STUN.concat(SERVEURS_TURN) } };
 const etatRelais = {
