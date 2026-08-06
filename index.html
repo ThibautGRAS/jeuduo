@@ -68,6 +68,9 @@ input:focus{outline:none;border-color:var(--moi)}
 }
 @keyframes apparition{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 #etatLobby{font-size:12.5px;color:var(--sourd);text-align:center;min-height:18px;font-family:"JetBrains Mono",monospace}
+#diagRes{font-family:"JetBrains Mono",monospace;font-size:11.5px;line-height:2;color:var(--texte)}
+#diagRes .ok{color:#4ADE80} #diagRes .ko{color:#F87171} #diagRes .attente{color:var(--sourd)}
+#diagRes .verdict{margin-top:6px;color:var(--sourd);font-size:11px;line-height:1.6;letter-spacing:0}
 #version{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.22em;color:rgba(124,138,165,.55);margin-top:2px}
 .rangSolo{display:flex;gap:8px}
 .rangSolo button{padding:12px 8px;font-size:13.5px}
@@ -178,8 +181,14 @@ canvas{
     </div>
   </div>
 
+  <div class="carte">
+    <h2>DIAGNOSTIC RÉSEAU</h2>
+    <button id="btnDiag" class="secondaire">Tester ma connexion</button>
+    <div id="diagRes" class="cache"></div>
+  </div>
+
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.2 · 2026-08-06</div>
+  <div id="version">DUO v7.3 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -255,7 +264,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.2";
+const VERSION = "7.3";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -550,6 +559,72 @@ $("btnCreer").addEventListener("click", () => {
   });
   peer.on("connection", gestionnaireConnexion);
   peer.on("error", erreurLobby);
+});
+
+/* ================= DIAGNOSTIC RÉSEAU ================= */
+$("btnDiag").addEventListener("click", async () => {
+  const res = $("diagRes");
+  res.classList.remove("cache");
+  $("btnDiag").disabled = true;
+  const lignes = {
+    sig:  '<span class="attente">… Signalisation (mise en relation)</span>',
+    stun: '<span class="attente">… STUN (connexion directe)</span>',
+    turn: '<span class="attente">… TURN (relais de secours)</span>',
+  };
+  const rendre = verdict => {
+    res.innerHTML = lignes.sig + "<br>" + lignes.stun + "<br>" + lignes.turn +
+      (verdict ? '<div class="verdict">' + verdict + "</div>" : "");
+  };
+  rendre();
+
+  /* 1 — serveur de signalisation PeerJS */
+  let sigOK = false;
+  await new Promise(fini => {
+    let p = null;
+    const minuterie = setTimeout(() => { try{ p && p.destroy(); }catch(e){} fini(); }, 6000);
+    try{
+      p = new Peer(CONFIG_PEER);
+      p.on("open", () => { sigOK = true; clearTimeout(minuterie); try{ p.destroy(); }catch(e){} fini(); });
+      p.on("error", () => { clearTimeout(minuterie); try{ p.destroy(); }catch(e){} fini(); });
+    } catch(e){ clearTimeout(minuterie); fini(); }
+  });
+  lignes.sig = sigOK
+    ? '<span class="ok">✓ Signalisation : OK</span>'
+    : '<span class="ko">✗ Signalisation : INJOIGNABLE</span>';
+  rendre();
+
+  /* 2 & 3 — collecte de candidats ICE : srflx = STUN OK, relay = TURN OK */
+  let stunOK = false, turnOK = false;
+  await new Promise(fini => {
+    let pc = null;
+    const minuterie = setTimeout(() => { try{ pc && pc.close(); }catch(e){} fini(); }, 8000);
+    try{
+      pc = new RTCPeerConnection(CONFIG_PEER.config);
+      pc.createDataChannel("diag");
+      pc.onicecandidate = ev => {
+        if (!ev.candidate) { clearTimeout(minuterie); try{ pc.close(); }catch(e){} fini(); return; }
+        const c = ev.candidate.candidate || "";
+        if (c.indexOf(" srflx ") >= 0) stunOK = true;
+        if (c.indexOf(" relay ") >= 0) turnOK = true;
+      };
+      pc.createOffer().then(o => pc.setLocalDescription(o)).catch(() => { clearTimeout(minuterie); fini(); });
+    } catch(e){ clearTimeout(minuterie); fini(); }
+  });
+  lignes.stun = stunOK
+    ? '<span class="ok">✓ STUN : OK (direct possible)</span>'
+    : '<span class="ko">✗ STUN : BLOQUÉ</span>';
+  lignes.turn = turnOK
+    ? '<span class="ok">✓ TURN : OK (relais disponible)</span>'
+    : '<span class="ko">✗ TURN : INDISPONIBLE</span>';
+
+  let verdict = "";
+  if (!sigOK) verdict = "La mise en relation est bloquée sur ce réseau : rien ne peut fonctionner ici. Essayez un autre réseau ou un VPN.";
+  else if (!stunOK && !turnOK) verdict = "Mise en relation OK mais aucune voie de données : réseau très restrictif. Un VPN devrait débloquer.";
+  else if (!turnOK) verdict = "Pas de relais disponible : la connexion ne marchera qu'entre réseaux « ouverts ». Si l'adversaire est sur un réseau strict, ça échouera.";
+  else if (!stunOK) verdict = "Le direct est bloqué mais le relais fonctionne : les parties passeront par le relais (latence plus élevée).";
+  else verdict = "Tout est opérationnel sur ce réseau.";
+  rendre(verdict);
+  $("btnDiag").disabled = false;
 });
 
 /* ================= MATCH RAPIDE — file d'attente sans serveur =================
