@@ -152,6 +152,12 @@ canvas{
   <p class="sous">Duel néon réflexe, pair-à-pair.<br>Manches de 5 points, au meilleur des 3 — avec vices secrets.</p>
 
   <div class="carte">
+    <h2>MATCH RAPIDE</h2>
+    <button id="btnTrouver">Trouver un joueur</button>
+    <button id="btnAnnulerMM" class="secondaire cache">Annuler la recherche</button>
+  </div>
+
+  <div class="carte">
     <h2>CRÉER UNE PARTIE</h2>
     <button id="btnCreer">Générer un code</button>
     <div id="codePartie" class="cache"></div>
@@ -173,7 +179,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.1 · 2026-08-06</div>
+  <div id="version">DUO v7.2 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -249,7 +255,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.1";
+const VERSION = "7.2";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -517,6 +523,19 @@ function genCode(){
   return s;
 }
 
+function gestionnaireConnexion(c){
+  if (c.label === "voix"){
+    if (connVoix && connVoix.open){ try{ c.close(); }catch(e){} return; }
+    connVoix = c;
+    connVoix.on("data", jouerVoix);
+    return;
+  }
+  if (conn){ try{ c.close(); }catch(e){} return; }   /* déjà en partie : on refuse */
+  conn = c;
+  conn.on("open", demarrerPartie);
+  brancherConnexion();
+}
+
 $("btnCreer").addEventListener("click", () => {
   const code = genCode();
   estHote = true;
@@ -529,18 +548,91 @@ $("btnCreer").addEventListener("click", () => {
     etatLobby.textContent = "Partagez ce code — en attente du joueur 2";
     etatLobby.classList.add("pulse");
   });
-  peer.on("connection", c => {
-    if (c.label === "voix"){
-      connVoix = c;
-      connVoix.on("data", jouerVoix);
-      return;
-    }
-    conn = c;
-    conn.on("open", demarrerPartie);
-    brancherConnexion();
-  });
+  peer.on("connection", gestionnaireConnexion);
   peer.on("error", erreurLobby);
 });
+
+/* ================= MATCH RAPIDE — file d'attente sans serveur =================
+   Créneaux à identifiants connus (mm-0 … mm-4). Pour chaque créneau :
+   1) on tente de s'y connecter en invité (quelqu'un attend ?) ;
+   2) sinon on tente de le prendre en hôte et on attend le prochain chercheur.
+   Un hôte déjà en partie refuse les connexions, le chercheur passe au suivant. */
+const MM_SLOTS = 5, MM_TIMEOUT = 2500;
+let mmAnnule = false, mmPeerCourant = null;
+
+function uiRecherche(active, texte){
+  $("btnTrouver").classList.toggle("cache", active);
+  $("btnAnnulerMM").classList.toggle("cache", !active);
+  $("btnCreer").disabled = active;
+  $("btnRejoindre").disabled = active;
+  etatLobby.textContent = texte || "";
+  etatLobby.classList.toggle("pulse", active);
+}
+
+$("btnTrouver").addEventListener("click", () => {
+  mmAnnule = false;
+  uiRecherche(true, "Recherche d'un adversaire…");
+  sonderCreneau(0);
+});
+$("btnAnnulerMM").addEventListener("click", () => {
+  mmAnnule = true;
+  if (mmPeerCourant){ try{ mmPeerCourant.destroy(); }catch(e){} mmPeerCourant = null; }
+  uiRecherche(false, "Recherche annulée.");
+});
+
+function sonderCreneau(k){
+  if (mmAnnule) return;
+  if (k >= MM_SLOTS){
+    uiRecherche(false, "Personne pour l'instant — réessayez dans une minute.");
+    return;
+  }
+  etatLobby.textContent = "Recherche d'un adversaire… (" + (k+1) + "/" + MM_SLOTS + ")";
+  const p = new Peer(CONFIG_PEER);
+  mmPeerCourant = p;
+  let regle = false;
+  p.on("open", () => {
+    if (mmAnnule){ p.destroy(); return; }
+    const c = p.connect(PREFIXE + "mm-" + k, { reliable: false });
+    const minuterie = setTimeout(() => {
+      if (regle || mmAnnule) return;
+      regle = true; try{ p.destroy(); }catch(e){}
+      prendreCreneau(k);
+    }, MM_TIMEOUT);
+    c.on("open", () => {
+      /* l'hôte occupé ferme aussitôt : on confirme après un court délai */
+      setTimeout(() => {
+        if (regle || mmAnnule || !c.open) return;
+        regle = true; clearTimeout(minuterie);
+        peer = p; conn = c; estHote = false;
+        brancherConnexion();
+        uiRecherche(false, "");
+        demarrerPartie();
+        connVoix = p.connect(PREFIXE + "mm-" + k, { reliable: true, label: "voix" });
+        connVoix.on("data", jouerVoix);
+      }, 400);
+    });
+    c.on("close", () => { if (!regle && !mmAnnule){ regle = true; clearTimeout(minuterie); try{ p.destroy(); }catch(e){} sonderCreneau(k+1); } });
+    c.on("error", () => { if (!regle && !mmAnnule){ regle = true; clearTimeout(minuterie); try{ p.destroy(); }catch(e){} sonderCreneau(k+1); } });
+  });
+  p.on("error", () => { if (!regle && !mmAnnule){ regle = true; sonderCreneau(k+1); } });
+}
+
+function prendreCreneau(k){
+  if (mmAnnule) return;
+  const p = new Peer(PREFIXE + "mm-" + k, CONFIG_PEER);
+  mmPeerCourant = p;
+  p.on("open", () => {
+    if (mmAnnule){ p.destroy(); return; }
+    peer = p; estHote = true;
+    etatLobby.textContent = "En attente du premier joueur qui se connecte…";
+    p.on("connection", gestionnaireConnexion);
+  });
+  p.on("error", e => {
+    if (mmAnnule) return;
+    /* créneau pris entre-temps (course) : on repart en chercheur sur le suivant */
+    sonderCreneau(k + 1);
+  });
+}
 
 $("btnRejoindre").addEventListener("click", () => {
   const code = $("champCode").value.trim().toUpperCase();
