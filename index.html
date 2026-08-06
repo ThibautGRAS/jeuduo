@@ -73,6 +73,7 @@ input:focus{outline:none;border-color:var(--moi)}
 }
 @keyframes apparition{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 #etatLobby{font-size:12.5px;color:var(--sourd);text-align:center;min-height:18px;font-family:"JetBrains Mono",monospace}
+#version{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.22em;color:rgba(124,138,165,.55);margin-top:2px}
 .pulse::after{content:"";display:inline-block;width:6px;height:6px;margin-left:8px;border-radius:50%;background:var(--moi);vertical-align:middle;animation:pulse 1.1s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
 #legende{display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--sourd)}
@@ -144,6 +145,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
+  <div id="version">DUO v4.0 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -179,6 +181,10 @@ const MAX_BALLES = 3, MAX_BONUS = 2;
 const INTERVALLE_BONUS = 3800;      // ms entre apparitions
 const DUREE_TAILLE = 8000, DUREE_FANTOME = 2600;
 const RAYON_BONUS = 15;
+const SPIN_FACTEUR = 0.38, SPIN_MAX = 7.5;   // effet imprimé par la vitesse de raquette
+const MAGNUS = 0.02, SPIN_AMORTI = 0.985;    // courbure en vol et dissipation
+const VY_MIN = 2.2;                          // anti-blocage horizontal
+const VERSION = "4.0";
 const PREFIXE = "duo-pong-tg-";
 
 const CO_MOI = "#22D3EE", CO_ADV = "#F471B5", CO_BALLE = "#EAF0FF";
@@ -204,6 +210,8 @@ const effets = { finBas: 0, finHaut: 0, typeBas: "", typeHaut: "", finFantome: 0
 
 const etat = { raqBas: LARG/2, raqHaut: LARG/2, score: [0, 0] };
 let maRaquette = LARG/2, raqAdvAffichee = LARG/2;
+let raqPrecedente = LARG/2, vitRaqLisse = 0;  // vitesse latérale lissée de MA raquette
+let vitRaqHaut = 0;                            // vitesse reçue de la raquette invitée (hôte)
 let tailles = [RAQ_L_BASE, RAQ_L_BASE];         // [bas(hôte), haut(invité)] — répliqué
 let taillesAffichees = [RAQ_L_BASE, RAQ_L_BASE];
 let fantome = false;
@@ -242,6 +250,65 @@ function annoncer(texte, couleur){
   bandeau.classList.add("actif");
   clearTimeout(bandeauTimer);
   bandeauTimer = setTimeout(() => bandeau.classList.remove("actif"), 1600);
+}
+
+/* ================= AUDIO — synthèse Web Audio, zéro fichier ================= */
+let ac = null, gainMaitre = null;
+function initAudio(){
+  if (ac) return;
+  const C = window.AudioContext || window.webkitAudioContext;
+  if (!C) return;
+  ac = new C();
+  gainMaitre = ac.createGain();
+  gainMaitre.gain.value = 0.32;
+  gainMaitre.connect(ac.destination);
+}
+function reveillerAudio(){ initAudio(); if (ac && ac.state === "suspended") ac.resume(); }
+document.addEventListener("touchstart", reveillerAudio, { once: true, passive: true });
+document.addEventListener("mousedown", reveillerAudio, { once: true });
+
+function bip(freq, duree, type, vol, glisseVers){
+  if (!ac) return;
+  const t0 = ac.currentTime;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t0);
+  if (glisseVers) o.frequency.exponentialRampToValueAtTime(Math.max(20, glisseVers), t0 + duree);
+  g.gain.setValueAtTime(vol, t0);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + duree);
+  o.connect(g); g.connect(gainMaitre);
+  o.start(t0); o.stop(t0 + duree + 0.02);
+}
+function souffle(duree, vol, freqCentre){
+  if (!ac) return;
+  const t0 = ac.currentTime;
+  const n = Math.floor(ac.sampleRate * duree);
+  const buf = ac.createBuffer(1, n, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random()*2 - 1) * (1 - i/n);
+  const s = ac.createBufferSource(); s.buffer = buf;
+  const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = freqCentre; f.Q.value = 1.1;
+  const g = ac.createGain(); g.gain.value = vol;
+  s.connect(f); f.connect(g); g.connect(gainMaitre);
+  s.start(t0);
+}
+/* Palette sonore */
+function sonRaq(vitesse, spin){
+  const f = 240 + (vitesse || 8) * 16;
+  bip(f, 0.06, "triangle", 0.5, Math.abs(spin) > 1.5 ? f * 1.5 : 0);
+  souffle(0.035, 0.22, 1400);
+  if (Math.abs(spin) > 1.5) bip(f * 2, 0.09, "sine", 0.18, f * 2.6); /* sifflement du lift */
+}
+function sonMur(){ bip(170, 0.045, "sine", 0.3); souffle(0.02, 0.12, 700); }
+function sonBonus(){
+  bip(523, 0.09, "sine", 0.32);
+  setTimeout(() => bip(659, 0.09, "sine", 0.32), 70);
+  setTimeout(() => bip(784, 0.13, "sine", 0.34), 140);
+}
+function sonBut(){ bip(150, 0.35, "sine", 0.6, 42); souffle(0.22, 0.4, 260); }
+function sonGo(){ bip(880, 0.08, "square", 0.22); }
+function sonFin(gagne){
+  const notes = gagne ? [523, 659, 784, 1046] : [392, 330, 262];
+  notes.forEach((f, i) => setTimeout(() => bip(f, 0.16, "sine", 0.3), i * 130));
 }
 
 /* ================= LOBBY ================= */
@@ -330,14 +397,14 @@ function envoyerEtatHote(){
   if (!conn || !conn.open) return;
   etat.raqBas = maRaquette;
   conn.send({ t:"h",
-    bl: balles.map(b => [b.x, b.y, b.vx, b.vy]),
+    bl: balles.map(b => [b.x, b.y, b.vx, b.vy, b.spin]),
     bo: bonusListe.map(o => [o.id, o.x, o.y, o.k]),
     r: etat.raqBas, s: etat.score, ph: phase,
     ta: tailles, fa: fantome ? 1 : 0 });
 }
 function envoyerRaquetteInvite(){
   if (!conn || !conn.open) return;
-  conn.send({ t:"r", r: maRaquette });
+  conn.send({ t:"r", r: maRaquette, v: vitRaqLisse });
 }
 function envoyerFx(k, x, y, extra){
   if (conn && conn.open) conn.send({ t:"fx", k, x, y, e: extra || "" });
@@ -352,10 +419,12 @@ function recevoir(m){
   if (!m || typeof m !== "object") return;
   switch (m.t){
     case "h": {
-      cibles = m.bl.map(b => ({ x: b[0], y: b[1], vx: b[2], vy: b[3] }));
+      cibles = m.bl.map(b => ({ x: b[0], y: b[1], vx: b[2], vy: b[3], spin: b[4] || 0 }));
       cibleT = performance.now();
       if (balles.length !== cibles.length){
-        balles = cibles.map(c => ({ x: c.x, y: c.y, vx: c.vx, vy: c.vy, dernier: -1 }));
+        balles = cibles.map(c => ({ x: c.x, y: c.y, vx: c.vx, vy: c.vy, spin: c.spin, dernier: -1 }));
+      } else {
+        for (let i = 0; i < balles.length; i++) balles[i].spin = cibles[i].spin;
       }
       bonusListe = m.bo.map(o => ({ id: o[0], x: o[1], y: o[2], k: o[3] }));
       etat.raqBas = m.r;
@@ -365,13 +434,15 @@ function recevoir(m){
       etat.score = m.s;
       if (scoreChange) majScore(true);
       if (m.ph !== phase){
+        const avant = phase;
         phase = m.ph;
         if (phase === "fin") afficherFin();
         else voile.classList.add("cache");
+        if (avant === "compte" && phase === "jeu") sonGo();
       }
       break;
     }
-    case "r": etat.raqHaut = m.r; break;
+    case "r": etat.raqHaut = m.r; vitRaqHaut = m.v || 0; break;
     case "fx": jouerFx(m.k, m.x, m.y, m.e); break;
     case "rm": if (estHote) lancerRevanche(); break;
     case "p": conn.send({ t:"q" }); break;
@@ -380,15 +451,20 @@ function recevoir(m){
 }
 
 function jouerFx(k, x, y, extra){
-  if (k === "raq"){ explosion(x, y, CO_BALLE, 12, 3.4); secousse = Math.max(secousse, 3); }
-  if (k === "mur"){ explosion(x, y, "#8AB4FF", 7, 2.2); }
-  if (k === "but"){ explosion(x, y, CO_BALLE, 40, 5.5); secousse = 10; flashBut = 1; }
+  if (k === "raq"){
+    explosion(x, y, CO_BALLE, 12, 3.4); secousse = Math.max(secousse, 3);
+    const e = (extra && typeof extra === "object") ? extra : {};
+    sonRaq(e.v, e.s);
+  }
+  if (k === "mur"){ explosion(x, y, "#8AB4FF", 7, 2.2); sonMur(); }
+  if (k === "but"){ explosion(x, y, CO_BALLE, 40, 5.5); secousse = 10; flashBut = 1; sonBut(); }
   if (k === "bonus"){
     const def = BONUS_DEFS[extra];
     if (def){
       explosion(x, y, def.couleur, 26, 4.5);
       secousse = Math.max(secousse, 5);
       annoncer(def.nom, def.couleur);
+      sonBonus();
     }
   }
 }
@@ -400,6 +476,7 @@ function nouvelleBalle(x, y, sens, dernier){
     x, y,
     vx: VIT_INIT * Math.sin(angle),
     vy: VIT_INIT * Math.cos(angle) * sens,
+    spin: 0,
     dernier: dernier === undefined ? -1 : dernier,
   };
 }
@@ -413,6 +490,7 @@ function preparerService(sens){
 function servir(){
   balles = [ nouvelleBalle(LARG/2, HAUT/2, sensService) ];
   phase = "jeu";
+  sonGo();
 }
 
 function majEffets(maintenant){
@@ -475,23 +553,32 @@ function physique(){
 
   const aMarquer = [];
   for (const b of balles){
+    /* Magnus : le spin courbe la trajectoire, puis se dissipe */
+    b.vx += b.spin * MAGNUS;
+    b.spin *= SPIN_AMORTI;
+    /* anti-blocage : la balle garde une composante verticale minimale */
+    if (Math.abs(b.vy) < VY_MIN) b.vy = VY_MIN * (b.vy >= 0 ? 1 : -1);
+    /* plafond absolu de vitesse */
+    const vTot = Math.hypot(b.vx, b.vy);
+    if (vTot > VIT_MAX_ECLAIR){ b.vx *= VIT_MAX_ECLAIR/vTot; b.vy *= VIT_MAX_ECLAIR/vTot; }
+
     b.x += b.vx; b.y += b.vy;
 
-    if (b.x < BALLE_R){ b.x = BALLE_R; b.vx = Math.abs(b.vx); fxLocal("mur", b.x, b.y); }
-    if (b.x > LARG - BALLE_R){ b.x = LARG - BALLE_R; b.vx = -Math.abs(b.vx); fxLocal("mur", b.x, b.y); }
+    if (b.x < BALLE_R){ b.x = BALLE_R; b.vx = Math.abs(b.vx); b.spin *= -0.4; fxLocal("mur", b.x, b.y); }
+    if (b.x > LARG - BALLE_R){ b.x = LARG - BALLE_R; b.vx = -Math.abs(b.vx); b.spin *= -0.4; fxLocal("mur", b.x, b.y); }
 
     const yBas = HAUT - RAQ_MARGE - RAQ_H;
     if (b.vy > 0 && b.y + BALLE_R >= yBas && b.y + BALLE_R <= yBas + RAQ_H + 14){
       if (Math.abs(b.x - etat.raqBas) < tailles[0]/2 + BALLE_R){
-        rebond(b, etat.raqBas, tailles[0], -1); b.y = yBas - BALLE_R; b.dernier = 0;
-        fxLocal("raq", b.x, b.y);
+        rebond(b, etat.raqBas, tailles[0], -1, vitRaqLisse); b.y = yBas - BALLE_R; b.dernier = 0;
+        fxRaquette(b);
       }
     }
     const yHaut = RAQ_MARGE + RAQ_H;
     if (b.vy < 0 && b.y - BALLE_R <= yHaut && b.y - BALLE_R >= yHaut - RAQ_H - 14){
       if (Math.abs(b.x - etat.raqHaut) < tailles[1]/2 + BALLE_R){
-        rebond(b, etat.raqHaut, tailles[1], 1); b.dernier = 1; b.y = yHaut + BALLE_R;
-        fxLocal("raq", b.x, b.y);
+        rebond(b, etat.raqHaut, tailles[1], 1, vitRaqHaut); b.dernier = 1; b.y = yHaut + BALLE_R;
+        fxRaquette(b);
       }
     }
 
@@ -528,14 +615,21 @@ function physique(){
 }
 
 function fxLocal(k, x, y){ jouerFx(k, x, y, ""); envoyerFx(k, x, y); }
+function fxRaquette(b){
+  const extra = { v: Math.hypot(b.vx, b.vy), s: b.spin };
+  jouerFx("raq", b.x, b.y, extra);
+  envoyerFx("raq", b.x, b.y, extra);
+}
 
-function rebond(b, xRaq, largeur, sensY){
+function rebond(b, xRaq, largeur, sensY, vitRaq){
   const decal = (b.x - xRaq) / (largeur/2);
   const plafond = Math.hypot(b.vx, b.vy) > VIT_MAX ? VIT_MAX_ECLAIR : VIT_MAX;
   const vit = Math.min(Math.hypot(b.vx, b.vy) * ACCEL, plafond);
   const angle = decal * 1.1;
   b.vx = vit * Math.sin(angle);
   b.vy = vit * Math.cos(angle) * sensY;
+  /* effet : la vitesse latérale de la raquette imprime un spin */
+  b.spin = Math.max(-SPIN_MAX, Math.min(SPIN_MAX, (vitRaq || 0) * SPIN_FACTEUR));
 }
 
 /* ================= FIN & REVANCHE ================= */
@@ -552,6 +646,7 @@ function afficherFin(){
   voileTitre.style.filter = jAiGagne
     ? "drop-shadow(0 0 26px rgba(251,191,36,.6))"
     : "drop-shadow(0 0 20px rgba(124,138,165,.4))";
+  sonFin(jAiGagne);
 }
 btnRevanche.addEventListener("click", () => {
   if (estHote) lancerRevanche();
@@ -589,6 +684,9 @@ function majScore(pop){
 }
 
 function boucle(){
+  /* vitesse latérale lissée de ma raquette (px/frame) */
+  vitRaqLisse = vitRaqLisse * 0.7 + (maRaquette - raqPrecedente) * 0.3;
+  raqPrecedente = maRaquette;
   if (estHote){
     physique();
   } else if (phase === "jeu"){
@@ -657,8 +755,10 @@ function dessiner(){
         ctx.fillStyle = "rgba(138,180,255," + (a*0.22).toFixed(3) + ")";
         ctx.beginPath(); ctx.arc(tr[j].x, Y(tr[j].y), BALLE_R * a, 0, Math.PI*2); ctx.fill();
       }
-      ctx.shadowBlur = 26; ctx.shadowColor = fantome ? "#A78BFA" : CO_BALLE;
-      ctx.fillStyle = fantome ? "#C4B5FD" : CO_BALLE;
+      const liftee = Math.abs(b.spin || 0) > 1.2;
+      ctx.shadowBlur = 26;
+      ctx.shadowColor = fantome ? "#A78BFA" : (liftee ? "#FBBF24" : CO_BALLE);
+      ctx.fillStyle = fantome ? "#C4B5FD" : (liftee ? "#FDE68A" : CO_BALLE);
       ctx.beginPath(); ctx.arc(b.x, Y(b.y), BALLE_R, 0, Math.PI*2); ctx.fill();
       ctx.shadowBlur = 0;
     }
