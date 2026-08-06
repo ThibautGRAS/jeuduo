@@ -32,7 +32,11 @@ body{
 @keyframes derive{from{transform:translate(0,0) scale(1)}to{transform:translate(6vmax,-5vmax) scale(1.15)}}
 @media (prefers-reduced-motion: reduce){.aurore span{animation:none}}
 
-#lobby{position:relative;z-index:1;display:flex;flex-direction:column;gap:20px;align-items:center;padding:28px;max-width:420px;width:100%}
+#lobby{
+  position:relative;z-index:1;display:flex;flex-direction:column;gap:20px;align-items:center;
+  padding:28px;max-width:420px;width:100%;
+  max-height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;
+}
 #lobby h1{
   font-size:64px;font-weight:700;letter-spacing:.3em;margin-left:.3em;
   background:linear-gradient(120deg,var(--moi),#8AB4FF 55%,var(--adv));
@@ -188,7 +192,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.3 · 2026-08-06</div>
+  <div id="version">DUO v7.4 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -264,7 +268,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.3";
+const VERSION = "7.4";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
