@@ -192,7 +192,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.4 · 2026-08-06</div>
+  <div id="version">DUO v7.5 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -268,7 +268,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.4";
+const VERSION = "7.5";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -291,17 +291,26 @@ const SMASH_MUR = 20.5;                            // vitesse minimale qui fissu
 const FISSURE_PORTEE = 60, FISSURE_TROU = 3;       // regroupement des impacts / niveau "troué"
 const MAX_DEBRIS = 8, DEBRIS_R_MIN = 6, DEBRIS_R_MAX = 12;
 const PREFIXE = "duo-pong-tg-";
-const CONFIG_PEER = {
-  config: {
-    iceServers: [
-      { urls: "stun:stun.l.google.com:19302" },
-      { urls: "stun:stun1.l.google.com:19302" },
-      { urls: "turn:openrelay.metered.ca:80",  username: "openrelayproject", credential: "openrelayproject" },
-      { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
-      { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
-    ],
-  },
-};
+/* Relais TURN : identifiants frais demandés à Metered au chargement.
+   En cas d'échec (API injoignable, quota), repli silencieux sur STUN seul :
+   le direct continue de fonctionner. La clé est conçue pour être côté client. */
+const METERED_URL = "https://tgrey.metered.live/api/v1/turn/credentials?apiKey=UiN7nYUIQEnLPNro-eVeHpk5YBbvlygf6W3oDqk7FRLmPKwZ";
+const SERVEURS_STUN = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun1.l.google.com:19302" },
+];
+const CONFIG_PEER = { config: { iceServers: SERVEURS_STUN.slice() } };
+
+(async function chargerRelais(){
+  try{
+    const rep = await fetch(METERED_URL, { signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined });
+    if (!rep.ok) return;
+    const serveurs = await rep.json();
+    if (Array.isArray(serveurs) && serveurs.length){
+      CONFIG_PEER.config.iceServers = SERVEURS_STUN.concat(serveurs);
+    }
+  } catch(e){ /* repli STUN seul */ }
+})();
 
 const CO_MOI = "#22D3EE", CO_ADV = "#F471B5", CO_BALLE = "#EAF0FF";
 const CO_FEU = "#FB7185", CO_OR = "#FBBF24", CO_VICE = "#A78BFA";
