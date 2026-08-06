@@ -192,7 +192,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.15 · 2026-08-06</div>
+  <div id="version">DUO v7.16 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -268,7 +268,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.15";
+const VERSION = "7.16";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -350,6 +350,7 @@ let peer = null, conn = null;
 let estHote = false, partieEnCours = false;
 let modeSolo = false, niveauIA = "moyen";
 let monNom = "JOUEUR", nomAdverse = "";
+let rttMs = 60;                      /* aller-retour mesuré, pour la compensation de latence */
 function assainirNom(s){ return String(s || "").replace(/[<>&"'`]/g, "").trim().toUpperCase().slice(0, 12) || "JOUEUR"; }
 const IA_NIVEAUX = {
   facile:    { vit: 3.2,  err: 95, anticipe: false, smash: false, zone: 0.52 },
@@ -928,7 +929,10 @@ function recevoir(m){
     case "fx": jouerFx(m.k, m.x, m.y, m.e); break;
     case "rm": if (estHote) lancerRevanche(); break;
     case "p": conn.send({ t:"q" }); break;
-    case "q": elPing.textContent = Math.round(performance.now() - dernierPingEnvoi) + " ms"; break;
+    case "q":
+      rttMs = performance.now() - dernierPingEnvoi;
+      elPing.textContent = Math.round(rttMs) + " ms";
+      break;
   }
 }
 
@@ -1153,6 +1157,18 @@ function physique(){
   const gravite = maintenant < vfx.finGrav ? vfx.gravSens * GRAV_FORCE : 0;
   const murG = margeMur + BALLE_R, murD = LARG - margeMur - BALLE_R;
 
+  /* COMPENSATION DE LATENCE (raquette invitée uniquement) :
+     sa position reçue est vieille d'un demi-ping ; on la projette en avant
+     avec sa vitesse reçue, et on lui accorde une tolérance bornée au ping.
+     L'hôte, lu en direct, n'a besoin de rien. */
+  let raqHautComp = etat.raqHaut, toleranceHaut = 0;
+  if (!modeSolo){
+    const retardPas = Math.min(6, (rttMs/2 + 8) / (1000/60));
+    raqHautComp = etat.raqHaut + vitRaqHaut * retardPas;
+    raqHautComp = Math.max(margeMur + tailles[1]/2, Math.min(LARG - margeMur - tailles[1]/2, raqHautComp));
+    toleranceHaut = Math.min(22, rttMs * 0.12);
+  }
+
   /* décor oscillant */
   const tSec = maintenant / 1000;
   for (const o of obstacles){
@@ -1211,9 +1227,9 @@ function physique(){
     if (b.vy < 0 && prevY - BALLE_R >= yHaut - RAQ_H - 2 && b.y - BALLE_R <= yHaut){
       const tC = (prevY - (yHaut + BALLE_R)) / (prevY - b.y || 1);
       const xC = prevX + (b.x - prevX) * Math.max(0, Math.min(1, tC));
-      if (Math.abs(xC - etat.raqHaut) < tailles[1]/2 + BALLE_R){
+      if (Math.abs(xC - raqHautComp) < tailles[1]/2 + BALLE_R + toleranceHaut){
         b.x = xC;
-        frapper(b, etat.raqHaut, tailles[1], 1, vitRaqHaut, 1);
+        frapper(b, raqHautComp, tailles[1], 1, vitRaqHaut, 1);
         b.y = yHaut + BALLE_R;
       }
     }
@@ -1231,10 +1247,10 @@ function physique(){
         } else fxLocal("mur", b.x, b.y);
       }
       const vyAvant2 = b.vy;
-      const rHautX = etat.raqHaut - tailles[1]/2, rHautY = RAQ_MARGE;
-      if (collisionRect(b, rHautX, rHautY, tailles[1], RAQ_H)){
+      const rHautX = raqHautComp - (tailles[1]/2 + toleranceHaut), rHautY = RAQ_MARGE;
+      if (collisionRect(b, rHautX, rHautY, tailles[1] + 2*toleranceHaut, RAQ_H)){
         if (vyAvant2 < 0 && b.vy > 0){
-          frapper(b, etat.raqHaut, tailles[1], 1, vitRaqHaut, 1);
+          frapper(b, raqHautComp, tailles[1], 1, vitRaqHaut, 1);
           b.y = rHautY + RAQ_H + BALLE_R;
         } else fxLocal("mur", b.x, b.y);
       }
