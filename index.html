@@ -172,7 +172,7 @@ canvas{
 
   <div class="carte">
     <h2>REJOINDRE</h2>
-    <input id="champCode" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters">
+    <input id="champCode" maxlength="5" placeholder="CODE" autocomplete="off" autocapitalize="characters">
     <button id="btnRejoindre" class="secondaire">Rejoindre la partie</button>
   </div>
 
@@ -192,7 +192,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.13 · 2026-08-06</div>
+  <div id="version">DUO v7.14 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -268,7 +268,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.13";
+const VERSION = "7.14";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -308,6 +308,20 @@ const SERVEURS_TURN = [
   { urls: "turns:global.relay.metered.ca:443?transport=tcp", username: "f5eb9a36832219a0779eca03", credential: "BuMMDJGBeV9FVCFQ" },
 ];
 const CONFIG_PEER = { config: { iceServers: SERVEURS_STUN.concat(SERVEURS_TURN) } };
+/* Deux serveurs de signalisation gratuits : l'officiel PeerJS, et le
+   communautaire peerjs.92k.de en secours. Les deux joueurs doivent être
+   sur le MÊME : le code passe à 5 caractères ("2" final) sur le secours. */
+const BROKERS = [
+  { nom: "serveur 1 (officiel)", opts: {} },
+  { nom: "serveur 2 (secours)",  opts: { host: "peerjs.92k.de", port: 443, secure: true } },
+];
+function optionsPeer(i){ return Object.assign({}, BROKERS[i].opts, CONFIG_PEER); }
+function analyserCode(brut){
+  const s = String(brut || "").trim().toUpperCase();
+  if (s.length === 5 && s[4] === "2") return { code: s.slice(0, 4), broker: 1 };
+  if (s.length === 4) return { code: s, broker: 0 };
+  return null;
+}
 const etatRelais = {
   fait: true,
   ok: SERVEURS_TURN.length > 0,
@@ -605,22 +619,50 @@ function figerNom(){
 
 $("btnCreer").addEventListener("click", () => {
   figerNom();
-  const code = genCode();
   estHote = true;
   $("btnCreer").disabled = true;
-  etatLobby.textContent = "Création de la partie…";
-  peer = new Peer(PREFIXE + code, CONFIG_PEER);
-  blinderPeer(peer);
+  creerHote(0);
+});
+function creerHote(iBroker){
+  if (iBroker >= BROKERS.length){
+    etatLobby.textContent = "Aucun serveur de mise en relation joignable. Réessayez plus tard.";
+    $("btnCreer").disabled = false;
+    return;
+  }
+  const code = genCode();
+  etatLobby.textContent = "Création de la partie (" + BROKERS[iBroker].nom + ")…";
+  const p = new Peer(PREFIXE + code, optionsPeer(iBroker));
+  blinderPeer(p);
   demanderEcranAllume();
-  peer.on("open", () => {
-    codePartie.textContent = code;
+  let ouvert = false;
+  const bascule = setTimeout(() => {
+    if (ouvert) return;
+    try{ p.destroy(); }catch(e){}
+    creerHote(iBroker + 1);
+  }, 6000);
+  p.on("open", () => {
+    ouvert = true;
+    clearTimeout(bascule);
+    peer = p;
+    const affiche = code + (iBroker === 1 ? "2" : "");
+    codePartie.textContent = affiche;
     codePartie.classList.remove("cache");
     etatLobby.textContent = "Partagez ce code — en attente du joueur 2";
     etatLobby.classList.add("pulse");
   });
-  peer.on("connection", gestionnaireConnexion);
-  peer.on("error", erreurLobby);
-});
+  p.on("connection", gestionnaireConnexion);
+  p.on("error", e => {
+    if (!ouvert && (e.type === "network" || e.type === "server-error" || e.type === "socket-error" || e.type === "socket-closed")){
+      clearTimeout(bascule);
+      try{ p.destroy(); }catch(e2){}
+      creerHote(iBroker + 1);
+    } else if (e.type === "unavailable-id"){
+      clearTimeout(bascule);
+      try{ p.destroy(); }catch(e2){}
+      creerHote(iBroker);   /* nouveau code, même serveur */
+    } else if (ouvert) erreurLobby(e);
+  });
+}
 
 /* ================= DIAGNOSTIC RÉSEAU ================= */
 $("btnDiag").addEventListener("click", async () => {
@@ -646,20 +688,27 @@ $("btnDiag").addEventListener("click", async () => {
     : '<span class="ko">✗ Relais Metered : ' + (etatRelais.detail || "échec") + '</span>';
   rendre();
 
-  /* 1 — serveur de signalisation PeerJS */
-  let sigOK = false;
-  await new Promise(fini => {
-    let p = null;
-    const minuterie = setTimeout(() => { try{ p && p.destroy(); }catch(e){} fini(); }, 6000);
-    try{
-      p = new Peer(CONFIG_PEER);
-      p.on("open", () => { sigOK = true; clearTimeout(minuterie); try{ p.destroy(); }catch(e){} fini(); });
-      p.on("error", () => { clearTimeout(minuterie); try{ p.destroy(); }catch(e){} fini(); });
-    } catch(e){ clearTimeout(minuterie); fini(); }
-  });
+  /* 1 — les deux serveurs de signalisation */
+  const sigEtats = [];
+  for (let i = 0; i < BROKERS.length; i++){
+    let ok = false;
+    await new Promise(fini => {
+      let p = null;
+      const minuterie = setTimeout(() => { try{ p && p.destroy(); }catch(e){} fini(); }, 5000);
+      try{
+        p = new Peer(optionsPeer(i));
+        p.on("open", () => { ok = true; clearTimeout(minuterie); try{ p.destroy(); }catch(e){} fini(); });
+        p.on("error", () => { clearTimeout(minuterie); try{ p.destroy(); }catch(e){} fini(); });
+      } catch(e){ clearTimeout(minuterie); fini(); }
+    });
+    sigEtats.push(ok);
+    lignes.sig = '<span class="attente">… Signalisation ' + (i+1) + "/" + BROKERS.length + '</span>';
+    rendre();
+  }
+  const sigOK = sigEtats.some(x => x);
   lignes.sig = sigOK
-    ? '<span class="ok">✓ Signalisation : OK</span>'
-    : '<span class="ko">✗ Signalisation : INJOIGNABLE</span>';
+    ? '<span class="ok">✓ Signalisation : ' + sigEtats.map((x,i)=>"serveur "+(i+1)+(x?" OK":" ✗")).join(" · ") + '</span>'
+    : '<span class="ko">✗ Signalisation : les deux serveurs sont injoignables</span>';
   rendre();
 
   /* 2 & 3 — collecte de candidats ICE : srflx = STUN OK, relay = TURN OK */
@@ -701,12 +750,13 @@ $("btnDiag").addEventListener("click", async () => {
 
 $("btnRejoindre").addEventListener("click", () => {
   figerNom();
-  const code = $("champCode").value.trim().toUpperCase();
-  if (code.length !== 4){ etatLobby.textContent = "Code à 4 caractères requis."; return; }
+  const analyse = analyserCode($("champCode").value);
+  if (!analyse){ etatLobby.textContent = "Code à 4 caractères (ou 5 si l'hôte vous en donne 5)."; return; }
+  const code = analyse.code;
   estHote = false;
   $("btnRejoindre").disabled = true;
-  etatLobby.textContent = "Connexion…";
-  peer = new Peer(CONFIG_PEER);
+  etatLobby.textContent = "Connexion (" + BROKERS[analyse.broker].nom + ")…";
+  peer = new Peer(optionsPeer(analyse.broker));
   blinderPeer(peer);
   demanderEcranAllume();
   peer.on("open", () => {
@@ -770,7 +820,7 @@ function demarrerPartie(){
     elPing.textContent = "IA";
   } else {
     if (estHote) setInterval(envoyerEtatHote, TICK_ENVOI);
-    else setInterval(envoyerRaquetteInvite, TICK_ENVOI);
+    else setInterval(envoyerRaquetteInvite, 16);   /* raquette à 60 Hz : critique pour la collision */
     setInterval(envoyerPing, 2000);
   }
   requestAnimationFrame(boucle);
@@ -1162,6 +1212,28 @@ function physique(){
         b.x = xC;
         frapper(b, etat.raqHaut, tailles[1], 1, vitRaqHaut, 1);
         b.y = yHaut + BALLE_R;
+      }
+    }
+
+    /* FILET DE SÉCURITÉ — entrée latérale : la raquette arrive SUR la balle
+       sans franchissement de plan. Recouvrement direct cercle/rectangle ;
+       si la résolution renvoie la balle vers le camp adverse, c'est une frappe. */
+    {
+      const vyAvant = b.vy;
+      const rBasX = etat.raqBas - tailles[0]/2, rBasY = HAUT - RAQ_MARGE - RAQ_H;
+      if (collisionRect(b, rBasX, rBasY, tailles[0], RAQ_H)){
+        if (vyAvant > 0 && b.vy < 0){
+          frapper(b, etat.raqBas, tailles[0], -1, vitRaqLisse, 0);
+          b.y = rBasY - BALLE_R;
+        } else fxLocal("mur", b.x, b.y);
+      }
+      const vyAvant2 = b.vy;
+      const rHautX = etat.raqHaut - tailles[1]/2, rHautY = RAQ_MARGE;
+      if (collisionRect(b, rHautX, rHautY, tailles[1], RAQ_H)){
+        if (vyAvant2 < 0 && b.vy > 0){
+          frapper(b, etat.raqHaut, tailles[1], 1, vitRaqHaut, 1);
+          b.y = rHautY + RAQ_H + BALLE_R;
+        } else fxLocal("mur", b.x, b.y);
       }
     }
 
