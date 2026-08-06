@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>DUO — Pong temps réel</title>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<style>
+:root{
+  --fond:#0B0E14;
+  --ligne:#1E2633;
+  --p1:#4FD1C5;
+  --p2:#F6AD55;
+  --texte:#E6EDF3;
+  --sourd:#8B98A9;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{
+  background:var(--fond);
+  color:var(--texte);
+  font-family:"SF Mono",ui-monospace,Menlo,monospace;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  touch-action:none;
+}
+/* ---------- LOBBY ---------- */
+#lobby{display:flex;flex-direction:column;gap:22px;align-items:center;padding:24px;max-width:420px;width:100%}
+#lobby h1{font-size:44px;letter-spacing:.35em;font-weight:700;margin-left:.35em}
+#lobby h1 span{color:var(--p1)}
+#lobby p.sous{color:var(--sourd);font-size:13px;text-align:center;line-height:1.6}
+.bloc{width:100%;border:1px solid var(--ligne);padding:18px;display:flex;flex-direction:column;gap:12px}
+.bloc h2{font-size:12px;letter-spacing:.2em;color:var(--sourd);font-weight:400}
+button{
+  font-family:inherit;font-size:15px;letter-spacing:.08em;
+  background:none;color:var(--texte);border:1px solid var(--texte);
+  padding:13px 16px;cursor:pointer;width:100%;
+}
+button:active{background:var(--texte);color:var(--fond)}
+button:focus-visible{outline:2px solid var(--p1);outline-offset:2px}
+button:disabled{opacity:.4;pointer-events:none}
+input{
+  font-family:inherit;font-size:22px;letter-spacing:.4em;text-align:center;
+  background:none;border:1px solid var(--ligne);color:var(--texte);
+  padding:12px;width:100%;text-transform:uppercase;
+}
+input:focus{outline:none;border-color:var(--p1)}
+#codePartie{font-size:34px;letter-spacing:.45em;text-align:center;color:var(--p1);margin-left:.45em;user-select:all;-webkit-user-select:all}
+#etatLobby{font-size:12px;color:var(--sourd);text-align:center;min-height:16px}
+.cache{display:none !important}
+/* ---------- JEU ---------- */
+#jeu{display:none;flex-direction:column;align-items:center;gap:8px;width:100%;height:100%;justify-content:center}
+#hud{display:flex;justify-content:space-between;width:min(92vw,560px);font-size:13px;color:var(--sourd)}
+#score{font-size:26px;color:var(--texte);letter-spacing:.2em}
+#score .s1{color:var(--p1)}
+#score .s2{color:var(--p2)}
+#ping{min-width:70px;text-align:right}
+canvas{border:1px solid var(--ligne);width:min(92vw,560px);touch-action:none}
+#msgJeu{font-size:13px;color:var(--sourd);min-height:18px;text-align:center}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+
+<div id="lobby">
+  <h1>DU<span>O</span></h1>
+  <p class="sous">Pong 1 contre 1, temps réel, pair-à-pair.<br>Aucun serveur : vos deux navigateurs se parlent directement.</p>
+
+  <div class="bloc" id="blocCreer">
+    <h2>CRÉER UNE PARTIE</h2>
+    <button id="btnCreer">Générer un code</button>
+    <div id="codePartie" class="cache"></div>
+  </div>
+
+  <div class="bloc" id="blocRejoindre">
+    <h2>REJOINDRE</h2>
+    <input id="champCode" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters">
+    <button id="btnRejoindre">Rejoindre la partie</button>
+  </div>
+
+  <div id="etatLobby"></div>
+</div>
+
+<div id="jeu">
+  <div id="hud">
+    <div id="role"></div>
+    <div id="score"><span class="s1">0</span> — <span class="s2">0</span></div>
+    <div id="ping">— ms</div>
+  </div>
+  <canvas id="cv" width="560" height="720"></canvas>
+  <div id="msgJeu">Glissez pour déplacer votre raquette</div>
+</div>
+
+<script>
+"use strict";
+
+/* ================= CONFIG ================= */
+const LARG = 560, HAUT = 720;
+const RAQ_L = 110, RAQ_H = 14, RAQ_MARGE = 30;
+const BALLE_R = 9;
+const VIT_INIT = 5.2, VIT_MAX = 13, ACCEL = 1.045;
+const TICK_ENVOI = 33;            // ms entre envois d'état (~30 Hz)
+const PREFIXE = "duo-pong-tg-";   // espace de noms des peer IDs
+
+/* ================= ÉTAT GLOBAL ================= */
+let peer = null, conn = null;
+let estHote = false;
+let partieEnCours = false;
+let dernierPingEnvoi = 0, pingMs = null;
+
+/* État de jeu (autorité = hôte) */
+const etat = {
+  balle: { x: LARG/2, y: HAUT/2, vx: 0, vy: 0 },
+  raqBas: LARG/2,   // raquette de l'hôte (en bas chez lui)
+  raqHaut: LARG/2,  // raquette de l'invité
+  score: [0, 0],    // [hôte, invité]
+};
+let maRaquette = LARG/2;   // position locale (source de vérité pour SA raquette)
+
+/* ================= DOM ================= */
+const $ = id => document.getElementById(id);
+const lobby = $("lobby"), jeu = $("jeu");
+const etatLobby = $("etatLobby"), codePartie = $("codePartie");
+const cv = $("cv"), ctx = cv.getContext("2d");
+const elScore = $("score"), elPing = $("ping"), elRole = $("role"), elMsg = $("msgJeu");
+
+/* ================= LOBBY ================= */
+function genCode(){
+  const c = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // sans caractères ambigus
+  let s = "";
+  for (let i = 0; i < 4; i++) s += c[Math.floor(Math.random()*c.length)];
+  return s;
+}
+
+$("btnCreer").addEventListener("click", () => {
+  const code = genCode();
+  estHote = true;
+  $("btnCreer").disabled = true;
+  etatLobby.textContent = "Création de la partie…";
+  peer = new Peer(PREFIXE + code);
+  peer.on("open", () => {
+    codePartie.textContent = code;
+    codePartie.classList.remove("cache");
+    etatLobby.textContent = "Partagez ce code. En attente du joueur 2…";
+  });
+  peer.on("connection", c => {
+    conn = c;
+    conn.on("open", demarrerPartie);
+    brancherConnexion();
+  });
+  peer.on("error", e => erreurLobby(e));
+});
+
+$("btnRejoindre").addEventListener("click", () => {
+  const code = $("champCode").value.trim().toUpperCase();
+  if (code.length !== 4) { etatLobby.textContent = "Code à 4 caractères requis."; return; }
+  estHote = false;
+  $("btnRejoindre").disabled = true;
+  etatLobby.textContent = "Connexion…";
+  peer = new Peer();
+  peer.on("open", () => {
+    conn = peer.connect(PREFIXE + code, { reliable: false });
+    conn.on("open", demarrerPartie);
+    brancherConnexion();
+    setTimeout(() => {
+      if (!partieEnCours) { etatLobby.textContent = "Partie introuvable. Vérifiez le code."; $("btnRejoindre").disabled = false; }
+    }, 8000);
+  });
+  peer.on("error", e => erreurLobby(e));
+});
+
+function erreurLobby(e){
+  etatLobby.textContent = "Erreur : " + (e.type === "unavailable-id" ? "code déjà pris, réessayez" : e.type);
+  $("btnCreer").disabled = false;
+  $("btnRejoindre").disabled = false;
+}
+
+/* ================= CONNEXION ================= */
+function brancherConnexion(){
+  conn.on("data", recevoir);
+  conn.on("close", () => {
+    partieEnCours = false;
+    elMsg.textContent = "Adversaire déconnecté. Rechargez pour rejouer.";
+  });
+}
+
+function demarrerPartie(){
+  partieEnCours = true;
+  lobby.style.display = "none";
+  jeu.style.display = "flex";
+  elRole.textContent = estHote ? "HÔTE" : "INVITÉ";
+  if (estHote){
+    lancerBalle(Math.random() < 0.5 ? 1 : -1);
+    setInterval(envoyerEtatHote, TICK_ENVOI);
+  } else {
+    setInterval(envoyerRaquetteInvite, TICK_ENVOI);
+  }
+  setInterval(envoyerPing, 2000);
+  requestAnimationFrame(boucle);
+}
+
+/* ================= PROTOCOLE =================
+   h : état complet (hôte -> invité)
+   r : raquette invité (invité -> hôte)
+   p / q : ping / pong                          */
+function envoyerEtatHote(){
+  if (!conn || !conn.open) return;
+  etat.raqBas = maRaquette;
+  conn.send({ t:"h", b:[etat.balle.x, etat.balle.y], r: etat.raqBas, s: etat.score });
+}
+function envoyerRaquetteInvite(){
+  if (!conn || !conn.open) return;
+  conn.send({ t:"r", r: maRaquette });
+}
+function envoyerPing(){
+  if (!conn || !conn.open) return;
+  dernierPingEnvoi = performance.now();
+  conn.send({ t:"p" });
+}
+function recevoir(m){
+  if (!m || typeof m !== "object") return;
+  switch (m.t){
+    case "h": // invité reçoit l'état
+      etat.balle.x = m.b[0]; etat.balle.y = m.b[1];
+      etat.raqBas = m.r;
+      etat.score = m.s;
+      majScore();
+      break;
+    case "r": // hôte reçoit la raquette invité
+      etat.raqHaut = m.r;
+      break;
+    case "p": conn.send({ t:"q" }); break;
+    case "q":
+      pingMs = Math.round(performance.now() - dernierPingEnvoi);
+      elPing.textContent = pingMs + " ms";
+      break;
+  }
+}
+
+/* ================= PHYSIQUE (hôte uniquement) ================= */
+function lancerBalle(sens){
+  etat.balle.x = LARG/2; etat.balle.y = HAUT/2;
+  const angle = (Math.random()*0.6 - 0.3);
+  etat.balle.vx = VIT_INIT * Math.sin(angle);
+  etat.balle.vy = VIT_INIT * Math.cos(angle) * sens;
+}
+
+function physique(){
+  const b = etat.balle;
+  b.x += b.vx; b.y += b.vy;
+
+  if (b.x < BALLE_R){ b.x = BALLE_R; b.vx = Math.abs(b.vx); }
+  if (b.x > LARG - BALLE_R){ b.x = LARG - BALLE_R; b.vx = -Math.abs(b.vx); }
+
+  // raquette bas (hôte)
+  const yBas = HAUT - RAQ_MARGE - RAQ_H;
+  if (b.vy > 0 && b.y + BALLE_R >= yBas && b.y + BALLE_R <= yBas + RAQ_H + 12){
+    if (Math.abs(b.x - etat.raqBas) < RAQ_L/2 + BALLE_R){
+      rebond(etat.raqBas, -1);
+      b.y = yBas - BALLE_R;
+    }
+  }
+  // raquette haut (invité)
+  const yHaut = RAQ_MARGE + RAQ_H;
+  if (b.vy < 0 && b.y - BALLE_R <= yHaut && b.y - BALLE_R >= yHaut - RAQ_H - 12){
+    if (Math.abs(b.x - etat.raqHaut) < RAQ_L/2 + BALLE_R){
+      rebond(etat.raqHaut, 1);
+      b.y = yHaut + BALLE_R;
+    }
+  }
+  // points
+  if (b.y > HAUT + 30){ etat.score[1]++; majScore(); lancerBalle(-1); }
+  if (b.y < -30){ etat.score[0]++; majScore(); lancerBalle(1); }
+}
+
+function rebond(xRaq, sensY){
+  const b = etat.balle;
+  const decal = (b.x - xRaq) / (RAQ_L/2);           // -1 .. 1
+  let vit = Math.min(Math.hypot(b.vx, b.vy) * ACCEL, VIT_MAX);
+  const angle = decal * 1.05;                        // rad max ~60°
+  b.vx = vit * Math.sin(angle);
+  b.vy = vit * Math.cos(angle) * sensY;
+}
+
+/* ================= ENTRÉES ================= */
+function posDepuisEvenement(clientX){
+  const rect = cv.getBoundingClientRect();
+  const x = (clientX - rect.left) / rect.width * LARG;
+  maRaquette = Math.max(RAQ_L/2, Math.min(LARG - RAQ_L/2, x));
+}
+cv.addEventListener("touchstart", e => { e.preventDefault(); posDepuisEvenement(e.touches[0].clientX); }, {passive:false});
+cv.addEventListener("touchmove",  e => { e.preventDefault(); posDepuisEvenement(e.touches[0].clientX); }, {passive:false});
+cv.addEventListener("mousemove",  e => { if (e.buttons || e.type==="mousemove") posDepuisEvenement(e.clientX); });
+
+/* ================= RENDU ================= */
+function majScore(){
+  // affiché du point de vue local : mon score à gauche
+  const [sH, sI] = etat.score;
+  const gauche = estHote ? sH : sI, droite = estHote ? sI : sH;
+  elScore.innerHTML = '<span class="s1">' + gauche + '</span> — <span class="s2">' + droite + '</span>';
+}
+
+function boucle(){
+  if (estHote) physique();
+  dessiner();
+  if (partieEnCours) requestAnimationFrame(boucle);
+}
+
+function dessiner(){
+  ctx.fillStyle = "#0B0E14";
+  ctx.fillRect(0, 0, LARG, HAUT);
+
+  // ligne médiane
+  ctx.strokeStyle = "#1E2633";
+  ctx.setLineDash([8, 10]);
+  ctx.beginPath(); ctx.moveTo(0, HAUT/2); ctx.lineTo(LARG, HAUT/2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* Chacun se voit EN BAS. L'hôte dessine tel quel ;
+     l'invité dessine le monde retourné verticalement. */
+  const flip = !estHote;
+  const Y = y => flip ? HAUT - y : y;
+
+  // ma raquette (en bas de MON écran) — couleur p1
+  ctx.fillStyle = "#4FD1C5";
+  ctx.fillRect(maRaquette - RAQ_L/2, HAUT - RAQ_MARGE - RAQ_H, RAQ_L, RAQ_H);
+
+  // raquette adverse (en haut de mon écran) — couleur p2
+  const xAdv = estHote ? etat.raqHaut : etat.raqBas;
+  ctx.fillStyle = "#F6AD55";
+  ctx.fillRect(xAdv - RAQ_L/2, RAQ_MARGE, RAQ_L, RAQ_H);
+
+  // balle
+  ctx.fillStyle = "#E6EDF3";
+  ctx.beginPath();
+  ctx.arc(etat.balle.x, Y(etat.balle.y), BALLE_R, 0, Math.PI*2);
+  ctx.fill();
+}
+</script>
+</body>
+</html>
