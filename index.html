@@ -137,12 +137,20 @@ canvas{
   transition:opacity .3s;opacity:0;
 }
 #bandeau.actif{opacity:1}
+.icone{
+  width:34px;height:34px;flex:0 0 34px;padding:0;font-size:14px;line-height:34px;
+  border-radius:10px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(120,160,255,.18);color:var(--texte);
+  box-shadow:none;opacity:.62;transition:opacity .15s, border-color .15s;
+}
+.icone:active{transform:scale(.94)}
+.icone.eteint{opacity:.26}
+.icone.actif{opacity:1;border-color:rgba(34,211,238,.5)}
 #micEtat{
   font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.14em;
   color:#F87171;text-shadow:0 0 10px rgba(248,113,113,.6);
   animation:pulse .7s ease-in-out infinite;white-space:nowrap;
 }
-#regles #btnMicro{font-size:13px;padding:11px 14px}
 </style>
 </head>
 <body>
@@ -186,7 +194,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.17 · 2026-08-06</div>
+  <div id="version">DUO v7.18 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -213,10 +221,9 @@ canvas{
         <b class="f">BALLE EN FEU</b> — 8 rebonds sans point : la balle s'enflamme à vitesse maximale.<br>
         <b class="o">DÉCOR</b> — À partir de la manche 2, des blocs de la ligne médiane se détachent et dérivent au centre du terrain.<br>
         <b class="f">DÉGÂTS</b> — Les frappes surpuissantes fissurent les murs : les rebonds y deviennent imprévisibles et des débris sont projetés sur le terrain jusqu'à la fin de la manche.<br>
-        <b class="c">MICRO</b> — Optionnel : après chaque point, votre micro s'ouvre 2 secondes pour glisser un mot à l'adversaire.<br>
+        <b class="c">MICRO</b> — Icône 🎙 en bas à droite : une fois activée, votre micro s'ouvre 2 secondes après <i>chaque point</i> pour glisser un mot à l'adversaire. Icône ♪ en bas à gauche : musique.<br>
         <b class="v">VICES</b> — Le gagnant d'une manche choisit un vice <i>secret</i> : inversion, brouillard ou gravité. Il se déclenche tout seul, une seule fois, à un moment imprévisible d'une manche suivante — et frappe l'adversaire sans prévenir.
       </div>
-      <button id="btnMicro" class="secondaire">🎙 Activer le micro — 2 s de trash-talk après chaque point</button>
       <button id="btnLu">LU — JE SUIS PRÊT</button>
       <div class="petit" id="etatLu"></div>
     </div>
@@ -252,8 +259,10 @@ canvas{
     </div>
   </div>
   <div id="barreBasse">
+    <button id="btnMusique" class="icone" aria-label="Musique">♪</button>
     <div id="bandeau"></div>
-    <div id="micEtat" class="cache">🎙 REC</div>
+    <div id="micEtat" class="cache">REC</div>
+    <button id="btnMicToggle" class="icone eteint" aria-label="Micro">🎙</button>
   </div>
 </div>
 
@@ -261,13 +270,14 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.17";
+const VERSION = "7.18";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
 const BALLE_R = 8;
 const VIT_INIT = 9.2, VIT_MAX = 19, VIT_MAX_ECLAIR = 23, ACCEL = 1.06;
-const SPIN_FACTEUR = 0.46, SPIN_MAX = 8.5;
+const SPIN_FACTEUR = 0.46, SPIN_MAX = 8.5, LIFT_VITESSE = 0.34;
+const LIFT_SEUIL = 0.30, SPIN_VISIBLE = SPIN_MAX * LIFT_SEUIL;   /* geste franc = doré + vitesse */
 const MAGNUS = 0.026, SPIN_AMORTI = 0.985;
 const VY_MIN = 2.2;
 const SCORE_MANCHE = 5, MANCHES_GAGNANTES = 2;
@@ -400,15 +410,25 @@ function mimeAudio(){
   if (MediaRecorder.isTypeSupported("audio/mp4")) return "audio/mp4";
   return "";
 }
-async function activerMicro(){
+async function basculerMicro(){
+  reveillerAudio();
+  if (micActif){ micActif = false; majIcones(); return; }
+  if (micStream){ micActif = true; majIcones(); return; }
   try{
     micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     micActif = true;
-    document.getElementById("btnMicro").textContent = "🎙 MICRO ACTIVÉ";
-    document.getElementById("btnMicro").disabled = true;
+    annoncer("MICRO ACTIVÉ · 2 s APRÈS CHAQUE POINT", "#8AB4FF");
   } catch(e){
-    document.getElementById("btnMicro").textContent = "🎙 Micro refusé";
+    micActif = false;
+    annoncer("MICRO REFUSÉ", "#F87171");
   }
+  majIcones();
+}
+function majIcones(){
+  const bm = document.getElementById("btnMusique");
+  const bt = document.getElementById("btnMicToggle");
+  if (bm){ bm.classList.toggle("actif", musiqueOn); bm.classList.toggle("eteint", !musiqueOn); }
+  if (bt){ bt.classList.toggle("actif", micActif); bt.classList.toggle("eteint", !micActif); }
 }
 function enregistrerEtEnvoyer(){
   if (!micActif || !micStream || enTrainDEnregistrer || modeSolo) return;
@@ -527,9 +547,9 @@ function souffle(duree, vol, freqCentre){
 }
 function sonRaq(vitesse, spin){
   const f = 240 + (vitesse || 8) * 16;
-  bip(f, 0.06, "triangle", 0.5, Math.abs(spin) > 1.5 ? f * 1.5 : 0);
+  bip(f, 0.06, "triangle", 0.5, Math.abs(spin) > SPIN_VISIBLE ? f * 1.5 : 0);
   souffle(0.035, 0.22, 1400);
-  if (Math.abs(spin) > 1.5) bip(f * 2, 0.09, "sine", 0.18, f * 2.6);
+  if (Math.abs(spin) > SPIN_VISIBLE) bip(f * 2, 0.09, "sine", 0.18, f * 2.6);
 }
 function sonMur(){ bip(170, 0.045, "sine", 0.3); souffle(0.02, 0.12, 700); }
 function sonBonus(){
@@ -551,6 +571,52 @@ function sonManche(){ bip(659, 0.12, "sine", 0.3); setTimeout(() => bip(880, 0.2
 function sonFin(gagne){
   const notes = gagne ? [523, 659, 784, 1046] : [392, 330, 262];
   notes.forEach((f, i) => setTimeout(() => bip(f, 0.16, "sine", 0.3), i * 130));
+}
+
+/* ---------- MUSIQUE RÉTRO (chiptune synthétisé, boucle 16 pas) ---------- */
+const TEMPO = 138, DUREE_PAS = 60 / TEMPO / 2;
+const LEAD = [659,0,784,880,0,784,659,0,587,0,659,784,0,659,587,0];
+const BASSE = [220,0,220,0,165,0,165,0,196,0,196,0,147,0,147,0];
+let musiqueOn = true, gainMusique = null, pasMusique = 0, prochainPas = 0, minuteurMusique = 0;
+
+function noteMusique(freq, quand, duree, type, vol){
+  if (!ac || !gainMusique) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, quand);
+  g.gain.setValueAtTime(0.0001, quand);
+  g.gain.linearRampToValueAtTime(vol, quand + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, quand + duree);
+  o.connect(g); g.connect(gainMusique);
+  o.start(quand); o.stop(quand + duree + 0.02);
+}
+function planifierMusique(){
+  if (!ac || !musiqueOn || !gainMusique) return;
+  while (prochainPas < ac.currentTime + 0.3){
+    const i = pasMusique % LEAD.length;
+    if (LEAD[i])  noteMusique(LEAD[i],  prochainPas, DUREE_PAS * 0.85, "square",   0.05);
+    if (BASSE[i]) noteMusique(BASSE[i], prochainPas, DUREE_PAS * 1.5,  "triangle", 0.075);
+    prochainPas += DUREE_PAS; pasMusique++;
+  }
+}
+function demarrerMusique(){
+  initAudio();
+  if (!ac) return;
+  if (!gainMusique){
+    gainMusique = ac.createGain();
+    gainMusique.gain.value = musiqueOn ? 1 : 0;
+    gainMusique.connect(gainMaitre);
+  }
+  if (!minuteurMusique){
+    prochainPas = ac.currentTime + 0.15;
+    minuteurMusique = setInterval(planifierMusique, 70);
+  }
+}
+function basculerMusique(){
+  reveillerAudio();
+  musiqueOn = !musiqueOn;
+  if (gainMusique) gainMusique.gain.value = musiqueOn ? 1 : 0;
+  if (musiqueOn) demarrerMusique();
+  majIcones();
 }
 
 /* ================= RÉSILIENCE MOBILE =================
@@ -823,9 +889,13 @@ function demarrerPartie(){
 }
 
 /* ================= RÈGLES — double validation ================= */
-document.getElementById("btnMicro").addEventListener("click", activerMicro);
+document.getElementById("btnMusique").addEventListener("click", basculerMusique);
+document.getElementById("btnMicToggle").addEventListener("click", basculerMicro);
 
 btnLu.addEventListener("click", () => {
+  reveillerAudio();
+  demarrerMusique();
+  majIcones();
   luLocal = true;
   btnLu.disabled = true;
   etatLu.textContent = "EN ATTENTE DE L'ADVERSAIRE…";
@@ -1291,6 +1361,11 @@ function frapper(b, xRaq, largeur, sensY, vitRaq, frappeur){
   const plafond = Math.hypot(b.vx, b.vy) > VIT_MAX ? VIT_MAX_ECLAIR : VIT_MAX;
   let vit = Math.min(Math.hypot(b.vx, b.vy) * ACCEL, plafond);
 
+  /* effet lifté : le fouet imprime le spin ET accélère la balle */
+  const spin = Math.max(-SPIN_MAX, Math.min(SPIN_MAX, (vitRaq || 0) * SPIN_FACTEUR));
+  const forceLift = Math.abs(spin) / SPIN_MAX;
+  if (forceLift > LIFT_SEUIL) vit = Math.min(vit * (1 + forceLift * LIFT_VITESSE), VIT_MAX_ECLAIR);
+
   /* smash chargé */
   const charge = frappeur === 0 ? chargeLocal : chargeHaut;
   const smash = charge >= 1;
@@ -1302,7 +1377,7 @@ function frapper(b, xRaq, largeur, sensY, vitRaq, frappeur){
   const angle = decal * 1.1;
   b.vx = vit * Math.sin(angle);
   b.vy = vit * Math.cos(angle) * sensY;
-  b.spin = Math.max(-SPIN_MAX, Math.min(SPIN_MAX, (vitRaq || 0) * SPIN_FACTEUR));
+  b.spin = spin;
   b.dernier = frappeur;
 
   rebondsEchange++;
@@ -1632,7 +1707,7 @@ function dessiner(){
 
     const visible = !fantome || (Math.sin(t*22 + i*2) > 0.15);
     if (visible){
-      const liftee = Math.abs(b.spin || 0) > 1.2;
+      const liftee = Math.abs(b.spin || 0) > SPIN_VISIBLE;
       /* traînée : dorée, plus longue et plus dense quand la balle est liftée */
       const coulTraine = enFeu ? "251,113,133" : (liftee ? "251,191,36" : "138,180,255");
       const alphaTraine = enFeu ? 0.4 : (liftee ? 0.42 : 0.22);
