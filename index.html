@@ -77,6 +77,25 @@ input:focus{outline:none;border-color:var(--moi)}
 #diagRes .ok{color:#4ADE80} #diagRes .ko{color:#F87171} #diagRes .attente{color:var(--sourd)}
 #diagRes .verdict{margin-top:6px;color:var(--sourd);font-size:11px;line-height:1.6;letter-spacing:0}
 #version{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.22em;color:rgba(124,138,165,.55);margin-top:2px}
+.rangPhoto{display:flex;gap:12px;align-items:center}
+.vignette{
+  width:54px;height:54px;flex:0 0 54px;border-radius:14px;overflow:hidden;
+  background:rgba(5,8,16,.6);border:1px solid var(--bord);
+  display:flex;align-items:center;justify-content:center;
+  font-family:"JetBrains Mono",monospace;font-size:18px;color:var(--sourd);
+}
+.vignette img{width:100%;height:100%;object-fit:cover;display:block}
+#capPhoto{
+  position:fixed;inset:0;z-index:20;display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;
+  background:rgba(4,6,12,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+#capPhoto.actif{display:flex}
+#capPhoto video{
+  width:min(74vw,280px);height:min(74vw,280px);object-fit:cover;
+  border-radius:22px;border:1px solid var(--bord);background:#000;transform:scaleX(-1);
+}
+#capPhoto .rang{display:flex;gap:10px;width:min(74vw,280px)}
 .rangSolo{display:flex;gap:8px}
 .rangSolo button{padding:12px 8px;font-size:13.5px}
 .pulse::after{content:"";display:inline-block;width:6px;height:6px;margin-left:8px;border-radius:50%;background:var(--moi);vertical-align:middle;animation:pulse 1.1s ease-in-out infinite}
@@ -112,6 +131,20 @@ canvas{
 }
 .panneau .petit{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--sourd);letter-spacing:.12em;text-align:center}
 .panneau button{width:auto;padding:13px 34px}
+.duel{display:flex;align-items:center;justify-content:center;gap:14px;width:100%}
+.joueurCarte{display:flex;flex-direction:column;align-items:center;gap:6px;width:92px}
+.vignette.gros{width:68px;height:68px;flex:0 0 68px;border-radius:18px;font-size:22px}
+.nomJ{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.1em;color:var(--moi);
+  max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nomJ.adv{color:var(--adv)}
+.manchesJ{font-size:10px;letter-spacing:.2em;color:var(--sourd)}
+.scoreRecap{font-family:"JetBrains Mono",monospace;font-size:30px;font-weight:700;color:var(--texte);
+  text-shadow:0 0 16px rgba(120,160,255,.35);min-width:96px;text-align:center}
+#recapSarcasme{
+  font-size:13.5px;line-height:1.6;color:var(--or);text-align:center;max-width:330px;
+  text-shadow:0 0 14px rgba(251,191,36,.28);
+}
+#recapDuels{opacity:.75}
 #regles h3{font-size:20px;font-weight:700;letter-spacing:.2em;margin-bottom:2px}
 #reglesListe{
   font-size:12.5px;line-height:1.75;color:var(--texte);max-width:420px;
@@ -157,6 +190,14 @@ canvas{
 
 <div class="aurore" aria-hidden="true"><span></span><span></span><span></span></div>
 
+<div id="capPhoto">
+  <video id="fluxPhoto" playsinline autoplay muted></video>
+  <div class="rang">
+    <button id="btnCapturer">Capturer</button>
+    <button id="btnAnnulerPhoto" class="secondaire">Annuler</button>
+  </div>
+</div>
+
 <div id="lobby">
   <h1>DUO</h1>
   <p class="sous">Duel néon réflexe, pair-à-pair.<br>Manches de 5 points, au meilleur des 3 — avec vices secrets.</p>
@@ -164,6 +205,10 @@ canvas{
   <div class="carte">
     <h2>VOTRE NOM</h2>
     <input id="champNom" maxlength="12" placeholder="JOUEUR" autocomplete="nickname">
+    <div class="rangPhoto">
+      <div id="apercuPhoto" class="vignette">?</div>
+      <button id="btnPhoto" class="secondaire">Prendre une photo</button>
+    </div>
   </div>
 
   <div class="carte">
@@ -194,7 +239,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.19 · 2026-08-06</div>
+  <div id="version">DUO v8.0 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -226,6 +271,25 @@ canvas{
       </div>
       <button id="btnLu">LU — JE SUIS PRÊT</button>
       <div class="petit" id="etatLu"></div>
+    </div>
+
+    <div id="recap" class="panneau cache">
+      <div class="petit" id="recapTitre">MANCHE 1</div>
+      <div class="duel">
+        <div class="joueurCarte">
+          <div class="vignette gros" id="recapPhotoMoi">?</div>
+          <div class="nomJ" id="recapNomMoi">MOI</div>
+          <div class="manchesJ" id="recapManchesMoi">○○</div>
+        </div>
+        <div class="scoreRecap" id="recapScore">0 — 0</div>
+        <div class="joueurCarte">
+          <div class="vignette gros" id="recapPhotoAdv">?</div>
+          <div class="nomJ adv" id="recapNomAdv">ADV</div>
+          <div class="manchesJ" id="recapManchesAdv">○○</div>
+        </div>
+      </div>
+      <div id="recapSarcasme"></div>
+      <div class="petit" id="recapDuels"></div>
     </div>
 
     <div id="choixVice" class="panneau cache">
@@ -270,7 +334,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.19";
+const VERSION = "8.0";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -342,6 +406,26 @@ const BONUS_DEFS = {
   D: { couleur: "#EAF0FF", nom: "BALLE DOUBLE",     court: "DOUBLE" },
   F: { couleur: "#A78BFA", nom: "FANTÔME",          court: "FANTÔME" },
 };
+const DUREE_RECAP = 4600;
+const SARCASMES = [
+  "{G} gagne la manche. {P} a beaucoup appris.",
+  "{P} maîtrisait totalement la situation. Sur le plan émotionnel.",
+  "Manche pour {G}, qui n'en demandait pas tant.",
+  "{P} tient à préciser que le soleil était dans les yeux.",
+  "On applaudit {P} pour sa participation.",
+  "{G} joue, {P} regarde. C'est un choix.",
+  "{P} a tenté une stratégie audacieuse : ne pas marquer.",
+  "{G} enchaîne. {P} enchaîne aussi — les excuses.",
+  "La balle a préféré {G}. Ça arrive.",
+  "{P} a joué contre {G} et contre lui-même. Double défaite.",
+  "Statistiquement, {P} peut encore gagner. Statistiquement.",
+  "{G} remercie {P} pour sa générosité.",
+  "{P} a trouvé le mur. Le mur va bien.",
+  "Manche pliée. {P} range déjà ses arguments.",
+  "{G} n'a pas transpiré. {P} non plus, mais pas pour la même raison.",
+  "{P} confirme : la raquette n'était pas au courant.",
+];
+let sarcasmeIdx = 0, recapGagnant = 0;
 const VICE_DEFS = {
   I: { nom: "INVERSION" },
   B: { nom: "BROUILLARD" },
@@ -456,7 +540,9 @@ function enregistrerEtEnvoyer(){
   setTimeout(() => { try{ rec.stop(); } catch(e){} }, 2000);
 }
 function jouerVoix(m){
-  if (!m || m.t !== "vx" || !m.d) return;
+  if (!m || !m.d) return;
+  if (m.t === "ph"){ photoAdverse = m.d; return; }
+  if (m.t !== "vx") return;
   try{
     const blob = new Blob([m.d], { type: m.mt || "audio/webm" });
     const url = URL.createObjectURL(blob);
@@ -500,6 +586,8 @@ function annoncer(texte, couleur){
   bandeauTimer = setTimeout(() => bandeau.classList.remove("actif"), 1800);
 }
 function masquerPanneaux(){
+  const r = document.getElementById("recap");
+  if (r) r.classList.add("cache");
   panRegles.classList.add("cache");
   panChoixVice.classList.add("cache");
   panAttenteVice.classList.add("cache");
@@ -573,12 +661,60 @@ function sonFin(gagne){
   notes.forEach((f, i) => setTimeout(() => bip(f, 0.16, "sine", 0.3), i * 130));
 }
 
-/* ---------- MUSIQUE RÉTRO (chiptune synthétisé, boucle 16 pas) ---------- */
-const TEMPO = 138, DUREE_PAS = 60 / TEMPO / 2;
-const LEAD = [659,0,784,880,0,784,659,0,587,0,659,784,0,659,587,0];
-const BASSE = [220,0,220,0,165,0,165,0,196,0,196,0,147,0,147,0];
+/* ---------- MUSIQUE RÉTRO PERCUSSIVE (batterie + basse + lead synthétisés)
+     Le tempo suit l'intensité de l'échange : plus il dure, plus ça pousse. ---------- */
+const TEMPO_BASE = 142, TEMPO_MAX = 194;
+const LEAD   = [659,0,784,880, 0,784,659,0, 587,0,659,784, 0,659,587,0];
+const BASSE  = [110,0,110,110, 82,0,82,0,   98,0,98,98,    73,0,73,0];
+const KICK   = [1,0,0,0, 0,0,1,0, 1,0,0,0, 0,0,1,0];
+const CAISSE = [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,1];
+const CHARLEY= [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,1];
 let musiqueOn = true, gainMusique = null, pasMusique = 0, prochainPas = 0, minuteurMusique = 0;
+let bufBruit = null;
 
+function bruitBlanc(){
+  if (bufBruit) return bufBruit;
+  const n = Math.floor(ac.sampleRate * 0.4);
+  bufBruit = ac.createBuffer(1, n, ac.sampleRate);
+  const d = bufBruit.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random()*2 - 1;
+  return bufBruit;
+}
+function percBruit(quand, duree, freq, q, vol, typeFiltre){
+  if (!ac || !gainMusique) return;
+  const s = ac.createBufferSource(); s.buffer = bruitBlanc();
+  const f = ac.createBiquadFilter(); f.type = typeFiltre; f.frequency.value = freq; f.Q.value = q;
+  const g = ac.createGain();
+  g.gain.setValueAtTime(vol, quand);
+  g.gain.exponentialRampToValueAtTime(0.0001, quand + duree);
+  s.connect(f); f.connect(g); g.connect(gainMusique);
+  s.start(quand); s.stop(quand + duree + 0.03);
+}
+function grosseCaisse(quand){
+  if (!ac || !gainMusique) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(165, quand);
+  o.frequency.exponentialRampToValueAtTime(44, quand + 0.11);
+  g.gain.setValueAtTime(0.66, quand);
+  g.gain.exponentialRampToValueAtTime(0.0001, quand + 0.2);
+  o.connect(g); g.connect(gainMusique);
+  o.start(quand); o.stop(quand + 0.23);
+  percBruit(quand, 0.028, 2400, 0.7, 0.16, "bandpass");
+}
+function caisseClaire(quand){
+  percBruit(quand, 0.14, 1750, 0.75, 0.36, "bandpass");
+  if (!ac || !gainMusique) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = "triangle"; o.frequency.setValueAtTime(195, quand);
+  g.gain.setValueAtTime(0.22, quand);
+  g.gain.exponentialRampToValueAtTime(0.0001, quand + 0.09);
+  o.connect(g); g.connect(gainMusique);
+  o.start(quand); o.stop(quand + 0.11);
+}
+function charleston(quand, ouvert){
+  percBruit(quand, ouvert ? 0.1 : 0.033, 8200, 0.9, ouvert ? 0.15 : 0.11, "highpass");
+}
 function noteMusique(freq, quand, duree, type, vol){
   if (!ac || !gainMusique) return;
   const o = ac.createOscillator(), g = ac.createGain();
@@ -589,14 +725,31 @@ function noteMusique(freq, quand, duree, type, vol){
   o.connect(g); g.connect(gainMusique);
   o.start(quand); o.stop(quand + duree + 0.02);
 }
+function tempoCourant(){
+  const intensite = Math.min(1, (rebondsEchange || 0) / 10);
+  return TEMPO_BASE + (TEMPO_MAX - TEMPO_BASE) * intensite;
+}
 function planifierMusique(){
   if (!ac || !musiqueOn || !gainMusique) return;
-  while (prochainPas < ac.currentTime + 0.3){
-    const i = pasMusique % LEAD.length;
-    if (LEAD[i])  noteMusique(LEAD[i],  prochainPas, DUREE_PAS * 0.85, "square",   0.05);
-    if (BASSE[i]) noteMusique(BASSE[i], prochainPas, DUREE_PAS * 1.5,  "triangle", 0.075);
-    prochainPas += DUREE_PAS; pasMusique++;
+  while (prochainPas < ac.currentTime + 0.28){
+    const duree = 60 / tempoCourant() / 2;
+    const i = pasMusique % 16;
+    if (LEAD[i])    noteMusique(LEAD[i],  prochainPas, duree * 0.8, "square",   0.042);
+    if (BASSE[i])   noteMusique(BASSE[i], prochainPas, duree * 1.3, "sawtooth", 0.075);
+    if (KICK[i])    grosseCaisse(prochainPas);
+    if (CAISSE[i])  caisseClaire(prochainPas);
+    if (CHARLEY[i]) charleston(prochainPas, i === 15);
+    prochainPas += duree; pasMusique++;
   }
+}
+/* coupure nette sur un point, reprise juste après */
+function couperMusiqueBref(){
+  if (!ac || !gainMusique || !musiqueOn) return;
+  const t0 = ac.currentTime;
+  gainMusique.gain.cancelScheduledValues(t0);
+  gainMusique.gain.setValueAtTime(gainMusique.gain.value, t0);
+  gainMusique.gain.linearRampToValueAtTime(0.0001, t0 + 0.05);
+  gainMusique.gain.linearRampToValueAtTime(1, t0 + 1.05);
 }
 function demarrerMusique(){
   initAudio();
@@ -614,7 +767,10 @@ function demarrerMusique(){
 function basculerMusique(){
   reveillerAudio();
   musiqueOn = !musiqueOn;
-  if (gainMusique) gainMusique.gain.value = musiqueOn ? 1 : 0;
+  if (gainMusique){
+    gainMusique.gain.cancelScheduledValues(ac ? ac.currentTime : 0);
+    gainMusique.gain.value = musiqueOn ? 1 : 0;
+  }
   if (musiqueOn) demarrerMusique();
   majIcones();
 }
@@ -658,12 +814,86 @@ function gestionnaireConnexion(c){
     if (connVoix && connVoix.open){ try{ c.close(); }catch(e){} return; }
     connVoix = c;
     connVoix.on("data", jouerVoix);
+    connVoix.on("open", () => setTimeout(envoyerPhoto, 250));
+    setTimeout(envoyerPhoto, 400);
     return;
   }
   if (conn){ try{ c.close(); }catch(e){} return; }   /* déjà en partie : on refuse */
   conn = c;
   conn.on("open", demarrerPartie);
   brancherConnexion();
+}
+
+/* ================= COMPTEUR DE DUELS (persistant par adversaire) ================= */
+function cleDuel(){
+  const adv = (nomAdverse || "").replace(/[^A-Z0-9]/gi, "").slice(0, 12);
+  return adv ? "duo_duels_" + adv : null;
+}
+function lireDuels(){
+  const c = cleDuel();
+  if (!c) return { v: 0, d: 0 };
+  try{ return JSON.parse(localStorage.getItem(c)) || { v: 0, d: 0 }; }catch(e){ return { v: 0, d: 0 }; }
+}
+let duelEnregistre = false;
+function enregistrerDuel(jAiGagne){
+  const c = cleDuel();
+  if (!c || duelEnregistre || modeSolo) return;
+  duelEnregistre = true;
+  const s = lireDuels();
+  if (jAiGagne) s.v++; else s.d++;
+  try{ localStorage.setItem(c, JSON.stringify(s)); }catch(e){}
+}
+function texteDuels(){
+  if (modeSolo || !nomAdverse) return "";
+  const s = lireDuels();
+  if (!s.v && !s.d) return "PREMIER DUEL";
+  return "DUELS " + monNom + " " + s.v + " — " + s.d + " " + nomAdverse;
+}
+
+/* ================= PHOTO DE PROFIL ================= */
+let maPhoto = null, photoAdverse = null, fluxCam = null;
+function majVignette(){
+  const v = $("apercuPhoto");
+  v.innerHTML = maPhoto ? '<img alt="">' : "?";
+  if (maPhoto) v.querySelector("img").src = maPhoto;
+}
+(function initPhoto(){
+  try{ const m = localStorage.getItem("duo_photo"); if (m) maPhoto = m; }catch(e){}
+  majVignette();
+})();
+$("btnPhoto").addEventListener("click", async () => {
+  try{
+    fluxCam = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 320, height: 320 } });
+    $("fluxPhoto").srcObject = fluxCam;
+    $("capPhoto").classList.add("actif");
+  }catch(e){
+    etatLobby.textContent = "Caméra refusée ou indisponible.";
+  }
+});
+function fermerCamera(){
+  $("capPhoto").classList.remove("actif");
+  if (fluxCam){ fluxCam.getTracks().forEach(p => p.stop()); fluxCam = null; }
+}
+$("btnAnnulerPhoto").addEventListener("click", fermerCamera);
+$("btnCapturer").addEventListener("click", () => {
+  const v = $("fluxPhoto");
+  const c = document.createElement("canvas");
+  c.width = 128; c.height = 128;
+  const g = c.getContext("2d");
+  const cote = Math.min(v.videoWidth || 320, v.videoHeight || 320);
+  const dx = ((v.videoWidth || 320) - cote) / 2, dy = ((v.videoHeight || 320) - cote) / 2;
+  g.translate(128, 0); g.scale(-1, 1);          /* miroir, comme l'aperçu */
+  g.drawImage(v, dx, dy, cote, cote, 0, 0, 128, 128);
+  maPhoto = c.toDataURL("image/jpeg", 0.55);
+  try{ localStorage.setItem("duo_photo", maPhoto); }catch(e){}
+  majVignette();
+  fermerCamera();
+  envoyerPhoto();
+});
+function envoyerPhoto(){
+  if (maPhoto && connVoix && connVoix.open){
+    try{ connVoix.send({ t: "ph", d: maPhoto }); }catch(e){}
+  }
 }
 
 (function initNom(){
@@ -829,6 +1059,7 @@ $("btnRejoindre").addEventListener("click", () => {
       /* canal séparé FIABLE pour la voix : l'audio ne tolère pas la perte de paquets */
       connVoix = peer.connect(PREFIXE + code, { reliable: true, label: "voix" });
       connVoix.on("data", jouerVoix);
+      connVoix.on("open", () => setTimeout(envoyerPhoto, 250));
     });
     brancherConnexion();
     setTimeout(() => {
@@ -924,6 +1155,7 @@ function envoyerEtatHote(){
     ma: manches, mu: Math.round(margeMur), fe: enFeu ? 1 : 0,
     ch: [Math.round(chargeLocal*100), Math.round(chargeHaut*100)],
     vw: viceGagnant, vh: [vices[0] ? 1 : 0, vices[1] ? 1 : 0],
+    sk: sarcasmeIdx, rg: recapGagnant,
     ob: obstacles.map(o => [Math.round(o.x), o.y, o.l, o.h]),
     de: debris.filter(d => !d.naissance || performance.now() >= d.naissance)
               .map(d => [Math.round(d.x), Math.round(d.y), Math.round(d.r), Math.round(d.rot*100)/100]),
@@ -967,6 +1199,8 @@ function recevoir(m){
       for (const f of (m.fi || [])) fissures[f[0]].push({ y: f[1], niv: f[2] });
       chargesAffichees[1] = (m.ch[0] || 0) / 100;   // charge de l'hôte = mon adversaire
       viceGagnant = m.vw;
+      if (typeof m.sk === "number") sarcasmeIdx = m.sk;
+      if (typeof m.rg === "number") recapGagnant = m.rg;
       vfx.invVictime = m.iv; vfx.finInv = m.iv >= 0 ? performance.now() + 500 : 0;
       vfx.brouVictime = m.bv; vfx.finBrou = m.bv >= 0 ? performance.now() + 500 : 0;
       vfx.gravSens = m.gs;
@@ -1002,9 +1236,10 @@ function recevoir(m){
 function gererPhaseInvite(avant, apres){
   if (apres === "compte"){ masquerPanneaux(); if (avant === "fin"){ monViceNom = null; chargeLocal = 0; } }
   if (avant === "compte" && apres === "jeu") sonGo();
+  if (apres === "recap"){ masquerPanneaux(); afficherRecap(); sonManche(); }
   if (apres === "vice"){
     masquerPanneaux();
-    if (viceGagnant === 1){ panChoixVice.classList.remove("cache"); sonManche(); }
+    if (viceGagnant === 1){ panChoixVice.classList.remove("cache"); }
     else panAttenteVice.classList.remove("cache");
   }
   if (apres === "fin") afficherFin();
@@ -1022,7 +1257,7 @@ function jouerFx(k, x, y, extra){
     }
   }
   if (k === "mur"){ explosion(x, y, "#8AB4FF", 7, 2.2); sonMur(); }
-  if (k === "but"){ explosion(x, y, CO_BALLE, 40, 5.5); secousse = 10; flashBut = 1; sonBut(); enregistrerEtEnvoyer(); }
+  if (k === "but"){ explosion(x, y, CO_BALLE, 40, 5.5); secousse = 10; flashBut = 1; sonBut(); couperMusiqueBref(); enregistrerEtEnvoyer(); }
   if (k === "bonus"){
     const def = BONUS_DEFS[extra];
     if (def){
@@ -1401,25 +1636,59 @@ function finDeManche(gagnant){
     afficherFin();
     return;
   }
-  viceGagnant = gagnant;
-  phase = "vice";
+  recapGagnant = gagnant;
+  sarcasmeIdx = Math.floor(Math.random() * SARCASMES.length);
+  phase = "recap";
   balles = []; bonusListe = [];
   if (estHote){
     masquerPanneaux();
-    if (gagnant === 0){ panChoixVice.classList.remove("cache"); sonManche(); }
-    else {
-      panAttenteVice.classList.remove("cache");
-      if (modeSolo){
-        setTimeout(() => {
-          const types = Object.keys(VICE_DEFS);
-          vices[1] = types[Math.floor(Math.random()*types.length)];
-          planifierVice(1);
-          viceGagnant = -1;
-          mancheSuivante();
-        }, 1700);
-      }
+    afficherRecap();
+    sonManche();
+    setTimeout(() => { if (estHote && phase === "recap") passerAuVice(gagnant); }, DUREE_RECAP);
+  }
+}
+function passerAuVice(gagnant){
+  viceGagnant = gagnant;
+  phase = "vice";
+  masquerPanneaux();
+  if (gagnant === 0){ panChoixVice.classList.remove("cache"); }
+  else {
+    panAttenteVice.classList.remove("cache");
+    if (modeSolo){
+      setTimeout(() => {
+        const types = Object.keys(VICE_DEFS);
+        vices[1] = types[Math.floor(Math.random()*types.length)];
+        planifierVice(1);
+        viceGagnant = -1;
+        mancheSuivante();
+      }, 1500);
     }
   }
+}
+
+/* panneau récapitulatif de fin de manche */
+function afficherRecap(){
+  const moi = estHote ? 0 : 1, adv = 1 - moi;
+  const nomMoi = monNom, nomAdv = nomAdverse || (modeSolo ? "IA" : "ADVERSAIRE");
+  const gagnantNom = recapGagnant === moi ? nomMoi : nomAdv;
+  const perdantNom = recapGagnant === moi ? nomAdv : nomMoi;
+
+  $("recapTitre").textContent = "FIN DE LA MANCHE " + (manches[0] + manches[1]);
+  const vMoi = $("recapPhotoMoi"), vAdv = $("recapPhotoAdv");
+  vMoi.innerHTML = maPhoto ? '<img alt="">' : "?";
+  if (maPhoto) vMoi.querySelector("img").src = maPhoto;
+  vAdv.innerHTML = photoAdverse ? '<img alt="">' : "?";
+  if (photoAdverse) vAdv.querySelector("img").src = photoAdverse;
+
+  $("recapNomMoi").textContent = nomMoi;
+  $("recapNomAdv").textContent = nomAdv;
+  $("recapScore").textContent = etat.score[moi] + " — " + etat.score[adv];
+  $("recapManchesMoi").textContent = "●".repeat(manches[moi]) + "○".repeat(MANCHES_GAGNANTES - manches[moi]);
+  $("recapManchesAdv").textContent = "●".repeat(manches[adv]) + "○".repeat(MANCHES_GAGNANTES - manches[adv]);
+  $("recapSarcasme").textContent = SARCASMES[sarcasmeIdx % SARCASMES.length]
+    .replace(/\{G\}/g, gagnantNom).replace(/\{P\}/g, perdantNom);
+  $("recapDuels").textContent = texteDuels();
+  $("recap").classList.remove("cache");
 }
 function mancheSuivante(){
   etat.score = [0, 0];
@@ -1513,10 +1782,12 @@ function afficherFin(){
   const moi = estHote ? 0 : 1;
   const jAiGagne = manches[moi] >= MANCHES_GAGNANTES;
   masquerPanneaux();
+  enregistrerDuel(jAiGagne);
   const mMoi = estHote ? manches[0] : manches[1];
   const mAdv = estHote ? manches[1] : manches[0];
+  const td = texteDuels();
   montrerVoile(jAiGagne ? "VICTOIRE" : "DÉFAITE",
-    monNom + " " + mMoi + " — " + mAdv + " " + (nomAdverse || "ADVERSAIRE"), true);
+    monNom + " " + mMoi + " — " + mAdv + " " + (nomAdverse || "ADVERSAIRE") + (td ? " · " + td : ""), true);
   voileTitre.style.filter = jAiGagne
     ? "drop-shadow(0 0 26px rgba(251,191,36,.6))"
     : "drop-shadow(0 0 20px rgba(124,138,165,.4))";
@@ -1529,6 +1800,7 @@ btnRevanche.addEventListener("click", () => {
   setTimeout(() => btnRevanche.disabled = false, 1200);
 });
 function lancerRevanche(){
+  duelEnregistre = false;
   etat.score = [0, 0]; manches = [0, 0];
   construireObstacles();
   debris = []; fissures = [[], []];
@@ -1774,6 +2046,12 @@ function dessiner(){
       if (liftee && Math.random() < 0.4)
         particules.push({ x: b.x, y: b.y, vx: (Math.random()-0.5)*1.3, vy: (Math.random()-0.5)*1.3, vie: 0.6, couleur: CO_OR });
 
+      /* ombre portée : donne la profondeur et suit la balle avec un léger décalage */
+      ctx.fillStyle = "rgba(2,4,10,.42)";
+      ctx.beginPath();
+      ctx.ellipse(b.x + 3.5, Y(b.y) + 5, BALLE_R * 0.95, BALLE_R * 0.55, 0, 0, Math.PI*2);
+      ctx.fill();
+
       /* corps : dégradé cœur clair -> robe colorée, étiré dans le sens du vol */
       const vScrX = b.vx || 0, vScrY = (flip ? -(b.vy || 0) : (b.vy || 0));
       const etirement = 1 + Math.min(0.34, Math.hypot(vScrX, vScrY) / 70);
@@ -1821,6 +2099,37 @@ function dessiner(){
   arrondi(raqAdvAffichee - lAdv/2, RAQ_MARGE, lAdv, RAQ_H, 6);
   ctx.shadowBlur = 0;
 
+  /* ALERTE DE MENACE : ma ligne de fond s'embrase quand une balle fonce sur moi,
+     avec un curseur qui indique son point d'arrivée */
+  {
+    let menace = 0, xArrivee = -1;
+    for (const b of balles){
+      const vyEcran = flip ? -(b.vy || 0) : (b.vy || 0);
+      if (vyEcran <= 0) continue;                       /* ne descend pas vers moi */
+      const dist = (HAUT - RAQ_MARGE - RAQ_H) - Y(b.y);
+      if (dist < 0 || dist > HAUT * 0.6) continue;
+      const tArrivee = dist / Math.max(vyEcran, 0.001);
+      const proximite = Math.max(0, 1 - tArrivee / 46);
+      const vitesse = Math.min(1, Math.hypot(b.vx, b.vy) / VIT_MAX);
+      const m = proximite * (0.45 + 0.55 * vitesse);
+      if (m > menace){ menace = m; xArrivee = b.x + (b.vx || 0) * tArrivee; }
+    }
+    if (menace > 0.06){
+      const ga = ctx.createLinearGradient(0, HAUT, 0, HAUT - 70);
+      ga.addColorStop(0, rgba(menace > 0.72 ? CO_FEU : CO_MOI, 0.42 * menace));
+      ga.addColorStop(1, rgba(menace > 0.72 ? CO_FEU : CO_MOI, 0));
+      ctx.fillStyle = ga;
+      ctx.fillRect(0, HAUT - 70, LARG, 70);
+      if (xArrivee >= 0 && menace > 0.3){
+        const xc = Math.max(8, Math.min(LARG - 8, xArrivee));
+        ctx.fillStyle = rgba(menace > 0.72 ? CO_FEU : CO_MOI, Math.min(0.9, menace));
+        ctx.beginPath();
+        ctx.moveTo(xc, HAUT - 6); ctx.lineTo(xc - 6, HAUT - 1); ctx.lineTo(xc + 6, HAUT - 1);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+  }
+
   /* brouillard — je suis la victime : ma moitié lointaine (haut de mon écran) se voile */
   if (vfx.brouVictime === moi && (estHote ? performance.now() < vfx.finBrou : true) && vfx.brouVictime >= 0){
     const gr = ctx.createLinearGradient(0, 0, 0, HAUT * 0.55);
@@ -1853,29 +2162,37 @@ function rgba(hex, a){
 }
 
 /* ---------- ARÈNE : grille en défilement, cercle central, zones, vignette ---------- */
+const ARENES = [
+  { nom: "STATION", halo: "28,48,104", grille: "120,160,255", trait: "120,160,255", pas: 45 },
+  { nom: "NÉON",    halo: "86,20,96",   grille: "236,120,255", trait: "236,120,255", pas: 38 },
+  { nom: "GLACE",   halo: "16,72,92",   grille: "150,240,255", trait: "150,240,255", pas: 54 },
+];
+function areneCourante(){ return ARENES[Math.min(ARENES.length - 1, manches[0] + manches[1])]; }
+
 function dessinerArene(Y, t){
+  const A = areneCourante();
   const vg = ctx.createRadialGradient(LARG/2, HAUT/2, 30, LARG/2, HAUT/2, HAUT*0.72);
-  vg.addColorStop(0, "rgba(28,48,104,.30)");
-  vg.addColorStop(0.6, "rgba(10,16,36,.16)");
+  vg.addColorStop(0, "rgba(" + A.halo + ",.34)");
+  vg.addColorStop(0.6, "rgba(" + A.halo + ",.15)");
   vg.addColorStop(1, "rgba(2,4,10,0)");
   ctx.fillStyle = vg;
   ctx.fillRect(0, 0, LARG, HAUT);
 
-  const pas = 45, decal = (t * 13) % pas;
-  ctx.strokeStyle = "rgba(120,160,255,.055)";
+  const pas = A.pas, decal = (t * 13) % pas;
+  ctx.strokeStyle = "rgba(" + A.grille + ",.06)";
   ctx.lineWidth = 1;
   ctx.beginPath();
   for (let y = -pas + decal; y < HAUT + pas; y += pas){ ctx.moveTo(0, y); ctx.lineTo(LARG, y); }
   for (let x = 0; x <= LARG; x += pas){ ctx.moveTo(x, 0); ctx.lineTo(x, HAUT); }
   ctx.stroke();
 
-  ctx.strokeStyle = "rgba(120,160,255,.14)";
+  ctx.strokeStyle = "rgba(" + A.trait + ",.15)";
   ctx.lineWidth = 1.2;
   ctx.beginPath(); ctx.arc(LARG/2, HAUT/2, 78, 0, Math.PI*2); ctx.stroke();
   ctx.beginPath(); ctx.arc(LARG/2, HAUT/2, 26, 0, Math.PI*2); ctx.stroke();
 
   /* équerres de coin */
-  ctx.strokeStyle = "rgba(120,160,255,.22)";
+  ctx.strokeStyle = "rgba(" + A.trait + ",.24)";
   ctx.lineWidth = 2;
   const m = 16, L = 26;
   for (const [cx, cy, sx, sy] of [[m,m,1,1],[LARG-m,m,-1,1],[m,HAUT-m,1,-1],[LARG-m,HAUT-m,-1,-1]]){
