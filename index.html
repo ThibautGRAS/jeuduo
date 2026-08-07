@@ -143,12 +143,6 @@ canvas{
   animation:pulse .7s ease-in-out infinite;white-space:nowrap;
 }
 #regles #btnMicro{font-size:13px;padding:11px 14px}
-#btnVice{
-  width:auto;padding:10px 18px;font-size:13px;letter-spacing:.1em;
-  color:var(--texte);background:linear-gradient(120deg,#4C1D95,#7C3AED);
-  box-shadow:0 6px 22px rgba(124,58,237,.45);border-radius:12px;
-  animation:pulse 1.6s ease-in-out infinite;
-}
 </style>
 </head>
 <body>
@@ -192,7 +186,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v7.16 · 2026-08-06</div>
+  <div id="version">DUO v7.17 · 2026-08-06</div>
 </div>
 
 <div id="jeu">
@@ -220,7 +214,7 @@ canvas{
         <b class="o">DÉCOR</b> — À partir de la manche 2, des blocs de la ligne médiane se détachent et dérivent au centre du terrain.<br>
         <b class="f">DÉGÂTS</b> — Les frappes surpuissantes fissurent les murs : les rebonds y deviennent imprévisibles et des débris sont projetés sur le terrain jusqu'à la fin de la manche.<br>
         <b class="c">MICRO</b> — Optionnel : après chaque point, votre micro s'ouvre 2 secondes pour glisser un mot à l'adversaire.<br>
-        <b class="v">VICES</b> — Le gagnant d'une manche choisit un vice <i>secret</i> : inversion, brouillard ou gravité. Il peut l'activer une seule fois, quand il veut, dans les manches suivantes. L'adversaire ne sait pas lequel a été choisi.
+        <b class="v">VICES</b> — Le gagnant d'une manche choisit un vice <i>secret</i> : inversion, brouillard ou gravité. Il se déclenche tout seul, une seule fois, à un moment imprévisible d'une manche suivante — et frappe l'adversaire sans prévenir.
       </div>
       <button id="btnMicro" class="secondaire">🎙 Activer le micro — 2 s de trash-talk après chaque point</button>
       <button id="btnLu">LU — JE SUIS PRÊT</button>
@@ -260,7 +254,6 @@ canvas{
   <div id="barreBasse">
     <div id="bandeau"></div>
     <div id="micEtat" class="cache">🎙 REC</div>
-    <button id="btnVice" class="cache">VICE</button>
   </div>
 </div>
 
@@ -268,14 +261,14 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "7.16";
+const VERSION = "7.17";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
 const BALLE_R = 8;
 const VIT_INIT = 9.2, VIT_MAX = 19, VIT_MAX_ECLAIR = 23, ACCEL = 1.06;
-const SPIN_FACTEUR = 0.38, SPIN_MAX = 7.5;
-const MAGNUS = 0.02, SPIN_AMORTI = 0.985;
+const SPIN_FACTEUR = 0.46, SPIN_MAX = 8.5;
+const MAGNUS = 0.026, SPIN_AMORTI = 0.985;
 const VY_MIN = 2.2;
 const SCORE_MANCHE = 5, MANCHES_GAGNANTES = 2;
 const TICK_ENVOI = 33, DUREE_COMPTE = 800;
@@ -391,6 +384,8 @@ let fissures = [[], []];            // [gauche, droite] : {y,niv}
 
 /* vices */
 let vices = [null, null];          // hôte : vice détenu non utilisé par joueur
+let viceQuand = [0, 0], tempsJeu = 0;   /* déclenchement automatique programmé */
+function planifierVice(j){ viceQuand[j] = tempsJeu + 6000 + Math.random()*14000; }
 let viceGagnant = -1;              // qui choisit actuellement
 let monViceNom = null;             // ce que J'AI choisi (mémoire locale, jamais transmise à l'autre en clair côté UI)
 const vfx = { invVictime: -1, finInv: 0, brouVictime: -1, finBrou: 0, gravSens: 0, finGrav: 0 };
@@ -473,7 +468,7 @@ const pts1 = $("pts1"), pts2 = $("pts2"), dots1 = $("dots1"), dots2 = $("dots2")
 const voile = $("voile"), voileTitre = $("voileTitre"), voileSous = $("voileSous");
 const btnRevanche = $("btnRevanche"), bandeau = $("bandeau");
 const panRegles = $("regles"), etatLu = $("etatLu"), btnLu = $("btnLu");
-const panChoixVice = $("choixVice"), panAttenteVice = $("attenteVice"), btnVice = $("btnVice");
+const panChoixVice = $("choixVice"), panAttenteVice = $("attenteVice");
 let bandeauTimer = 0;
 
 function annoncer(texte, couleur){
@@ -860,7 +855,8 @@ function envoyerEtatHote(){
     ch: [Math.round(chargeLocal*100), Math.round(chargeHaut*100)],
     vw: viceGagnant, vh: [vices[0] ? 1 : 0, vices[1] ? 1 : 0],
     ob: obstacles.map(o => [Math.round(o.x), o.y, o.l, o.h]),
-    de: debris.map(d => [Math.round(d.x), Math.round(d.y), Math.round(d.r), Math.round(d.rot*100)/100]),
+    de: debris.filter(d => !d.naissance || performance.now() >= d.naissance)
+              .map(d => [Math.round(d.x), Math.round(d.y), Math.round(d.r), Math.round(d.rot*100)/100]),
     fi: fissures[0].map(f => [0, Math.round(f.y), f.niv]).concat(fissures[1].map(f => [1, Math.round(f.y), f.niv])),
     iv: performance.now() < vfx.finInv ? vfx.invVictime : -1,
     bv: performance.now() < vfx.finBrou ? vfx.brouVictime : -1,
@@ -912,8 +908,6 @@ function recevoir(m){
         phInvite = m.ph;
         phase = m.ph;
       }
-      /* bouton vice : je suis l'invité = joueur 1 */
-      majBoutonVice(m.vh[1] === 1);
       break;
     }
     case "r": etat.raqHaut = m.r; vitRaqHaut = m.v || 0; chargeHaut = (m.c || 0)/100; chargesAffichees[1] = chargeHaut; break;
@@ -924,8 +918,7 @@ function recevoir(m){
       break;
     case "nm2": nomAdverse = assainirNom(m.n); majNoms(); break;
     case "lu": if (estHote){ lus[1] = true; verifierLus(); } break;
-    case "vc": if (estHote && viceGagnant === 1){ vices[1] = m.k; viceGagnant = -1; mancheSuivante(); } break;
-    case "va": if (estHote) activerVice(1); break;
+    case "vc": if (estHote && viceGagnant === 1){ vices[1] = m.k; planifierVice(1); viceGagnant = -1; mancheSuivante(); } break;
     case "fx": jouerFx(m.k, m.x, m.y, m.e); break;
     case "rm": if (estHote) lancerRevanche(); break;
     case "p": conn.send({ t:"q" }); break;
@@ -945,12 +938,6 @@ function gererPhaseInvite(avant, apres){
     else panAttenteVice.classList.remove("cache");
   }
   if (apres === "fin") afficherFin();
-}
-
-function majBoutonVice(jenAiUn){
-  const visible = jenAiUn && phase === "jeu";
-  btnVice.classList.toggle("cache", !visible);
-  if (visible && monViceNom) btnVice.textContent = "VICE : " + monViceNom;
 }
 
 function jouerFx(k, x, y, extra){
@@ -1114,16 +1101,19 @@ function toucherMur(b, cote, murX){
   if (vit >= SMASH_MUR){
     if (f) f.niv++;
     else { f = { y: b.y, niv: 1 }; arr.push(f); }
-    /* projection de débris */
+    /* éclats DIFFÉRÉS : le mur se fend, puis les morceaux se détachent
+       (280 à 600 ms plus tard) et dérivent lentement — on a le temps de voir venir */
     const nDeb = Math.min(2, MAX_DEBRIS - debris.length);
+    const tImpact = performance.now();
     for (let i = 0; i < nDeb; i++){
       debris.push({
         x: murX + (cote === 0 ? 1 : -1) * (14 + Math.random()*10),
         y: b.y + (Math.random()-0.5)*30,
-        vx: (cote === 0 ? 1 : -1) * (0.35 + Math.random()*0.55),
-        vy: (Math.random()-0.5)*1.1,
+        vx: (cote === 0 ? 1 : -1) * (0.18 + Math.random()*0.28),
+        vy: (Math.random()-0.5)*0.6,
         r: DEBRIS_R_MIN + Math.random()*(DEBRIS_R_MAX - DEBRIS_R_MIN),
-        rot: Math.random()*6.28, vr: (Math.random()-0.5)*0.12,
+        rot: Math.random()*6.28, vr: (Math.random()-0.5)*0.1,
+        naissance: tImpact + 280 + i*170 + Math.random()*150, ne: false,
       });
     }
     fxLocal("fissure", murX, b.y, f.niv);
@@ -1151,6 +1141,12 @@ function physique(){
   }
   if (phase !== "jeu") return;
 
+  /* VICES AUTOMATIQUES : ils partent seuls, à un instant imprévisible */
+  tempsJeu += PAS_MS;
+  for (let j = 0; j < 2; j++){
+    if (vices[j] && viceQuand[j] && tempsJeu >= viceQuand[j]) activerVice(j);
+  }
+
   if (maintenant >= prochainBonus) apparaitreBonus(maintenant);
   if (mortSubite && margeMur < MUR_MAX) margeMur = Math.min(MUR_MAX, margeMur + MUR_VITESSE);
 
@@ -1163,10 +1159,10 @@ function physique(){
      L'hôte, lu en direct, n'a besoin de rien. */
   let raqHautComp = etat.raqHaut, toleranceHaut = 0;
   if (!modeSolo){
-    const retardPas = Math.min(6, (rttMs/2 + 8) / (1000/60));
+    const retardPas = Math.min(7, (rttMs/2 + 12) / (1000/60));
     raqHautComp = etat.raqHaut + vitRaqHaut * retardPas;
     raqHautComp = Math.max(margeMur + tailles[1]/2, Math.min(LARG - margeMur - tailles[1]/2, raqHautComp));
-    toleranceHaut = Math.min(22, rttMs * 0.12);
+    toleranceHaut = Math.min(30, rttMs * 0.17);
   }
 
   /* décor oscillant */
@@ -1175,8 +1171,10 @@ function physique(){
     o.x = o.base + Math.sin(tSec * o.vitOsc + o.phase) * o.amp - o.l/2;
     o.x = Math.max(margeMur + 4, Math.min(LARG - margeMur - 4 - o.l, o.x));
   }
-  /* dérive des débris */
+  /* dérive des débris (ceux qui ne sont pas encore détachés attendent) */
   for (const d of debris){
+    if (d.naissance && maintenant < d.naissance) continue;
+    if (d.naissance && !d.ne){ d.ne = true; explosion(d.x, d.y, "#94A3B8", 7, 2.2); }
     d.x += d.vx; d.y += d.vy; d.rot += d.vr;
     if (d.x < margeMur + d.r){ d.x = margeMur + d.r; d.vx = Math.abs(d.vx); }
     if (d.x > LARG - margeMur - d.r){ d.x = LARG - margeMur - d.r; d.vx = -Math.abs(d.vx); }
@@ -1207,6 +1205,7 @@ function physique(){
       if (collisionRect(b, o.x, o.y - o.h/2, o.l, o.h)){ fxLocal("mur", b.x, b.y); break; }
     }
     for (const d of debris){
+      if (d.naissance && performance.now() < d.naissance) continue;
       if (collisionDebris(b, d)){ fxLocal("mur", b.x, b.y); break; }
     }
 
@@ -1339,6 +1338,7 @@ function finDeManche(gagnant){
         setTimeout(() => {
           const types = Object.keys(VICE_DEFS);
           vices[1] = types[Math.floor(Math.random()*types.length)];
+          planifierVice(1);
           viceGagnant = -1;
           mancheSuivante();
         }, 1700);
@@ -1366,7 +1366,7 @@ for (const btn of document.querySelectorAll(".carteVice")){
     monViceNom = VICE_DEFS[k].nom;
     panChoixVice.classList.add("cache");
     if (estHote){
-      if (viceGagnant === 0){ vices[0] = k; viceGagnant = -1; mancheSuivante(); }
+      if (viceGagnant === 0){ vices[0] = k; planifierVice(0); viceGagnant = -1; mancheSuivante(); }
     } else if (conn && conn.open){
       conn.send({ t:"vc", k });
     }
@@ -1374,15 +1374,10 @@ for (const btn of document.querySelectorAll(".carteVice")){
 }
 
 /* activation */
-btnVice.addEventListener("click", () => {
-  btnVice.classList.add("cache");
-  if (estHote) activerVice(0);
-  else if (conn && conn.open) conn.send({ t:"va" });
-});
 function activerVice(joueur){
   const k = vices[joueur];
   if (!k || phase !== "jeu") return;
-  vices[joueur] = null;
+  vices[joueur] = null; viceQuand[joueur] = 0;
   const victime = 1 - joueur;
   const maintenant = performance.now();
   if (k === "I"){ vfx.invVictime = victime; vfx.finInv = maintenant + DUREE_INV; }
@@ -1430,12 +1425,6 @@ function iaJouer(){
     if (Math.abs(pas) < SEUIL_CHARGE) chargeHaut = Math.min(1, chargeHaut + 1/60);
     else chargeHaut = Math.max(0, chargeHaut - 3/60);
   } else chargeHaut = 0;
-
-  /* vice : l'IA garde son vice et le sort quand elle est menée */
-  if (vices[1] && phase === "jeu"){
-    const menee = etat.score[0] - etat.score[1] >= 2 || etat.score[0] === SCORE_MANCHE - 1;
-    if (menee && Math.random() < 0.004) activerVice(1);
-  }
 }
 
 /* ================= FIN & REVANCHE ================= */
@@ -1457,7 +1446,6 @@ function afficherFin(){
     ? "drop-shadow(0 0 26px rgba(251,191,36,.6))"
     : "drop-shadow(0 0 20px rgba(124,138,165,.4))";
   sonFin(jAiGagne);
-  btnVice.classList.add("cache");
 }
 btnRevanche.addEventListener("click", () => {
   if (estHote) lancerRevanche();
@@ -1469,7 +1457,7 @@ function lancerRevanche(){
   etat.score = [0, 0]; manches = [0, 0];
   construireObstacles();
   debris = []; fissures = [[], []];
-  vices = [null, null]; monViceNom = null;
+  vices = [null, null]; viceQuand = [0, 0]; tempsJeu = 0; monViceNom = null;
   vfx.finInv = vfx.finBrou = vfx.finGrav = 0;
   chargeLocal = 0; chargeHaut = 0; margeMur = 0;
   effets.finBas = effets.finHaut = effets.finFantome = 0;
@@ -1542,7 +1530,6 @@ function boucle(){
       pas++;
     }
     if (pas === 5) accumulateur = 0;   /* rattrapage borné après une longue pause */
-    majBoutonVice(!!vices[0]);
   } else if (phase === "jeu"){
     const dt = (performance.now() - cibleT) / (1000/60);
     for (let i = 0; i < balles.length && i < cibles.length; i++){
@@ -1591,25 +1578,9 @@ function dessiner(){
   ctx.beginPath(); ctx.moveTo(0, HAUT/2); ctx.lineTo(LARG, HAUT/2); ctx.stroke();
   ctx.setLineDash([]);
 
-  /* fissures des murs */
+  /* fissures des murs — tracé organique ramifié */
   for (let cote = 0; cote < 2; cote++){
-    for (const f of fissures[cote]){
-      const xm = cote === 0 ? margeMur : LARG - margeMur;
-      const dir = cote === 0 ? 1 : -1;
-      const long = 8 + Math.min(f.niv, FISSURE_TROU) * 9;
-      ctx.strokeStyle = f.niv >= FISSURE_TROU ? "#CBD5E1" : "#64748B";
-      ctx.lineWidth = f.niv >= FISSURE_TROU ? 2 : 1.2;
-      ctx.beginPath();
-      ctx.moveTo(xm, Y(f.y) - 16);
-      ctx.lineTo(xm + dir*long*0.5, Y(f.y) - 5);
-      ctx.lineTo(xm + dir*long*0.25, Y(f.y) + 3);
-      ctx.lineTo(xm + dir*long, Y(f.y) + 14);
-      ctx.stroke();
-      if (f.niv >= FISSURE_TROU){
-        ctx.fillStyle = "rgba(2,4,10,.9)";
-        ctx.beginPath(); ctx.ellipse(xm, Y(f.y), 7, 22, 0, 0, Math.PI*2); ctx.fill();
-      }
-    }
+    for (const f of fissures[cote]) dessinerFissure(cote, f, Y);
   }
 
   /* blocs de décor détachés */
@@ -1661,20 +1632,40 @@ function dessiner(){
 
     const visible = !fantome || (Math.sin(t*22 + i*2) > 0.15);
     if (visible){
-      const coulTraine = enFeu ? "251,113,133" : "138,180,255";
+      const liftee = Math.abs(b.spin || 0) > 1.2;
+      /* traînée : dorée, plus longue et plus dense quand la balle est liftée */
+      const coulTraine = enFeu ? "251,113,133" : (liftee ? "251,191,36" : "138,180,255");
+      const alphaTraine = enFeu ? 0.4 : (liftee ? 0.42 : 0.22);
+      const longTraine = liftee ? 20 : 12;
+      while (tr.length > longTraine) tr.shift();
       for (let j = 0; j < tr.length; j++){
         const a = (j+1) / tr.length;
-        ctx.fillStyle = "rgba(" + coulTraine + "," + (a*(enFeu ? 0.4 : 0.22)).toFixed(3) + ")";
-        ctx.beginPath(); ctx.arc(tr[j].x, Y(tr[j].y), BALLE_R * a * (enFeu ? 1.25 : 1), 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "rgba(" + coulTraine + "," + (a*alphaTraine).toFixed(3) + ")";
+        ctx.beginPath(); ctx.arc(tr[j].x, Y(tr[j].y), BALLE_R * a * (enFeu || liftee ? 1.3 : 1), 0, Math.PI*2); ctx.fill();
       }
       if (enFeu && Math.random() < 0.5)
         particules.push({ x: b.x, y: b.y, vx: (Math.random()-0.5)*1.5, vy: (Math.random()-0.5)*1.5, vie: 0.7, couleur: Math.random() < 0.5 ? CO_FEU : CO_OR });
+      if (liftee && Math.random() < 0.4)
+        particules.push({ x: b.x, y: b.y, vx: (Math.random()-0.5)*1.3, vy: (Math.random()-0.5)*1.3, vie: 0.6, couleur: CO_OR });
 
-      const liftee = Math.abs(b.spin || 0) > 1.2;
-      ctx.shadowBlur = enFeu ? 34 : 26;
-      ctx.shadowColor = enFeu ? CO_FEU : (fantome ? "#A78BFA" : (liftee ? "#FB923C" : CO_BALLE));
-      ctx.fillStyle = enFeu ? "#FECDD3" : (fantome ? "#C4B5FD" : (liftee ? "#FDBA74" : CO_BALLE));
-      ctx.beginPath(); ctx.arc(b.x, Y(b.y), BALLE_R, 0, Math.PI*2); ctx.fill();
+      /* corps : dégradé cœur clair -> robe colorée, étiré dans le sens du vol */
+      const vScrX = b.vx || 0, vScrY = (flip ? -(b.vy || 0) : (b.vy || 0));
+      const etirement = 1 + Math.min(0.34, Math.hypot(vScrX, vScrY) / 70);
+      const coeur = enFeu ? "#FFF1F2" : (fantome ? "#EDE9FE" : (liftee ? "#FFFBEB" : "#FFFFFF"));
+      const robe  = enFeu ? "#FB7185" : (fantome ? "#A78BFA" : (liftee ? "#F59E0B" : "#B9C8E8"));
+      ctx.save();
+      ctx.translate(b.x, Y(b.y));
+      ctx.rotate(Math.atan2(vScrY, vScrX));
+      ctx.scale(etirement, 1 / Math.sqrt(etirement));
+      const gradB = ctx.createRadialGradient(-BALLE_R*0.28, -BALLE_R*0.28, 1, 0, 0, BALLE_R + 1.5);
+      gradB.addColorStop(0, coeur);
+      gradB.addColorStop(0.5, coeur);
+      gradB.addColorStop(1, robe);
+      ctx.shadowBlur = enFeu ? 36 : (liftee ? 34 : 26);
+      ctx.shadowColor = enFeu ? CO_FEU : (fantome ? "#A78BFA" : (liftee ? CO_OR : CO_BALLE));
+      ctx.fillStyle = gradB;
+      ctx.beginPath(); ctx.arc(0, 0, BALLE_R, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
       ctx.shadowBlur = 0;
     }
   }
@@ -1728,6 +1719,57 @@ function dessiner(){
     ctx.fillRect(-10, -10, LARG+20, HAUT+20);
     flashBut *= 0.88;
   }
+}
+
+/* générateur pseudo-aléatoire déterministe : une fissure garde sa forme */
+function graine(n){
+  let s = (n | 0) || 1;
+  return function(){ s = (s * 1664525 + 1013904223) | 0; return ((s >>> 8) / 16777216); };
+}
+function dessinerFissure(cote, f, Y){
+  const xm = cote === 0 ? margeMur : LARG - margeMur;
+  const dir = cote === 0 ? 1 : -1;
+  const niv = Math.min(f.niv, FISSURE_TROU);
+  const long = 16 + niv * 12;
+  const yA = Y(f.y);
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  for (let passe = 0; passe < 2; passe++){
+    const r = graine(Math.round(f.y * 13) + cote * 7919);
+    ctx.strokeStyle = passe === 0 ? "rgba(6,10,20,.9)"
+      : (f.niv >= FISSURE_TROU ? "rgba(203,213,225,.92)" : "rgba(124,138,165,.78)");
+    ctx.lineWidth = passe === 0 ? (niv >= 3 ? 3.8 : 2.6) : (niv >= 3 ? 1.6 : 1);
+    ctx.beginPath();
+    let x = xm, y = yA - (5 + r()*10);
+    ctx.moveTo(x, y);
+    const nSeg = 4 + niv;
+    for (let i = 0; i < nSeg; i++){
+      x += dir * (2 + r() * (long / nSeg) * 1.5);
+      y += (r() - 0.45) * 16;
+      ctx.lineTo(x, y);
+      if (niv >= 2 && (i === 1 || i === nSeg - 2)){
+        ctx.moveTo(x, y);
+        let xx = x, yy = y;
+        const sens = r() < 0.5 ? -1 : 1;
+        for (let j = 0; j < 2; j++){
+          xx += dir * (2 + r()*7);
+          yy += sens * (4 + r()*9);
+          ctx.lineTo(xx, yy);
+        }
+        ctx.moveTo(x, y);
+      }
+    }
+    ctx.stroke();
+  }
+  if (f.niv >= FISSURE_TROU){
+    const r = graine(Math.round(f.y * 29) + cote);
+    ctx.fillStyle = "rgba(2,4,10,.94)";
+    for (let i = 0; i < 3; i++){
+      ctx.beginPath();
+      ctx.ellipse(xm + dir * r() * 4, yA + (r()-0.5)*18, 4 + r()*4, 9 + r()*12, (r()-0.5)*0.8, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  ctx.lineCap = "butt"; ctx.lineJoin = "miter";
 }
 
 function dessinerCompte(){
