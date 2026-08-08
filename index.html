@@ -131,6 +131,7 @@ canvas{
 }
 .panneau .petit{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--sourd);letter-spacing:.12em;text-align:center}
 .panneau button{width:auto;padding:13px 34px}
+#btnMenu{padding:11px 26px;font-size:14px}
 .duel{display:flex;align-items:center;justify-content:center;gap:14px;width:100%}
 .joueurCarte{display:flex;flex-direction:column;align-items:center;gap:6px;width:92px}
 .vignette.gros{width:68px;height:68px;flex:0 0 68px;border-radius:18px;font-size:22px}
@@ -239,7 +240,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v8.0 · 2026-08-07</div>
+  <div id="version">DUO v8.1 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -262,7 +263,8 @@ canvas{
         <b class="c">MANCHES</b> — 5 points gagnent une manche, 2 manches gagnent le match. À 4-4 : <b class="f">MORT SUBITE</b>, le terrain rétrécit et les orbes disparaissent.<br>
         <b class="c">LIFT</b> — Fouettez la raquette latéralement à l'impact : la balle part courbée (halo <span style="color:#FB923C">orange</span>).<br>
         <b class="c">SMASH</b> — Raquette immobile 1 s : elle se charge et vire à l'<span style="color:#FBBF24">or</span>. La frappe suivante part à pleine puissance.<br>
-        <b class="o">ORBES</b> — Touchez-les avec la balle : le bonus va au dernier frappeur. Agrandir · rétrécir l'autre · éclair · balle double · fantôme.<br>
+        <b class="o">ORBES</b> — Touchez-les avec la balle : le bonus va au dernier frappeur. Agrandir · rétrécir l'autre · éclair · balle double · fantôme · <span style="color:#FB923C">boule de feu</span> (7 s : la balle pulvérise les blocs).<br>
+        <b class="o">ARÈNES</b> — Manche 1 <b>ROCHE</b>, manche 2 <b>GLACE</b> (les glaçons ralentissent la balle), manche 3 <b>LAVE</b> (les roches en fusion l'accélèrent).<br>
         <b class="f">BALLE EN FEU</b> — 8 rebonds sans point : la balle s'enflamme à vitesse maximale.<br>
         <b class="o">DÉCOR</b> — À partir de la manche 2, des blocs de la ligne médiane se détachent et dérivent au centre du terrain.<br>
         <b class="f">DÉGÂTS</b> — Les frappes surpuissantes fissurent les murs : les rebonds y deviennent imprévisibles et des débris sont projetés sur le terrain jusqu'à la fin de la manche.<br>
@@ -320,6 +322,7 @@ canvas{
       <div class="grand" id="voileTitre"></div>
       <div class="petit" id="voileSous"></div>
       <button id="btnRevanche" class="cache">Revanche</button>
+      <button id="btnMenu" class="secondaire cache">Menu principal</button>
     </div>
   </div>
   <div id="barreBasse">
@@ -334,7 +337,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "8.0";
+const VERSION = "8.1";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -347,7 +350,7 @@ const VY_MIN = 2.2;
 const SCORE_MANCHE = 5, MANCHES_GAGNANTES = 2;
 const TICK_ENVOI = 33, DUREE_COMPTE = 800;
 const MAX_BALLES = 3, MAX_BONUS = 2, INTERVALLE_BONUS = 3800;
-const DUREE_TAILLE = 8000, DUREE_FANTOME = 2600;
+const DUREE_TAILLE = 8000, DUREE_FANTOME = 2600, DUREE_BOULE_FEU = 7000;
 const RAYON_BONUS = 15;
 const FEU_SEUIL = 8, VIT_FEU = 21;
 const MUR_MAX = 88, MUR_VITESSE = 0.05;          // mort subite : rétrécissement px/frame
@@ -405,6 +408,7 @@ const BONUS_DEFS = {
   E: { couleur: "#FBBF24", nom: "ÉCLAIR",           court: "ÉCLAIR" },
   D: { couleur: "#EAF0FF", nom: "BALLE DOUBLE",     court: "DOUBLE" },
   F: { couleur: "#A78BFA", nom: "FANTÔME",          court: "FANTÔME" },
+  B: { couleur: "#FB923C", nom: "BOULE DE FEU",     court: "BOULE DE FEU" },
 };
 const DUREE_RECAP = 4600;
 const SARCASMES = [
@@ -454,7 +458,8 @@ let lus = [false, false], luLocal = false;
 
 let balles = [], bonusListe = [], cibles = [], cibleT = 0;
 let bonusId = 0, prochainBonus = 0;
-const effets = { finBas: 0, finHaut: 0, typeBas: "", typeHaut: "", finFantome: 0 };
+const effets = { finBas: 0, finHaut: 0, typeBas: "", typeHaut: "", finFantome: 0, finBouleFeu: 0 };
+let bouleFeu = false;
 const etat = { raqBas: LARG/2, raqHaut: LARG/2, score: [0, 0] };
 let tailles = [RAQ_L_BASE, RAQ_L_BASE], taillesAffichees = [RAQ_L_BASE, RAQ_L_BASE];
 let fantome = false;
@@ -654,6 +659,16 @@ function sonMortSubite(){
   setTimeout(() => bip(330, 0.3, "square", 0.3, 220), 440);
 }
 function sonVice(){ bip(196, 0.5, "sawtooth", 0.32, 60); souffle(0.25, 0.2, 400); }
+function sonBloc(matiere){
+  if (matiere === "glace"){ bip(1450, 0.1, "sine", 0.3, 900); souffle(0.05, 0.14, 5200); }
+  else if (matiere === "lave"){ bip(120, 0.16, "sawtooth", 0.34, 300); souffle(0.13, 0.3, 700); }
+  else { bip(170, 0.045, "sine", 0.3); souffle(0.02, 0.12, 700); }
+}
+function sonCasse(matiere){
+  souffle(0.24, 0.42, matiere === "glace" ? 4200 : 950);
+  bip(matiere === "glace" ? 1800 : 150, 0.26, matiere === "glace" ? "sine" : "sawtooth", 0.4,
+      matiere === "glace" ? 420 : 48);
+}
 function sonFissure(){ souffle(0.16, 0.5, 500); bip(95, 0.2, "sawtooth", 0.3, 45); }
 function sonManche(){ bip(659, 0.12, "sine", 0.3); setTimeout(() => bip(880, 0.2, "sine", 0.32), 130); }
 function sonFin(gagne){
@@ -1151,7 +1166,7 @@ function envoyerEtatHote(){
     bl: balles.map(b => [b.x, b.y, b.vx, b.vy, b.spin]),
     bo: bonusListe.map(o => [o.id, o.x, o.y, o.k]),
     r: etat.raqBas, s: etat.score, ph: phase,
-    ta: tailles, fa: fantome ? 1 : 0,
+    ta: tailles, fa: fantome ? 1 : 0, bf: bouleFeu ? 1 : 0,
     ma: manches, mu: Math.round(margeMur), fe: enFeu ? 1 : 0,
     ch: [Math.round(chargeLocal*100), Math.round(chargeHaut*100)],
     vw: viceGagnant, vh: [vices[0] ? 1 : 0, vices[1] ? 1 : 0],
@@ -1191,7 +1206,7 @@ function recevoir(m){
       }
       bonusListe = m.bo.map(o => ({ id: o[0], x: o[1], y: o[2], k: o[3] }));
       etat.raqBas = m.r;
-      tailles = m.ta; fantome = !!m.fa;
+      tailles = m.ta; fantome = !!m.fa; bouleFeu = !!m.bf;
       manches = m.ma; margeMur = m.mu; enFeu = !!m.fe;
       obstacles = (m.ob || []).map(o => ({ x: o[0], y: o[1], l: o[2], h: o[3] }));
       debris = (m.de || []).map(d => ({ x: d[0], y: d[1], r: d[2], rot: d[3] }));
@@ -1257,6 +1272,20 @@ function jouerFx(k, x, y, extra){
     }
   }
   if (k === "mur"){ explosion(x, y, "#8AB4FF", 7, 2.2); sonMur(); }
+  if (k === "bloc"){
+    const coul = extra === "glace" ? "#BAE6FD" : (extra === "lave" ? "#FB923C" : "#8AB4FF");
+    explosion(x, y, coul, 10, 2.6);
+    secousse = Math.max(secousse, extra === "lave" ? 5 : 3);
+    sonBloc(extra);
+  }
+  if (k === "casse"){
+    const coul = extra === "glace" ? "#BAE6FD" : (extra === "lave" ? "#FB923C" : "#94A3B8");
+    explosion(x, y, coul, 34, 5.4);
+    explosion(x, y, "#FDBA74", 16, 4);
+    secousse = Math.max(secousse, 8);
+    annoncer("BLOC PULVÉRISÉ", "#FB923C");
+    sonCasse(extra);
+  }
   if (k === "but"){ explosion(x, y, CO_BALLE, 40, 5.5); secousse = 10; flashBut = 1; sonBut(); couperMusiqueBref(); enregistrerEtEnvoyer(); }
   if (k === "bonus"){
     const def = BONUS_DEFS[extra];
@@ -1282,7 +1311,7 @@ function jouerFx(k, x, y, extra){
     if (victime === moi) annoncer("VICE !", CO_VICE);
     else annoncer("VICE : " + (VICE_DEFS[monViceNom] ? monViceNom : "ACTIVÉ"), CO_VICE);
   }
-  if (k === "manche"){ annoncer("MANCHE " + extra, CO_OR); sonManche(); }
+  if (k === "manche"){ annoncer("MANCHE " + extra + " · ARÈNE " + areneCourante().nom, CO_OR); sonManche(); }
 }
 
 /* ================= PHYSIQUE (hôte) ================= */
@@ -1315,6 +1344,7 @@ function majEffets(maintenant){
   tailles[1] = maintenant < effets.finHaut
     ? (effets.typeHaut === "G" ? RAQ_L_GRAND : RAQ_L_PETIT) : RAQ_L_BASE;
   fantome = maintenant < effets.finFantome;
+  bouleFeu = maintenant < effets.finBouleFeu;
 }
 
 function apparaitreBonus(maintenant){
@@ -1350,6 +1380,7 @@ function appliquerBonus(k, frappeur, x, y){
     balles.push(nouvelleBalle(x, y, Math.random() < 0.5 ? 1 : -1, frappeur));
   }
   if (k === "F"){ effets.finFantome = maintenant + DUREE_FANTOME; }
+  if (k === "B"){ effets.finBouleFeu = maintenant + DUREE_BOULE_FEU; }
   jouerFx("bonus", x, y, k);
   envoyerFx("bonus", x, y, k);
 }
@@ -1357,11 +1388,13 @@ function appliquerBonus(k, frappeur, x, y){
 /* blocs de décor : n = manche en cours - 1, plafonné à 2 */
 function construireObstacles(){
   obstacles = [];
-  const n = Math.min(2, manches[0] + manches[1]);
+  const n = Math.min(3, 1 + manches[0] + manches[1]);
+  const decalY = [-46, 44, -116];
   for (let i = 0; i < n; i++){
     obstacles.push({
-      base: LARG/2, y: HAUT/2 + (i === 0 ? -46 : 40), l: OBST_L, h: OBST_H,
-      amp: 130 + i*40, vitOsc: 0.7 + i*0.35, phase: i*2.1, x: LARG/2 - OBST_L/2,
+      base: LARG/2, y: HAUT/2 + decalY[i], l: OBST_L, h: OBST_H,
+      amp: 130 + i*36, vitOsc: 0.7 + i*0.32, phase: i*2.1, x: LARG/2 - OBST_L/2,
+      germe: 1000 + i * 977,
     });
   }
 }
@@ -1506,12 +1539,32 @@ function physique(){
     if (b.x < murG){ b.x = murG; b.vx = Math.abs(b.vx); toucherMur(b, 0, margeMur); }
     if (b.x > murD){ b.x = murD; b.vx = -Math.abs(b.vx); toucherMur(b, 1, LARG - margeMur); }
 
-    for (const o of obstacles){
-      if (collisionRect(b, o.x, o.y - o.h/2, o.l, o.h)){ fxLocal("mur", b.x, b.y); break; }
+    for (let oi = obstacles.length - 1; oi >= 0; oi--){
+      const o = obstacles[oi];
+      if (!collisionRect(b, o.x, o.y - o.h/2, o.l, o.h)) continue;
+      const A = areneCourante();
+      if (bouleFeu){
+        obstacles.splice(oi, 1);                 /* la boule de feu pulvérise le bloc */
+        fxLocal("casse", o.x + o.l/2, o.y, A.bloc);
+      } else {
+        if (A.facteur !== 1){                    /* glace ralentit, lave accélère */
+          b.vx *= A.facteur; b.vy *= A.facteur;
+          const v = Math.hypot(b.vx, b.vy);
+          const vMin = VIT_INIT * 0.55;
+          if (v < vMin && v > 0){ b.vx *= vMin/v; b.vy *= vMin/v; }
+          if (v > VIT_MAX_ECLAIR){ b.vx *= VIT_MAX_ECLAIR/v; b.vy *= VIT_MAX_ECLAIR/v; }
+        }
+        fxLocal("bloc", b.x, b.y, A.bloc);
+      }
+      break;
     }
-    for (const d of debris){
+    for (let di = debris.length - 1; di >= 0; di--){
+      const d = debris[di];
       if (d.naissance && performance.now() < d.naissance) continue;
-      if (collisionDebris(b, d)){ fxLocal("mur", b.x, b.y); break; }
+      if (!collisionDebris(b, d)) continue;
+      if (bouleFeu){ debris.splice(di, 1); fxLocal("casse", d.x, d.y, areneCourante().bloc); }
+      else fxLocal("mur", b.x, b.y);
+      break;
     }
 
     /* Collision BALAYÉE : on teste le franchissement du plan de la raquette
@@ -1695,7 +1748,7 @@ function mancheSuivante(){
   margeMur = 0;
   construireObstacles();
   debris = []; fissures = [[], []];
-  effets.finBas = effets.finHaut = effets.finFantome = 0;
+  effets.finBas = effets.finHaut = effets.finFantome = effets.finBouleFeu = 0;
   majScore(false);
   masquerPanneaux();
   fxLocal("manche", LARG/2, HAUT/2, manches[0] + manches[1] + 1);
@@ -1776,8 +1829,22 @@ function montrerVoile(titre, sous, avecBouton){
   voileTitre.textContent = titre;
   voileSous.textContent = sous;
   btnRevanche.classList.toggle("cache", !avecBouton);
+  $("btnMenu").classList.remove("cache");     /* retour au menu toujours possible */
   voile.classList.remove("cache");
 }
+
+/* Retour au menu principal : on coupe proprement les liaisons puis on repart
+   d'une page neuve — nom, photo et compteurs de duels sont conservés dans le
+   stockage local, et aucun minuteur résiduel ne peut subsister. */
+$("btnMenu").addEventListener("click", () => {
+  partieEnCours = false;
+  try{ if (conn) conn.close(); }catch(e){}
+  try{ if (connVoix) connVoix.close(); }catch(e){}
+  try{ if (peer && !peer.destroyed) peer.destroy(); }catch(e){}
+  try{ if (micStream) micStream.getTracks().forEach(p => p.stop()); }catch(e){}
+  try{ if (ac) ac.close(); }catch(e){}
+  location.reload();
+});
 function afficherFin(){
   const moi = estHote ? 0 : 1;
   const jAiGagne = manches[moi] >= MANCHES_GAGNANTES;
@@ -1800,6 +1867,7 @@ btnRevanche.addEventListener("click", () => {
   setTimeout(() => btnRevanche.disabled = false, 1200);
 });
 function lancerRevanche(){
+  $("btnMenu").classList.add("cache");
   duelEnregistre = false;
   etat.score = [0, 0]; manches = [0, 0];
   construireObstacles();
@@ -1807,7 +1875,7 @@ function lancerRevanche(){
   vices = [null, null]; viceQuand = [0, 0]; tempsJeu = 0; monViceNom = null;
   vfx.finInv = vfx.finBrou = vfx.finGrav = 0;
   chargeLocal = 0; chargeHaut = 0; margeMur = 0;
-  effets.finBas = effets.finHaut = effets.finFantome = 0;
+  effets.finBas = effets.finHaut = effets.finFantome = effets.finBouleFeu = 0;
   majScore(false);
   masquerPanneaux();
   preparerService(Math.random() < 0.5 ? 1 : -1);
@@ -1933,37 +2001,28 @@ function dessiner(){
     for (const f of fissures[cote]) dessinerFissure(cote, f, Y);
   }
 
-  /* blocs de décor détachés — dalles métalliques biseautées */
-  for (const o of obstacles){
-    const oy = Y(o.y) - o.h/2;
-    const gd = ctx.createLinearGradient(o.x, oy, o.x, oy + o.h);
-    gd.addColorStop(0, "#D6E2FF");
-    gd.addColorStop(0.42, "#8FA6DE");
-    gd.addColorStop(0.58, "#5D72AE");
-    gd.addColorStop(1, "#2E3C68");
-    ctx.shadowBlur = 18; ctx.shadowColor = "rgba(138,180,255,.55)";
-    ctx.fillStyle = gd;
-    arrondi(o.x, oy, o.l, o.h, 4);
-    ctx.shadowBlur = 0;
-    /* liseré supérieur + rainures d'ombre */
-    ctx.fillStyle = "rgba(255,255,255,.42)";
-    ctx.fillRect(o.x + 5, oy + 1.4, o.l - 10, 1.1);
-    ctx.fillStyle = "rgba(4,8,18,.34)";
-    for (let i = 1; i < 4; i++) ctx.fillRect(o.x + o.l*i/4, oy + 3, 1.6, o.h - 6);
-    ctx.fillStyle = "rgba(4,8,18,.45)";
-    ctx.fillRect(o.x + 4, oy + o.h - 2.2, o.l - 8, 1.2);
-  }
+  /* blocs — silhouette rocheuse irrégulière, habillée selon la matière */
+  for (const o of obstacles) dessinerBloc(o, Y(o.y), t);
   /* débris */
   for (const d of debris){
     if (d.naissance && performance.now() < d.naissance) continue;   /* pas encore détaché */
     ctx.save();
     ctx.translate(d.x, Y(d.y));
     ctx.rotate(d.rot);
+    const Ad = areneCourante();
     const ge = ctx.createLinearGradient(-d.r, -d.r, d.r, d.r);
-    ge.addColorStop(0, "#CBD5E1");
-    ge.addColorStop(0.55, "#8B99AD");
-    ge.addColorStop(1, "#3F4A60");
-    ctx.shadowBlur = 10; ctx.shadowColor = "rgba(148,163,184,.7)";
+    if (Ad.bloc === "glace"){
+      ge.addColorStop(0, "#E0F7FF"); ge.addColorStop(0.55, "#7DD3FC"); ge.addColorStop(1, "#2E7EA8");
+      ctx.globalAlpha = 0.72;
+      ctx.shadowColor = "rgba(125,211,252,.8)";
+    } else if (Ad.bloc === "lave"){
+      ge.addColorStop(0, "#FDBA74"); ge.addColorStop(0.5, "#7C2D12"); ge.addColorStop(1, "#1A0F0E");
+      ctx.shadowColor = "rgba(251,146,60,.8)";
+    } else {
+      ge.addColorStop(0, "#CBD5E1"); ge.addColorStop(0.55, "#8B99AD"); ge.addColorStop(1, "#3F4A60");
+      ctx.shadowColor = "rgba(148,163,184,.7)";
+    }
+    ctx.shadowBlur = 10;
     ctx.fillStyle = ge;
     ctx.beginPath();
     ctx.moveTo(-d.r*0.9, -d.r*0.5);
@@ -1973,7 +2032,7 @@ function dessiner(){
     ctx.lineTo(-d.r*0.7, d.r*0.6);
     ctx.closePath(); ctx.fill();
     ctx.restore();
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
   }
 
   if (phase === "compte") dessinerCompte();
@@ -2031,10 +2090,14 @@ function dessiner(){
     const visible = !fantome || (Math.sin(t*22 + i*2) > 0.15);
     if (visible){
       const liftee = Math.abs(b.spin || 0) > SPIN_VISIBLE;
-      /* traînée : dorée, plus longue et plus dense quand la balle est liftée */
-      const coulTraine = enFeu ? "251,113,133" : (liftee ? "251,191,36" : "138,180,255");
-      const alphaTraine = enFeu ? 0.4 : (liftee ? 0.42 : 0.22);
-      const longTraine = liftee ? 20 : 12;
+      /* traînée : orange ardent en boule de feu, dorée en lift */
+      const coulTraine = bouleFeu ? "251,146,60" : (enFeu ? "251,113,133" : (liftee ? "251,191,36" : "138,180,255"));
+      const alphaTraine = bouleFeu ? 0.5 : (enFeu ? 0.4 : (liftee ? 0.42 : 0.22));
+      const longTraine = (bouleFeu || liftee) ? 20 : 12;
+      if (bouleFeu && Math.random() < 0.8)
+        particules.push({ x: b.x + (Math.random()-0.5)*8, y: b.y + (Math.random()-0.5)*8,
+                          vx: (Math.random()-0.5)*1.6, vy: (Math.random()-0.5)*1.6,
+                          vie: 0.75, couleur: Math.random() < 0.5 ? "#FB923C" : "#FDE68A" });
       while (tr.length > longTraine) tr.shift();
       for (let j = 0; j < tr.length; j++){
         const a = (j+1) / tr.length;
@@ -2055,8 +2118,8 @@ function dessiner(){
       /* corps : dégradé cœur clair -> robe colorée, étiré dans le sens du vol */
       const vScrX = b.vx || 0, vScrY = (flip ? -(b.vy || 0) : (b.vy || 0));
       const etirement = 1 + Math.min(0.34, Math.hypot(vScrX, vScrY) / 70);
-      const coeur = enFeu ? "#FFF1F2" : (fantome ? "#EDE9FE" : (liftee ? "#FFFBEB" : "#FFFFFF"));
-      const robe  = enFeu ? "#FB7185" : (fantome ? "#A78BFA" : (liftee ? "#F59E0B" : "#B9C8E8"));
+      const coeur = bouleFeu ? "#FFFBEB" : (enFeu ? "#FFF1F2" : (fantome ? "#EDE9FE" : (liftee ? "#FFFBEB" : "#FFFFFF")));
+      const robe  = bouleFeu ? "#EA580C" : (enFeu ? "#FB7185" : (fantome ? "#A78BFA" : (liftee ? "#F59E0B" : "#B9C8E8")));
       ctx.save();
       ctx.translate(b.x, Y(b.y));
       ctx.rotate(Math.atan2(vScrY, vScrX));
@@ -2065,8 +2128,8 @@ function dessiner(){
       gradB.addColorStop(0, coeur);
       gradB.addColorStop(0.5, coeur);
       gradB.addColorStop(1, robe);
-      ctx.shadowBlur = enFeu ? 36 : (liftee ? 34 : 26);
-      ctx.shadowColor = enFeu ? CO_FEU : (fantome ? "#A78BFA" : (liftee ? CO_OR : CO_BALLE));
+      ctx.shadowBlur = bouleFeu ? 42 : (enFeu ? 36 : (liftee ? 34 : 26));
+      ctx.shadowColor = bouleFeu ? "#FB923C" : (enFeu ? CO_FEU : (fantome ? "#A78BFA" : (liftee ? CO_OR : CO_BALLE)));
       ctx.fillStyle = gradB;
       ctx.beginPath(); ctx.arc(0, 0, BALLE_R, 0, Math.PI*2); ctx.fill();
       ctx.restore();
@@ -2163,9 +2226,12 @@ function rgba(hex, a){
 
 /* ---------- ARÈNE : grille en défilement, cercle central, zones, vignette ---------- */
 const ARENES = [
-  { nom: "STATION", halo: "28,48,104", grille: "120,160,255", trait: "120,160,255", pas: 45 },
-  { nom: "NÉON",    halo: "86,20,96",   grille: "236,120,255", trait: "236,120,255", pas: 38 },
-  { nom: "GLACE",   halo: "16,72,92",   grille: "150,240,255", trait: "150,240,255", pas: 54 },
+  { nom: "ROCHE", halo: "28,48,104", grille: "120,160,255", trait: "120,160,255", pas: 45,
+    bloc: "roche", facteur: 1,    accent: "#8AB4FF" },
+  { nom: "GLACE", halo: "16,72,92",  grille: "150,240,255", trait: "150,240,255", pas: 54,
+    bloc: "glace", facteur: 0.78, accent: "#7DD3FC" },
+  { nom: "LAVE",  halo: "96,26,10",  grille: "255,150,80",  trait: "255,140,60",  pas: 38,
+    bloc: "lave",  facteur: 1.22, accent: "#FB923C" },
 ];
 function areneCourante(){ return ARENES[Math.min(ARENES.length - 1, manches[0] + manches[1])]; }
 
@@ -2238,6 +2304,20 @@ function glypheBonus(k, x, y, s, couleur){
     ctx.globalAlpha = 0.5;
     ctx.beginPath(); ctx.arc(3.1, 2.1, 2.5, 0, Math.PI*2); ctx.fill();
     ctx.globalAlpha = 1;
+  } else if (k === "B"){                /* boule de feu */
+    ctx.beginPath();
+    ctx.moveTo(0, -7.6);
+    ctx.bezierCurveTo(4.6, -3.4, 5.2, 1.2, 2.6, 4.4);
+    ctx.bezierCurveTo(1.4, 5.9, -1.4, 5.9, -2.6, 4.4);
+    ctx.bezierCurveTo(-5.2, 1.2, -4.6, -3.4, 0, -7.6);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#FEF3C7";
+    ctx.beginPath();
+    ctx.moveTo(0, -2.4);
+    ctx.bezierCurveTo(2.2, -0.4, 2.4, 1.8, 1.1, 3.4);
+    ctx.bezierCurveTo(0.5, 4.1, -0.5, 4.1, -1.1, 3.4);
+    ctx.bezierCurveTo(-2.4, 1.8, -2.2, -0.4, 0, -2.4);
+    ctx.closePath(); ctx.fill();
   } else if (k === "F"){                /* fantôme */
     ctx.beginPath();
     ctx.arc(0, -1.4, 4.3, Math.PI, 0);
@@ -2301,6 +2381,97 @@ function dessinerFissure(cote, f, Y){
     }
   }
   ctx.lineCap = "butt"; ctx.lineJoin = "miter";
+}
+
+/* contour rocheux déterministe (même bloc = même silhouette) */
+function cheminRoche(x, y, l, h, germe){
+  const r = graine(germe);
+  const n = 9;
+  ctx.beginPath();
+  for (let i = 0; i < n; i++){
+    const a = (i / n) * Math.PI * 2;
+    const rx = (l/2) * (0.82 + r()*0.3);
+    const ry = (h/2) * (0.78 + r()*0.55);
+    const px = x + l/2 + Math.cos(a) * rx;
+    const py = y + Math.sin(a) * ry;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+}
+function dessinerBloc(o, yEcran, t){
+  const A = areneCourante();
+  const g = o.germe || 1;
+  if (A.bloc === "glace"){
+    /* glaçon translucide : on voit le fond au travers */
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    const gd = ctx.createLinearGradient(o.x, yEcran - o.h, o.x + o.l, yEcran + o.h);
+    gd.addColorStop(0, "#E0F7FF"); gd.addColorStop(0.5, "#7DD3FC"); gd.addColorStop(1, "#2E7EA8");
+    ctx.shadowBlur = 22; ctx.shadowColor = "rgba(125,211,252,.75)";
+    ctx.fillStyle = gd;
+    cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 0.85;
+    ctx.strokeStyle = "rgba(224,247,255,.9)"; ctx.lineWidth = 1.2;
+    cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g); ctx.stroke();
+    /* facettes internes */
+    const r = graine(g + 31);
+    ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i < 3; i++){
+      ctx.moveTo(o.x + 8 + r()*(o.l-16), yEcran - o.h*0.5);
+      ctx.lineTo(o.x + 8 + r()*(o.l-16), yEcran + o.h*0.5);
+    }
+    ctx.stroke();
+    ctx.restore();
+  } else if (A.bloc === "lave"){
+    /* roche sombre parcourue de veines en fusion pulsantes */
+    const gd = ctx.createLinearGradient(o.x, yEcran - o.h, o.x, yEcran + o.h);
+    gd.addColorStop(0, "#5B4038"); gd.addColorStop(0.45, "#33211E"); gd.addColorStop(1, "#1A0F0E");
+    ctx.shadowBlur = 20; ctx.shadowColor = "rgba(251,146,60,.65)";
+    ctx.fillStyle = gd;
+    cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g); ctx.fill();
+    ctx.shadowBlur = 0;
+    const pulse = 0.55 + 0.45 * Math.sin(t * 2.6 + g);
+    const r = graine(g + 17);
+    ctx.strokeStyle = "rgba(251,146,60," + (0.55 + pulse*0.45).toFixed(2) + ")";
+    ctx.lineWidth = 2.2; ctx.lineCap = "round";
+    ctx.beginPath();
+    for (let i = 0; i < 3; i++){
+      let px = o.x + 6 + r()*(o.l - 12), py = yEcran - o.h*0.5;
+      ctx.moveTo(px, py);
+      for (let j = 0; j < 3; j++){
+        px += (r() - 0.5) * 16; py += o.h / 3;
+        ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(254,240,138," + (0.3*pulse).toFixed(2) + ")";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.lineCap = "butt";
+    if (Math.random() < 0.25)
+      particules.push({ x: o.x + Math.random()*o.l, y: o.y, vx: (Math.random()-0.5)*0.6,
+                        vy: -0.5 - Math.random()*0.7, vie: 0.7, couleur: "#FB923C" });
+  } else {
+    /* roche minérale grise à facettes */
+    const gd = ctx.createLinearGradient(o.x, yEcran - o.h, o.x, yEcran + o.h);
+    gd.addColorStop(0, "#B8C4DA"); gd.addColorStop(0.45, "#6E7C97"); gd.addColorStop(1, "#39445C");
+    ctx.shadowBlur = 16; ctx.shadowColor = "rgba(138,180,255,.45)";
+    ctx.fillStyle = gd;
+    cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g); ctx.fill();
+    ctx.shadowBlur = 0;
+    const r = graine(g + 7);
+    ctx.strokeStyle = "rgba(20,28,44,.45)"; ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    for (let i = 0; i < 3; i++){
+      ctx.moveTo(o.x + 6 + r()*(o.l-12), yEcran - o.h*0.45);
+      ctx.lineTo(o.x + 6 + r()*(o.l-12), yEcran + o.h*0.45);
+    }
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.28)";
+    ctx.fillRect(o.x + 6, yEcran - o.h*0.55, o.l - 12, 1.1);
+  }
 }
 
 function dessinerCompte(){
