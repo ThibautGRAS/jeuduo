@@ -302,7 +302,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v8.6.1 · 2026-08-07</div>
+  <div id="version">DUO v8.7 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -410,6 +410,7 @@ canvas{
     <button id="btnMusique" class="icone" aria-label="Musique">♪</button>
     <div id="bandeau"></div>
     <div id="micEtat" class="cache">REC</div>
+    <button id="btnEffets" class="icone actif" aria-label="Effets visuels">✦</button>
     <button id="btnMicToggle" class="icone eteint" aria-label="Micro">🎙</button>
   </div>
 </div>
@@ -418,7 +419,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "8.6.1";
+const VERSION = "8.7";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -653,6 +654,8 @@ async function basculerMicro(){
   majIcones();
 }
 function majIcones(){
+  const be = document.getElementById("btnEffets");
+  if (be){ be.classList.toggle("actif", effetsRiches); be.classList.toggle("eteint", !effetsRiches); }
   const bm = document.getElementById("btnMusique");
   const bt = document.getElementById("btnMicToggle");
   if (bm){ bm.classList.toggle("actif", musiqueOn); bm.classList.toggle("eteint", !musiqueOn); }
@@ -1323,6 +1326,15 @@ function demarrerPartie(){
 }
 
 /* ================= RÈGLES — double validation ================= */
+document.getElementById("btnEffets").addEventListener("click", () => {
+  effetsRiches = !effetsRiches;
+  try{ localStorage.setItem("duo_effets", effetsRiches ? "1" : "0"); }catch(e){}
+  tempsFrames = [];
+  majIcones();
+});
+(function initEffets(){
+  try{ if (localStorage.getItem("duo_effets") === "0") effetsRiches = false; }catch(e){}
+})();
 document.getElementById("btnMusique").addEventListener("click", basculerMusique);
 document.getElementById("btnMicToggle").addEventListener("click", basculerMicro);
 
@@ -2212,6 +2224,7 @@ function boucle(){
   horlogePrec = maintenant;
 
   /* vitesse de raquette normalisée en px par pas de 16,7 ms (indépendante de l'écran) */
+  surveillerPerf(dtMs);
   const deltaRaq = (maRaquette - raqPrecedente) * (PAS_MS / Math.max(dtMs, 1));
   vitRaqLisse = vitRaqLisse * 0.7 + deltaRaq * 0.3;
   raqPrecedente = maRaquette;
@@ -2254,6 +2267,7 @@ function boucle(){
 function dessiner(){
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, LARG, HAUT);
+  preparerBloom();
   if (secousse > 0.2){
     ctx.translate((Math.random()-0.5)*secousse, (Math.random()-0.5)*secousse);
     secousse *= 0.86;
@@ -2284,6 +2298,8 @@ function dessiner(){
   ctx.setLineDash([5, 13]);
   ctx.beginPath(); ctx.moveTo(0, HAUT/2); ctx.lineTo(LARG, HAUT/2); ctx.stroke();
   ctx.setLineDash([]);
+
+  if (effetsRiches){ dessinerLumieres(Y); dessinerOmbresBlocs(Y); }
 
   /* fissures des murs — tracé organique ramifié */
   for (let cote = 0; cote < 2; cote++){
@@ -2366,6 +2382,8 @@ function dessiner(){
     ctx.setLineDash([]);
     ctx.restore();
 
+    bloomCercle(o.x, yy, r * 3.2, def.couleur, 0.5);
+
     /* glyphe vectoriel */
     glypheBonus(o.k, o.x, yy, 1.06 + pulse * 0.05, def.couleur);
     ctx.shadowBlur = 0;
@@ -2441,6 +2459,7 @@ function dessiner(){
       ctx.beginPath(); ctx.arc(0, 0, BALLE_R, 0, Math.PI*2); ctx.fill();
       ctx.restore();
       ctx.shadowBlur = 0;
+      bloomCercle(b.x, Y(b.y), BALLE_R * (bouleFeu || enFeu ? 7.5 : 5.5), robe, 0.85);
     }
   }
 
@@ -2468,6 +2487,8 @@ function dessiner(){
   ctx.fillStyle = cAdv >= 1 ? "#FDE68A" : CO_ADV;
   arrondi(raqAdvAffichee - lAdv/2, RAQ_MARGE, lAdv, RAQ_H, 6);
   ctx.shadowBlur = 0;
+  bloomCercle(maRaquette, HAUT - RAQ_MARGE - RAQ_H/2, 62 + cMoi*36, cMoi >= 1 ? CO_OR : CO_MOI, 0.6);
+  bloomCercle(raqAdvAffichee, RAQ_MARGE + RAQ_H/2, 62 + cAdv*36, cAdv >= 1 ? CO_OR : CO_ADV, 0.6);
 
   /* ALERTE DE MENACE : ma ligne de fond s'embrase quand une balle fonce sur moi,
      avec un curseur qui indique son point d'arrivée */
@@ -2519,10 +2540,145 @@ function dessiner(){
     ctx.shadowBlur = 0;
   }
 
+  appliquerBloom();
+  appliquerGrain();
+
   if (flashBut > 0.02){
     ctx.fillStyle = "rgba(234,240,255," + (flashBut*0.18).toFixed(3) + ")";
     ctx.fillRect(-10, -10, LARG+20, HAUT+20);
     flashBut *= 0.88;
+  }
+}
+
+/* ================= POST-TRAITEMENT : bloom, grain, éclairage =================
+   Le bloom passe par un canevas au quart de résolution : on y peint les sources
+   lumineuses, puis on le recompose agrandi en mode "lighter". L'agrandissement
+   fait le flou gratuitement, sans filtre coûteux. */
+let effetsRiches = true;
+const ECHB = 0.25;
+const cvBloom = document.createElement("canvas");
+cvBloom.width = Math.round(LARG * ECHB);
+cvBloom.height = Math.round(HAUT * ECHB);
+const ctxB = cvBloom.getContext("2d");
+let motifGrain = null;
+
+function construireGrain(){
+  const c = document.createElement("canvas");
+  c.width = 128; c.height = 128;
+  const g = c.getContext("2d");
+  const img = g.createImageData(128, 128);
+  for (let i = 0; i < img.data.length; i += 4){
+    const v = Math.random() * 255;
+    img.data[i] = img.data[i+1] = img.data[i+2] = v;
+    img.data[i+3] = 26 + Math.random() * 30;
+  }
+  g.putImageData(img, 0, 0);
+  motifGrain = ctx.createPattern(c, "repeat");
+}
+function preparerBloom(){
+  if (!effetsRiches) return;
+  ctxB.clearRect(0, 0, cvBloom.width, cvBloom.height);
+}
+function bloomCercle(x, y, r, couleur, alpha){
+  if (!effetsRiches) return;
+  const cx = x * ECHB, cy = y * ECHB, cr = Math.max(1, r * ECHB);
+  const g = ctxB.createRadialGradient(cx, cy, 0, cx, cy, cr);
+  g.addColorStop(0, rgba(couleur, alpha));
+  g.addColorStop(0.5, rgba(couleur, alpha * 0.35));
+  g.addColorStop(1, rgba(couleur, 0));
+  ctxB.fillStyle = g;
+  ctxB.beginPath(); ctxB.arc(cx, cy, cr, 0, Math.PI*2); ctxB.fill();
+}
+function appliquerBloom(){
+  if (!effetsRiches) return;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = 0.62;
+  ctx.drawImage(cvBloom, 0, 0, LARG, HAUT);
+  ctx.globalAlpha = 0.30;
+  ctx.drawImage(cvBloom, -4, -4, LARG + 8, HAUT + 8);
+  ctx.restore();
+  ctx.globalCompositeOperation = "source-over";
+  ctx.globalAlpha = 1;
+}
+function appliquerGrain(){
+  if (!effetsRiches) return;
+  if (!motifGrain) construireGrain();
+  if (!motifGrain) return;
+  ctx.save();
+  ctx.globalAlpha = 0.05;
+  ctx.fillStyle = motifGrain;
+  ctx.fillRect(-10, -10, LARG + 20, HAUT + 20);
+  ctx.restore();
+}
+
+/* lumières émises par les balles et les raquettes, projetées sur le décor */
+function dessinerLumieres(Y){
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  for (const b of balles){
+    const coul = bouleFeu ? "251,146,60" : (enFeu ? "251,113,133" : "170,200,255");
+    const R = 165;
+    const g = ctx.createRadialGradient(b.x, Y(b.y), 0, b.x, Y(b.y), R);
+    g.addColorStop(0, "rgba(" + coul + ",0.22)");
+    g.addColorStop(0.4, "rgba(" + coul + ",0.08)");
+    g.addColorStop(1, "rgba(" + coul + ",0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(b.x - R, Y(b.y) - R, R*2, R*2);
+  }
+  const lMoi = estHote ? taillesAffichees[0] : taillesAffichees[1];
+  const lAdv = estHote ? taillesAffichees[1] : taillesAffichees[0];
+  for (const [px, py, coul, lg] of [
+      [maRaquette, HAUT - RAQ_MARGE, "34,211,238", lMoi],
+      [raqAdvAffichee, RAQ_MARGE + RAQ_H, "244,113,181", lAdv]]){
+    const R = 120;
+    const g = ctx.createRadialGradient(px, py, 0, px, py, R);
+    g.addColorStop(0, "rgba(" + coul + ",0.17)");
+    g.addColorStop(1, "rgba(" + coul + ",0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(px - R, py - R, R*2, R*2);
+  }
+  ctx.restore();
+}
+
+/* ombres projetées : chaque bloc s'assombrit à l'opposé de la balle la plus proche */
+function dessinerOmbresBlocs(Y){
+  if (!obstacles.length || !balles.length) return;
+  for (const o of obstacles){
+    const ocx = o.x + o.l/2, ocy = Y(o.y);
+    let sx = balles[0].x, sy = Y(balles[0].y), best = Infinity;
+    for (const b of balles){
+      const d = (b.x - ocx)*(b.x - ocx) + (Y(b.y) - ocy)*(Y(b.y) - ocy);
+      if (d < best){ best = d; sx = b.x; sy = Y(b.y); }
+    }
+    const dx = ocx - sx, dy = ocy - sy;
+    const d = Math.hypot(dx, dy) || 1;
+    const proche = Math.min(1, d / 320);
+    const dec = 7 + 20 * proche;
+    ctx.save();
+    ctx.globalAlpha = 0.42 * (1 - proche * 0.55);
+    ctx.fillStyle = "#01030A";
+    ctx.translate((dx/d) * dec, (dy/d) * dec);
+    cheminRoche(o.x, ocy, o.l * 1.08, o.h * 1.4, o.germe || 1);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+/* garde-fou : si l'appareil peine, on retombe sur un rendu léger */
+let tempsFrames = [], derniereVerifPerf = 0;
+function surveillerPerf(dtMs){
+  tempsFrames.push(dtMs);
+  if (tempsFrames.length > 90) tempsFrames.shift();
+  const now = performance.now();
+  if (!derniereVerifPerf) derniereVerifPerf = now;
+  if (now - derniereVerifPerf < 4000 || tempsFrames.length < 70) return;
+  derniereVerifPerf = now;
+  const moy = tempsFrames.reduce((a, x) => a + x, 0) / tempsFrames.length;
+  if (moy > 23 && effetsRiches){
+    effetsRiches = false;
+    majIcones();
+    annoncer("EFFETS ALLÉGÉS POUR LA FLUIDITÉ", "#8AB4FF");
   }
 }
 
