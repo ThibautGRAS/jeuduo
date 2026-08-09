@@ -303,7 +303,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v9.3 · 2026-08-07</div>
+  <div id="version">DUO v9.4 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -329,7 +329,8 @@ canvas{
         <b class="c">SMASH</b> — Raquette immobile 1 s : elle se charge et vire à l'<span style="color:#FBBF24">or</span>. La frappe suivante part à pleine puissance.<br>
         <b class="o">ORBES</b> — Touchez-les avec la balle : le bonus va au dernier frappeur. Agrandir · rétrécir l'autre · éclair · balle double · fantôme · <span style="color:#FB923C">boule de feu</span> (7 s : la balle pulvérise les blocs).<br>
         <b class="o">ARÈNES</b> — Six arènes, ordre tiré au sort dès la manche 1 : <b>MÉTAL</b> (neutre), <b>GLACE</b> (ralentit), <b>LAVE</b> (accélère), <b>ORAGE</b> (dévie et charge), <b>VIDE</b> (attire la balle), <b>JUNGLE</b> (absorbe l'effet). Décor, musique et physique changent avec elle.<br>
-        <b class="o">BLOCS</b> — Les blocs mobiles s'ébrèchent et rétrécissent à chaque impact, mais ne disparaissent jamais d'eux-mêmes : seule la boule de feu les pulvérise.<br>
+        <b class="o">BLOCS</b> — Une ou deux bûches mobiles selon l'arène. Elles se fêlent au premier choc mais ne changent jamais de taille et ne peuvent pas être détruites.<br>
+        <b class="v">ARC ÉLECTRIQUE</b> — Dans l'arène ORAGE, un arc traverse le terrain par intermittence, annoncé par un pointillé clignotant : toute balle qui le franchit repart dans une direction imprévisible.<br>
         <b class="f">BALLE EN FEU</b> — 8 rebonds sans point : la balle s'enflamme à vitesse maximale.<br>
         <b class="o">DÉCOR</b> — À partir de la manche 2, des blocs de la ligne médiane se détachent et dérivent au centre du terrain.<br>
         <b class="f">DÉGÂTS</b> — Les frappes surpuissantes fissurent les murs : les rebonds y deviennent imprévisibles et des débris sont projetés sur le terrain jusqu'à la fin de la manche.<br>
@@ -420,7 +421,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "9.3";
+const VERSION = "9.4";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -453,11 +454,15 @@ const MUR_MAX = 88, MUR_VITESSE = 0.05;          // mort subite : rétrécisseme
 const SEUIL_CHARGE = 0.45;                        // vitesse raquette max pour charger
 const DUREE_INV = 3000, DUREE_BROU = 4000, DUREE_GRAV = 5000, GRAV_FORCE = 0.09;
 const OBST_L = 72, OBST_H = 14;                   // blocs de décor détachés
-const OBST_RETRECIT = 0.66, OBST_L_MIN = 46;   /* un seul ébrèchement, bloc toujours lisible */
 const IMMU_BLOC = 340;   /* un bloc ne peut encaisser qu'un impact par 340 ms */
 const SMASH_MUR = 20.5;                            // vitesse minimale qui fissure un mur
 const FISSURE_PORTEE = 60, FISSURE_TROU = 3;       // regroupement des impacts / niveau "troué"
 const MAX_DEBRIS = 8, DEBRIS_R_MIN = 6, DEBRIS_R_MAX = 12;
+/* Arc électrique de l'arène ORAGE : il traverse le terrain, et toute balle qui
+   le franchit repart dans une direction imprévisible. */
+const ARC_INTERVALLE = 5200, ARC_PREAVIS = 850, ARC_DUREE = 1500;
+const ARC_BANDE = 7, ARC_REPOS = 420;
+const arcOrage = { prochain: 0, debut: 0, y: 0, actif: false, preavis: false };
 const PREFIXE = "duo-pong-tg-";
 /* Relais TURN : identifiants frais demandés à Metered au chargement.
    En cas d'échec (API injoignable, quota), repli silencieux sur STUN seul :
@@ -808,6 +813,12 @@ function sonMortSubite(){
   setTimeout(() => bip(330, 0.3, "square", 0.3, 220), 440);
 }
 function sonVice(){ bip(196, 0.5, "sawtooth", 0.32, 60); souffle(0.25, 0.2, 400); }
+function sonArcOn(){ bip(90, 0.5, "sawtooth", 0.3, 420); souffle(0.4, 0.24, 2600); }
+function sonArc(){
+  bip(1200, 0.13, "square", 0.34, 260);
+  souffle(0.16, 0.4, 3400);
+  setTimeout(() => bip(760, 0.1, "sawtooth", 0.24, 180), 60);
+}
 function sonBloc(matiere){
   if (matiere === "glace"){ bip(1450, 0.1, "sine", 0.3, 900); souffle(0.05, 0.14, 5200); }
   else if (matiere === "lave"){ bip(120, 0.16, "sawtooth", 0.34, 300); souffle(0.13, 0.3, 700); }
@@ -1368,6 +1379,7 @@ function envoyerEtatHote(){
     bo: bonusListe.map(o => [o.id, o.x, o.y, o.k]),
     r: etat.raqBas, s: etat.score, ph: phase,
     ta: tailles, fa: fantome ? 1 : 0, bf: bouleFeu ? 1 : 0,
+    ao: arcOrage.actif ? Math.round(arcOrage.y) : (arcOrage.preavis ? -Math.round(arcOrage.y) : 0),
     ma: manches, mu: Math.round(margeMur), fe: enFeu ? 1 : 0,
     ch: [Math.round(chargeLocal*100), Math.round(chargeHaut*100)],
     vw: viceGagnant, vh: [vices[0] ? 1 : 0, vices[1] ? 1 : 0],
@@ -1409,6 +1421,8 @@ function recevoir(m){
       bonusListe = m.bo.map(o => ({ id: o[0], x: o[1], y: o[2], k: o[3] }));
       etat.raqBas = m.r;
       tailles = m.ta; fantome = !!m.fa; bouleFeu = !!m.bf;
+      const ao = m.ao || 0;
+      arcOrage.actif = ao > 0; arcOrage.preavis = ao < 0; arcOrage.y = Math.abs(ao);
       manches = m.ma; margeMur = m.mu; enFeu = !!m.fe;
       obstacles = (m.ob || []).map(o => ({ x: o[0], y: o[1], l: o[2], h: o[3], ebreche: o[4], germe: o[5] }));
       debris = (m.de || []).map(d => ({ x: d[0], y: d[1], r: d[2], rot: d[3] }));
@@ -1481,6 +1495,13 @@ function jouerFx(k, x, y, extra){
   }
   if (k === "mur"){ explosion(x, y, "#8AB4FF", 7, 2.2); sonMur(); }
   if (k === "survol"){ annoncer("BALLE LIFTÉE — ELLE SURVOLE", CO_OR); }
+  if (k === "arcOn"){ sonArcOn(); }
+  if (k === "arc"){
+    explosion(x, y, "#C4B5FD", 22, 4.2);
+    secousse = Math.max(secousse, 6);
+    annoncer("ARC ÉLECTRIQUE", "#C4B5FD");
+    sonArc();
+  }
   if (k === "bloc"){
     const coul = extra === "glace" ? "#BAE6FD" : (extra === "lave" ? "#FB923C" : "#8AB4FF");
     explosion(x, y, coul, 10, 2.6);
@@ -1598,8 +1619,8 @@ function appliquerBonus(k, frappeur, x, y){
 /* blocs de décor : n = manche en cours - 1, plafonné à 2 */
 function construireObstacles(){
   obstacles = [];
-  const n = cfgMode().obstacles ? Math.min(3, 1 + manches[0] + manches[1]) : 0;
-  const decalY = [-46, 44, -116];
+  const n = cfgMode().obstacles ? (areneCourante().blocs || 1) : 0;
+  const decalY = n === 1 ? [0] : [-52, 52];
   for (let i = 0; i < n; i++){
     obstacles.push({
       base: LARG/2, y: HAUT/2 + decalY[i], l: OBST_L, h: OBST_H,
@@ -1682,6 +1703,7 @@ function physique(){
                                         (avant : rafraîchie seulement à l'envoi réseau,
                                         donc jamais en solo -> raquette fantôme au centre) */
   const maintenant = performance.now();
+  majArc(maintenant);
   majEffets(maintenant);
   if (phase === "compte"){
     if (maintenant >= finCompte) servir();
@@ -1795,12 +1817,12 @@ function physique(){
         /* Les blocs d'origine ne sont JAMAIS détruits par un simple contact :
            ils s'ébrèchent et rétrécissent jusqu'à une taille plancher, puis
            restent en jeu. Seule la boule de feu peut les faire disparaître. */
+        /* La bûche garde sa taille : elle se marque d'une félure au premier
+           choc, et c'est tout. Ni destruction, ni rétrécissement, jamais. */
         const tNow = performance.now();
         if (!o.ebreche && tNow - (o.tImpact === undefined ? -1e9 : o.tImpact) >= IMMU_BLOC){
-          o.ebreche = 1;                       /* une seule fois, jamais davantage */
+          o.ebreche = 1;
           o.tImpact = tNow;
-          o.l = Math.max(OBST_L_MIN, o.l * OBST_RETRECIT);
-          o.h = Math.max(10, o.h * 0.88);
         }
         fxLocal("bloc", b.x, b.y, A.bloc);
       }
@@ -1871,6 +1893,22 @@ function physique(){
       }
     }
 
+    /* franchissement de l'arc : déviation imprévisible */
+    if (arcOrage.actif){
+      const traverse = (prevY - arcOrage.y) * (b.y - arcOrage.y) <= 0
+                    || Math.abs(b.y - arcOrage.y) < ARC_BANDE;
+      if (traverse && maintenant - (b.tArc || -1e9) > ARC_REPOS){
+        b.tArc = maintenant;
+        const v = Math.hypot(b.vx, b.vy);
+        const ang = Math.atan2(b.vx, b.vy) + (Math.random() - 0.5) * 1.9;
+        b.vx = v * Math.sin(ang);
+        b.vy = v * Math.cos(ang);
+        if (Math.abs(b.vy) < VY_MIN) b.vy = VY_MIN * (b.vy >= 0 ? 1 : -1);
+        b.spin = 0;
+        fxLocal("arc", b.x, arcOrage.y, "");
+      }
+    }
+
     if (b.y > HAUT + 30) aMarquer.push({ b, qui: 1 });
     if (b.y < -30) aMarquer.push({ b, qui: 0 });
   }
@@ -1892,6 +1930,29 @@ function physique(){
 }
 
 function survolePrecalc(b){ return Math.abs(b.spin || 0) > SPIN_SURVOL; }
+
+/* cycle de l'arc : attente -> préavis clignotant -> arc actif */
+function majArc(maintenant){
+  const A = areneCourante();
+  if (!cfgMode().obstacles || A.bloc !== "orage" || phase !== "jeu"){
+    arcOrage.actif = false; arcOrage.preavis = false;
+    return;
+  }
+  if (!arcOrage.prochain) arcOrage.prochain = maintenant + ARC_INTERVALLE;
+  if (!arcOrage.actif && !arcOrage.preavis && maintenant >= arcOrage.prochain){
+    arcOrage.preavis = true;
+    arcOrage.debut = maintenant + ARC_PREAVIS;
+    arcOrage.y = HAUT * 0.28 + Math.random() * HAUT * 0.44;
+  }
+  if (arcOrage.preavis && maintenant >= arcOrage.debut){
+    arcOrage.preavis = false; arcOrage.actif = true;
+    fxLocal("arcOn", LARG/2, arcOrage.y, "");
+  }
+  if (arcOrage.actif && maintenant >= arcOrage.debut + ARC_DUREE){
+    arcOrage.actif = false;
+    arcOrage.prochain = maintenant + ARC_INTERVALLE;
+  }
+}
 
 /* frappe de raquette : rebond + spin + smash + compteur de feu */
 function frapper(b, xRaq, largeur, sensY, vitRaq, frappeur){
@@ -2046,6 +2107,7 @@ function afficherRecap(){
 function mancheSuivante(){
   etat.score = [0, 0];
   margeMur = 0;
+  arcOrage.actif = false; arcOrage.preavis = false; arcOrage.prochain = 0;
   construireObstacles();
   precharger();
   debris = []; fissures = [[], []];
@@ -2395,6 +2457,8 @@ function dessiner(){
     ctx.fillText(def.court, o.x, yy + r + 13);
   }
 
+  dessinerArcOrage(Y, t);
+
   /* balles + traînes */
   while (traines.length < balles.length) traines.push([]);
   while (traines.length > balles.length) traines.pop();
@@ -2726,6 +2790,7 @@ function rgba(hex, a){
 const ARENES = [
   { nom: "MÉTAL", bloc: "roche", img: "arenes/metal.webp", halo: "28,48,104", grille: "120,160,255", trait: "120,160,255",
     pas: 45, facteur: 1, accent: "#8AB4FF",
+    blocs: 2,
     mus: { tempo: 142, max: 190, lead: "square", basse: "sawtooth",
            L: [659,0,784,880, 0,784,659,0, 587,0,659,784, 0,659,587,0],
            B: [110,0,110,110, 82,0,82,0, 98,0,98,98, 73,0,73,0],
@@ -2736,6 +2801,7 @@ const ARENES = [
 
   { nom: "GLACE", bloc: "glace", img: "arenes/glace.webp", halo: "16,72,92", grille: "150,240,255", trait: "150,240,255",
     pas: 54, facteur: 0.78, accent: "#7DD3FC",
+    blocs: 1,
     mus: { tempo: 124, max: 158, lead: "triangle", basse: "sine",
            L: [1047,0,1245,0, 1397,0,1245,0, 1047,0,880,0, 1047,1245,0,0],
            B: [65,0,0,0, 65,0,0,0, 49,0,0,0, 58,0,0,0],
@@ -2747,6 +2813,7 @@ const ARENES = [
 
   { nom: "LAVE", bloc: "lave", img: "arenes/lave.webp", halo: "96,26,10", grille: "255,150,80", trait: "255,140,60",
     pas: 38, facteur: 1.22, accent: "#FB923C",
+    blocs: 2,
     mus: { tempo: 168, max: 208, lead: "sawtooth", basse: "sawtooth",
            L: [415,0,415,494, 554,0,494,415, 370,0,415,494, 554,494,415,0],
            B: [55,55,0,55, 55,0,55,0, 49,49,0,49, 49,0,49,0],
@@ -2758,6 +2825,7 @@ const ARENES = [
 
   { nom: "ORAGE", bloc: "orage", img: "arenes/orage.webp", halo: "40,32,86", grille: "196,181,253", trait: "216,180,254",
     pas: 34, facteur: 1.10, accent: "#C4B5FD", chaos: 0.34,
+    blocs: 1,
     mus: { tempo: 176, max: 214, lead: "square", basse: "sawtooth",
            L: [0,0,880,0, 988,0,0,880, 0,0,784,0, 880,0,988,0],
            B: [73,73,73,0, 73,0,73,73, 65,65,65,0, 65,0,65,65],
@@ -2769,6 +2837,7 @@ const ARENES = [
 
   { nom: "VIDE", bloc: "vide", img: "arenes/espace.webp", halo: "10,14,46", grille: "148,163,220", trait: "165,180,252",
     pas: 66, facteur: 0.94, accent: "#A5B4FC", attraction: 0.055,
+    blocs: 2,
     mus: { tempo: 104, max: 132, lead: "sine", basse: "sine",
            L: [523,0,0,0, 0,0,622,0, 0,0,466,0, 0,0,0,0],
            B: [41,0,0,0, 0,0,0,0, 39,0,0,0, 0,0,0,0],
@@ -2780,6 +2849,7 @@ const ARENES = [
 
   { nom: "JUNGLE", bloc: "jungle", img: "arenes/jungle.webp", halo: "12,58,32", grille: "134,239,172", trait: "134,239,172",
     pas: 48, facteur: 1, accent: "#4ADE80", absorbe: true,
+    blocs: 1,
     mus: { tempo: 150, max: 188, lead: "triangle", basse: "triangle",
            L: [587,0,659,0, 587,523,0,587, 440,0,523,0, 587,0,523,0],
            B: [87,0,87,0, 65,0,65,65, 73,0,73,0, 98,0,98,0],
@@ -3149,6 +3219,40 @@ function cheminRoche(x, y, l, h, germe){
   }
   ctx.closePath();
 }
+function dessinerArcOrage(Y, t){
+  if (!arcOrage.actif && !arcOrage.preavis) return;
+  const yA = Y(arcOrage.y);
+  const x0 = murG_(), x1 = murD_();
+  if (arcOrage.preavis){
+    ctx.save();
+    ctx.strokeStyle = "rgba(196,181,253," + (0.22 + 0.28 * Math.abs(Math.sin(t * 13))).toFixed(2) + ")";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 9]);
+    ctx.beginPath(); ctx.moveTo(x0, yA); ctx.lineTo(x1, yA); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+    return;
+  }
+  const germeArc = Math.floor(t * 24);
+  const tracer = (largeur, couleur) => {
+    const r = graine(germeArc);
+    ctx.strokeStyle = couleur; ctx.lineWidth = largeur;
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.beginPath(); ctx.moveTo(x0, yA);
+    const n = 16;
+    for (let i = 1; i <= n; i++){
+      const x = x0 + (x1 - x0) * i / n;
+      const y = yA + (i === n ? 0 : (r() - 0.5) * 17);
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  };
+  tracer(8, "rgba(124,58,237,.30)");
+  tracer(3.4, "rgba(196,181,253,.75)");
+  tracer(1.3, "rgba(255,255,255,.92)");
+  bloomCercle(LARG/2, yA, 240, "#C4B5FD", 0.42);
+}
+
 function dessinerBloc(o, yEcran, t){
   const A = areneCourante();
   const g = o.germe || 1;
