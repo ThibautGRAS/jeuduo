@@ -270,6 +270,26 @@ verifier("tableau comparatif", /function majRecordsVoile\(/.test(script) && /id=
 verifier("records rangés localement, sans service distant",
   /localStorage\.setItem\("duo_records"/.test(script) && !/fetch\([^)]*record/i.test(script));
 
+/* ======================= 8septies. SURVOL ET ÉCLATS ======================= */
+titre("8septies. Survol du lift et cycle de vie des éclats");
+verifier("le survol ignore les bûches", /if \(!survole\) for \(let oi/.test(script));
+verifier("le survol ignore aussi les éclats", /if \(!survole\) for \(let di/.test(script));
+verifier("l'ombre traduit la hauteur",
+  /const hauteur = Math\.max\(0, \(Math\.abs\(b\.spin \|\| 0\) - SPIN_VISIBLE\)/.test(script) &&
+  /hauteur\*13/.test(script));
+verifier("anneau doré au moment du décollage",
+  /const enVol = Math\.abs\(b\.spin \|\| 0\) > SPIN_SURVOL/.test(script));
+verifier("éclat écorné au premier impact", /d\.ecorne = 1;[\s\S]{0,120}DEBRIS_RETRECIT/.test(script));
+verifier("éclat pulvérisé au second", /if \(d\.ecorne\)\{[\s\S]{0,120}debris\.splice\(di, 1\)/.test(script));
+verifier("immunité entre deux chocs d'un même éclat", /IMMU_DEBRIS/.test(script));
+verifier("état d'écornement transmis à l'invité",
+  /d\.ecorne \|\| 0\]/.test(script) && /ecorne: d\[4\]/.test(script));
+{
+  const seuils = { survol: 0.62, visible: 0.30 };
+  verifier("le survol demande plus qu'un lift visible", seuils.survol > seuils.visible,
+    Math.round(seuils.survol*100) + "% contre " + Math.round(seuils.visible*100) + "% du spin maximal");
+}
+
 /* ======================= 9. RÉFÉRENCES ======================= */
 titre("9. Toute fonction appelée est définie");
 {
