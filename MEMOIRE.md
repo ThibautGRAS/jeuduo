@@ -61,6 +61,7 @@ relancer la suite.
 | Immunité des blocs | 340 ms | un bloc oscillant recognait la balle à l'image suivante |
 | IA facile / moyen / difficile | 37 / 64 / 90 % d'interception | mesuré sur 3 000 échanges simulés |
 | Cadre des arènes | 42 × 50 | correspond exactement au cadre peint des décors |
+| Format du terrain | 540 × 880 | rapport 0,614 : épouse la hauteur réellement disponible sur iPhone, contre 0,75 où 130 pt restaient vides |
 
 **Arènes** : six, tirées au sort dès la manche 1 ou imposées depuis le menu.
 Chacune a sa matière (facteur de vitesse, chaos, absorption, attraction), son
