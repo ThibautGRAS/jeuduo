@@ -216,6 +216,17 @@ verifier("sélecteur d'arène présent", /id="choixArenes"/.test(html));
 verifier("arène imposée respectée dans le mélange",
   /if \(choixArene >= 0 && choixArene < ARENES\.length\)/.test(script));
 verifier("choix mémorisé", /localStorage\.setItem\("duo_arene"/.test(script));
+verifier("le classique honore aussi le décor choisi",
+  !/if \(modeJeu === "classique"\) return ARENES\[0\]/.test(script),
+  "seules les matières sont neutralisées, par absence de blocs");
+{
+  /* les effets de matière ne doivent vivre que dans la collision de bloc */
+  const deb = script.indexOf("if (!survole) for (let oi = obstacles.length");
+  const bloc = script.slice(deb, deb + 2600);
+  verifier("les matières n'agissent que via les blocs",
+    ["A.facteur", "A.chaos", "A.absorbe"].every(p => bloc.includes(p)),
+    "donc sans effet en classique, où il n'y a pas de bloc");
+}
 verifier("boutons construits après la définition des arènes",
   script.indexOf("const ARENES = [") < script.indexOf("initChoixArene"),
   "sinon zone morte temporelle");
