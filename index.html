@@ -150,7 +150,7 @@ canvas{
 .combattant.droite .vignette.geant{border-color:rgba(244,113,181,.85);box-shadow:0 0 34px rgba(244,113,181,.4)}
 .vsNom{
   font-family:"JetBrains Mono",monospace;font-size:12.5px;font-weight:700;letter-spacing:.08em;
-  color:var(--moi);max-width:126px;line-height:1.3;text-align:center;
+  color:var(--moi);max-width:132px;line-height:1.25;text-align:center;
   overflow-wrap:anywhere;word-break:break-word;
   text-shadow:0 0 14px rgba(34,211,238,.5);
 }
@@ -303,7 +303,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v9.2 · 2026-08-07</div>
+  <div id="version">DUO v9.3 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -420,7 +420,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "9.2";
+const VERSION = "9.3";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -1981,8 +1981,11 @@ function afficherVersus(){
   if (maPhoto) pG.querySelector("img").src = maPhoto;
   pD.innerHTML = photoAdverse ? '<img alt="">' : (modeSolo ? "IA" : "?");
   if (photoAdverse) pD.querySelector("img").src = photoAdverse;
-  $("vsNomG").textContent = monNom;
-  $("vsNomD").textContent = nomAdv;
+  for (const [id, nom] of [["vsNomG", monNom], ["vsNomD", nomAdv]]){
+    const el = $(id);
+    el.textContent = nom;
+    el.style.fontSize = nom.length > 11 ? "10px" : (nom.length > 8 ? "11.5px" : "13px");
+  }
   const fmt = MANCHES_GAGNANTES === 2 ? "AU MEILLEUR DES 3"
             : (MANCHES_GAGNANTES === 3 ? "AU MEILLEUR DES 5" : "AU MEILLEUR DES 9");
   $("vsFormat").textContent = fmt + " · " + modeJeu.toUpperCase() + " · " + texteDuels();
@@ -2278,14 +2281,14 @@ function dessiner(){
 
   /* murs de mort subite */
   if (margeMur > 1){
-    ctx.shadowBlur = 20; ctx.shadowColor = CO_FEU;
+    ctx.shadowBlur = flou(20); ctx.shadowColor = CO_FEU;
     ctx.fillStyle = "rgba(251,113,133,.22)";
     ctx.fillRect(CADRE_X, 0, margeMur, HAUT);
     ctx.fillRect(LARG - CADRE_X - margeMur, 0, margeMur, HAUT);
     ctx.fillStyle = CO_FEU;
     ctx.fillRect(murG_() - 2, 0, 2, HAUT);
     ctx.fillRect(murD_(), 0, 2, HAUT);
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = flou(0);
   }
 
   dessinerArene(Y, t);
@@ -2333,7 +2336,7 @@ function dessiner(){
       ge.addColorStop(0, "#CBD5E1"); ge.addColorStop(0.55, "#8B99AD"); ge.addColorStop(1, "#3F4A60");
       ctx.shadowColor = "rgba(148,163,184,.7)";
     }
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = flou(10);
     ctx.fillStyle = ge;
     ctx.beginPath();
     ctx.moveTo(-d.r*0.9, -d.r*0.5);
@@ -2343,7 +2346,7 @@ function dessiner(){
     ctx.lineTo(-d.r*0.7, d.r*0.6);
     ctx.closePath(); ctx.fill();
     ctx.restore();
-    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+    ctx.shadowBlur = flou(0); ctx.globalAlpha = 1;
   }
 
   if (phase === "compte") dessinerCompte();
@@ -2368,7 +2371,7 @@ function dessiner(){
     ctx.beginPath(); ctx.arc(o.x, yy, r, 0, Math.PI*2); ctx.fill();
 
     /* anneau plein + anneau pointillé contrarotatif */
-    ctx.shadowBlur = 16; ctx.shadowColor = def.couleur;
+    ctx.shadowBlur = flou(16); ctx.shadowColor = def.couleur;
     ctx.strokeStyle = rgba(def.couleur, 0.9); ctx.lineWidth = 1.8;
     ctx.beginPath(); ctx.arc(o.x, yy, r, 0, Math.PI*2); ctx.stroke();
     ctx.save();
@@ -2383,7 +2386,7 @@ function dessiner(){
 
     /* glyphe vectoriel */
     glypheBonus(o.k, o.x, yy, 1.06 + pulse * 0.05, def.couleur);
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = flou(0);
 
     /* étiquette */
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -2446,13 +2449,13 @@ function dessiner(){
       gradB.addColorStop(0, coeur);
       gradB.addColorStop(0.5, coeur);
       gradB.addColorStop(1, robe);
-      ctx.shadowBlur = bouleFeu ? 42 : (enFeu ? 36 : (liftee ? 34 : 26));
+      ctx.shadowBlur = flou(bouleFeu ? 42 : (enFeu ? 36 : (liftee ? 34 : 26)));
       ctx.shadowColor = bouleFeu ? "#FB923C" : (enFeu ? CO_FEU : (fantome ? "#A78BFA" : (liftee ? CO_OR : CO_BALLE)));
       ctx.fillStyle = gradB;
       ctx.beginPath(); ctx.arc(0, 0, BALLE_R, 0, Math.PI*2); ctx.fill();
       ctx.restore();
-      ctx.shadowBlur = 0;
-      bloomCercle(b.x, Y(b.y), BALLE_R * (bouleFeu || enFeu ? 5.5 : 3.8), robe, 0.55);
+      ctx.shadowBlur = flou(0);
+      bloomCercle(b.x, Y(b.y), BALLE_R * (bouleFeu || enFeu ? 4.6 : 3.2), robe, 0.45);
     }
   }
 
@@ -2471,15 +2474,15 @@ function dessiner(){
   const lMoi = estHote ? taillesAffichees[0] : taillesAffichees[1];
   const lAdv = estHote ? taillesAffichees[1] : taillesAffichees[0];
   const cMoi = chargesAffichees[0], cAdv = chargesAffichees[1];
-  ctx.shadowBlur = 22 + cMoi * 26;
+  ctx.shadowBlur = flou(22 + cMoi * 26);
   ctx.shadowColor = cMoi >= 1 ? CO_OR : CO_MOI;
   ctx.fillStyle = cMoi >= 1 ? "#FDE68A" : CO_MOI;
   arrondi(maRaquette - lMoi/2, HAUT - RAQ_MARGE - RAQ_H, lMoi, RAQ_H, 6);
-  ctx.shadowBlur = 22 + cAdv * 26;
+  ctx.shadowBlur = flou(22 + cAdv * 26);
   ctx.shadowColor = cAdv >= 1 ? CO_OR : CO_ADV;
   ctx.fillStyle = cAdv >= 1 ? "#FDE68A" : CO_ADV;
   arrondi(raqAdvAffichee - lAdv/2, RAQ_MARGE, lAdv, RAQ_H, 6);
-  ctx.shadowBlur = 0;
+  ctx.shadowBlur = flou(0);
   bloomCercle(maRaquette, HAUT - RAQ_MARGE - RAQ_H/2, 44 + cMoi*16, cMoi >= 1 ? CO_OR : CO_MOI, 0.34);
   bloomCercle(raqAdvAffichee, RAQ_MARGE + RAQ_H/2, 44 + cAdv*16, cAdv >= 1 ? CO_OR : CO_ADV, 0.34);
 
@@ -2528,9 +2531,9 @@ function dessiner(){
     ctx.font = "700 30px 'Space Grotesk', sans-serif";
     ctx.textAlign = "center";
     ctx.fillStyle = CO_VICE;
-    ctx.shadowBlur = 18; ctx.shadowColor = CO_VICE;
+    ctx.shadowBlur = flou(18); ctx.shadowColor = CO_VICE;
     ctx.fillText("⇄", LARG/2, HAUT - 90);
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = flou(0);
   }
 
   appliquerBloom();
@@ -2568,6 +2571,11 @@ function construireGrain(){
   g.putImageData(img, 0, 0);
   motifGrain = ctx.createPattern(c, "repeat");
 }
+/* Le flou d'ombre du canevas force une passe de rendu par objet : très coûteux
+   sur mobile. Quand le bloom est actif, il fait le même travail bien moins cher,
+   donc on neutralise le flou ; en mode allégé (sans bloom) on le conserve. */
+function flou(v){ return effetsRiches ? 0 : v; }
+
 function preparerBloom(){
   if (!effetsRiches) return;
   ctxB.clearRect(0, 0, cvBloom.width, cvBloom.height);
@@ -2586,9 +2594,9 @@ function appliquerBloom(){
   if (!effetsRiches) return;
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
-  ctx.globalAlpha = 0.42;
+  ctx.globalAlpha = 0.5;
   ctx.drawImage(cvBloom, 0, 0, LARG, HAUT);
-  ctx.globalAlpha = 0.18;
+  ctx.globalAlpha = 0.22;
   ctx.drawImage(cvBloom, -4, -4, LARG + 8, HAUT + 8);
   ctx.restore();
   ctx.globalCompositeOperation = "source-over";
@@ -2671,7 +2679,7 @@ function surveillerPerf(dtMs){
   if (now - derniereVerifPerf < 6000 || tempsFrames.length < 140) return;
   derniereVerifPerf = now;
   const moy = tempsFrames.reduce((a, x) => a + x, 0) / tempsFrames.length;
-  if (moy > 27 && effetsRiches){
+  if (moy > 33 && effetsRiches){
     effetsRiches = false;
     majIcones();
     annoncer("EFFETS ALLÉGÉS POUR LA FLUIDITÉ", "#8AB4FF");
@@ -3079,40 +3087,51 @@ function graine(n){
   return function(){ s = (s * 1664525 + 1013904223) | 0; return ((s >>> 8) / 16777216); };
 }
 function dessinerFissure(cote, f, Y){
-  /* La brèche appartient à la PAROI : entaille déchiquetée creusée dans la
-     bordure, énergie qui s'en échappe, aux couleurs de l'arène. */
+  /* La brèche est INSCRITE dans la paroi : de fines fêlures gravées dans la
+     bordure, bornées par un masque pour ne jamais déborder sur le terrain.
+     Aucune découpe noire — juste une entaille sombre doublée d'une arête vive. */
   const A = areneCourante();
   const xm = cote === 0 ? murG_() : murD_();
-  const dir = cote === 0 ? 1 : -1;
+  const dir = cote === 0 ? 1 : -1;               /* dir pointe vers le terrain */
   const niv = Math.min(f.niv, FISSURE_TROU);
   const yA = Y(f.y);
-  const h = 30 + niv * 15;
-  const prof = 5 + niv * 5;
-  const r = graine(Math.round(f.y * 13) + cote * 7919);
+  const h = 24 + niv * 11;
 
-  const g = ctx.createRadialGradient(xm, yA, 2, xm, yA, h * 1.1);
-  g.addColorStop(0, rgba(A.accent, 0.42));
-  g.addColorStop(0.45, rgba(A.accent, 0.13));
+  ctx.save();
+  ctx.beginPath();
+  if (cote === 0) ctx.rect(0, yA - h, xm, h * 2);
+  else ctx.rect(xm, yA - h, LARG - xm, h * 2);
+  ctx.clip();
+
+  const tracer = (largeur, couleur) => {
+    const r = graine(Math.round(f.y * 13) + cote * 7919);
+    ctx.strokeStyle = couleur;
+    ctx.lineWidth = largeur;
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.beginPath();
+    for (let br = 0; br < 2 + niv; br++){
+      let px = xm - dir * 1, py = yA + (r() - 0.5) * h * 0.9;
+      ctx.moveTo(px, py);
+      const seg = 3 + Math.floor(r() * 3);
+      for (let i = 0; i < seg; i++){
+        px -= dir * (4 + r() * 11);              /* la fêlure s'enfonce dans la paroi */
+        py += (r() - 0.5) * 16;
+        ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+  };
+  tracer(2.4, "rgba(4,7,16,.5)");
+  tracer(1, rgba(A.accent, niv >= FISSURE_TROU ? 0.9 : 0.6));
+  ctx.restore();
+
+  /* lueur qui s'échappe de la brèche, côté terrain */
+  const g = ctx.createRadialGradient(xm, yA, 1, xm, yA, h);
+  g.addColorStop(0, rgba(A.accent, niv >= FISSURE_TROU ? 0.3 : 0.18));
   g.addColorStop(1, rgba(A.accent, 0));
   ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(xm, yA, h * 1.1, 0, Math.PI*2); ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(xm - dir * CADRE_X, yA - h/2);
-  const n = 5 + niv;
-  for (let i = 0; i <= n; i++){
-    const u = i / n;
-    const px = xm + dir * prof * (0.3 + r() * 0.9) * Math.sin(u * Math.PI);
-    ctx.lineTo(px, yA - h/2 + h * u);
-  }
-  ctx.lineTo(xm - dir * CADRE_X, yA + h/2);
-  ctx.closePath();
-  ctx.fillStyle = "rgba(3,5,12,.88)";
-  ctx.fill();
-  ctx.strokeStyle = rgba(A.accent, niv >= FISSURE_TROU ? 0.95 : 0.6);
-  ctx.lineWidth = niv >= FISSURE_TROU ? 2 : 1.3;
-  ctx.stroke();
-  bloomCercle(xm, yA, h * 1.4, A.accent, niv >= FISSURE_TROU ? 0.5 : 0.3);
+  ctx.beginPath(); ctx.arc(xm, yA, h, 0, Math.PI*2); ctx.fill();
+  bloomCercle(xm, yA, h * 1.2, A.accent, niv >= FISSURE_TROU ? 0.34 : 0.2);
 }
 
 /* contour rocheux déterministe (même bloc = même silhouette) */
@@ -3140,10 +3159,10 @@ function dessinerBloc(o, yEcran, t){
     ctx.globalAlpha = 0.55;
     const gd = ctx.createLinearGradient(o.x, yEcran - o.h, o.x + o.l, yEcran + o.h);
     gd.addColorStop(0, "#E0F7FF"); gd.addColorStop(0.5, "#7DD3FC"); gd.addColorStop(1, "#2E7EA8");
-    ctx.shadowBlur = 22; ctx.shadowColor = "rgba(125,211,252,.75)";
+    ctx.shadowBlur = flou(22); ctx.shadowColor = "rgba(125,211,252,.75)";
     ctx.fillStyle = gd;
     cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g); ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = flou(0);
     ctx.globalAlpha = 0.85;
     ctx.strokeStyle = "rgba(224,247,255,.9)"; ctx.lineWidth = 1.2;
     cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g); ctx.stroke();
@@ -3161,10 +3180,10 @@ function dessinerBloc(o, yEcran, t){
     /* roche sombre parcourue de veines en fusion pulsantes */
     const gd = ctx.createLinearGradient(o.x, yEcran - o.h, o.x, yEcran + o.h);
     gd.addColorStop(0, "#5B4038"); gd.addColorStop(0.45, "#33211E"); gd.addColorStop(1, "#1A0F0E");
-    ctx.shadowBlur = 20; ctx.shadowColor = "rgba(251,146,60,.65)";
+    ctx.shadowBlur = flou(20); ctx.shadowColor = "rgba(251,146,60,.65)";
     ctx.fillStyle = gd;
     cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g); ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = flou(0);
     const pulse = 0.55 + 0.45 * Math.sin(t * 2.6 + g);
     const r = graine(g + 17);
     ctx.strokeStyle = "rgba(251,146,60," + (0.55 + pulse*0.45).toFixed(2) + ")";
@@ -3190,10 +3209,10 @@ function dessinerBloc(o, yEcran, t){
     /* pylône électrifié : métal sombre et arcs grésillants */
     const gd = ctx.createLinearGradient(o.x, yEcran - o.h, o.x, yEcran + o.h);
     gd.addColorStop(0, "#C7BFF5"); gd.addColorStop(0.5, "#5B4E9C"); gd.addColorStop(1, "#2A2350");
-    ctx.shadowBlur = 20; ctx.shadowColor = "rgba(196,181,253,.7)";
+    ctx.shadowBlur = flou(20); ctx.shadowColor = "rgba(196,181,253,.7)";
     ctx.fillStyle = gd;
     cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g); ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = flou(0);
     const r = graine(g + 53);
     ctx.strokeStyle = "rgba(237,233,254," + (0.4 + 0.6*Math.abs(Math.sin(t*9 + g))).toFixed(2) + ")";
     ctx.lineWidth = 1.4; ctx.lineCap = "round";
@@ -3211,10 +3230,10 @@ function dessinerBloc(o, yEcran, t){
     /* tronc noueux ceint de lianes */
     const gd = ctx.createLinearGradient(o.x, yEcran - o.h, o.x, yEcran + o.h);
     gd.addColorStop(0, "#8B6B4A"); gd.addColorStop(0.5, "#5A4430"); gd.addColorStop(1, "#2E2318");
-    ctx.shadowBlur = 14; ctx.shadowColor = "rgba(74,222,128,.5)";
+    ctx.shadowBlur = flou(14); ctx.shadowColor = "rgba(74,222,128,.5)";
     ctx.fillStyle = gd;
     cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g); ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = flou(0);
     const r = graine(g + 71);
     ctx.strokeStyle = "rgba(74,222,128,.85)"; ctx.lineWidth = 2; ctx.lineCap = "round";
     ctx.beginPath();
@@ -3237,11 +3256,11 @@ function dessinerBloc(o, yEcran, t){
     ctx.globalAlpha = 0.72;
     const gd = ctx.createLinearGradient(o.x, yEcran - o.h, o.x + o.l, yEcran + o.h);
     gd.addColorStop(0, "#E0E7FF"); gd.addColorStop(0.5, "#818CF8"); gd.addColorStop(1, "#312E81");
-    ctx.shadowBlur = 26; ctx.shadowColor = "rgba(165,180,252,.85)";
+    ctx.shadowBlur = flou(26); ctx.shadowColor = "rgba(165,180,252,.85)";
     ctx.fillStyle = gd;
     cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g); ctx.fill();
     ctx.restore();
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = flou(0);
     ctx.strokeStyle = "rgba(165,180,252," + (0.1 + 0.08*Math.sin(t*2 + g)).toFixed(3) + ")";
     ctx.lineWidth = 1;
     for (let k = 1; k <= 2; k++){
@@ -3253,10 +3272,10 @@ function dessinerBloc(o, yEcran, t){
     /* roche minérale grise à facettes */
     const gd = ctx.createLinearGradient(o.x, yEcran - o.h, o.x, yEcran + o.h);
     gd.addColorStop(0, "#B8C4DA"); gd.addColorStop(0.45, "#6E7C97"); gd.addColorStop(1, "#39445C");
-    ctx.shadowBlur = 16; ctx.shadowColor = "rgba(138,180,255,.45)";
+    ctx.shadowBlur = flou(16); ctx.shadowColor = "rgba(138,180,255,.45)";
     ctx.fillStyle = gd;
     cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g); ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = flou(0);
     const r = graine(g + 7);
     ctx.strokeStyle = "rgba(20,28,44,.45)"; ctx.lineWidth = 1.1;
     ctx.beginPath();
@@ -3290,16 +3309,16 @@ function dessinerCompte(){
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.font = "700 88px 'Space Grotesk', sans-serif";
   ctx.fillStyle = "rgba(234,240,255,.85)";
-  ctx.shadowBlur = 30; ctx.shadowColor = CO_MOI;
+  ctx.shadowBlur = flou(30); ctx.shadowColor = CO_MOI;
   ctx.fillText("GO", LARG/2, HAUT/2 - 90);
-  ctx.shadowBlur = 0;
+  ctx.shadowBlur = flou(0);
   /* nom de l'arène : seulement au tout premier service de la manche (0-0) */
   if (modeJeu !== "classique" && etat.score[0] === 0 && etat.score[1] === 0){
     ctx.font = "700 30px 'Space Grotesk', sans-serif";
     ctx.fillStyle = A.accent;
-    ctx.shadowBlur = 24; ctx.shadowColor = A.accent;
+    ctx.shadowBlur = flou(24); ctx.shadowColor = A.accent;
     ctx.fillText("ARÈNE " + A.nom, LARG/2, HAUT/2 - 20);
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur = flou(0);
     ctx.font = "400 11px 'JetBrains Mono', monospace";
     ctx.fillStyle = "rgba(234,240,255,.6)";
     ctx.fillText(DESCRIPTION_ARENE[A.bloc] || "", LARG/2, HAUT/2 + 6);
