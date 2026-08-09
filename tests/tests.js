@@ -381,6 +381,49 @@ verifier("un seul des deux joueurs relance",
   /if \(estHote\) lancerRevanche\(\); else envoyerFiable\(\{ t: "rm" \}\)/.test(script),
   "sinon les deux côtés déclencheraient un match");
 
+/* ======================= 8nonies. MODE GRAVITÉ ======================= */
+titre("8nonies. Mode gravité");
+verifier("troisième mode déclaré", /gravite:\s*\{[^}]*puits: true/.test(script) && /data-mode="gravite"/.test(html));
+verifier("puits projeté chez l'adversaire",
+  /y: HAUT \* PUITS_HAUTEUR,\s*j: 0/.test(script) && /y: HAUT \* \(1 - PUITS_HAUTEUR\),\s*j: 1/.test(script),
+  "sinon il faciliterait sa propre défense");
+verifier("aucun orbe ni bloc en gravité",
+  /gravite:\s*\{ bonus: false,\s*obstacles: false,\s*vices: false/.test(script));
+verifier("puits dessinés", /function dessinerPuits\(/.test(script));
+verifier("aucune donnée réseau supplémentaire",
+  /x: etat\.raqBas/.test(script) && /x: etat\.raqHaut/.test(script),
+  "les puits se déduisent des raquettes déjà synchronisées");
+{
+  /* on rejoue le calibrage : l'amplitude doit rester de l'ordre d'une raquette */
+  const F = nombre("PUITS_FORCE"), P = nombre("PUITS_PORTEE"), HT = nombre("PUITS_HAUTEUR");
+  const LARG_J = nombre("LARG"), HAUT_J = nombre("HAUT");
+  const CX = nombre("CADRE_X"), BR = nombre("BALLE_R"), VMIN = nombre("VY_MIN");
+  const VMAX = nombre("VIT_MAX_ECLAIR"), RM = nombre("RAQ_MARGE"), RH = nombre("RAQ_H");
+  const tir = (xPuits) => {
+    const yP = HAUT_J * HT;
+    const b = { x: LARG_J/2, y: HAUT_J - RM - RH - 10, vx: 0, vy: -11 };
+    for (let i = 0; i < 1400; i++){
+      const dx = xPuits - b.x, dy = yP - b.y, d2 = dx*dx + dy*dy;
+      if (d2 > 400 && d2 < P*P){ const d = Math.sqrt(d2), u = 1 - d/P, f = F*u*u;
+        b.vx += (dx/d)*f; b.vy += (dy/d)*f; }
+      if (Math.abs(b.vy) < VMIN) b.vy = VMIN * (b.vy >= 0 ? 1 : -1);
+      const v = Math.hypot(b.vx, b.vy);
+      if (v > VMAX){ b.vx *= VMAX/v; b.vy *= VMAX/v; }
+      b.x += b.vx; b.y += b.vy;
+      if (b.x < CX+BR){ b.x = CX+BR; b.vx = Math.abs(b.vx); }
+      if (b.x > LARG_J-CX-BR){ b.x = LARG_J-CX-BR; b.vx = -Math.abs(b.vx); }
+      if (b.y <= RM + RH) return b.x;
+      if (b.y > HAUT_J + 30) return null;
+    }
+    return null;
+  };
+  const g = tir(140), d = tir(400);
+  const amplitude = (g !== null && d !== null) ? Math.abs(d - g) : 0;
+  verifier("le puits déplace l'arrivée d'environ une raquette",
+    amplitude > 70 && amplitude < 190,
+    Math.round(amplitude) + " px pour une raquette de 104 px");
+}
+
 /* ======================= 9. RÉFÉRENCES ======================= */
 titre("9. Toute fonction appelée est définie");
 {
