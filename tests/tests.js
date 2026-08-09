@@ -290,6 +290,37 @@ verifier("aucun flou d'ombre direct",
 verifier("traînée : plafond d'empilement au-dessus de la longueur voulue",
   /tr\.length > 24/.test(script) && /\? 20 : 13/.test(script));
 
+/* ======================= 11. MÉMOIRE À JOUR ======================= */
+titre("11. Cohérence de MEMOIRE.md avec le code");
+{
+  let memoire = "";
+  try{ memoire = fs.readFileSync(path.join(__dirname, "..", "MEMOIRE.md"), "utf8"); }catch(e){}
+  if (!memoire){
+    verifier("MEMOIRE.md présent", false, "fichier introuvable");
+  } else {
+    const cite = (motif) => memoire.includes(motif);
+    const paires = [
+      ["Vitesse au service", nombre("VIT_INIT"), "7,4"],
+      ["Plafond éclair", nombre("VIT_MAX_ECLAIR"), "18,4"],
+      ["Immunité des blocs", nombre("IMMU_BLOC"), "340"],
+      ["Cadre", nombre("CADRE_X"), "42"],
+    ];
+    for (const [nom, valeurCode, valeurCitee] of paires)
+      verifier("mémoire à jour : " + nom, cite(valeurCitee),
+        "code = " + valeurCode + ", cité = " + valeurCitee);
+    const nbArenes = [...script.matchAll(/nom:\s*"[^"]+",\s*bloc:/g)].length;
+    verifier("mémoire à jour : nombre d'arènes", memoire.includes("six") && nbArenes === 6,
+      nbArenes + " arènes dans le code");
+    verifier("aucun secret dans la mémoire",
+      !/github_pat_|apiKey=|[A-Za-z0-9_-]{40,}/.test(memoire));
+  }
+  let consignes = "";
+  try{ consignes = fs.readFileSync(path.join(__dirname, "..", "CLAUDE.md"), "utf8"); }catch(e){}
+  verifier("CLAUDE.md présent", consignes.length > 500);
+  verifier("aucun secret dans les consignes",
+    !/github_pat_|apiKey=|[A-Za-z0-9_-]{40,}/.test(consignes));
+}
+
 /* ======================= RÉSULTAT ======================= */
 console.log("\n" + "=".repeat(52));
 console.log("réussis : " + reussis + "   échoués : " + echoues);
