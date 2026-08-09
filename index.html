@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#04060C">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icone.png">
 <title>DUO — duel néon réflexe</title>
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -76,9 +78,18 @@ input:focus{outline:none;border-color:var(--moi)}
 #diagRes{font-family:"JetBrains Mono",monospace;font-size:11.5px;line-height:2;color:var(--texte)}
 #diagRes .ok{color:#4ADE80} #diagRes .ko{color:#F87171} #diagRes .attente{color:var(--sourd)}
 #diagRes .verdict{margin-top:6px;color:var(--sourd);font-size:11px;line-height:1.6;letter-spacing:0}
+#records{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.14em;color:rgba(251,191,36,.6);text-align:center}
 #version{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.22em;color:rgba(124,138,165,.55);margin-top:2px}
 @supports (height:100svh){ #lobby{ max-height:100svh; } }
 .aideMode{font-family:"JetBrains Mono",monospace;font-size:10.5px;line-height:1.5;color:var(--sourd)}
+input[type=range]{
+  width:100%;height:26px;background:transparent;-webkit-appearance:none;appearance:none;padding:0;border:0;
+}
+input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:rgba(120,160,255,.22)}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:20px;height:20px;margin-top:-7.5px;
+  border-radius:50%;background:var(--moi);box-shadow:0 2px 10px rgba(34,211,238,.5);
+}
 .grilleArenes{display:flex;flex-wrap:wrap;gap:6px}
 .grilleArenes button{width:auto;flex:1 1 30%;min-width:88px;padding:9px 6px;font-size:12.5px;letter-spacing:.02em}
 button.choisi{
@@ -264,9 +275,12 @@ canvas{
   text-shadow:0 0 14px rgba(251,191,36,.28);
 }
 #regles h3{font-size:20px;font-weight:700;letter-spacing:.2em;margin-bottom:2px}
+#reglesCourt{font-size:13px;line-height:1.7;color:var(--texte);max-width:420px;text-align:left}
+#reglesCourt .c{color:var(--moi)} #reglesCourt .o{color:var(--or)}
+#regles #btnPlus{padding:9px 18px;font-size:12.5px}
 #reglesListe{
-  font-size:12.5px;line-height:1.75;color:var(--texte);max-width:420px;
-  overflow-y:auto;max-height:56%;padding:0 4px;
+  font-size:12px;line-height:1.7;color:var(--texte);max-width:420px;
+  overflow-y:auto;max-height:44vh;padding:0 4px;text-align:left;
 }
 #reglesListe b{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.14em}
 #reglesListe .c{color:var(--moi)} #reglesListe .o{color:var(--or)}
@@ -325,12 +339,24 @@ canvas{
   </div>
 
   <div class="carte">
+    <h2>JOUER TOUT DE SUITE</h2>
+    <div class="rangSolo">
+      <button class="btnSolo secondaire" data-niveau="facile">Facile</button>
+      <button class="btnSolo" data-niveau="moyen">Moyen</button>
+      <button class="btnSolo secondaire" data-niveau="difficile">Difficile</button>
+    </div>
+    <div class="aideMode">Contre l'ordinateur, sans attendre personne.</div>
+  </div>
+
+  <div class="carte">
     <h2>MODE DE JEU</h2>
     <div class="rangSolo">
       <button class="btnMode secondaire" data-mode="arcade">Arcade</button>
       <button class="btnMode secondaire" data-mode="classique">Classique</button>
     </div>
     <div class="aideMode" id="aideMode">Orbes, blocs, vices et arènes à thème.</div>
+    <h2 style="margin-top:4px">VOLUME</h2>
+    <input id="curseurVolume" type="range" min="0" max="100" value="32" aria-label="Volume">
     <h2 style="margin-top:4px">ARÈNE</h2>
     <div class="grilleArenes" id="choixArenes"></div>
     <h2 style="margin-top:4px">MANCHES GAGNANTES</h2>
@@ -345,6 +371,7 @@ canvas{
     <h2>CRÉER UNE PARTIE</h2>
     <button id="btnCreer">Générer un code</button>
     <div id="codePartie" class="cache"></div>
+    <button id="btnLien" class="secondaire cache">Copier le lien d'invitation</button>
   </div>
 
   <div class="carte">
@@ -354,22 +381,14 @@ canvas{
   </div>
 
   <div class="carte">
-    <h2>SOLO — CONTRE L'IA</h2>
-    <div class="rangSolo">
-      <button class="btnSolo secondaire" data-niveau="facile">Facile</button>
-      <button class="btnSolo secondaire" data-niveau="moyen">Moyen</button>
-      <button class="btnSolo secondaire" data-niveau="difficile">Difficile</button>
-    </div>
-  </div>
-
-  <div class="carte">
     <h2>DIAGNOSTIC RÉSEAU</h2>
     <button id="btnDiag" class="secondaire">Tester ma connexion</button>
     <div id="diagRes" class="cache"></div>
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v10.4 · 2026-08-09</div>
+  <div id="records"></div>
+  <div id="version">DUO v10.5 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -387,7 +406,13 @@ canvas{
 
     <div id="regles" class="panneau">
       <h3>RÈGLES</h3>
-      <div id="reglesListe">
+      <div id="reglesCourt">
+        Glissez pour déplacer votre raquette — vous êtes <b class="c">en bas</b>.<br>
+        5 points gagnent une manche. Fouettez à l'impact pour lifter, restez immobile pour charger un smash.<br>
+        Touchez les <b class="o">orbes</b> avec la balle pour déclencher un bonus.
+      </div>
+      <button id="btnPlus" class="secondaire">Voir toutes les règles</button>
+      <div id="reglesListe" class="cache">
         <b class="c">DÉPLACEMENT</b> — Glissez pour bouger votre raquette. Vous êtes toujours en bas, en cyan.<br>
         <b class="c">MODES</b> — <b>Arcade</b> : orbes, blocs, vices, arènes à thème. <b>Classique</b> : duel pur, sans aucun de ces éléments.<br>
         <b class="c">MANCHES</b> — 5 points gagnent une manche ; le nombre de manches gagnantes se règle au menu. À 4-4 : <b class="f">MORT SUBITE</b>, le terrain rétrécit et les orbes disparaissent.<br>
@@ -488,7 +513,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "10.4";
+const VERSION = "10.5";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -802,6 +827,7 @@ let modeSolo = false, niveauIA = "moyen";
 let monNom = "JOUEUR", nomAdverse = "";
 let rttMs = 60;                      /* aller-retour lissé, pour la compensation de latence */
 let voieConnexion = "";              /* "DIRECT" ou "RELAIS", mesuré sur la session */
+let versionAdverse = "";             /* renseignée si elle diffère de la nôtre */
 function majPing(){
   elPing.textContent = Math.round(rttMs) + " ms" + (voieConnexion ? " · " + voieConnexion : "");
 }
@@ -1016,10 +1042,23 @@ function initAudio(){
   if (!C) return;
   ac = new C();
   gainMaitre = ac.createGain();
-  gainMaitre.gain.value = 0.32;
+  gainMaitre.gain.value = volume;
   gainMaitre.connect(ac.destination);
 }
 function reveillerAudio(){ initAudio(); if (ac && ac.state === "suspended") ac.resume(); }
+let volume = 0.32;
+(function initVolume(){
+  const c = document.getElementById("curseurVolume");
+  if (!c) return;
+  try{ const v = localStorage.getItem("duo_volume"); if (v !== null) volume = Number(v) / 100; }catch(e){}
+  c.value = String(Math.round(volume * 100));
+  c.addEventListener("input", () => {
+    volume = Number(c.value) / 100;
+    try{ localStorage.setItem("duo_volume", c.value); }catch(e){}
+    reveillerAudio();
+    if (gainMaitre) gainMaitre.gain.value = volume;
+  });
+})();
 document.addEventListener("touchstart", reveillerAudio, { once: true, passive: true });
 document.addEventListener("mousedown", reveillerAudio, { once: true });
 
@@ -1284,6 +1323,29 @@ function majReglages(){
     b.classList.toggle("choisi", Number(b.dataset.n) === MANCHES_GAGNANTES);
   $("aideMode").textContent = AIDE_MODE[modeJeu];
 }
+/* arrivée par un lien d'invitation */
+(function afficherRecords(){
+  const e = document.getElementById("records");
+  if (e) e.textContent = texteRecords();
+})();
+
+(function initInvitation(){
+  let code = "";
+  try{
+    const p = new URLSearchParams(location.search || "");
+    code = (p.get("p") || "").trim().toUpperCase();
+  }catch(e){}
+  if (!code) return;
+  $("champCode").value = code;
+  etatLobby.textContent = "Invitation reçue pour la partie " + code + ".";
+  /* nom déjà connu : on rejoint sans rien demander */
+  let nomConnu = "";
+  try{ nomConnu = localStorage.getItem("duo_nom") || ""; }catch(e){}
+  if (nomConnu){
+    setTimeout(() => { if (!partieEnCours) $("btnRejoindre").click(); }, 400);
+  }
+})();
+
 (function initReglages(){
   try{
     const m = localStorage.getItem("duo_mode");
@@ -1329,6 +1391,52 @@ function enregistrerDuel(jAiGagne){
   if (jAiGagne) s.v++; else s.d++;
   try{ localStorage.setItem(c, JSON.stringify(s)); }catch(e){}
 }
+/* ---------- historique et records, conservés sur l'appareil ---------- */
+const MAX_HISTORIQUE = 30;
+function lireHistorique(){
+  try{ return JSON.parse(localStorage.getItem("duo_historique")) || []; }catch(e){ return []; }
+}
+function ajouterHistorique(entree){
+  const h = lireHistorique();
+  h.unshift(entree);
+  while (h.length > MAX_HISTORIQUE) h.pop();
+  try{ localStorage.setItem("duo_historique", JSON.stringify(h)); }catch(e){}
+}
+function lireRecords(){
+  try{ return JSON.parse(localStorage.getItem("duo_records")) || { echange: 0, serie: 0, remontee: 0 }; }
+  catch(e){ return { echange: 0, serie: 0, remontee: 0 }; }
+}
+function ecrireRecords(r){ try{ localStorage.setItem("duo_records", JSON.stringify(r)); }catch(e){} }
+let recordEnCours = { echange: 0, serie: 0, dernierMarqueur: -1, retard: 0 };
+function noterEchange(n){
+  if (n > recordEnCours.echange) recordEnCours.echange = n;
+}
+function noterPoint(qui){
+  const moi = estHote ? 0 : 1;
+  if (qui === recordEnCours.dernierMarqueur) recordEnCours.serieCourante = (recordEnCours.serieCourante || 1) + 1;
+  else { recordEnCours.dernierMarqueur = qui; recordEnCours.serieCourante = 1; }
+  if (qui === moi && recordEnCours.serieCourante > recordEnCours.serie)
+    recordEnCours.serie = recordEnCours.serieCourante;
+  /* plus grand retard comblé : on retient l'écart maximal subi */
+  const ecart = etat.score[1 - moi] - etat.score[moi];
+  if (ecart > recordEnCours.retard) recordEnCours.retard = ecart;
+}
+function cloturerRecords(jAiGagne){
+  const r = lireRecords();
+  let battu = [];
+  if (recordEnCours.echange > r.echange){ r.echange = recordEnCours.echange; battu.push("ÉCHANGE"); }
+  if (recordEnCours.serie > r.serie){ r.serie = recordEnCours.serie; battu.push("SÉRIE"); }
+  if (jAiGagne && recordEnCours.retard > r.remontee){ r.remontee = recordEnCours.retard; battu.push("REMONTÉE"); }
+  ecrireRecords(r);
+  return battu;
+}
+function texteRecords(){
+  const r = lireRecords();
+  if (!r.echange && !r.serie && !r.remontee) return "";
+  return "RECORDS · ÉCHANGE " + r.echange + " · SÉRIE " + r.serie +
+         (r.remontee ? " · REMONTÉE " + r.remontee : "");
+}
+
 function texteDuels(){
   if (modeSolo || !nomAdverse) return "";
   const s = lireDuels();
@@ -1395,6 +1503,24 @@ function figerNom(){
   try{ localStorage.setItem("duo_nom", monNom); }catch(e){}
 }
 
+/* Lien d'invitation : le code voyage dans l'adresse, l'invité arrive avec le
+   champ prérempli — et rejoint tout seul s'il a déjà un nom enregistré. */
+function lienInvitation(code){
+  const base = location.origin + location.pathname;
+  return base + "?p=" + encodeURIComponent(code);
+}
+$("btnLien").addEventListener("click", async () => {
+  const code = codePartie.textContent.trim();
+  if (!code) return;
+  const lien = lienInvitation(code);
+  try{
+    await navigator.clipboard.writeText(lien);
+    etatLobby.textContent = "Lien copié — envoyez-le à votre adversaire.";
+  }catch(e){
+    etatLobby.textContent = lien;
+  }
+});
+
 $("btnCreer").addEventListener("click", () => {
   figerNom();
   estHote = true;
@@ -1426,6 +1552,7 @@ function creerHote(iBroker){
     const affiche = code + (iBroker === 1 ? "2" : "");
     codePartie.textContent = affiche;
     codePartie.classList.remove("cache");
+    $("btnLien").classList.remove("cache");
     etatLobby.textContent = "Partagez ce code — en attente du joueur 2";
     etatLobby.classList.add("pulse");
   });
@@ -1624,6 +1751,8 @@ function finirReprise(reussie){
     voile.classList.add("cache");
     annoncer("LIAISON RÉTABLIE", "#4ADE80");
     envoyerFiable({ t: "nm", n: monNom });
+    envoyerFiable({ t: "ver", v: VERSION });
+    envoyerConfig();
     envoyerPhoto();
     viderFilePrioritaire();
   } else {
@@ -1639,7 +1768,10 @@ function demarrerPartie(){
   lobby.style.display = "none";
   jeu.style.display = "flex";
   majNoms();
-  if (!modeSolo) envoyerFiable({ t: "nm", n: monNom });
+  if (!modeSolo){
+    envoyerFiable({ t: "nm", n: monNom });
+    envoyerFiable({ t: "ver", v: VERSION });
+  }
   phase = "regles";
   panRegles.classList.remove("cache");
   if (modeSolo){
@@ -1667,6 +1799,12 @@ document.getElementById("btnEffets").addEventListener("click", () => {
 })();
 document.getElementById("btnMusique").addEventListener("click", basculerMusique);
 document.getElementById("btnMicToggle").addEventListener("click", basculerMicro);
+
+$("btnPlus").addEventListener("click", () => {
+  const l = $("reglesListe"), ouvert = !l.classList.contains("cache");
+  l.classList.toggle("cache", ouvert);
+  $("btnPlus").textContent = ouvert ? "Voir toutes les règles" : "Masquer les règles";
+});
 
 btnLu.addEventListener("click", () => {
   reveillerAudio();
@@ -1701,7 +1839,7 @@ function envoyerEtatHote(){
     ch: [Math.round(chargeLocal*100), Math.round(chargeHaut*100)],
     vw: viceGagnant, vh: [vices[0] ? 1 : 0, vices[1] ? 1 : 0],
     sk: sarcasmeIdx, rg: recapGagnant, sm: sarcasmeMatch, ra: recapArene,
-    mj: modeJeu, mg: MANCHES_GAGNANTES, sa: sequenceArenes,
+
     ob: obstacles.map(o => [Math.round(o.x), Math.round(o.y), Math.round(o.l), Math.round(o.h), o.ebreche || 0, o.germe]),
     de: debris.filter(d => !d.naissance || performance.now() >= d.naissance)
               .map(d => [Math.round(d.x), Math.round(d.y), Math.round(d.r), Math.round(d.rot*100)/100]),
@@ -1777,9 +1915,7 @@ function recevoir(m){
       if (typeof m.rg === "number") recapGagnant = m.rg;
       if (typeof m.sm === "number") sarcasmeMatch = m.sm;
       if (typeof m.ra === "number") recapArene = m.ra;
-      if (typeof m.mj === "string" && MODES[m.mj]) modeJeu = m.mj;   /* l'hôte impose les réglages */
-      if (typeof m.mg === "number" && m.mg > 0) MANCHES_GAGNANTES = m.mg;
-      if (Array.isArray(m.sa) && m.sa.length) sequenceArenes = m.sa;
+
       vfx.invVictime = m.iv; vfx.finInv = m.iv >= 0 ? performance.now() + 500 : 0;
       vfx.brouVictime = m.bv; vfx.finBrou = m.bv >= 0 ? performance.now() + 500 : 0;
       vfx.gravSens = m.gs;
@@ -1800,6 +1936,25 @@ function recevoir(m){
       envoyerFiable({ t: "nm2", n: monNom });
       break;
     case "nm2": nomAdverse = assainirNom(m.n); majNoms(); break;
+    case "cfg":
+      /* réglages de match : ils ne changent pas en cours de route, donc ils
+         voyagent une seule fois sur le canal fiable au lieu de 30 fois par
+         seconde dans le flux d'état */
+      if (typeof m.mj === "string" && MODES[m.mj]) modeJeu = m.mj;
+      if (typeof m.mg === "number" && m.mg > 0) MANCHES_GAGNANTES = m.mg;
+      if (Array.isArray(m.sa) && m.sa.length) sequenceArenes = m.sa;
+      majScore(false);
+      break;
+    case "ver":
+      /* Sans ce contrôle, un adversaire resté sur une version en cache pouvait
+         parler un protocole différent et désynchroniser la partie en silence. */
+      if (m.v && m.v !== VERSION){
+        versionAdverse = String(m.v);
+        annoncer("VERSIONS DIFFÉRENTES", "#F87171");
+        etatLu.textContent = "ATTENTION : ADVERSAIRE EN v" + versionAdverse +
+                             ", VOUS EN v" + VERSION + " — RECHARGEZ TOUS LES DEUX";
+      }
+      break;
     case "lu": if (estHote){ lus[1] = true; verifierLus(); } break;
     case "vc": if (estHote && viceGagnant === 1){ vices[1] = m.k; planifierVice(1); viceGagnant = -1; mancheSuivante(); } break;
     case "fx": jouerFx(m.k, m.x, m.y, m.e); break;
@@ -2274,6 +2429,7 @@ function physique(){
     const idx = balles.indexOf(m.b);
     if (idx >= 0) balles.splice(idx, 1);
     etat.score[m.qui]++;
+    noterPoint(m.qui);
     majScore(true);
     fxLocal("but", m.b.x, Math.max(20, Math.min(HAUT-20, m.b.y)));
   }
@@ -2351,6 +2507,7 @@ function frapper(b, xRaq, largeur, sensY, vitRaq, frappeur){
   b.dernier = frappeur;
 
   rebondsEchange++;
+  noterEchange(rebondsEchange);
   if (!enFeu && rebondsEchange >= FEU_SEUIL){
     enFeu = true;
     fxLocal("feu", b.x, b.y);
@@ -2438,8 +2595,15 @@ function afficherVersus(){
 }
 
 /* démarrage d'un match : arènes tirées, écran VS, puis premier service */
+function envoyerConfig(){
+  if (modeSolo || !estHote) return;
+  envoyerFiable({ t: "cfg", mj: modeJeu, mg: MANCHES_GAGNANTES, sa: sequenceArenes });
+}
+
 function demarrerMatch(){
+  recordEnCours = { echange: 0, serie: 0, dernierMarqueur: -1, retard: 0 };
   melangerArenes();
+  envoyerConfig();
   construireObstacles();
   precharger();
   debris = []; fissures = [[], []];
@@ -2595,12 +2759,20 @@ function afficherFin(){
   const gagnantF = jAiGagne ? nomMoiF : nomAdvF, perdantF = jAiGagne ? nomAdvF : nomMoiF;
   const poolF = poolMatch(perdantF);
   $("voilePhrase").textContent = habiller(poolF[sarcasmeMatch % poolF.length], gagnantF, perdantF, sarcasmeMatch);
+  const battus = cloturerRecords(jAiGagne);
+  if (!modeSolo) ajouterHistorique({
+    d: Date.now(), a: nomAdverse || "ADVERSAIRE",
+    m: [manches[moi], manches[1 - moi]], g: jAiGagne ? 1 : 0,
+  });
+  if (battus.length) annoncer("RECORD BATTU : " + battus.join(" + "), CO_OR);
   const td = texteDuels();
   montrerVoile(jAiGagne ? "VICTOIRE" : "DÉFAITE",
     monNom + " " + mMoi + " — " + mAdv + " " + (nomAdverse || "ADVERSAIRE") + (td ? " · " + td : ""), true);
   voileTitre.style.filter = jAiGagne
     ? "drop-shadow(0 0 26px rgba(251,191,36,.6))"
     : "drop-shadow(0 0 20px rgba(124,138,165,.4))";
+  const rec = texteRecords();
+  if (rec) $("voilePhrase").textContent += "\n" + rec;
   sonFin(jAiGagne);
 }
 btnRevanche.addEventListener("click", () => {
@@ -2637,6 +2809,34 @@ cv.addEventListener("touchstart", e => { e.preventDefault(); posDepuisEvenement(
 cv.addEventListener("touchmove",  e => { e.preventDefault(); posDepuisEvenement(e.touches[0].clientX); }, {passive:false});
 cv.addEventListener("mousemove",  e => posDepuisEvenement(e.clientX));
 
+/* ---------- clavier : jouable sans souris, et pause en solo ---------- */
+let clavierGauche = false, clavierDroite = false, enPause = false;
+const VIT_CLAVIER = 8.5;
+document.addEventListener("keydown", e => {
+  const k = e.key;
+  if (k === "ArrowLeft" || k === "q" || k === "Q" || k === "a" || k === "A"){ clavierGauche = true; }
+  if (k === "ArrowRight" || k === "d" || k === "D"){ clavierDroite = true; }
+  if (k === "p" || k === "P" || k === "Escape") basculerPause();
+});
+document.addEventListener("keyup", e => {
+  const k = e.key;
+  if (k === "ArrowLeft" || k === "q" || k === "Q" || k === "a" || k === "A") clavierGauche = false;
+  if (k === "ArrowRight" || k === "d" || k === "D") clavierDroite = false;
+});
+function majClavier(dtMs){
+  if (!clavierGauche && !clavierDroite) return;
+  const pas = VIT_CLAVIER * (dtMs / (1000/60));
+  const demi = (estHote ? taillesAffichees[0] : taillesAffichees[1]) / 2;
+  const x = maRaquette + (clavierDroite ? pas : 0) - (clavierGauche ? pas : 0);
+  maRaquette = Math.max(murG_() + demi, Math.min(murD_() - demi, x));
+}
+function basculerPause(){
+  /* la pause n'a de sens que hors ligne : à deux, elle figerait l'adversaire */
+  if (!partieEnCours || !modeSolo) return;
+  enPause = !enPause;
+  annoncer(enPause ? "PAUSE" : "REPRISE", "#8AB4FF");
+}
+
 /* ================= RENDU ================= */
 function majNoms(){
   elRole.textContent = monNom + (nomAdverse ? " vs " + nomAdverse : (estHote ? " · HÔTE" : " · INVITÉ"));
@@ -2663,6 +2863,7 @@ function boucle(){
 
   /* vitesse de raquette normalisée en px par pas de 16,7 ms (indépendante de l'écran) */
   surveillerPerf(dtMs);
+  majClavier(dtMs);
   const deltaRaq = (maRaquette - raqPrecedente) * (PAS_MS / Math.max(dtMs, 1));
   vitRaqLisse = vitRaqLisse * 0.7 + deltaRaq * 0.3;
   raqPrecedente = maRaquette;
@@ -2675,6 +2876,7 @@ function boucle(){
   chargesAffichees[0] = chargeLocal;
   if (estHote) chargesAffichees[1] = chargeHaut;
 
+  if (enPause){ dessiner(); if (partieEnCours) requestAnimationFrame(boucle); return; }
   if (estHote){
     accumulateur += dtMs;
     let pas = 0;
@@ -3616,6 +3818,9 @@ function dessinerRaquette(cx, largeur, yHaut, couleur, charge, tFlash, vitesse){
   ctx.scale(etire, aplati);
 
   const x0 = -largeur/2, y0 = -h/2, r = h/2;
+  /* La couleur seule ne distingue pas les deux camps pour un daltonien :
+     la raquette adverse porte en plus trois encoches. */
+  const estMienne = Math.abs(cy - (HAUT - RAQ_MARGE - h/2)) < 1;
 
   cheminArrondi(x0 - 1.6, y0 - 1.6, largeur + 3.2, h + 3.2, r + 1.4);
   ctx.fillStyle = "rgba(3,6,14,.72)";
@@ -3647,6 +3852,11 @@ function dessinerRaquette(cx, largeur, yHaut, couleur, charge, tFlash, vitesse){
 
   ctx.fillStyle = "rgba(255,255,255,.7)";
   ctx.fillRect(x0 + lc*0.5, y0 + 1, largeur - lc, 1.1);
+
+  if (!estMienne){
+    ctx.fillStyle = "rgba(5,7,14,.55)";
+    for (let i = -1; i <= 1; i++) ctx.fillRect(i * 9 - 1.4, y0 + 2.5, 2.8, h - 5);
+  }
 
   if (impact > 0.02){
     cheminArrondi(x0, y0, largeur, h, r);
