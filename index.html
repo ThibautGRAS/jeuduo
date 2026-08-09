@@ -2826,21 +2826,14 @@ function dessiner(){
   }
   ctx.globalAlpha = 1;
 
-  /* raquettes — halo de charge doré ∝ charge */
+  /* raquettes */
   const lMoi = estHote ? taillesAffichees[0] : taillesAffichees[1];
   const lAdv = estHote ? taillesAffichees[1] : taillesAffichees[0];
   const cMoi = chargesAffichees[0], cAdv = chargesAffichees[1];
-  ctx.shadowBlur = flou(22 + cMoi * 26);
-  ctx.shadowColor = cMoi >= 1 ? CO_OR : CO_MOI;
-  ctx.fillStyle = cMoi >= 1 ? "#FDE68A" : CO_MOI;
-  arrondi(maRaquette - lMoi/2, HAUT - RAQ_MARGE - RAQ_H, lMoi, RAQ_H, 6);
-  ctx.shadowBlur = flou(22 + cAdv * 26);
-  ctx.shadowColor = cAdv >= 1 ? CO_OR : CO_ADV;
-  ctx.fillStyle = cAdv >= 1 ? "#FDE68A" : CO_ADV;
-  arrondi(raqAdvAffichee - lAdv/2, RAQ_MARGE, lAdv, RAQ_H, 6);
-  ctx.shadowBlur = flou(0);
-  bloomCercle(maRaquette, HAUT - RAQ_MARGE - RAQ_H/2, 44 + cMoi*16, cMoi >= 1 ? CO_OR : CO_MOI, 0.34);
-  bloomCercle(raqAdvAffichee, RAQ_MARGE + RAQ_H/2, 44 + cAdv*16, cAdv >= 1 ? CO_OR : CO_ADV, 0.34);
+  vitRaqAdvAff = vitRaqAdvAff * 0.7 + (raqAdvAffichee - raqAdvPrec) * 0.3;
+  raqAdvPrec = raqAdvAffichee;
+  dessinerRaquette(maRaquette, lMoi, HAUT - RAQ_MARGE - RAQ_H, CO_MOI, cMoi, flashRaq[0], vitRaqLisse);
+  dessinerRaquette(raqAdvAffichee, lAdv, RAQ_MARGE, CO_ADV, cAdv, flashRaq[1], vitRaqAdvAff);
 
   /* ALERTE DE MENACE : ma ligne de fond s'embrase quand une balle fonce sur moi,
      avec un curseur qui indique son point d'arrivée */
