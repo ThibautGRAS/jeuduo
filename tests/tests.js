@@ -169,8 +169,50 @@ const noyau = (l, c) => Math.max(0, (l - Math.min(13, l*0.16)*2 - 6) * Math.min(
 verifier("noyau de charge monotone et borné",
   [62,104,168].every(l => noyau(l,0) === 0 && noyau(l,1) > 8 && noyau(l,1) < l));
 
-/* ======================= 9. PIÈGES CONNUS ======================= */
-titre("9. Pièges déjà rencontrés (non-régression)");
+/* ======================= 9. RÉFÉRENCES ======================= */
+titre("9. Toute fonction appelée est définie");
+{
+  /* on retire commentaires et chaînes : sinon le moindre mot de prose
+     ressemble à un appel de fonction */
+  const nu = script
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/(^|[^:])\/\/[^\n]*/g, "$1 ")
+    /* une classe de caractères comme [<>&"'`] contient des guillemets et
+       faussait l'appariement des chaînes : on la neutralise d'abord */
+    .replace(/\[[^\]\n]*["'`][^\]\n]*\]/g, "[]")
+    .replace(/"(?:[^"\\]|\\.)*"/g, '""')
+    .replace(/'(?:[^'\\]|\\.)*'/g, "''")
+    .replace(/`(?:[^`\\]|\\.)*`/g, "``");
+  const definies = new Set([...nu.matchAll(/function\s+(\w+)\s*\(/g)].map(m => m[1]));
+  [...nu.matchAll(/(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?(?:\([^)]*\)|\w+)\s*=>/g)]
+    .forEach(m => definies.add(m[1]));
+  [...nu.matchAll(/(\w+)\s*:\s*(?:async\s*)?(?:function|\([^)]*\)\s*=>)/g)]
+    .forEach(m => definies.add(m[1]));
+  /* une variable peut recevoir une fonction (graine() en renvoie une), et un
+     paramètre aussi (le « fini » des promesses) : on les reconnaît également */
+  [...nu.matchAll(/(?:const|let|var)\s+(\w+)\s*=/g)].forEach(m => definies.add(m[1]));
+  [...nu.matchAll(/function\s*\w*\s*\(([^)]*)\)/g)]
+    .forEach(m => m[1].split(",").forEach(a => { const n = a.trim().split(/[=\s]/)[0]; if (n) definies.add(n); }));
+  [...nu.matchAll(/\(([^)]*)\)\s*=>/g)]
+    .forEach(m => m[1].split(",").forEach(a => { const n = a.trim().split(/[=\s]/)[0]; if (n) definies.add(n); }));
+  [...nu.matchAll(/(?:^|[^\w.])(\w+)\s*=>/g)].forEach(m => definies.add(m[1]));
+  const NATIF = new Set(["if","for","while","switch","catch","return","typeof","function","new",
+    "Math","JSON","Object","Array","String","Number","Boolean","Date","Promise","Set","Map",
+    "parseInt","parseFloat","isFinite","isNaN","setTimeout","setInterval","clearTimeout",
+    "clearInterval","requestAnimationFrame","fetch","Peer","Image","Audio","Blob","URL",
+    "MediaRecorder","AudioContext","RTCPeerConnection","AbortSignal","Uint8ClampedArray",
+    "console","localStorage","navigator","document","window","performance","location","eval",
+    "async","await","of","in","do","else","try","delete","void","instanceof"]);
+  const appelees = new Set([...nu.matchAll(/(?:^|[^.\w$])(\w+)\s*\(/g)].map(m => m[1]));
+  const manquantes = [...appelees].filter(n =>
+    !definies.has(n) && !NATIF.has(n) && !/^[A-Z_]+$/.test(n) && isNaN(Number(n)));
+  verifier("aucune fonction appelée sans définition",
+    manquantes.length === 0,
+    manquantes.length ? "manquantes : " + manquantes.join(", ") : definies.size + " fonctions définies");
+}
+
+/* ======================= 10. PIÈGES CONNUS ======================= */
+titre("10. Pièges déjà rencontrés (non-régression)");
 verifier("aucun test de véracité sur un index de joueur",
   !/(if|while)\s*\(\s*!?\s*(gagnant|joueur|frappeur|recapGagnant)\s*\)/.test(script),
   "le joueur 0 est falsy en JavaScript");
