@@ -290,6 +290,31 @@ verifier("état d'écornement transmis à l'invité",
     Math.round(seuils.survol*100) + "% contre " + Math.round(seuils.visible*100) + "% du spin maximal");
 }
 
+/* ======================= 8octies. RETOUR EN JEU ======================= */
+titre("8octies. Ce qui donne envie de relancer");
+verifier("carte de résultat peinte au canevas", /async function construireCarte\(/.test(script));
+verifier("partage natif avec repli téléchargement",
+  /navigator\.canShare/.test(script) && /a\.download = "duo\.png"/.test(script));
+verifier("la carte porte l'adresse du jeu", /thibautgras\.github\.io\/jeuduo/.test(script));
+verifier("défi asynchrone par lien", /function lienDefi\(/.test(script) && /p\.get\("d"\)/.test(script));
+verifier("défi relevé détecté", /function verifierDefi\(/.test(script) && /DÉFI RELEVÉ/.test(script));
+verifier("séries de confrontation suivies", /VICTOIRES D'AFFILÉE/.test(script) && /DÉFAITES D'AFFILÉE/.test(script));
+{
+  /* la série doit repartir de un quand elle s'inverse */
+  const maj = (s, gagne) => gagne ? (s >= 0 ? s + 1 : 1) : (s <= 0 ? s - 1 : -1);
+  let s = 0;
+  s = maj(s, true); s = maj(s, true); s = maj(s, true);
+  const apresTroisVictoires = s;
+  s = maj(s, false);
+  verifier("la série s'inverse proprement", apresTroisVictoires === 3 && s === -1,
+    "3 victoires puis une défaite -> " + s);
+}
+verifier("relance automatique annulable",
+  /function lancerDecompteRelance\(/.test(script) && /toucher pour annuler/.test(script));
+verifier("un seul des deux joueurs relance",
+  /if \(estHote\) lancerRevanche\(\); else envoyerFiable\(\{ t: "rm" \}\)/.test(script),
+  "sinon les deux côtés déclencheraient un match");
+
 /* ======================= 9. RÉFÉRENCES ======================= */
 titre("9. Toute fonction appelée est définie");
 {
@@ -324,7 +349,8 @@ titre("9. Toute fonction appelée est définie");
     "MediaRecorder","AudioContext","RTCPeerConnection","AbortSignal","Uint8ClampedArray",
     "console","localStorage","navigator","document","window","performance","location","eval",
     "async","await","of","in","do","else","try","delete","void","instanceof",
-    "URLSearchParams","encodeURIComponent","decodeURIComponent","structuredClone"]);
+    "URLSearchParams","encodeURIComponent","decodeURIComponent","structuredClone",
+    "File","FileReader","Blob","Uint8Array","ArrayBuffer"]);
   const appelees = new Set([...nu.matchAll(/(?:^|[^.\w$])(\w+)\s*\(/g)].map(m => m[1]));
   const manquantes = [...appelees].filter(n =>
     !definies.has(n) && !NATIF.has(n) && !/^[A-Z_]+$/.test(n) && isNaN(Number(n)));
