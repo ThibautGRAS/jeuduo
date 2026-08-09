@@ -101,6 +101,32 @@ margeMur = 0;
     verifier("mise en page tient sur " + nom, t > 0 && t/rapport + reserve <= H + 1,
       Math.round(t) + " x " + Math.round(t/rapport) + " pt");
   }
+  /* parc d'appareils réels : largeur x hauteur de fenêtre, puis habillage du navigateur */
+  const PARC = [
+    ["iPhone SE 2/3", 375, 667, 144], ["iPhone 13 mini", 375, 812, 144],
+    ["iPhone 13/14", 390, 844, 144],  ["iPhone 15 Pro Max", 430, 932, 144],
+    ["Galaxy S8", 360, 740, 56],      ["Galaxy S21", 360, 800, 56],
+    ["Pixel 7", 412, 915, 56],        ["iPad mini", 744, 1133, 90],
+  ];
+  const mCourt = css.match(/@media \(max-height: 700px\)\{[\s\S]*?--terrain:min\(\d+vw, calc\(\(100vh - (\d+)px\)/);
+  const reserveCourte = mCourt ? Number(mCourt[1]) : reserve;
+  let pire = null;
+  for (const [nom, L, H, chrome] of PARC){
+    const svh = H - chrome;
+    const res = svh <= 700 ? reserveCourte : reserve;
+    const t = Math.min(partVw*L, (svh - res)*rapport, LARG_JEU);
+    const tient = t/rapport + res <= svh + 1;
+    if (!pire || t < pire[1]) pire = [nom, t];
+    verifier("portrait sur " + nom, tient && t >= 250,
+      Math.round(t) + " x " + Math.round(t/rapport) + " pt");
+  }
+  verifier("le plus petit appareil reste jouable", pire[1] >= 250,
+    pire[0] + " : " + Math.round(pire[1]) + " pt de large");
+  verifier("le paysage renvoie vers la rotation",
+    /@media \(orientation: landscape\)[\s\S]{0,80}#rotation\{display:flex\}/.test(css) &&
+    /#lobby, #jeu, #capPhoto\{display:none !important\}/.test(css),
+    "couché, le terrain tomberait sous 160 pt");
+
   verifier("le terrain exploite la hauteur disponible",
     terrain(390, 700) / rapport > 560,
     Math.round(terrain(390, 700) / rapport) + " pt de haut sur iPhone 13");
