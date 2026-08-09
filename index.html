@@ -137,6 +137,44 @@ canvas{
 .panneau .petit{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--sourd);letter-spacing:.12em;text-align:center}
 .panneau button{width:auto;padding:13px 34px}
 #btnMenu{padding:11px 26px;font-size:14px}
+/* ---------- écran VERSUS ---------- */
+.vsScene{display:flex;align-items:center;justify-content:center;gap:6px;width:100%}
+.combattant{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1}
+.combattant.gauche{animation:entreeG .5s cubic-bezier(.16,1.1,.3,1) both}
+.combattant.droite{animation:entreeD .5s cubic-bezier(.16,1.1,.3,1) both}
+.vignette.geant{
+  width:104px;height:104px;flex:0 0 104px;border-radius:22px;font-size:34px;
+  border-width:2px;box-shadow:0 12px 40px rgba(0,0,0,.55);
+}
+.combattant.gauche .vignette.geant{border-color:rgba(34,211,238,.85);box-shadow:0 0 34px rgba(34,211,238,.4)}
+.combattant.droite .vignette.geant{border-color:rgba(244,113,181,.85);box-shadow:0 0 34px rgba(244,113,181,.4)}
+.vsNom{
+  font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;letter-spacing:.14em;
+  color:var(--moi);max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  text-shadow:0 0 14px rgba(34,211,238,.5);
+}
+.vsNom.adv{color:var(--adv);text-shadow:0 0 14px rgba(244,113,181,.5)}
+.vsLogo{
+  font-size:52px;font-weight:700;font-style:italic;letter-spacing:-.04em;
+  background:linear-gradient(120deg,var(--moi),#FFFFFF 45%,var(--adv));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 22px rgba(255,255,255,.45));
+  animation:coupVS .62s cubic-bezier(.2,1.7,.35,1) .34s both;
+}
+.vsFlash{
+  position:absolute;inset:0;border-radius:18px;background:#fff;pointer-events:none;
+  animation:flashVS .6s ease-out .34s both;
+}
+@keyframes entreeG{from{transform:translateX(-135%) skewX(-10deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes entreeD{from{transform:translateX(135%) skewX(10deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes coupVS{0%{transform:scale(3.6) rotate(-14deg);opacity:0}
+                  55%{transform:scale(.84) rotate(4deg);opacity:1}
+                  100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes flashVS{0%{opacity:.85}100%{opacity:0}}
+@media (prefers-reduced-motion: reduce){
+  .combattant.gauche,.combattant.droite,.vsLogo,.vsFlash{animation:none}
+  .vsFlash{display:none}
+}
 .duel{display:flex;align-items:center;justify-content:center;gap:14px;width:100%}
 .joueurCarte{display:flex;flex-direction:column;align-items:center;gap:6px;width:92px}
 .vignette.gros{width:68px;height:68px;flex:0 0 68px;border-radius:18px;font-size:22px}
@@ -264,7 +302,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v8.4 · 2026-08-07</div>
+  <div id="version">DUO v8.5 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -290,7 +328,7 @@ canvas{
         <b class="c">SMASH</b> — Raquette immobile 1 s : elle se charge et vire à l'<span style="color:#FBBF24">or</span>. La frappe suivante part à pleine puissance.<br>
         <b class="o">ORBES</b> — Touchez-les avec la balle : le bonus va au dernier frappeur. Agrandir · rétrécir l'autre · éclair · balle double · fantôme · <span style="color:#FB923C">boule de feu</span> (7 s : la balle pulvérise les blocs).<br>
         <b class="o">ARÈNES</b> — Six arènes, ordre tiré au sort dès la manche 1 : <b>ROCHE</b> (neutre), <b>GLACE</b> (ralentit), <b>LAVE</b> (accélère), <b>ORAGE</b> (dévie et charge), <b>VIDE</b> (attire la balle), <b>JUNGLE</b> (absorbe l'effet). Décor, musique et physique changent avec elle.<br>
-        <b class="o">BLOCS</b> — Deux impacts et ils éclatent. La boule de feu les pulvérise d'un coup.<br>
+        <b class="o">BLOCS</b> — Premier impact : le bloc se fend et rétrécit de moitié. Deuxième : il éclate. La boule de feu le pulvérise d'un coup.<br>
         <b class="f">BALLE EN FEU</b> — 8 rebonds sans point : la balle s'enflamme à vitesse maximale.<br>
         <b class="o">DÉCOR</b> — À partir de la manche 2, des blocs de la ligne médiane se détachent et dérivent au centre du terrain.<br>
         <b class="f">DÉGÂTS</b> — Les frappes surpuissantes fissurent les murs : les rebonds y deviennent imprévisibles et des débris sont projetés sur le terrain jusqu'à la fin de la manche.<br>
@@ -299,6 +337,22 @@ canvas{
       </div>
       <button id="btnLu">LU — JE SUIS PRÊT</button>
       <div class="petit" id="etatLu"></div>
+    </div>
+
+    <div id="versus" class="panneau cache">
+      <div class="vsFlash" id="vsFlash"></div>
+      <div class="vsScene">
+        <div class="combattant gauche" id="vsG">
+          <div class="vignette geant" id="vsPhotoG">?</div>
+          <div class="vsNom" id="vsNomG">MOI</div>
+        </div>
+        <div class="vsLogo" id="vsLogo">VS</div>
+        <div class="combattant droite" id="vsD">
+          <div class="vignette geant" id="vsPhotoD">?</div>
+          <div class="vsNom adv" id="vsNomD">ADV</div>
+        </div>
+      </div>
+      <div class="petit" id="vsFormat"></div>
     </div>
 
     <div id="recap" class="panneau cache">
@@ -364,7 +418,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "8.4";
+const VERSION = "8.5";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -392,7 +446,8 @@ const MUR_MAX = 88, MUR_VITESSE = 0.05;          // mort subite : rétrécisseme
 const SEUIL_CHARGE = 0.45;                        // vitesse raquette max pour charger
 const DUREE_INV = 3000, DUREE_BROU = 4000, DUREE_GRAV = 5000, GRAV_FORCE = 0.09;
 const OBST_L = 72, OBST_H = 14;                   // blocs de décor détachés
-const PV_BLOC = 2;                                 // deux impacts et le bloc éclate
+const PV_BLOC = 2;                                 // 1er impact : il rétrécit — 2e : il éclate
+const OBST_RETRECIT = 0.55, OBST_L_MIN = 30;
 const SMASH_MUR = 20.5;                            // vitesse minimale qui fissure un mur
 const FISSURE_PORTEE = 60, FISSURE_TROU = 3;       // regroupement des impacts / niveau "troué"
 const MAX_DEBRIS = 8, DEBRIS_R_MIN = 6, DEBRIS_R_MAX = 12;
@@ -676,6 +731,8 @@ function annoncer(texte, couleur){
 function masquerPanneaux(){
   const r = document.getElementById("recap");
   if (r) r.classList.add("cache");
+  const v = document.getElementById("versus");
+  if (v) v.classList.add("cache");
   panRegles.classList.add("cache");
   panChoixVice.classList.add("cache");
   panAttenteVice.classList.add("cache");
@@ -751,6 +808,14 @@ function sonCasse(matiere){
   souffle(0.24, 0.42, matiere === "glace" ? 4200 : 950);
   bip(matiere === "glace" ? 1800 : 150, 0.26, matiere === "glace" ? "sine" : "sawtooth", 0.4,
       matiere === "glace" ? 420 : 48);
+}
+function sonVersus(){
+  /* impact grave, montée, puis deux frappes : annonce de combat */
+  bip(70, 0.5, "sine", 0.55, 34);
+  souffle(0.35, 0.4, 320);
+  setTimeout(() => { bip(180, 0.6, "sawtooth", 0.22, 720); }, 260);
+  setTimeout(() => { bip(300, 0.14, "square", 0.4, 140); souffle(0.1, 0.3, 1600); }, 900);
+  setTimeout(() => { bip(240, 0.3, "square", 0.42, 90); souffle(0.22, 0.34, 900); }, 1120);
 }
 function sonFissure(){ souffle(0.16, 0.5, 500); bip(95, 0.2, "sawtooth", 0.3, 45); }
 function sonManche(){ bip(659, 0.12, "sine", 0.3); setTimeout(() => bip(880, 0.2, "sine", 0.32), 130); }
@@ -1272,13 +1337,7 @@ btnLu.addEventListener("click", () => {
 });
 function verifierLus(){
   if (estHote && lus[0] && (lus[1] || modeSolo) && phase === "regles"){
-    masquerPanneaux();
-    melangerArenes();
-    construireObstacles();
-    debris = []; fissures = [[], []];
-    fxLocal("manche", LARG/2, HAUT/2, 1);
-    preparerService(Math.random() < 0.5 ? 1 : -1);
-    prochainBonus = performance.now() + INTERVALLE_BONUS;
+    demarrerMatch();
   }
 }
 
@@ -1381,6 +1440,7 @@ function recevoir(m){
 function gererPhaseInvite(avant, apres){
   if (apres === "compte"){ masquerPanneaux(); if (avant === "fin"){ monViceNom = null; chargeLocal = 0; } }
   if (avant === "compte" && apres === "jeu") sonGo();
+  if (apres === "vs"){ masquerPanneaux(); afficherVersus(); }
   if (apres === "recap"){ masquerPanneaux(); afficherRecap(); sonManche(); }
   if (apres === "vice"){
     masquerPanneaux();
@@ -1698,6 +1758,9 @@ function physique(){
           obstacles.splice(oi, 1);
           fxLocal("casse", o.x + o.l/2, o.y, A.bloc);
         } else {
+          /* premier impact : le bloc se fend et perd la moitié de sa largeur */
+          o.l = Math.max(OBST_L_MIN, o.l * OBST_RETRECIT);
+          o.h = Math.max(9, o.h * 0.82);
           if (A.facteur !== 1){                  /* glace ralentit, lave accélère */
             b.vx *= A.facteur; b.vy *= A.facteur;
           }
@@ -1883,6 +1946,48 @@ function passerAuVice(gagnant){
   }
 }
 
+/* ---------- écran VERSUS façon jeu de combat ---------- */
+const DUREE_VS = 3200;
+function afficherVersus(){
+  const nomAdv = nomAdverse || (modeSolo ? ("IA " + niveauIA.toUpperCase()) : "ADVERSAIRE");
+  const pG = $("vsPhotoG"), pD = $("vsPhotoD");
+  pG.innerHTML = maPhoto ? '<img alt="">' : "?";
+  if (maPhoto) pG.querySelector("img").src = maPhoto;
+  pD.innerHTML = photoAdverse ? '<img alt="">' : (modeSolo ? "IA" : "?");
+  if (photoAdverse) pD.querySelector("img").src = photoAdverse;
+  $("vsNomG").textContent = monNom;
+  $("vsNomD").textContent = nomAdv;
+  const fmt = MANCHES_GAGNANTES === 2 ? "AU MEILLEUR DES 3"
+            : (MANCHES_GAGNANTES === 3 ? "AU MEILLEUR DES 5" : "AU MEILLEUR DES 9");
+  $("vsFormat").textContent = fmt + " · " + modeJeu.toUpperCase() + " · " + texteDuels();
+  /* on relance les animations en réinjectant les noeuds */
+  for (const id of ["vsG", "vsD", "vsLogo", "vsFlash"]){
+    const el = $(id);
+    el.style.animation = "none";
+    void el.offsetWidth;
+    el.style.animation = "";
+  }
+  $("versus").classList.remove("cache");
+  sonVersus();
+}
+
+/* démarrage d'un match : arènes tirées, écran VS, puis premier service */
+function demarrerMatch(){
+  melangerArenes();
+  construireObstacles();
+  debris = []; fissures = [[], []];
+  phase = "vs";
+  masquerPanneaux();
+  afficherVersus();
+  setTimeout(() => {
+    if (!estHote || phase !== "vs") return;
+    masquerPanneaux();
+    fxLocal("manche", LARG/2, HAUT/2, 1);
+    preparerService(Math.random() < 0.5 ? 1 : -1);
+    prochainBonus = performance.now() + INTERVALLE_BONUS;
+  }, DUREE_VS);
+}
+
 /* panneau récapitulatif de fin de manche */
 function afficherRecap(){
   const moi = estHote ? 0 : 1, adv = 1 - moi;
@@ -2038,18 +2143,13 @@ btnRevanche.addEventListener("click", () => {
 function lancerRevanche(){
   $("btnMenu").classList.add("cache");
   duelEnregistre = false;
-  melangerArenes();
   etat.score = [0, 0]; manches = [0, 0];
-  construireObstacles();
-  debris = []; fissures = [[], []];
   vices = [null, null]; viceQuand = [0, 0]; tempsJeu = 0; monViceNom = null;
   vfx.finInv = vfx.finBrou = vfx.finGrav = 0;
   chargeLocal = 0; chargeHaut = 0; margeMur = 0;
   effets.finBas = effets.finHaut = effets.finFantome = effets.finBouleFeu = 0;
   majScore(false);
-  masquerPanneaux();
-  preparerService(Math.random() < 0.5 ? 1 : -1);
-  prochainBonus = performance.now() + INTERVALLE_BONUS;
+  demarrerMatch();
 }
 
 /* ================= ENTRÉES ================= */
