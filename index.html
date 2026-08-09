@@ -77,6 +77,11 @@ input:focus{outline:none;border-color:var(--moi)}
 #diagRes .ok{color:#4ADE80} #diagRes .ko{color:#F87171} #diagRes .attente{color:var(--sourd)}
 #diagRes .verdict{margin-top:6px;color:var(--sourd);font-size:11px;line-height:1.6;letter-spacing:0}
 #version{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.22em;color:rgba(124,138,165,.55);margin-top:2px}
+.aideMode{font-family:"JetBrains Mono",monospace;font-size:10.5px;line-height:1.5;color:var(--sourd)}
+button.choisi{
+  color:var(--fond);background:linear-gradient(120deg,var(--moi),#67E8F9);
+  border-color:transparent;box-shadow:0 6px 20px rgba(34,211,238,.32);
+}
 .rangPhoto{display:flex;gap:12px;align-items:center}
 .vignette{
   width:54px;height:54px;flex:0 0 54px;border-radius:14px;overflow:hidden;
@@ -146,6 +151,10 @@ canvas{
   text-shadow:0 0 14px rgba(251,191,36,.28);
 }
 #recapDuels{opacity:.75}
+#voilePhrase{
+  font-size:13px;line-height:1.6;color:var(--or);text-align:center;max-width:320px;
+  text-shadow:0 0 14px rgba(251,191,36,.28);
+}
 #regles h3{font-size:20px;font-weight:700;letter-spacing:.2em;margin-bottom:2px}
 #reglesListe{
   font-size:12.5px;line-height:1.75;color:var(--texte);max-width:420px;
@@ -213,6 +222,21 @@ canvas{
   </div>
 
   <div class="carte">
+    <h2>MODE DE JEU</h2>
+    <div class="rangSolo">
+      <button class="btnMode secondaire" data-mode="arcade">Arcade</button>
+      <button class="btnMode secondaire" data-mode="classique">Classique</button>
+    </div>
+    <div class="aideMode" id="aideMode">Orbes, blocs, vices et arènes à thème.</div>
+    <h2 style="margin-top:4px">MANCHES GAGNANTES</h2>
+    <div class="rangSolo">
+      <button class="btnManches secondaire" data-n="2">2</button>
+      <button class="btnManches secondaire" data-n="3">3</button>
+      <button class="btnManches secondaire" data-n="5">5</button>
+    </div>
+  </div>
+
+  <div class="carte">
     <h2>CRÉER UNE PARTIE</h2>
     <button id="btnCreer">Générer un code</button>
     <div id="codePartie" class="cache"></div>
@@ -240,7 +264,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v8.1 · 2026-08-07</div>
+  <div id="version">DUO v8.2 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -260,7 +284,8 @@ canvas{
       <h3>RÈGLES</h3>
       <div id="reglesListe">
         <b class="c">DÉPLACEMENT</b> — Glissez pour bouger votre raquette. Vous êtes toujours en bas, en cyan.<br>
-        <b class="c">MANCHES</b> — 5 points gagnent une manche, 2 manches gagnent le match. À 4-4 : <b class="f">MORT SUBITE</b>, le terrain rétrécit et les orbes disparaissent.<br>
+        <b class="c">MODES</b> — <b>Arcade</b> : orbes, blocs, vices, arènes à thème. <b>Classique</b> : duel pur, sans aucun de ces éléments.<br>
+        <b class="c">MANCHES</b> — 5 points gagnent une manche ; le nombre de manches gagnantes se règle au menu. À 4-4 : <b class="f">MORT SUBITE</b>, le terrain rétrécit et les orbes disparaissent.<br>
         <b class="c">LIFT</b> — Fouettez la raquette latéralement à l'impact : la balle part courbée (halo <span style="color:#FB923C">orange</span>).<br>
         <b class="c">SMASH</b> — Raquette immobile 1 s : elle se charge et vire à l'<span style="color:#FBBF24">or</span>. La frappe suivante part à pleine puissance.<br>
         <b class="o">ORBES</b> — Touchez-les avec la balle : le bonus va au dernier frappeur. Agrandir · rétrécir l'autre · éclair · balle double · fantôme · <span style="color:#FB923C">boule de feu</span> (7 s : la balle pulvérise les blocs).<br>
@@ -321,6 +346,7 @@ canvas{
     <div id="voile" class="panneau cache">
       <div class="grand" id="voileTitre"></div>
       <div class="petit" id="voileSous"></div>
+      <div id="voilePhrase"></div>
       <button id="btnRevanche" class="cache">Revanche</button>
       <button id="btnMenu" class="secondaire cache">Menu principal</button>
     </div>
@@ -337,7 +363,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "8.1";
+const VERSION = "8.2";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -347,7 +373,14 @@ const SPIN_FACTEUR = 0.46, SPIN_MAX = 8.5, LIFT_VITESSE = 0.34;
 const LIFT_SEUIL = 0.30, SPIN_VISIBLE = SPIN_MAX * LIFT_SEUIL;   /* geste franc = doré + vitesse */
 const MAGNUS = 0.026, SPIN_AMORTI = 0.985;
 const VY_MIN = 2.2;
-const SCORE_MANCHE = 5, MANCHES_GAGNANTES = 2;
+const SCORE_MANCHE = 5;
+const MODES = {
+  arcade:    { bonus: true,  obstacles: true,  vices: true,  degats: true },
+  classique: { bonus: false, obstacles: false, vices: false, degats: false },
+};
+let modeJeu = "arcade";                 /* arcade par défaut */
+let MANCHES_GAGNANTES = 2;              /* 2, 3 ou 5 */
+function cfgMode(){ return MODES[modeJeu] || MODES.arcade; }
 const TICK_ENVOI = 33, DUREE_COMPTE = 800;
 const MAX_BALLES = 3, MAX_BONUS = 2, INTERVALLE_BONUS = 3800;
 const DUREE_TAILLE = 8000, DUREE_FANTOME = 2600, DUREE_BOULE_FEU = 7000;
@@ -429,7 +462,21 @@ const SARCASMES = [
   "{G} n'a pas transpiré. {P} non plus, mais pas pour la même raison.",
   "{P} confirme : la raquette n'était pas au courant.",
 ];
-let sarcasmeIdx = 0, recapGagnant = 0;
+const SARCASMES_MATCH = [
+  "{G} remporte le match. {P} demande une enquête.",
+  "Match plié. {P} en garde le meilleur souvenir : aucun.",
+  "{G} gagne. {P} a maintenant une histoire à raconter — la version courte.",
+  "{P} a perdu, mais avec une constance remarquable.",
+  "Victoire de {G}. {P} annonce sa reconversion.",
+  "{G} : champion. {P} : témoin oculaire.",
+  "{P} rappelle que c'était un entraînement. Depuis le début.",
+  "{G} l'emporte. {P} conteste la gravité.",
+  "Le match est terminé, {P}. Vraiment terminé.",
+  "{G} gagne le match, {P} gagne du temps de réflexion.",
+  "{P} a tout donné. C'était peu, mais c'était tout.",
+  "{G} triomphe. {P} prépare déjà les excuses de la revanche.",
+];
+let sarcasmeIdx = 0, recapGagnant = 0, sarcasmeMatch = 0;
 const VICE_DEFS = {
   I: { nom: "INVERSION" },
   B: { nom: "BROUILLARD" },
@@ -839,6 +886,42 @@ function gestionnaireConnexion(c){
   brancherConnexion();
 }
 
+/* ================= RÉGLAGES DE PARTIE ================= */
+const AIDE_MODE = {
+  arcade: "Orbes, blocs, vices et arènes à thème.",
+  classique: "Duel pur : ni orbe, ni bloc, ni vice. La balle accélère pour éviter les échanges interminables.",
+};
+function majReglages(){
+  for (const b of document.querySelectorAll(".btnMode"))
+    b.classList.toggle("choisi", b.dataset.mode === modeJeu);
+  for (const b of document.querySelectorAll(".btnManches"))
+    b.classList.toggle("choisi", Number(b.dataset.n) === MANCHES_GAGNANTES);
+  $("aideMode").textContent = AIDE_MODE[modeJeu];
+}
+(function initReglages(){
+  try{
+    const m = localStorage.getItem("duo_mode");
+    if (m && MODES[m]) modeJeu = m;
+    const n = Number(localStorage.getItem("duo_manches"));
+    if ([2,3,5].includes(n)) MANCHES_GAGNANTES = n;
+  }catch(e){}
+  for (const b of document.querySelectorAll(".btnMode")){
+    b.addEventListener("click", () => {
+      modeJeu = b.dataset.mode;
+      try{ localStorage.setItem("duo_mode", modeJeu); }catch(e){}
+      majReglages();
+    });
+  }
+  for (const b of document.querySelectorAll(".btnManches")){
+    b.addEventListener("click", () => {
+      MANCHES_GAGNANTES = Number(b.dataset.n);
+      try{ localStorage.setItem("duo_manches", String(MANCHES_GAGNANTES)); }catch(e){}
+      majReglages();
+    });
+  }
+  majReglages();
+})();
+
 /* ================= COMPTEUR DE DUELS (persistant par adversaire) ================= */
 function cleDuel(){
   const adv = (nomAdverse || "").replace(/[^A-Z0-9]/gi, "").slice(0, 12);
@@ -1170,7 +1253,8 @@ function envoyerEtatHote(){
     ma: manches, mu: Math.round(margeMur), fe: enFeu ? 1 : 0,
     ch: [Math.round(chargeLocal*100), Math.round(chargeHaut*100)],
     vw: viceGagnant, vh: [vices[0] ? 1 : 0, vices[1] ? 1 : 0],
-    sk: sarcasmeIdx, rg: recapGagnant,
+    sk: sarcasmeIdx, rg: recapGagnant, sm: sarcasmeMatch,
+    mj: modeJeu, mg: MANCHES_GAGNANTES,
     ob: obstacles.map(o => [Math.round(o.x), o.y, o.l, o.h]),
     de: debris.filter(d => !d.naissance || performance.now() >= d.naissance)
               .map(d => [Math.round(d.x), Math.round(d.y), Math.round(d.r), Math.round(d.rot*100)/100]),
@@ -1216,6 +1300,9 @@ function recevoir(m){
       viceGagnant = m.vw;
       if (typeof m.sk === "number") sarcasmeIdx = m.sk;
       if (typeof m.rg === "number") recapGagnant = m.rg;
+      if (typeof m.sm === "number") sarcasmeMatch = m.sm;
+      if (typeof m.mj === "string" && MODES[m.mj]) modeJeu = m.mj;   /* l'hôte impose les réglages */
+      if (typeof m.mg === "number" && m.mg > 0) MANCHES_GAGNANTES = m.mg;
       vfx.invVictime = m.iv; vfx.finInv = m.iv >= 0 ? performance.now() + 500 : 0;
       vfx.brouVictime = m.bv; vfx.finBrou = m.bv >= 0 ? performance.now() + 500 : 0;
       vfx.gravSens = m.gs;
@@ -1348,7 +1435,7 @@ function majEffets(maintenant){
 }
 
 function apparaitreBonus(maintenant){
-  if (bonusListe.length >= MAX_BONUS || mortSubite){ prochainBonus = maintenant + INTERVALLE_BONUS; return; }
+  if (!cfgMode().bonus || bonusListe.length >= MAX_BONUS || mortSubite){ prochainBonus = maintenant + INTERVALLE_BONUS; return; }
   const types = Object.keys(BONUS_DEFS);
   bonusListe.push({
     id: ++bonusId,
@@ -1388,7 +1475,7 @@ function appliquerBonus(k, frappeur, x, y){
 /* blocs de décor : n = manche en cours - 1, plafonné à 2 */
 function construireObstacles(){
   obstacles = [];
-  const n = Math.min(3, 1 + manches[0] + manches[1]);
+  const n = cfgMode().obstacles ? Math.min(3, 1 + manches[0] + manches[1]) : 0;
   const decalY = [-46, 44, -116];
   for (let i = 0; i < n; i++){
     obstacles.push({
@@ -1436,7 +1523,7 @@ function toucherMur(b, cote, murX){
   let f = null;
   for (const x of arr){ if (Math.abs(x.y - b.y) < FISSURE_PORTEE){ f = x; break; } }
 
-  if (vit >= SMASH_MUR){
+  if (vit >= SMASH_MUR && cfgMode().degats){
     if (f) f.niv++;
     else { f = { y: b.y, niv: 1 }; arr.push(f); }
     /* éclats DIFFÉRÉS : le mur se fend, puis les morceaux se détachent
@@ -1685,6 +1772,7 @@ function fxLocal(k, x, y, extra){ jouerFx(k, x, y, extra === undefined ? "" : ex
 function finDeManche(gagnant){
   manches[gagnant]++;
   if (manches[gagnant] >= MANCHES_GAGNANTES){
+    sarcasmeMatch = Math.floor(Math.random() * SARCASMES_MATCH.length);
     phase = "fin";
     afficherFin();
     return;
@@ -1701,6 +1789,7 @@ function finDeManche(gagnant){
   }
 }
 function passerAuVice(gagnant){
+  if (!cfgMode().vices){ masquerPanneaux(); mancheSuivante(); return; }
   viceGagnant = gagnant;
   phase = "vice";
   masquerPanneaux();
@@ -1852,6 +1941,10 @@ function afficherFin(){
   enregistrerDuel(jAiGagne);
   const mMoi = estHote ? manches[0] : manches[1];
   const mAdv = estHote ? manches[1] : manches[0];
+  const nomMoiF = monNom, nomAdvF = nomAdverse || (modeSolo ? "IA" : "ADVERSAIRE");
+  $("voilePhrase").textContent = SARCASMES_MATCH[sarcasmeMatch % SARCASMES_MATCH.length]
+    .replace(/\{G\}/g, jAiGagne ? nomMoiF : nomAdvF)
+    .replace(/\{P\}/g, jAiGagne ? nomAdvF : nomMoiF);
   const td = texteDuels();
   montrerVoile(jAiGagne ? "VICTOIRE" : "DÉFAITE",
     monNom + " " + mMoi + " — " + mAdv + " " + (nomAdverse || "ADVERSAIRE") + (td ? " · " + td : ""), true);
@@ -2233,7 +2326,10 @@ const ARENES = [
   { nom: "LAVE",  halo: "96,26,10",  grille: "255,150,80",  trait: "255,140,60",  pas: 38,
     bloc: "lave",  facteur: 1.22, accent: "#FB923C" },
 ];
-function areneCourante(){ return ARENES[Math.min(ARENES.length - 1, manches[0] + manches[1])]; }
+function areneCourante(){
+  if (modeJeu === "classique") return ARENES[0];
+  return ARENES[Math.min(ARENES.length - 1, manches[0] + manches[1])];
+}
 
 function dessinerArene(Y, t){
   const A = areneCourante();
