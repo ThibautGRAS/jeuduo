@@ -304,7 +304,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v9.6 · 2026-08-07</div>
+  <div id="version">DUO v9.7 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -422,7 +422,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "9.6";
+const VERSION = "9.7";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -618,7 +618,33 @@ let peer = null, conn = null;
 let estHote = false, partieEnCours = false;
 let modeSolo = false, niveauIA = "moyen";
 let monNom = "JOUEUR", nomAdverse = "";
-let rttMs = 60;                      /* aller-retour mesuré, pour la compensation de latence */
+let rttMs = 60;                      /* aller-retour lissé, pour la compensation de latence */
+let voieConnexion = "";              /* "DIRECT" ou "RELAIS", mesuré sur la session */
+function majPing(){
+  elPing.textContent = Math.round(rttMs) + " ms" + (voieConnexion ? " · " + voieConnexion : "");
+}
+
+/* Interroge la session WebRTC pour savoir si les données passent en direct
+   ou par un serveur relais — la seule façon de savoir si le TURN sert. */
+async function mesurerVoie(){
+  try{
+    const pc = conn && conn.peerConnection;
+    if (!pc || !pc.getStats) return;
+    const stats = await pc.getStats();
+    let paire = null;
+    stats.forEach(r => {
+      if (r.type === "candidate-pair" && (r.state === "succeeded" || r.nominated)) paire = r;
+    });
+    if (!paire) return;
+    let relais = false;
+    stats.forEach(r => {
+      if (r.type === "local-candidate" && r.id === paire.localCandidateId && r.candidateType === "relay") relais = true;
+      if (r.type === "remote-candidate" && r.id === paire.remoteCandidateId && r.candidateType === "relay") relais = true;
+    });
+    voieConnexion = relais ? "RELAIS" : "DIRECT";
+    majPing();
+  }catch(e){}
+}
 function assainirNom(s){ return String(s || "").replace(/[<>&"'`]/g, "").trim().toUpperCase().slice(0, 12) || "JOUEUR"; }
 const IA_NIVEAUX = {
   facile:    { vit: 2.6, err: 95, anticipe: false, smash: false, zone: 0.52 },
@@ -1365,6 +1391,8 @@ function demarrerPartie(){
     if (estHote) setInterval(envoyerEtatHote, TICK_ENVOI);
     else setInterval(envoyerRaquetteInvite, 16);   /* raquette à 60 Hz : critique pour la collision */
     setInterval(envoyerPing, 2000);
+    setTimeout(mesurerVoie, 2500);
+    setInterval(mesurerVoie, 15000);
   }
   requestAnimationFrame(boucle);
 }
@@ -1496,10 +1524,13 @@ function recevoir(m){
     case "fx": jouerFx(m.k, m.x, m.y, m.e); break;
     case "rm": if (estHote) lancerRevanche(); break;
     case "p": conn.send({ t:"q" }); break;
-    case "q":
-      rttMs = performance.now() - dernierPingEnvoi;
-      elPing.textContent = Math.round(rttMs) + " ms";
+    case "q": {
+      const brut = performance.now() - dernierPingEnvoi;
+      /* moyenne glissante : une mesure isolée ne doit pas affoler la compensation */
+      rttMs = rttMs ? rttMs * 0.7 + brut * 0.3 : brut;
+      majPing();
       break;
+    }
   }
 }
 
@@ -1791,13 +1822,17 @@ function physique(){
     /* arène VIDE : chaque bloc exerce un puits de gravité sur la balle */
     const Aatt = areneCourante();
     if (Aatt.attraction && !survolePrecalc(b)){
+      const portee = Aatt.portee || 205;
       for (const o of obstacles){
         const cx = o.x + o.l/2, cy = o.y;
         const dx = cx - b.x, dy = cy - b.y;
         const d2 = dx*dx + dy*dy;
-        if (d2 > 25 && d2 < 20000){
+        if (d2 > 400 && d2 < portee*portee){
           const d = Math.sqrt(d2);
-          const f = Aatt.attraction * (1 - d/141);
+          /* décroissance quadratique : ferme de près, douce de loin,
+             ce qui donne des courbes amples plutôt qu'un coup de barre */
+          const u = 1 - d / portee;
+          const f = Aatt.attraction * u * u;
           b.vx += (dx/d) * f; b.vy += (dy/d) * f;
         }
       }
@@ -2834,7 +2869,7 @@ const ARENES = [
            cFreq: 2100, cVol: 0.26, hFreq: 6500 } },
 
   { nom: "VIDE", bloc: "vide", img: "arenes/espace.webp", halo: "10,14,46", grille: "148,163,220", trait: "165,180,252",
-    pas: 66, facteur: 0.94, accent: "#A5B4FC", attraction: 0.055,
+    pas: 66, facteur: 0.94, accent: "#A5B4FC", attraction: 0.5, portee: 245,
     blocs: 2,
     mus: { tempo: 104, max: 132, lead: "sine", basse: "sine",
            L: [523,0,0,0, 0,0,622,0, 0,0,466,0, 0,0,0,0],
