@@ -796,6 +796,8 @@ let fantome = false;
 
 let maRaquette = LARG/2, raqAdvAffichee = LARG/2;
 let raqPrecedente = LARG/2, vitRaqLisse = 0, vitRaqHaut = 0;
+const flashRaq = [-1e9, -1e9];     /* [ma raquette, celle d'en face] */
+let raqAdvPrec = LARG/2, vitRaqAdvAff = 0;
 
 /* smash chargé */
 let chargeLocal = 0;               // 0..1
@@ -1756,6 +1758,8 @@ function jouerFx(k, x, y, extra){
     explosion(x, y, CO_BALLE, 12, 3.4); secousse = Math.max(secousse, 3);
     const e = (extra && typeof extra === "object") ? extra : {};
     sonRaq(e.v, e.s);
+    const moiRaq = estHote ? 0 : 1;
+    flashRaq[e.f === moiRaq ? 0 : 1] = performance.now();
     if (e.sm){
       sonSmash(); secousse = 8;
       explosion(x, y, CO_OR, 30, 6);
@@ -3502,6 +3506,81 @@ function ancrageArc(x, y, force){
   bloomCercle(x, y, 80 * force, "#DDD6FE", 0.55 * force);
 }
 
+/* Raquette : corps métallique en dégradé, coiffes aux extrémités, noyau
+   d'énergie qui se remplit avec la charge, écrasement à l'impact et légère
+   inclinaison dans le sens du déplacement. */
+function dessinerRaquette(cx, largeur, yHaut, couleur, charge, tFlash, vitesse){
+  const h = RAQ_H;
+  const cy = yHaut + h/2;
+  const chargee = charge >= 1;
+  const teinte = chargee ? CO_OR : couleur;
+
+  const impact = Math.max(0, 1 - (performance.now() - tFlash) / 190);
+  const etire = 1 + impact * 0.16;
+  const aplati = 1 - impact * 0.34;
+  const angle = Math.max(-0.13, Math.min(0.13, (vitesse || 0) * 0.012));
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(angle);
+  ctx.scale(etire, aplati);
+
+  const x0 = -largeur/2, y0 = -h/2, r = h/2;
+
+  cheminArrondi(x0 - 1.6, y0 - 1.6, largeur + 3.2, h + 3.2, r + 1.4);
+  ctx.fillStyle = "rgba(3,6,14,.72)";
+  ctx.fill();
+
+  const g = ctx.createLinearGradient(0, y0, 0, y0 + h);
+  g.addColorStop(0, "#FFFFFF");
+  g.addColorStop(0.28, chargee ? "#FDE68A" : eclaircir(teinte, 0.45));
+  g.addColorStop(0.62, teinte);
+  g.addColorStop(1, assombrir(teinte, 0.55));
+  cheminArrondi(x0, y0, largeur, h, r);
+  ctx.fillStyle = g;
+  ctx.fill();
+
+  ctx.fillStyle = assombrir(teinte, 0.35);
+  const lc = Math.min(13, largeur * 0.16);
+  cheminArrondi(x0, y0, lc, h, r); ctx.fill();
+  cheminArrondi(x0 + largeur - lc, y0, lc, h, r); ctx.fill();
+
+  const lNoyau = Math.max(0, (largeur - lc*2 - 6) * Math.min(1, charge));
+  if (lNoyau > 2){
+    const gn = ctx.createLinearGradient(-lNoyau/2, 0, lNoyau/2, 0);
+    gn.addColorStop(0, rgba(chargee ? CO_OR : "#FFFFFF", 0));
+    gn.addColorStop(0.5, rgba(chargee ? CO_OR : "#FFFFFF", chargee ? 0.95 : 0.6));
+    gn.addColorStop(1, rgba(chargee ? CO_OR : "#FFFFFF", 0));
+    ctx.fillStyle = gn;
+    ctx.fillRect(-lNoyau/2, -1.3, lNoyau, 2.6);
+  }
+
+  ctx.fillStyle = "rgba(255,255,255,.7)";
+  ctx.fillRect(x0 + lc*0.5, y0 + 1, largeur - lc, 1.1);
+
+  if (impact > 0.02){
+    cheminArrondi(x0, y0, largeur, h, r);
+    ctx.fillStyle = "rgba(255,255,255," + (0.55 * impact).toFixed(3) + ")";
+    ctx.fill();
+  }
+  ctx.restore();
+
+  bloomCercle(cx, cy, 38 + charge * 18 + impact * 60, teinte, 0.3 + charge * 0.15 + impact * 0.4);
+}
+
+function eclaircir(hex, k){
+  if (hex.charAt(0) !== "#") return hex;
+  const n = parseInt(hex.slice(1), 16);
+  const m = c => Math.round(c + (255 - c) * k);
+  return "rgb(" + m((n>>16)&255) + "," + m((n>>8)&255) + "," + m(n&255) + ")";
+}
+function assombrir(hex, k){
+  if (hex.charAt(0) !== "#") return hex;
+  const n = parseInt(hex.slice(1), 16);
+  const m = c => Math.round(c * (1 - k));
+  return "rgb(" + m((n>>16)&255) + "," + m((n>>8)&255) + "," + m(n&255) + ")";
+}
+
 function dessinerArcOrage(Y, t){
   if (!arcOrage.actif && !arcOrage.preavis) return;
   const x1 = arcOrage.x1, y1 = Y(arcOrage.y1);
@@ -3743,6 +3822,14 @@ const DESCRIPTION_ARENE = {
   jungle: "LE FEUILLAGE ABSORBE L'EFFET",
 };
 
+function cheminArrondi(x, y, l, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + l, y, x + l, y + h, r);
+  ctx.arcTo(x + l, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + l, y, r);
+}
 function arrondi(x, y, l, h, r){
   ctx.beginPath();
   ctx.moveTo(x + r, y);
