@@ -22,6 +22,8 @@ utilisable tel quel avant un déploiement.
 | Arènes | six arènes, décors, tempos distincts, une ou deux bûches |
 | Bûches | ni destruction ni redimensionnement |
 | Vannes | rimes trouvées sur 36 prénoms, aucun marqueur résiduel, même texte des deux côtés |
+| Raquettes | dégradé, écrasement, inclinaison, noyau de charge |
+| Références | **toute fonction appelée est bien définie** |
 | Non-régression | les pièges déjà rencontrés une fois |
 
 ## Pièges surveillés
@@ -34,7 +36,10 @@ Ces vérifications existent parce que le bug s'est produit pour de vrai :
   déclenchaient le repli automatique des effets ;
 - **traînée** — un plafond d'empilement plus bas que la longueur voulue rendait
   la traîne longue inatteignable ;
-- **code mort** après un `return`.
+- **code mort** après un `return` ;
+- **fonction appelée mais jamais définie** — une édition partiellement appliquée
+  avait laissé `dessinerRaquette` invoquée sans corps ; `node --check` ne voit
+  rien puisque la syntaxe est valide, seule l'exécution aurait planté.
 
 ## Ajouter un test
 
