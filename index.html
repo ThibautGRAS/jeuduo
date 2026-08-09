@@ -264,7 +264,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v8.3 · 2026-08-07</div>
+  <div id="version">DUO v8.4 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -289,7 +289,7 @@ canvas{
         <b class="c">LIFT</b> — Fouettez la raquette à l'impact : la balle part courbée, bien plus rapide, et si le geste est franc elle <b>décolle et survole les blocs</b> (halo doré, ombre qui s'écarte).<br>
         <b class="c">SMASH</b> — Raquette immobile 1 s : elle se charge et vire à l'<span style="color:#FBBF24">or</span>. La frappe suivante part à pleine puissance.<br>
         <b class="o">ORBES</b> — Touchez-les avec la balle : le bonus va au dernier frappeur. Agrandir · rétrécir l'autre · éclair · balle double · fantôme · <span style="color:#FB923C">boule de feu</span> (7 s : la balle pulvérise les blocs).<br>
-        <b class="o">ARÈNES</b> — Ordre tiré au sort à chaque match, dès la manche 1 : <b>ROCHE</b> (neutre), <b>GLACE</b> (ralentit), <b>LAVE</b> (accélère), <b>ORAGE</b> (décharge et dévie), <b>VIDE</b> (les cristaux attirent la balle). Décor et musique changent avec l'arène.<br>
+        <b class="o">ARÈNES</b> — Six arènes, ordre tiré au sort dès la manche 1 : <b>ROCHE</b> (neutre), <b>GLACE</b> (ralentit), <b>LAVE</b> (accélère), <b>ORAGE</b> (dévie et charge), <b>VIDE</b> (attire la balle), <b>JUNGLE</b> (absorbe l'effet). Décor, musique et physique changent avec elle.<br>
         <b class="o">BLOCS</b> — Deux impacts et ils éclatent. La boule de feu les pulvérise d'un coup.<br>
         <b class="f">BALLE EN FEU</b> — 8 rebonds sans point : la balle s'enflamme à vitesse maximale.<br>
         <b class="o">DÉCOR</b> — À partir de la manche 2, des blocs de la ligne médiane se détachent et dérivent au centre du terrain.<br>
@@ -364,7 +364,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "8.3";
+const VERSION = "8.4";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -478,8 +478,41 @@ const SARCASMES_MATCH = [
   "{G} gagne le match, {P} gagne du temps de réflexion.",
   "{P} a tout donné. C'était peu, mais c'était tout.",
   "{G} triomphe. {P} prépare déjà les excuses de la revanche.",
+  "{P} a visité six arènes pour perdre dans chacune.",
+  "{G} s'adapte à tout. {P} s'adapte à la défaite.",
+  "Le décor a changé cinq fois. Le résultat, jamais.",
+  "{P} demande un match retour. {G} demande un café.",
 ];
-let sarcasmeIdx = 0, recapGagnant = 0, sarcasmeMatch = 0;
+const SARCASMES_THEME = {
+  roche:  ["{P} a trouvé la roche. La roche n'a rien senti.",
+           "Terrain neutre, excuses nulles : {G} était juste meilleur.",
+           "{P} accuse le décor. Le décor n'a rien fait."],
+  glace:  ["{P} a glissé. Au sens propre comme au figuré.",
+           "{G} patine, {P} dérape. Nuance décisive.",
+           "La glace a ralenti la balle. {P} était déjà en retard."],
+  lave:   ["{P} a fondu sous la pression. Littéralement.",
+           "{G} joue avec le feu, {P} joue avec le vide.",
+           "La lave a accéléré la balle. {P} n'a accéléré que sa défaite."],
+  orage:  ["{P} a pris la foudre. À plusieurs reprises.",
+           "{G} maîtrise l'orage, {P} subit la météo.",
+           "Chaque déviation a trouvé {P}. Statistiquement remarquable."],
+  vide:   ["{P} s'est perdu dans le vide. On envoie une équipe.",
+           "Dans le vide, personne ne t'entend rater, {P}.",
+           "Les cristaux ont attiré la balle. Pas la raquette de {P}."],
+  jungle: ["La jungle a mangé l'effet de {P}. Et sa manche.",
+           "{G} taille sa route, {P} reste dans les lianes.",
+           "{P} a joué comme un touriste en forêt dense."],
+};
+let sarcasmeIdx = 0, recapGagnant = 0, sarcasmeMatch = 0, recapArene = 0;
+/* index de l'arène de la manche qui vient de se terminer */
+function areneManche(n){
+  if (modeJeu === "classique") return 0;
+  return sequenceArenes[Math.min(sequenceArenes.length - 1, Math.max(0, n))] || 0;
+}
+function poolSarcasmes(idxArene){
+  const bloc = (ARENES[idxArene] || ARENES[0]).bloc;
+  return SARCASMES.concat(SARCASMES_THEME[bloc] || []);
+}
 const VICE_DEFS = {
   I: { nom: "INVERSION" },
   B: { nom: "BROUILLARD" },
@@ -749,30 +782,33 @@ function percBruit(quand, duree, freq, q, vol, typeFiltre){
   s.connect(f); f.connect(g); g.connect(gainMusique);
   s.start(quand); s.stop(quand + duree + 0.03);
 }
-function grosseCaisse(quand){
+/* Batterie paramétrée par l'arène. Volumes très réduits par rapport à la v8.3 :
+   la mélodie portait l'identité du thème mais était noyée sous la caisse. */
+function grosseCaisse(quand, M){
   if (!ac || !gainMusique) return;
   const o = ac.createOscillator(), g = ac.createGain();
-  o.type = "sine";
-  o.frequency.setValueAtTime(165, quand);
-  o.frequency.exponentialRampToValueAtTime(44, quand + 0.11);
-  g.gain.setValueAtTime(0.66, quand);
-  g.gain.exponentialRampToValueAtTime(0.0001, quand + 0.2);
+  o.type = M.kType || "sine";
+  o.frequency.setValueAtTime(M.kHaut || 165, quand);
+  o.frequency.exponentialRampToValueAtTime(M.kBas || 44, quand + (M.kGliss || 0.11));
+  g.gain.setValueAtTime(M.kVol !== undefined ? M.kVol : 0.4, quand);
+  g.gain.exponentialRampToValueAtTime(0.0001, quand + (M.kDuree || 0.2));
   o.connect(g); g.connect(gainMusique);
-  o.start(quand); o.stop(quand + 0.23);
-  percBruit(quand, 0.028, 2400, 0.7, 0.16, "bandpass");
+  o.start(quand); o.stop(quand + (M.kDuree || 0.2) + 0.03);
+  if (M.kClic !== 0) percBruit(quand, 0.026, 2400, 0.7, 0.09, "bandpass");
 }
-function caisseClaire(quand){
-  percBruit(quand, 0.14, 1750, 0.75, 0.36, "bandpass");
+function caisseClaire(quand, M){
+  percBruit(quand, M.cDuree || 0.13, M.cFreq || 1750, 0.75, M.cVol !== undefined ? M.cVol : 0.2, "bandpass");
   if (!ac || !gainMusique) return;
   const o = ac.createOscillator(), g = ac.createGain();
-  o.type = "triangle"; o.frequency.setValueAtTime(195, quand);
-  g.gain.setValueAtTime(0.22, quand);
+  o.type = "triangle"; o.frequency.setValueAtTime(M.cTon || 195, quand);
+  g.gain.setValueAtTime(0.11, quand);
   g.gain.exponentialRampToValueAtTime(0.0001, quand + 0.09);
   o.connect(g); g.connect(gainMusique);
   o.start(quand); o.stop(quand + 0.11);
 }
-function charleston(quand, ouvert){
-  percBruit(quand, ouvert ? 0.1 : 0.033, 8200, 0.9, ouvert ? 0.15 : 0.11, "highpass");
+function charleston(quand, ouvert, M){
+  percBruit(quand, ouvert ? 0.09 : 0.03, M.hFreq || 8200, 0.9,
+            (ouvert ? 0.07 : 0.05) * (M.hVol !== undefined ? M.hVol : 1), "highpass");
 }
 function noteMusique(freq, quand, duree, type, vol){
   if (!ac || !gainMusique) return;
@@ -799,11 +835,11 @@ function planifierMusique(){
     const M = musiqueArene();
     const duree = 60 / tempoCourant() / 2;
     const i = pasMusique % 16;
-    if (M.L[i]) noteMusique(M.L[i], prochainPas, duree * 0.8, M.lead,  0.042);
-    if (M.B[i]) noteMusique(M.B[i], prochainPas, duree * 1.3, M.basse, 0.075);
-    if (M.K[i]) grosseCaisse(prochainPas);
-    if (M.C[i]) caisseClaire(prochainPas);
-    if (M.H[i]) charleston(prochainPas, i === 15);
+    if (M.L[i]) noteMusique(M.L[i], prochainPas, duree * 0.8, M.lead,  M.lVol !== undefined ? M.lVol : 0.15);
+    if (M.B[i]) noteMusique(M.B[i], prochainPas, duree * 1.3, M.basse, M.bVol !== undefined ? M.bVol : 0.17);
+    if (M.K[i]) grosseCaisse(prochainPas, M);
+    if (M.C[i]) caisseClaire(prochainPas, M);
+    if (M.H[i]) charleston(prochainPas, i === 15, M);
     prochainPas += duree; pasMusique++;
   }
 }
@@ -1240,6 +1276,7 @@ function verifierLus(){
     melangerArenes();
     construireObstacles();
     debris = []; fissures = [[], []];
+    fxLocal("manche", LARG/2, HAUT/2, 1);
     preparerService(Math.random() < 0.5 ? 1 : -1);
     prochainBonus = performance.now() + INTERVALLE_BONUS;
   }
@@ -1257,7 +1294,7 @@ function envoyerEtatHote(){
     ma: manches, mu: Math.round(margeMur), fe: enFeu ? 1 : 0,
     ch: [Math.round(chargeLocal*100), Math.round(chargeHaut*100)],
     vw: viceGagnant, vh: [vices[0] ? 1 : 0, vices[1] ? 1 : 0],
-    sk: sarcasmeIdx, rg: recapGagnant, sm: sarcasmeMatch,
+    sk: sarcasmeIdx, rg: recapGagnant, sm: sarcasmeMatch, ra: recapArene,
     mj: modeJeu, mg: MANCHES_GAGNANTES, sa: sequenceArenes,
     ob: obstacles.map(o => [Math.round(o.x), o.y, o.l, o.h, o.pv, o.germe]),
     de: debris.filter(d => !d.naissance || performance.now() >= d.naissance)
@@ -1305,6 +1342,7 @@ function recevoir(m){
       if (typeof m.sk === "number") sarcasmeIdx = m.sk;
       if (typeof m.rg === "number") recapGagnant = m.rg;
       if (typeof m.sm === "number") sarcasmeMatch = m.sm;
+      if (typeof m.ra === "number") recapArene = m.ra;
       if (typeof m.mj === "string" && MODES[m.mj]) modeJeu = m.mj;   /* l'hôte impose les réglages */
       if (typeof m.mg === "number" && m.mg > 0) MANCHES_GAGNANTES = m.mg;
       if (Array.isArray(m.sa) && m.sa.length) sequenceArenes = m.sa;
@@ -1663,6 +1701,7 @@ function physique(){
           if (A.facteur !== 1){                  /* glace ralentit, lave accélère */
             b.vx *= A.facteur; b.vy *= A.facteur;
           }
+          if (A.absorbe){ b.spin = 0; }          /* jungle : le feuillage mange l'effet */
           if (A.chaos){                          /* orage : décharge et déviation */
             const ang = (Math.random() - 0.5) * A.chaos * 2;
             const c = Math.cos(ang), s = Math.sin(ang);
@@ -1813,7 +1852,8 @@ function finDeManche(gagnant){
     return;
   }
   recapGagnant = gagnant;
-  sarcasmeIdx = Math.floor(Math.random() * SARCASMES.length);
+  recapArene = areneManche(manches[0] + manches[1] - 1);
+  sarcasmeIdx = Math.floor(Math.random() * poolSarcasmes(recapArene).length);
   phase = "recap";
   balles = []; bonusListe = [];
   if (estHote){
@@ -1862,7 +1902,8 @@ function afficherRecap(){
   $("recapScore").textContent = etat.score[moi] + " — " + etat.score[adv];
   $("recapManchesMoi").textContent = "●".repeat(manches[moi]) + "○".repeat(MANCHES_GAGNANTES - manches[moi]);
   $("recapManchesAdv").textContent = "●".repeat(manches[adv]) + "○".repeat(MANCHES_GAGNANTES - manches[adv]);
-  $("recapSarcasme").textContent = SARCASMES[sarcasmeIdx % SARCASMES.length]
+  const pool = poolSarcasmes(recapArene);
+  $("recapSarcasme").textContent = pool[sarcasmeIdx % pool.length]
     .replace(/\{G\}/g, gagnantNom).replace(/\{P\}/g, perdantNom);
   $("recapDuels").textContent = texteDuels();
   $("recap").classList.remove("cache");
@@ -2147,6 +2188,15 @@ function dessiner(){
     } else if (Ad.bloc === "lave"){
       ge.addColorStop(0, "#FDBA74"); ge.addColorStop(0.5, "#7C2D12"); ge.addColorStop(1, "#1A0F0E");
       ctx.shadowColor = "rgba(251,146,60,.8)";
+    } else if (Ad.bloc === "jungle"){
+      ge.addColorStop(0, "#BBF7D0"); ge.addColorStop(0.5, "#3F6212"); ge.addColorStop(1, "#1A2E0A");
+      ctx.shadowColor = "rgba(74,222,128,.75)";
+    } else if (Ad.bloc === "orage"){
+      ge.addColorStop(0, "#E9D5FF"); ge.addColorStop(0.5, "#6D28D9"); ge.addColorStop(1, "#2A2350");
+      ctx.shadowColor = "rgba(196,181,253,.8)";
+    } else if (Ad.bloc === "vide"){
+      ge.addColorStop(0, "#E0E7FF"); ge.addColorStop(0.5, "#4F46E5"); ge.addColorStop(1, "#1E1B4B");
+      ctx.shadowColor = "rgba(165,180,252,.8)";
     } else {
       ge.addColorStop(0, "#CBD5E1"); ge.addColorStop(0.55, "#8B99AD"); ge.addColorStop(1, "#3F4A60");
       ctx.shadowColor = "rgba(148,163,184,.7)";
@@ -2371,7 +2421,8 @@ const ARENES = [
            B: [110,0,110,110, 82,0,82,0, 98,0,98,98, 73,0,73,0],
            K: [1,0,0,0, 0,0,1,0, 1,0,0,0, 0,0,1,0],
            C: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,1],
-           H: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,1] } },
+           H: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,1],
+           lVol: 0.15, bVol: 0.17, kVol: 0.4, kHaut: 165, kBas: 44 } },
 
   { nom: "GLACE", bloc: "glace", halo: "16,72,92", grille: "150,240,255", trait: "150,240,255",
     pas: 54, facteur: 0.78, accent: "#7DD3FC",
@@ -2380,7 +2431,9 @@ const ARENES = [
            B: [65,0,0,0, 65,0,0,0, 49,0,0,0, 58,0,0,0],
            K: [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
            C: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
-           H: [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1] } },
+           H: [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1],
+           lVol: 0.2, bVol: 0.14, kVol: 0.26, kHaut: 120, kBas: 52, kClic: 0,
+           cFreq: 3200, cVol: 0.14, hFreq: 11000, hVol: 1.3 } },
 
   { nom: "LAVE", bloc: "lave", halo: "96,26,10", grille: "255,150,80", trait: "255,140,60",
     pas: 38, facteur: 1.22, accent: "#FB923C",
@@ -2389,7 +2442,9 @@ const ARENES = [
            B: [55,55,0,55, 55,0,55,0, 49,49,0,49, 49,0,49,0],
            K: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,1],
            C: [0,0,0,0, 1,0,0,1, 0,0,0,0, 1,0,1,0],
-           H: [0,1,0,1, 0,1,0,1, 0,1,0,1, 0,1,1,1] } },
+           H: [0,1,0,1, 0,1,0,1, 0,1,0,1, 0,1,1,1],
+           lVol: 0.17, bVol: 0.2, kVol: 0.46, kType: "triangle", kHaut: 190, kBas: 38,
+           cFreq: 1400, cVol: 0.24 } },
 
   { nom: "ORAGE", bloc: "orage", halo: "40,32,86", grille: "196,181,253", trait: "216,180,254",
     pas: 34, facteur: 1.10, accent: "#C4B5FD", chaos: 0.34,
@@ -2398,7 +2453,9 @@ const ARENES = [
            B: [73,73,73,0, 73,0,73,73, 65,65,65,0, 65,0,65,65],
            K: [1,0,1,1, 0,1,1,0, 1,0,1,1, 0,1,1,1],
            C: [0,0,0,0, 1,0,0,0, 0,0,1,0, 1,0,1,1],
-           H: [1,1,0,1, 1,1,0,1, 1,1,0,1, 1,1,1,1] } },
+           H: [1,1,0,1, 1,1,0,1, 1,1,0,1, 1,1,1,1],
+           lVol: 0.16, bVol: 0.19, kVol: 0.42, kHaut: 210, kBas: 60, kGliss: 0.07,
+           cFreq: 2100, cVol: 0.26, hFreq: 6500 } },
 
   { nom: "VIDE", bloc: "vide", halo: "10,14,46", grille: "148,163,220", trait: "165,180,252",
     pas: 66, facteur: 0.94, accent: "#A5B4FC", attraction: 0.055,
@@ -2407,7 +2464,20 @@ const ARENES = [
            B: [41,0,0,0, 0,0,0,0, 39,0,0,0, 0,0,0,0],
            K: [1,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,0],
            C: [0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
-           H: [0,0,1,0, 0,0,0,0, 0,0,1,0, 0,0,1,0] } },
+           H: [0,0,1,0, 0,0,0,0, 0,0,1,0, 0,0,1,0],
+           lVol: 0.22, bVol: 0.22, kVol: 0.3, kHaut: 90, kBas: 30, kGliss: 0.2, kDuree: 0.4,
+           kClic: 0, cVol: 0.1, hVol: 0.6 } },
+
+  { nom: "JUNGLE", bloc: "jungle", halo: "12,58,32", grille: "134,239,172", trait: "134,239,172",
+    pas: 48, facteur: 1, accent: "#4ADE80", absorbe: true,
+    mus: { tempo: 150, max: 188, lead: "triangle", basse: "triangle",
+           L: [587,0,659,0, 587,523,0,587, 440,0,523,0, 587,0,523,0],
+           B: [87,0,87,0, 65,0,65,65, 73,0,73,0, 98,0,98,0],
+           K: [1,0,0,1, 0,0,1,0, 1,0,0,1, 0,1,0,0],
+           C: [0,0,1,0, 0,1,0,0, 0,0,1,0, 0,0,1,0],
+           H: [1,1,0,1, 1,0,1,1, 1,1,0,1, 1,0,1,1],
+           lVol: 0.19, bVol: 0.18, kVol: 0.38, kType: "triangle", kHaut: 140, kBas: 62,
+           kGliss: 0.09, cFreq: 900, cVol: 0.2, cTon: 320, hFreq: 5200, hVol: 0.8 } },
 ];
 /* ordre des arènes tiré au sort par l'hôte au début du match */
 let sequenceArenes = [0, 1, 2, 3, 4];
@@ -2458,25 +2528,112 @@ function dessinerArene(Y, t){
     }
     ctx.globalAlpha = 1;
   } else if (A.bloc === "orage"){
-    const cycle = (t * 0.55) % 4;
-    if (cycle < 0.14){
-      ctx.fillStyle = "rgba(216,180,254," + (0.16 * (1 - cycle/0.14)).toFixed(3) + ")";
+    /* nuages statiques + éclair ramifié avec embrasement et rémanence */
+    const rn = graine(5150);
+    for (let i = 0; i < 9; i++){
+      const cx = rn() * LARG, cy = rn() * HAUT * 0.9, rr = 40 + rn() * 70;
+      ctx.fillStyle = "rgba(40,32,86,.30)";
+      ctx.beginPath(); ctx.arc(cx, cy, rr, 0, Math.PI*2); ctx.fill();
+    }
+    const periode = 3.4;
+    const cycle = (t % periode) / periode;
+    if (cycle < 0.1){
+      const p = cycle / 0.1;                       /* 0 -> 1 sur la durée du flash */
+      const eclat = Math.pow(1 - p, 2.2);          /* éblouissement qui retombe vite */
+      const r = graine(Math.floor(t / periode) * 31 + 5);
+      const xArr = 40 + r() * (LARG - 80);
+
+      ctx.fillStyle = "rgba(237,233,254," + (0.42 * eclat).toFixed(3) + ")";
       ctx.fillRect(0, 0, LARG, HAUT);
-      const r = graine(Math.floor(t * 0.55) * 31 + 5);
-      ctx.strokeStyle = "rgba(237,233,254,.85)";
-      ctx.lineWidth = 1.8; ctx.lineCap = "round";
-      ctx.beginPath();
-      let px = 40 + r() * (LARG - 80), py = 0;
-      ctx.moveTo(px, py);
-      for (let s = 0; s < 6; s++){ px += (r() - 0.5) * 70; py += HAUT / 6; ctx.lineTo(px, py); }
-      ctx.stroke(); ctx.lineCap = "butt";
+      const gl = ctx.createRadialGradient(xArr, HAUT*0.35, 10, xArr, HAUT*0.35, HAUT*0.75);
+      gl.addColorStop(0, "rgba(233,213,255," + (0.5 * eclat).toFixed(3) + ")");
+      gl.addColorStop(1, "rgba(233,213,255,0)");
+      ctx.fillStyle = gl; ctx.fillRect(0, 0, LARG, HAUT);
+
+      const tracer = (largeur, couleur, flou) => {
+        ctx.strokeStyle = couleur; ctx.lineWidth = largeur;
+        ctx.shadowBlur = flou; ctx.shadowColor = "rgba(216,180,254,.95)";
+        ctx.lineCap = "round"; ctx.lineJoin = "round";
+        const rr = graine(Math.floor(t / periode) * 31 + 5);
+        let px = 40 + rr() * (LARG - 80), py = 0;
+        ctx.beginPath(); ctx.moveTo(px, py);
+        const pts = [];
+        for (let s = 0; s < 8; s++){
+          px += (rr() - 0.5) * 62; py += HAUT / 8;
+          ctx.lineTo(px, py); pts.push([px, py]);
+        }
+        ctx.stroke();
+        /* ramifications */
+        for (let k = 1; k < pts.length - 1; k += 2){
+          ctx.beginPath(); ctx.moveTo(pts[k][0], pts[k][1]);
+          let bx = pts[k][0], by = pts[k][1];
+          const sens = rr() < 0.5 ? -1 : 1;
+          for (let j = 0; j < 2; j++){ bx += sens * (14 + rr()*30); by += 18 + rr()*26; ctx.lineTo(bx, by); }
+          ctx.stroke();
+        }
+        ctx.shadowBlur = 0; ctx.lineCap = "butt"; ctx.lineJoin = "miter";
+      };
+      tracer(9, "rgba(196,181,253," + (0.30 * eclat).toFixed(3) + ")", 34);
+      tracer(4, "rgba(233,213,255," + (0.75 * eclat).toFixed(3) + ")", 26);
+      tracer(1.6, "rgba(255,255,255," + (0.95 * eclat).toFixed(3) + ")", 14);
+    } else if (cycle < 0.3){
+      const p = (cycle - 0.1) / 0.2;
+      ctx.fillStyle = "rgba(196,181,253," + (0.07 * (1 - p)).toFixed(3) + ")";
+      ctx.fillRect(0, 0, LARG, HAUT);
     }
   } else if (A.bloc === "lave"){
-    ctx.fillStyle = "rgba(251,146,60,.10)";
-    for (let i = 0; i < 5; i++){
-      const bx = ((i * 137 + t * 22) % (LARG + 60)) - 30;
-      const by = HAUT/2 + Math.sin(t * 0.8 + i) * HAUT * 0.32;
-      ctx.beginPath(); ctx.arc(bx, by, 26 + i * 5, 0, Math.PI*2); ctx.fill();
+    /* sol basaltique craquelé, statique : les veines incandescentes respirent sur place */
+    const r = graine(8123);
+    const respire = 0.55 + 0.45 * Math.sin(t * 1.1);
+    for (let i = 0; i < 16; i++){
+      const x0 = r() * LARG, y0 = r() * HAUT;
+      const n = 3 + Math.floor(r() * 3);
+      ctx.strokeStyle = "rgba(251,146,60," + (0.05 + 0.09 * respire).toFixed(3) + ")";
+      ctx.lineWidth = 1 + r() * 2.6;
+      ctx.beginPath(); ctx.moveTo(x0, y0);
+      let px = x0, py = y0;
+      for (let j = 0; j < n; j++){ px += (r() - 0.5) * 90; py += (r() - 0.5) * 90; ctx.lineTo(px, py); }
+      ctx.stroke();
+    }
+    ctx.fillStyle = "rgba(120,20,4,.16)";
+    const r2 = graine(4471);
+    for (let i = 0; i < 10; i++){
+      const px = r2() * LARG, py = r2() * HAUT, rr = 22 + r2() * 44;
+      ctx.beginPath(); ctx.arc(px, py, rr, 0, Math.PI*2); ctx.fill();
+    }
+  } else if (A.bloc === "jungle"){
+    /* canopée statique : couches de feuillage en haut et en bas, lianes verticales */
+    const r = graine(2718);
+    for (const [base, sens] of [[0, 1], [HAUT, -1]]){
+      for (let couche = 0; couche < 3; couche++){
+        ctx.fillStyle = "rgba(" + [ "6,42,22", "10,58,30", "16,76,40" ][couche] + ",.85)";
+        ctx.beginPath();
+        ctx.moveTo(0, base);
+        const h = 44 + couche * 26;
+        for (let x = 0; x <= LARG; x += 26){
+          const y = base + sens * (h * (0.55 + r() * 0.5));
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(LARG, base); ctx.closePath(); ctx.fill();
+      }
+    }
+    const r3 = graine(9091);
+    ctx.strokeStyle = "rgba(74,222,128,.16)"; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < 7; i++){
+      const x0 = r3() * LARG;
+      ctx.moveTo(x0, 40);
+      let px = x0;
+      for (let y = 40; y < HAUT - 40; y += 60){ px += (r3() - 0.5) * 22; ctx.lineTo(px, y); }
+    }
+    ctx.stroke();
+    ctx.fillStyle = "rgba(134,239,172,.10)";
+    const r4 = graine(313);
+    for (let i = 0; i < 22; i++){
+      const px = r4() * LARG, py = 60 + r4() * (HAUT - 120), rr = 5 + r4() * 9;
+      ctx.save(); ctx.translate(px, py); ctx.rotate(r4() * Math.PI);
+      ctx.beginPath(); ctx.ellipse(0, 0, rr, rr * 0.42, 0, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
     }
   } else if (A.bloc === "glace"){
     ctx.strokeStyle = "rgba(224,247,255,.10)";
@@ -2709,6 +2866,30 @@ function dessinerBloc(o, yEcran, t){
     if (Math.random() < 0.2)
       particules.push({ x: o.x + Math.random()*o.l, y: o.y, vx: (Math.random()-0.5)*2,
                         vy: (Math.random()-0.5)*2, vie: 0.5, couleur: "#C4B5FD" });
+  } else if (A.bloc === "jungle"){
+    /* tronc noueux ceint de lianes */
+    const gd = ctx.createLinearGradient(o.x, yEcran - o.h, o.x, yEcran + o.h);
+    gd.addColorStop(0, "#8B6B4A"); gd.addColorStop(0.5, "#5A4430"); gd.addColorStop(1, "#2E2318");
+    ctx.shadowBlur = 14; ctx.shadowColor = "rgba(74,222,128,.5)";
+    ctx.fillStyle = gd;
+    cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g); ctx.fill();
+    ctx.shadowBlur = 0;
+    const r = graine(g + 71);
+    ctx.strokeStyle = "rgba(74,222,128,.85)"; ctx.lineWidth = 2; ctx.lineCap = "round";
+    ctx.beginPath();
+    for (let i = 0; i < 3; i++){
+      const x0 = o.x + 8 + r()*(o.l - 16);
+      ctx.moveTo(x0, yEcran - o.h*0.7);
+      ctx.quadraticCurveTo(x0 + (r()-0.5)*18, yEcran, x0 + (r()-0.5)*14, yEcran + o.h*0.7);
+    }
+    ctx.stroke(); ctx.lineCap = "butt";
+    ctx.fillStyle = "rgba(134,239,172,.75)";
+    for (let i = 0; i < 4; i++){
+      const px = o.x + 6 + r()*(o.l - 12), py = yEcran + (r()-0.5)*o.h;
+      ctx.save(); ctx.translate(px, py); ctx.rotate(r()*Math.PI);
+      ctx.beginPath(); ctx.ellipse(0, 0, 5, 2.2, 0, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
   } else if (A.bloc === "vide"){
     /* éclat de cristal en lévitation, cerclé de son puits de gravité */
     ctx.save();
@@ -2764,13 +2945,33 @@ function dessinerBloc(o, yEcran, t){
 }
 
 function dessinerCompte(){
+  const A = areneCourante();
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.font = "700 88px 'Space Grotesk', sans-serif";
   ctx.fillStyle = "rgba(234,240,255,.85)";
   ctx.shadowBlur = 30; ctx.shadowColor = CO_MOI;
   ctx.fillText("GO", LARG/2, HAUT/2 - 90);
   ctx.shadowBlur = 0;
+  /* nom de l'arène, bien lisible au service */
+  if (modeJeu !== "classique"){
+    ctx.font = "700 30px 'Space Grotesk', sans-serif";
+    ctx.fillStyle = A.accent;
+    ctx.shadowBlur = 24; ctx.shadowColor = A.accent;
+    ctx.fillText("ARÈNE " + A.nom, LARG/2, HAUT/2 - 20);
+    ctx.shadowBlur = 0;
+    ctx.font = "400 11px 'JetBrains Mono', monospace";
+    ctx.fillStyle = "rgba(234,240,255,.6)";
+    ctx.fillText(DESCRIPTION_ARENE[A.bloc] || "", LARG/2, HAUT/2 + 6);
+  }
 }
+const DESCRIPTION_ARENE = {
+  roche:  "REBOND NEUTRE",
+  glace:  "LES GLAÇONS RALENTISSENT LA BALLE",
+  lave:   "LES ROCHES EN FUSION L'ACCÉLÈRENT",
+  orage:  "LES PYLÔNES LA DÉVIENT ET LA CHARGENT",
+  vide:   "LES CRISTAUX L'ATTIRENT",
+  jungle: "LE FEUILLAGE ABSORBE L'EFFET",
+};
 
 function arrondi(x, y, l, h, r){
   ctx.beginPath();
