@@ -132,6 +132,12 @@ La traînée était plafonnée à 12 points à l'empilement alors que le mode li
 demandait 20 : la traîne longue était inatteignable. Vérifier qu'un plafond est
 bien au-dessus de la plus grande valeur demandée.
 
+### La physique ne tourne que chez l'hôte
+Tout ce qui est calculé dans `physique()` ou `frapper()` est **invisible pour
+l'invité**. Les records d'échange et de série ne progressaient donc jamais chez
+lui. Avant d'ajouter une mesure, se demander de quel côté elle est calculée et
+comment elle traverse le réseau.
+
 ### Secrets
 Une clé secrète Metered a été publiée dans un dépôt public avant d'être retirée
 et régénérée. Distinguer les identifiants **conçus pour le client** (TURN
