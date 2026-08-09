@@ -35,7 +35,7 @@ body{
 #lobby{
   position:relative;z-index:1;display:flex;flex-direction:column;gap:20px;align-items:center;
   padding:28px;max-width:420px;width:100%;
-  max-height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;
+  max-height:100vh;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;
 }
 #lobby h1{
   font-size:64px;font-weight:700;letter-spacing:.3em;margin-left:.3em;
@@ -77,6 +77,7 @@ input:focus{outline:none;border-color:var(--moi)}
 #diagRes .ok{color:#4ADE80} #diagRes .ko{color:#F87171} #diagRes .attente{color:var(--sourd)}
 #diagRes .verdict{margin-top:6px;color:var(--sourd);font-size:11px;line-height:1.6;letter-spacing:0}
 #version{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.22em;color:rgba(124,138,165,.55);margin-top:2px}
+@supports (height:100svh){ #lobby{ max-height:100svh; } }
 .aideMode{font-family:"JetBrains Mono",monospace;font-size:10.5px;line-height:1.5;color:var(--sourd)}
 button.choisi{
   color:var(--fond);background:linear-gradient(120deg,var(--moi),#67E8F9);
@@ -107,8 +108,19 @@ button.choisi{
 @keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
 .cache{display:none !important}
 
-#jeu{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;gap:8px;width:100%;height:100%;justify-content:center}
-#hud{display:flex;justify-content:space-between;align-items:center;width:min(92vw,540px);font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--sourd)}
+#jeu{
+  position:relative;z-index:1;display:none;flex-direction:column;align-items:center;
+  gap:8px;width:100%;height:100%;justify-content:center;
+  /* Le terrain est borné par la largeur ET par la hauteur disponible : sans ça,
+     sur écran court il débordait et la barre du bas sortait de l'écran. */
+  --terrain:min(92vw, calc((100vh - 215px) * 0.75), 540px);
+}
+@supports (height:100svh){
+  /* svh = hauteur avec la barre d'adresse visible : valeur stable, donc plus de
+     saut de mise en page quand Safari masque puis réaffiche sa barre. */
+  #jeu{ --terrain:min(92vw, calc((100svh - 215px) * 0.75), 540px); }
+}
+#hud{display:flex;justify-content:space-between;align-items:center;width:var(--terrain);font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--sourd)}
 #score{font-size:26px;font-weight:700;letter-spacing:.1em;color:var(--texte);display:flex;align-items:center;gap:10px}
 #score .s1{color:var(--moi);text-shadow:0 0 14px rgba(34,211,238,.5)}
 #score .s2{color:var(--adv);text-shadow:0 0 14px rgba(244,113,181,.5)}
@@ -116,9 +128,9 @@ button.choisi{
 .dots{font-size:11px;letter-spacing:.2em}
 @keyframes pop{from{transform:scale(1.9)}to{transform:scale(1)}}
 #ping{min-width:64px;text-align:right}
-#scene{position:relative;width:min(92vw,540px)}
+#scene{position:relative;width:var(--terrain);aspect-ratio:540 / 720}
 canvas{
-  display:block;width:100%;border-radius:18px;border:1px solid var(--bord);
+  display:block;width:100%;height:100%;border-radius:18px;border:1px solid var(--bord);
   background:radial-gradient(ellipse at 50% 50%, #070B16 0%, #04060C 75%);
   box-shadow:0 24px 70px rgba(0,0,0,.6), inset 0 0 90px rgba(20,35,80,.25);touch-action:none;
 }
@@ -213,7 +225,7 @@ canvas{
 .carteVice:active{transform:scale(.97);border-color:var(--vice)}
 .carteVice .nomV{font-weight:700;letter-spacing:.12em;color:var(--vice);font-size:14px}
 .carteVice .descV{font-size:12px;color:var(--sourd);line-height:1.5;margin-top:3px}
-#barreBasse{display:flex;gap:10px;width:min(92vw,540px);align-items:center}
+#barreBasse{display:flex;gap:10px;width:var(--terrain);align-items:center}
 #bandeau{
   flex:1;font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.18em;
   min-height:18px;color:var(--or);text-shadow:0 0 12px rgba(251,191,36,.5);
@@ -304,7 +316,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v9.7 · 2026-08-07</div>
+  <div id="version">DUO v9.8 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -422,7 +434,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "9.7";
+const VERSION = "9.8";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -2478,8 +2490,9 @@ function dessiner(){
       ge.addColorStop(0, "#E9D5FF"); ge.addColorStop(0.5, "#6D28D9"); ge.addColorStop(1, "#2A2350");
       ctx.shadowColor = "rgba(196,181,253,.8)";
     } else if (Ad.bloc === "vide"){
-      ge.addColorStop(0, "#E0E7FF"); ge.addColorStop(0.5, "#4F46E5"); ge.addColorStop(1, "#1E1B4B");
-      ctx.shadowColor = "rgba(165,180,252,.8)";
+      /* gravats ternes : aucune confusion possible avec les cristaux attirants */
+      ge.addColorStop(0, "#9AA3B8"); ge.addColorStop(0.55, "#5A6274"); ge.addColorStop(1, "#2B3040");
+      ctx.shadowColor = "rgba(120,130,150,.5)";
     } else {
       ge.addColorStop(0, "#CBD5E1"); ge.addColorStop(0.55, "#8B99AD"); ge.addColorStop(1, "#3F4A60");
       ctx.shadowColor = "rgba(148,163,184,.7)";
