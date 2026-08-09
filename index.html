@@ -302,7 +302,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v9.0 · 2026-08-07</div>
+  <div id="version">DUO v9.1 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -419,7 +419,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "9.0";
+const VERSION = "9.1";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -2659,14 +2659,17 @@ function dessinerOmbresBlocs(Y){
 /* garde-fou : si l'appareil peine, on retombe sur un rendu léger */
 let tempsFrames = [], derniereVerifPerf = 0;
 function surveillerPerf(dtMs){
+  /* on ignore les à-coups isolés (chargement d'un décor, retour d'arrière-plan)
+     et on ne mesure qu'en cours de jeu : le repli doit refléter une vraie lenteur */
+  if (dtMs > 55 || phase !== "jeu") return;
   tempsFrames.push(dtMs);
-  if (tempsFrames.length > 90) tempsFrames.shift();
+  if (tempsFrames.length > 150) tempsFrames.shift();
   const now = performance.now();
   if (!derniereVerifPerf) derniereVerifPerf = now;
-  if (now - derniereVerifPerf < 4000 || tempsFrames.length < 70) return;
+  if (now - derniereVerifPerf < 6000 || tempsFrames.length < 140) return;
   derniereVerifPerf = now;
   const moy = tempsFrames.reduce((a, x) => a + x, 0) / tempsFrames.length;
-  if (moy > 23 && effetsRiches){
+  if (moy > 27 && effetsRiches){
     effetsRiches = false;
     majIcones();
     annoncer("EFFETS ALLÉGÉS POUR LA FLUIDITÉ", "#8AB4FF");
@@ -2743,7 +2746,7 @@ const ARENES = [
            lVol: 0.17, bVol: 0.2, kVol: 0.46, kType: "triangle", kHaut: 190, kBas: 38,
            cFreq: 1400, cVol: 0.24 } },
 
-  { nom: "ORAGE", bloc: "orage", halo: "40,32,86", grille: "196,181,253", trait: "216,180,254",
+  { nom: "ORAGE", bloc: "orage", img: "arenes/orage.webp", halo: "40,32,86", grille: "196,181,253", trait: "216,180,254",
     pas: 34, facteur: 1.10, accent: "#C4B5FD", chaos: 0.34,
     mus: { tempo: 176, max: 214, lead: "square", basse: "sawtooth",
            L: [0,0,880,0, 988,0,0,880, 0,0,784,0, 880,0,988,0],
@@ -2815,7 +2818,7 @@ function dessinerArene(Y, t){
      médiane — on saute alors tous les tracés procéduraux correspondants. */
   if (A._pret && !A._echec){
     ctx.drawImage(A._img, 0, 0, LARG, HAUT);
-    signatureArene(A, Y, t, 0.45);
+    signatureAnimee(A, t);
     bandesJoueurs();
     return true;
   }
@@ -2840,7 +2843,7 @@ function dessinerArene(Y, t){
   ctx.beginPath(); ctx.arc(LARG/2, HAUT/2, 78, 0, Math.PI*2); ctx.stroke();
   ctx.beginPath(); ctx.arc(LARG/2, HAUT/2, 26, 0, Math.PI*2); ctx.stroke();
 
-  signatureArene(A, Y, t, 1);
+  signatureProcedurale(A, Y, t, 1);
 
   /* équerres de coin */
   ctx.strokeStyle = "rgba(" + A.trait + ",.24)";
@@ -2866,27 +2869,9 @@ function bandesJoueurs(){
 }
 
 /* effets animés propres au thème, superposés au décor peint comme au procédural */
-function signatureArene(A, Y, t, force){
-  ctx.save();
-  ctx.globalAlpha = force;
-  if (A.bloc === "vide"){
-    const r = graine(4242);
-    ctx.fillStyle = "rgba(226,232,255,.75)";
-    for (let i = 0; i < 60; i++){
-      const sx = r() * LARG, sy = r() * HAUT, sr = 0.4 + r()*1.3;
-      ctx.globalAlpha = 0.25 + 0.6 * Math.abs(Math.sin(t*0.7 + i));
-      ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI*2); ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-  } else if (A.bloc === "orage"){
-    /* nuages statiques + éclair ramifié avec embrasement et rémanence */
-    const rn = graine(5150);
-    for (let i = 0; i < 9; i++){
-      const cx = rn() * LARG, cy = rn() * HAUT * 0.9, rr = 40 + rn() * 70;
-      ctx.fillStyle = "rgba(40,32,86,.30)";
-      ctx.beginPath(); ctx.arc(cx, cy, rr, 0, Math.PI*2); ctx.fill();
-    }
-    const periode = 3.4;
+/* Éclair d'orage : effet animé, conservé y compris par-dessus un décor peint. */
+function eclairOrage(t){
+const periode = 3.4;
     const cycle = (t % periode) / periode;
     if (cycle < 0.1){
       const p = cycle / 0.1;                       /* 0 -> 1 sur la durée du flash */
@@ -2932,6 +2917,58 @@ function signatureArene(A, Y, t, force){
       ctx.fillStyle = "rgba(196,181,253," + (0.07 * (1 - p)).toFixed(3) + ")";
       ctx.fillRect(0, 0, LARG, HAUT);
     }
+}
+
+/* Éléments ANIMÉS seulement — ce qui se superpose légitimement à un décor peint.
+   Les textures statiques (canopée, veines, cristaux) appartiennent au décor et ne
+   doivent jamais être redessinées par-dessus l'image, sous peine de doublon. */
+function signatureAnimee(A, t){
+  ctx.save();
+  if (A.bloc === "orage"){
+    eclairOrage(t);
+  } else if (A.bloc === "vide"){
+    const r = graine(4242);
+    ctx.fillStyle = "rgba(226,232,255,.7)";
+    for (let i = 0; i < 16; i++){
+      const sx = r() * LARG, sy = r() * HAUT, sr = 0.5 + r() * 1.1;
+      ctx.globalAlpha = 0.12 + 0.45 * Math.abs(Math.sin(t * 0.9 + i));
+      ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI*2); ctx.fill();
+    }
+  } else if (A.bloc === "lave"){
+    if (Math.random() < 0.3)
+      particules.push({ x: 70 + Math.random()*(LARG-140), y: HAUT*0.88,
+                        vx: (Math.random()-0.5)*0.5, vy: -0.4 - Math.random()*0.6,
+                        vie: 0.8, couleur: Math.random() < 0.5 ? "#FB923C" : "#FDE68A" });
+  } else if (A.bloc === "jungle"){
+    if (Math.random() < 0.12)
+      particules.push({ x: Math.random()*LARG, y: -6,
+                        vx: (Math.random()-0.5)*0.35, vy: 0.25 + Math.random()*0.35,
+                        vie: 0.9, couleur: "#86EFAC" });
+  }
+  ctx.restore();
+}
+
+function signatureProcedurale(A, Y, t, force){
+  ctx.save();
+  ctx.globalAlpha = force;
+  if (A.bloc === "vide"){
+    const r = graine(4242);
+    ctx.fillStyle = "rgba(226,232,255,.75)";
+    for (let i = 0; i < 60; i++){
+      const sx = r() * LARG, sy = r() * HAUT, sr = 0.4 + r()*1.3;
+      ctx.globalAlpha = 0.25 + 0.6 * Math.abs(Math.sin(t*0.7 + i));
+      ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  } else if (A.bloc === "orage"){
+    /* nuages statiques ; l'éclair est traité par eclairOrage() */
+    const rn = graine(5150);
+    for (let i = 0; i < 9; i++){
+      const cx = rn() * LARG, cy = rn() * HAUT * 0.9, rr = 40 + rn() * 70;
+      ctx.fillStyle = "rgba(40,32,86,.30)";
+      ctx.beginPath(); ctx.arc(cx, cy, rr, 0, Math.PI*2); ctx.fill();
+    }
+    eclairOrage(t);
   } else if (A.bloc === "lave"){
     /* sol basaltique craquelé, statique : les veines incandescentes respirent sur place */
     const r = graine(8123);
