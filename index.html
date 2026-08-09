@@ -463,7 +463,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v10.12 · 2026-08-09</div>
+  <div id="version">DUO v10.13 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -489,7 +489,7 @@ canvas{
       <button id="btnPlus" class="secondaire">Voir toutes les règles</button>
       <div id="reglesListe" class="cache">
         <b class="c">DÉPLACEMENT</b> — Glissez pour bouger votre raquette. Vous êtes toujours en bas, en cyan.<br>
-        <b class="c">MODES</b> — <b>Arcade</b> : orbes, blocs, vices, arènes à thème. <b>Classique</b> : duel pur, sans aucun de ces éléments.<br>
+        <b class="c">MODES</b> — <b>Arcade</b> : orbes, blocs, vices et matières d'arène. <b>Classique</b> : duel pur, sans aucun de ces éléments — mais vous gardez le décor et la musique de l'arène de votre choix.<br>
         <b class="c">MANCHES</b> — 5 points gagnent une manche ; le nombre de manches gagnantes se règle au menu. À 4-4 : <b class="f">MORT SUBITE</b>, le terrain rétrécit et les orbes disparaissent.<br>
         <b class="c">LIFT</b> — Fouettez la raquette à l'impact : la balle part courbée, bien plus rapide, et si le geste est franc elle <b>décolle et survole les blocs</b> (halo doré, ombre qui s'écarte).<br>
         <b class="c">SMASH</b> — Raquette immobile 1 s : elle se charge et vire à l'<span style="color:#FBBF24">or</span>. La frappe suivante part à pleine puissance.<br>
@@ -593,7 +593,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "10.12";
+const VERSION = "10.13";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -1399,14 +1399,11 @@ function gestionnaireConnexion(c){
 /* ================= RÉGLAGES DE PARTIE ================= */
 const AIDE_MODE = {
   arcade: "Orbes, blocs destructibles, vices et 5 arènes tirées au sort.",
-  classique: "Duel pur : ni orbe, ni bloc, ni vice, ni arène à thème. La balle accélère pour éviter les échanges interminables.",
+  classique: "Duel pur : ni orbe, ni bloc, ni vice. Le décor et la musique de l'arène restent, la balle accélère pour éviter les échanges interminables.",
 };
 function majReglages(){
   for (const b of document.querySelectorAll(".btnMode"))
     b.classList.toggle("choisi", b.dataset.mode === modeJeu);
-  /* le mode classique impose l'arène neutre : proposer un choix serait mentir */
-  const bloc = document.getElementById("blocArene");
-  if (bloc) bloc.classList.toggle("cache", modeJeu === "classique");
   for (const b of document.querySelectorAll(".btnManches"))
     b.classList.toggle("choisi", Number(b.dataset.n) === MANCHES_GAGNANTES);
   $("aideMode").textContent = AIDE_MODE[modeJeu];
@@ -3823,7 +3820,9 @@ function precharger(){
 }
 
 function areneCourante(){
-  if (modeJeu === "classique") return ARENES[0];
+  /* Le classique retire les orbes, les blocs et les vices — pas le décor.
+     La matière des arènes n'agit que sur les blocs, absents ici : choisir une
+     arène en classique ne change donc que l'image et la musique. */
   const idx = Math.min(sequenceArenes.length - 1, manches[0] + manches[1]);
   return ARENES[sequenceArenes[idx]] || ARENES[0];
 }
