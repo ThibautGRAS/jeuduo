@@ -302,7 +302,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v8.5 · 2026-08-07</div>
+  <div id="version">DUO v8.6 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -418,7 +418,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "8.5";
+const VERSION = "8.6";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -448,6 +448,7 @@ const DUREE_INV = 3000, DUREE_BROU = 4000, DUREE_GRAV = 5000, GRAV_FORCE = 0.09;
 const OBST_L = 72, OBST_H = 14;                   // blocs de décor détachés
 const PV_BLOC = 2;                                 // 1er impact : il rétrécit — 2e : il éclate
 const OBST_RETRECIT = 0.55, OBST_L_MIN = 30;
+const IMMU_BLOC = 340;   /* un bloc ne peut encaisser qu'un impact par 340 ms */
 const SMASH_MUR = 20.5;                            // vitesse minimale qui fissure un mur
 const FISSURE_PORTEE = 60, FISSURE_TROU = 3;       // regroupement des impacts / niveau "troué"
 const MAX_DEBRIS = 8, DEBRIS_R_MIN = 6, DEBRIS_R_MAX = 12;
@@ -1469,6 +1470,14 @@ function jouerFx(k, x, y, extra){
     secousse = Math.max(secousse, extra === "lave" ? 5 : 3);
     sonBloc(extra);
   }
+  if (k === "miette"){
+    const coul = extra === "glace" ? "#BAE6FD" : (extra === "lave" ? "#FB923C"
+               : (extra === "jungle" ? "#86EFAC" : (extra === "orage" ? "#C4B5FD"
+               : (extra === "vide" ? "#A5B4FC" : "#94A3B8"))));
+    explosion(x, y, coul, 16, 3.2);
+    secousse = Math.max(secousse, 3.5);
+    sonBloc(extra);
+  }
   if (k === "casse"){
     const coul = extra === "glace" ? "#BAE6FD" : (extra === "lave" ? "#FB923C" : "#94A3B8");
     explosion(x, y, coul, 34, 5.4);
@@ -1585,7 +1594,7 @@ function construireObstacles(){
     obstacles.push({
       base: LARG/2, y: HAUT/2 + decalY[i], l: OBST_L, h: OBST_H,
       amp: 130 + i*36, vitOsc: 0.7 + i*0.32, phase: i*2.1, x: LARG/2 - OBST_L/2,
-      germe: 1000 + i * 977, pv: PV_BLOC,
+      germe: 1000 + i * 977, pv: PV_BLOC, tImpact: 0,
     });
   }
 }
@@ -1753,28 +1762,38 @@ function physique(){
         obstacles.splice(oi, 1);                 /* la boule de feu pulvérise d'un coup */
         fxLocal("casse", o.x + o.l/2, o.y, A.bloc);
       } else {
-        o.pv = (o.pv === undefined ? PV_BLOC : o.pv) - 1;
-        if (o.pv <= 0){
-          obstacles.splice(oi, 1);
-          fxLocal("casse", o.x + o.l/2, o.y, A.bloc);
+        /* Le rebond et les effets d'arène s'appliquent à CHAQUE contact… */
+        if (A.facteur !== 1){                    /* glace ralentit, lave accélère */
+          b.vx *= A.facteur; b.vy *= A.facteur;
+        }
+        if (A.absorbe){ b.spin = 0; }            /* jungle : le feuillage mange l'effet */
+        if (A.chaos){                            /* orage : décharge et déviation */
+          const ang = (Math.random() - 0.5) * A.chaos * 2;
+          const c = Math.cos(ang), s = Math.sin(ang);
+          const nvx = b.vx*c - b.vy*s, nvy = b.vx*s + b.vy*c;
+          b.vx = nvx; b.vy = nvy;
+        }
+        const v = Math.hypot(b.vx, b.vy);
+        const vMin = VIT_INIT * 0.55;
+        if (v < vMin && v > 0){ b.vx *= vMin/v; b.vy *= vMin/v; }
+        if (v > VIT_MAX_ECLAIR){ b.vx *= VIT_MAX_ECLAIR/v; b.vy *= VIT_MAX_ECLAIR/v; }
+
+        /* …mais les DÉGÂTS sont limités à un par fenêtre d'immunité : sans ça,
+           un bloc qui oscille revient dans la balle à l'image suivante, ou deux
+           balles le touchent dans la même image, et il éclatait au premier contact. */
+        const tNow = performance.now();
+        if (!o.tImpact || tNow - o.tImpact >= IMMU_BLOC){
+          o.tImpact = tNow;
+          o.pv = (o.pv === undefined ? PV_BLOC : o.pv) - 1;
+          if (o.pv <= 0){
+            obstacles.splice(oi, 1);
+            fxLocal("miette", o.x + o.l/2, o.y, A.bloc);
+          } else {
+            o.l = Math.max(OBST_L_MIN, o.l * OBST_RETRECIT);
+            o.h = Math.max(9, o.h * 0.82);
+            fxLocal("bloc", b.x, b.y, A.bloc);
+          }
         } else {
-          /* premier impact : le bloc se fend et perd la moitié de sa largeur */
-          o.l = Math.max(OBST_L_MIN, o.l * OBST_RETRECIT);
-          o.h = Math.max(9, o.h * 0.82);
-          if (A.facteur !== 1){                  /* glace ralentit, lave accélère */
-            b.vx *= A.facteur; b.vy *= A.facteur;
-          }
-          if (A.absorbe){ b.spin = 0; }          /* jungle : le feuillage mange l'effet */
-          if (A.chaos){                          /* orage : décharge et déviation */
-            const ang = (Math.random() - 0.5) * A.chaos * 2;
-            const c = Math.cos(ang), s = Math.sin(ang);
-            const nvx = b.vx*c - b.vy*s, nvy = b.vx*s + b.vy*c;
-            b.vx = nvx; b.vy = nvy;
-          }
-          const v = Math.hypot(b.vx, b.vy);
-          const vMin = VIT_INIT * 0.55;
-          if (v < vMin && v > 0){ b.vx *= vMin/v; b.vy *= vMin/v; }
-          if (v > VIT_MAX_ECLAIR){ b.vx *= VIT_MAX_ECLAIR/v; b.vy *= VIT_MAX_ECLAIR/v; }
           fxLocal("bloc", b.x, b.y, A.bloc);
         }
       }
