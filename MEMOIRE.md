@@ -160,9 +160,11 @@ le moteur et les six arènes existantes.
 
 **GRAVITÉ** — *construit en v11.0.* Le puits est projeté dans la moitié
 ADVERSE, à l'aplomb de sa propre raquette — et non devant soi, ce qui aurait
-facilité sa propre défense. Calibré à 0,7 de force sur 245 px : le point
-d'arrivée se déplace d'environ 100 px selon la position du puits, soit une
-largeur de raquette. Aucune donnée réseau supplémentaire, les puits se
+facilité sa propre défense. Calibré à 1,0 de force sur 265 px : le point
+d'arrivée se déplace de 182 px selon la position du puits, soit 1,75 largeur
+de raquette. Le décor est réellement déformé par une lentille : on prélève
+l'image autour du puits et on la repose en neuf anneaux de plus en plus tournés
+et grossis vers le centre. Aucune donnée réseau supplémentaire, les puits se
 déduisent des raquettes déjà synchronisées.
 
 **CASSE-MUR** — un mur de blocs occupe la moitié du terrain, dans la matière de
