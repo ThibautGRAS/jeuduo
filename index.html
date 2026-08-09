@@ -316,7 +316,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v9.9 · 2026-08-07</div>
+  <div id="version">DUO v9.10 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -434,7 +434,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "9.9";
+const VERSION = "9.10";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -620,6 +620,50 @@ const MOT_LETTRE = {
   P:"passoire", Q:"quiche", R:"ralenti", S:"spectateur", T:"touriste",
   U:"utopiste", V:"vent", W:"wagon de queue", X:"inconnu", Y:"yo-yo", Z:"zéro pointé",
 };
+/* Rimes : on reconnaît la terminaison du nom pour piocher un mot qui sonne
+   pareil. Le choix dépend de l'indice synchronisé, donc les deux écrans
+   affichent exactement la même chute. */
+const RIMES = [
+  [/(EAUX|EAU|AULT|AUT|AUD|OT|OS|O)$/, ["zéro", "de trop", "à l'eau", "en solo", "le dos au mur", "un blaireau"]],
+  [/(ALLE|ALE|AL)$/,                    ["mal", "banal", "pas normal", "brutal", "un scandale"]],
+  [/(AND|ANT|ENT|AN|EN)$/,              ["perdant", "en avant", "lentement", "dedans", "évidemment"]],
+  [/(OMPT|OND|ON)$/,                    ["pas bon", "sans façon", "au plafond", "une leçon", "à reculons"]],
+  [/(AINT|EIN|AIN|INT|IN)$/,            ["pour rien", "en vain", "du matin", "à la fin", "moins que rien"]],
+  [/(EUR|OEUR)$/,                       ["sans peur", "ailleurs", "spectateur", "en pleurs", "à toute heure"]],
+  [/(ARD|ART|AR)$/,                     ["au hasard", "en retard", "dans le brouillard", "un cauchemar"]],
+  [/(ILE|IL|YL)$/,                      ["fragile", "inutile", "difficile", "immobile"]],
+  [/(ORT|ORS|OR)$/,                     ["dehors", "à tort", "encore", "sans effort"]],
+  [/(OUX|OUP|OU)$/,                     ["à bout", "debout", "n'importe où", "en dessous"]],
+  [/(ILLE|ILLES)$/,                     ["parti en vrille", "qui s'éparpille", "une brindille"]],
+  [/(ERRE|AIRE|ERES?|ERRES)$/,          ["par terre", "en arrière", "à refaire", "pas très clair"]],
+  [/(ELLES|ELLE|EL)$/,                  ["cruel", "irréel", "sans appel", "artificiel"]],
+  [/(OINE|OIN)$/,                       ["comme un moine", "à l'avoine", "de loin"]],
+  [/(IMES?|IM)$/,                        ["minime", "une victime", "sans estime"]],
+  [/(EDE|ED|AIDE)$/,                    ["raide", "sans aide", "qui demande de l'aide"]],
+  [/(IE|IS|IT|Y|I)$/,                   ["fini", "démoli", "sans souci", "ramolli", "au lit"]],
+  [/(UES|UE|US|U)$/,                    ["vaincu", "déçu", "perdu", "abattu"]],
+  [/(AME|AM|EM)$/,                      ["un drame", "sans âme", "à la rame"]],
+  [/(EZ|ER|ET|EY|AY|É|E)$/,             ["dépassé", "ridiculisé", "à côté", "vite oublié", "dégoûté"]],
+  [/(AH|AS|AT|A)$/,                     ["à plat", "pas de ça", "au cas par cas", "déjà las"]],
+];
+function sansAccent(s){
+  return (s || "").normalize ? s.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : s;
+}
+function rimesDe(nom){
+  const s = sansAccent((nom || "").trim().toUpperCase()).replace(/[^A-Z]/g, "");
+  if (s.length < 2) return null;
+  for (const [motif, mots] of RIMES) if (motif.test(s)) return mots;
+  return null;
+}
+const SARCASMES_RIME = [
+  "{P} rime avec {R}. Le hasard fait bien les choses.",
+  "{P} ? {R}, oui.",
+  "{P} et {R}, même combat.",
+  "On retiendra de cette manche : {P}, {R}.",
+  "{G} l'emporte. {P} rime avec {R}, ça ne s'invente pas.",
+  "Il fallait choisir entre gagner et rimer avec {R}. {P} a choisi.",
+  "{P}, {R} : le dictionnaire avait prévenu.",
+];
 const SARCASMES_NOM = [
   "{P}, {L} officiel de cette manche.",
   "Au dictionnaire, à « {L} », il y a la photo de {P}.",
@@ -668,24 +712,27 @@ function areneManche(n){
   if (modeJeu === "classique") return 0;
   return sequenceArenes[Math.min(sequenceArenes.length - 1, Math.max(0, n))] || 0;
 }
+function complements(nomPerdant){
+  const cl = classeNom(nomPerdant);
+  if (cl === "defaut") return SARCASMES_DEFAUT;
+  if (cl === "ecriture") return SARCASMES_ECRITURE;
+  const r = rimesDe(nomPerdant);
+  return r ? SARCASMES_NOM.concat(SARCASMES_RIME) : SARCASMES_NOM;
+}
 function poolSarcasmes(idxArene, nomPerdant){
   const bloc = (ARENES[idxArene] || ARENES[0]).bloc;
-  const base = SARCASMES.concat(SARCASMES_THEME[bloc] || []);
-  const cl = classeNom(nomPerdant);
-  if (cl === "defaut") return base.concat(SARCASMES_DEFAUT);
-  if (cl === "ecriture") return base.concat(SARCASMES_ECRITURE);
-  return base.concat(SARCASMES_NOM);
+  return SARCASMES.concat(SARCASMES_THEME[bloc] || []).concat(complements(nomPerdant));
 }
 function poolMatch(nomPerdant){
-  const cl = classeNom(nomPerdant);
-  if (cl === "defaut") return SARCASMES_MATCH.concat(SARCASMES_DEFAUT);
-  if (cl === "ecriture") return SARCASMES_MATCH.concat(SARCASMES_ECRITURE);
-  return SARCASMES_MATCH.concat(SARCASMES_NOM);
+  return SARCASMES_MATCH.concat(complements(nomPerdant));
 }
-function habiller(phrase, gagnant, perdant){
+function habiller(phrase, gagnant, perdant, idx){
+  const r = rimesDe(perdant);
+  const rime = r ? r[Math.abs(idx || 0) % r.length] : "rien du tout";
   return phrase.replace(/\{G\}/g, gagnant)
                .replace(/\{P\}/g, perdant)
-               .replace(/\{L\}/g, motDe(perdant));
+               .replace(/\{L\}/g, motDe(perdant))
+               .replace(/\{R\}/g, rime);
 }
 const VICE_DEFS = {
   I: { nom: "INVERSION" },
@@ -2267,7 +2314,7 @@ function afficherRecap(){
   $("recapManchesMoi").textContent = "●".repeat(manches[moi]) + "○".repeat(MANCHES_GAGNANTES - manches[moi]);
   $("recapManchesAdv").textContent = "●".repeat(manches[adv]) + "○".repeat(MANCHES_GAGNANTES - manches[adv]);
   const pool = poolSarcasmes(recapArene, perdantNom);
-  $("recapSarcasme").textContent = habiller(pool[sarcasmeIdx % pool.length], gagnantNom, perdantNom);
+  $("recapSarcasme").textContent = habiller(pool[sarcasmeIdx % pool.length], gagnantNom, perdantNom, sarcasmeIdx);
   $("recapDuels").textContent = texteDuels();
   $("recap").classList.remove("cache");
 }
@@ -2385,7 +2432,7 @@ function afficherFin(){
   const nomMoiF = monNom, nomAdvF = nomAdverse || (modeSolo ? "IA" : "ADVERSAIRE");
   const gagnantF = jAiGagne ? nomMoiF : nomAdvF, perdantF = jAiGagne ? nomAdvF : nomMoiF;
   const poolF = poolMatch(perdantF);
-  $("voilePhrase").textContent = habiller(poolF[sarcasmeMatch % poolF.length], gagnantF, perdantF);
+  $("voilePhrase").textContent = habiller(poolF[sarcasmeMatch % poolF.length], gagnantF, perdantF, sarcasmeMatch);
   const td = texteDuels();
   montrerVoile(jAiGagne ? "VICTOIRE" : "DÉFAITE",
     monNom + " " + mMoi + " — " + mAdv + " " + (nomAdverse || "ADVERSAIRE") + (td ? " · " + td : ""), true);
