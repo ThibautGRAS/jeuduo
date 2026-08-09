@@ -1,8 +1,16 @@
 # Tests de DUO
 
 ```bash
-node tests/tests.js
+node tests/tests.js        # 100 vérifications statiques
+node tests/simulation.js   # exécute réellement le jeu
 ```
+
+**`simulation.js` est le filet le plus solide** : il bouchonne le navigateur
+(DOM, canevas, audio, réseau, stockage), charge `index.html` tel quel, lance un
+match solo et fait tourner la boucle pendant 140 secondes simulées. Il attrape ce
+qu'aucune analyse statique ne voit — fonction manquante à l'exécution, valeur
+invalide qui se propage, tâches qui s'accumulent, exception dans une branche
+rarement empruntée.
 
 53 vérifications lancées directement contre `index.html` : les constantes, les
 fonctions pures et la structure du code sont extraites du fichier réel, donc la
