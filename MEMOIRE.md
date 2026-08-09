@@ -153,7 +153,32 @@ statiques) des clés serveur. Le dépôt est public : rien de sensible dedans.
 
 ---
 
-## 4. Points en suspens
+## 4. Mini-jeux à tester
+
+Quatre pistes retenues, à construire et éprouver une par une. Toutes réutilisent
+le moteur et les six arènes existantes.
+
+**GRAVITÉ** — chaque joueur traîne un puits d'attraction placé devant sa
+raquette et qui la suit. Un seul geste pilote alors deux choses : où l'on
+défend, et comment on tord la trajectoire chez l'adversaire. Prolonge
+directement la mécanique de l'arène VIDE, sans commande nouvelle.
+
+**CASSE-MUR** — un mur de blocs occupe la moitié du terrain, dans la matière de
+l'arène : la glace ralentit, la lave accélère, les cristaux attirent. Chacun
+creuse dans le mur adverse, le premier qui perce gagne. Donne enfin un rôle
+central au travail fait sur les matières.
+
+**RELAIS** — coopératif : à deux, garder une seule balle en vie le plus
+longtemps possible, compteur commun qui accélère. Crée un record partagé plutôt
+qu'un vainqueur, et alimente les liens de défi. Le moins cher à construire.
+
+**CIBLES** — on ne marque plus en passant la raquette adverse mais en touchant
+des cibles derrière elle. Bascule le jeu de la défense vers la visée, et rend le
+point de contact sur la raquette enfin décisif.
+
+Ordre conseillé : GRAVITÉ, puis RELAIS.
+
+## 4bis. Points en suspens
 
 Par ordre d'intérêt, issus de l'audit :
 
