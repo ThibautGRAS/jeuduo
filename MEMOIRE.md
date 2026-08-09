@@ -139,6 +139,13 @@ l'invité**. Les records d'échange et de série ne progressaient donc jamais ch
 lui. Avant d'ajouter une mesure, se demander de quel côté elle est calculée et
 comment elle traverse le réseau.
 
+### Zone morte temporelle
+Une initialisation placée plus haut dans le fichier que les `const`/`let`
+qu'elle utilise lève une erreur au chargement — écran blanc, aucun message
+utile. Deux fois rencontré : les boutons d'arène, puis le calibrage des
+graphismes. Les blocs d'initialisation qui lisent des données déclarées bas
+vont **en fin de script**.
+
 ### Secrets
 Une clé secrète Metered a été publiée dans un dépôt public avant d'être retirée
 et régénérée. Distinguer les identifiants **conçus pour le client** (TURN
