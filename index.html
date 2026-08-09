@@ -80,6 +80,12 @@ input:focus{outline:none;border-color:var(--moi)}
 #diagRes{font-family:"JetBrains Mono",monospace;font-size:11.5px;line-height:2;color:var(--texte)}
 #diagRes .ok{color:#4ADE80} #diagRes .ko{color:#F87171} #diagRes .attente{color:var(--sourd)}
 #diagRes .verdict{margin-top:6px;color:var(--sourd);font-size:11px;line-height:1.6;letter-spacing:0}
+#defiBandeau{
+  width:100%;padding:11px 14px;border-radius:14px;text-align:center;
+  background:linear-gradient(120deg, rgba(251,191,36,.16), rgba(251,113,133,.12));
+  border:1px solid rgba(251,191,36,.4);
+  font-family:"JetBrains Mono",monospace;font-size:12px;line-height:1.6;color:var(--or);
+}
 #records{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.14em;color:rgba(251,191,36,.6);text-align:center}
 #version{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.22em;color:rgba(124,138,165,.55);margin-top:2px}
 @supports (height:100svh){ #lobby{ max-height:100svh; } }
@@ -272,6 +278,10 @@ canvas{
   text-shadow:0 0 14px rgba(251,191,36,.28);
 }
 #recapDuels{opacity:.75}
+.rangFin{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.rangFin button{width:auto;padding:12px 24px}
+#voileRelance{color:var(--sourd);cursor:pointer}
+#voileRelance b{color:var(--moi)}
 #voileRecords{
   display:grid;grid-template-columns:auto 1fr 1fr;gap:3px 12px;
   font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.08em;
@@ -383,6 +393,7 @@ canvas{
     <button id="btnCreer">Générer un code</button>
     <div id="codePartie" class="cache"></div>
     <button id="btnLien" class="secondaire cache">Copier le lien d'invitation</button>
+    <button id="btnDefi" class="secondaire">Défier quelqu'un avec mon record</button>
   </div>
 
   <div class="carte">
@@ -397,9 +408,10 @@ canvas{
     <div id="diagRes" class="cache"></div>
   </div>
 
+  <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v10.7 · 2026-08-09</div>
+  <div id="version">DUO v10.8 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -509,7 +521,11 @@ canvas{
       <div class="petit" id="voileSous"></div>
       <div id="voilePhrase"></div>
       <div id="voileRecords" class="cache"></div>
-      <button id="btnRevanche" class="cache">Revanche</button>
+      <div class="rangFin">
+        <button id="btnRevanche" class="cache">Revanche</button>
+        <button id="btnPartage" class="secondaire cache">Partager le résultat</button>
+      </div>
+      <div id="voileRelance" class="petit cache"></div>
       <button id="btnMenu" class="secondaire cache">Menu principal</button>
     </div>
   </div>
@@ -526,7 +542,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "10.7";
+const VERSION = "10.8";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -1352,6 +1368,11 @@ function majReglages(){
   try{
     const p = new URLSearchParams(location.search || "");
     code = (p.get("p") || "").trim().toUpperCase();
+    const v = Number(p.get("d"));
+    if (Number.isFinite(v) && v > 0){
+      defi = { nom: assainirNom(p.get("n") || "QUELQU'UN"), valeur: Math.round(v) };
+      majDefi();
+    }
   }catch(e){}
   if (!code) return;
   $("champCode").value = code;
@@ -1397,8 +1418,9 @@ function cleDuel(){
 }
 function lireDuels(){
   const c = cleDuel();
-  if (!c) return { v: 0, d: 0 };
-  try{ return JSON.parse(localStorage.getItem(c)) || { v: 0, d: 0 }; }catch(e){ return { v: 0, d: 0 }; }
+  const vide = { v: 0, d: 0, s: 0 };
+  if (!c) return vide;
+  try{ return Object.assign(vide, JSON.parse(localStorage.getItem(c)) || {}); }catch(e){ return vide; }
 }
 let duelEnregistre = false;
 function enregistrerDuel(jAiGagne){
@@ -1406,7 +1428,8 @@ function enregistrerDuel(jAiGagne){
   if (!c || duelEnregistre || modeSolo) return;
   duelEnregistre = true;
   const s = lireDuels();
-  if (jAiGagne) s.v++; else s.d++;
+  if (jAiGagne){ s.v++; s.s = s.s >= 0 ? s.s + 1 : 1; }
+  else { s.d++; s.s = s.s <= 0 ? s.s - 1 : -1; }
   try{ localStorage.setItem(c, JSON.stringify(s)); }catch(e){}
 }
 /* ---------- historique et records, conservés sur l'appareil ---------- */
@@ -1449,6 +1472,150 @@ function cloturerRecords(jAiGagne){
   return battu;
 }
 /* Tableau comparatif : un record n'a de sel que confronté à quelqu'un. */
+/* ================= CARTE DE RÉSULTAT PARTAGEABLE =================
+   Une image que l'on jette dans la conversation du groupe : c'est elle qui
+   fait sortir le jeu du téléphone. Portrait 1080x1350, tout est peint au
+   canevas pour rester dans un seul fichier. */
+function chargerImage(source){
+  return new Promise(resolve => {
+    if (!source) return resolve(null);
+    const im = new Image();
+    im.onload = () => resolve(im);
+    im.onerror = () => resolve(null);
+    im.src = source;
+  });
+}
+
+async function construireCarte(){
+  const L = 1080, H = 1350;
+  const c = document.createElement("canvas");
+  c.width = L; c.height = H;
+  const g = c.getContext("2d");
+  const moi = estHote ? 0 : 1, adv = 1 - moi;
+  const jAiGagne = manches[moi] >= MANCHES_GAGNANTES;
+  const nomAdv = nomAdverse || (modeSolo ? "IA " + niveauIA.toUpperCase() : "ADVERSAIRE");
+
+  /* fond */
+  const f = g.createLinearGradient(0, 0, L, H);
+  f.addColorStop(0, "#0A1020"); f.addColorStop(0.55, "#05070E"); f.addColorStop(1, "#140A1A");
+  g.fillStyle = f; g.fillRect(0, 0, L, H);
+  for (const [x, y, r, coul] of [[0, H*0.3, L*0.9, "34,211,238"], [L, H*0.72, L*0.9, "244,113,181"]]){
+    const h = g.createRadialGradient(x, y, 0, x, y, r);
+    h.addColorStop(0, "rgba(" + coul + ",.20)"); h.addColorStop(1, "rgba(" + coul + ",0)");
+    g.fillStyle = h; g.fillRect(0, 0, L, H);
+  }
+
+  g.textAlign = "center";
+  g.fillStyle = "rgba(234,240,255,.55)";
+  g.font = "600 30px 'JetBrains Mono', monospace";
+  g.fillText("D U O", L/2, 96);
+
+  /* portraits */
+  const [imgA, imgB] = await Promise.all([chargerImage(maPhoto), chargerImage(photoAdverse)]);
+  const cote = 250, yP = 190;
+  const portrait = (im, x, coul, nom, initiale) => {
+    g.save();
+    g.beginPath();
+    const r = 34;
+    g.moveTo(x + r, yP); g.arcTo(x + cote, yP, x + cote, yP + cote, r);
+    g.arcTo(x + cote, yP + cote, x, yP + cote, r); g.arcTo(x, yP + cote, x, yP, r);
+    g.arcTo(x, yP, x + cote, yP, r); g.closePath();
+    g.clip();
+    g.fillStyle = "#0B1120"; g.fillRect(x, yP, cote, cote);
+    if (im) g.drawImage(im, x, yP, cote, cote);
+    else {
+      g.fillStyle = "rgba(234,240,255,.35)";
+      g.font = "700 110px 'JetBrains Mono', monospace";
+      g.fillText(initiale, x + cote/2, yP + cote/2 + 38);
+    }
+    g.restore();
+    g.strokeStyle = coul; g.lineWidth = 5;
+    g.beginPath();
+    const r2 = 34;
+    g.moveTo(x + r2, yP); g.arcTo(x + cote, yP, x + cote, yP + cote, r2);
+    g.arcTo(x + cote, yP + cote, x, yP + cote, r2); g.arcTo(x, yP + cote, x, yP, r2);
+    g.arcTo(x, yP, x + cote, yP, r2); g.closePath(); g.stroke();
+    g.fillStyle = coul;
+    g.font = "700 34px 'JetBrains Mono', monospace";
+    g.fillText(nom.slice(0, 12), x + cote/2, yP + cote + 52);
+  };
+  portrait(imgA, 120, "#22D3EE", monNom, (monNom[0] || "?"));
+  portrait(imgB, L - 120 - cote, "#F471B5", nomAdv, (nomAdv[0] || "?"));
+
+  g.fillStyle = "rgba(234,240,255,.75)";
+  g.font = "italic 700 76px 'Space Grotesk', sans-serif";
+  g.fillText("VS", L/2, yP + cote/2 + 26);
+
+  /* score */
+  g.font = "700 150px 'Space Grotesk', sans-serif";
+  g.fillStyle = "#22D3EE"; g.textAlign = "right";
+  g.fillText(String(manches[moi]), L/2 - 44, 640);
+  g.fillStyle = "rgba(234,240,255,.35)"; g.textAlign = "center";
+  g.fillText("—", L/2, 640);
+  g.fillStyle = "#F471B5"; g.textAlign = "left";
+  g.fillText(String(manches[adv]), L/2 + 44, 640);
+
+  g.textAlign = "center";
+  g.fillStyle = jAiGagne ? "#FBBF24" : "rgba(234,240,255,.5)";
+  g.font = "700 40px 'JetBrains Mono', monospace";
+  g.fillText(jAiGagne ? "VICTOIRE DE " + monNom.slice(0,12) : "VICTOIRE DE " + nomAdv.slice(0,12), L/2, 712);
+
+  /* faits marquants */
+  const r = lireRecords();
+  const lignes = [
+    "MEILLEUR ÉCHANGE : " + recordEnCours.echange + " RENVOIS",
+    "MEILLEURE SÉRIE : " + recordEnCours.serie + " POINTS",
+  ];
+  const td = texteDuels();
+  if (td) lignes.push(td);
+  g.font = "400 27px 'JetBrains Mono', monospace";
+  g.fillStyle = "rgba(234,240,255,.6)";
+  lignes.forEach((t, i) => g.fillText(t, L/2, 800 + i * 44));
+
+  /* la vanne, sur deux lignes au besoin */
+  const phrase = ($("voilePhrase").textContent || "").split("\n")[0];
+  g.fillStyle = "#FBBF24";
+  g.font = "500 30px 'Space Grotesk', sans-serif";
+  const mots = phrase.split(" ");
+  let ligne = "", y = 990;
+  for (const mot of mots){
+    const essai = ligne ? ligne + " " + mot : mot;
+    if (g.measureText(essai).width > L - 200 && ligne){ g.fillText(ligne, L/2, y); y += 42; ligne = mot; }
+    else ligne = essai;
+  }
+  if (ligne) g.fillText(ligne, L/2, y);
+
+  /* pied de carte */
+  g.strokeStyle = "rgba(255,255,255,.12)"; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(120, H - 150); g.lineTo(L - 120, H - 150); g.stroke();
+  g.fillStyle = "rgba(234,240,255,.45)";
+  g.font = "400 26px 'JetBrains Mono', monospace";
+  g.fillText("thibautgras.github.io/jeuduo", L/2, H - 100);
+  return c;
+}
+
+async function partagerResultat(){
+  const bouton = $("btnPartage");
+  bouton.disabled = true;
+  try{
+    const c = await construireCarte();
+    const blob = await new Promise(res => c.toBlob(res, "image/png"));
+    const fichier = new File([blob], "duo.png", { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [fichier] })){
+      await navigator.share({ files: [fichier], text: "Duel DUO — " + lienInvitation("") });
+    } else {
+      /* repli : on ouvre l'image, l'utilisateur l'enregistre ou la partage */
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "duo.png"; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    }
+  }catch(e){
+    annoncer("PARTAGE INDISPONIBLE", "#F87171");
+  }
+  bouton.disabled = false;
+}
+
 function majRecordsVoile(){
   const el = document.getElementById("voileRecords");
   if (!el) return;
@@ -1483,7 +1650,11 @@ function texteDuels(){
   if (modeSolo || !nomAdverse) return "";
   const s = lireDuels();
   if (!s.v && !s.d) return "PREMIER DUEL";
-  return "DUELS " + monNom + " " + s.v + " — " + s.d + " " + nomAdverse;
+  let t = "DUELS " + monNom + " " + s.v + " — " + s.d + " " + nomAdverse;
+  /* une série en cours donne un enjeu à la partie suivante */
+  if (s.s >= 2) t += " · " + s.s + " VICTOIRES D'AFFILÉE";
+  else if (s.s <= -2) t += " · " + (-s.s) + " DÉFAITES D'AFFILÉE";
+  return t;
 }
 
 /* ================= PHOTO DE PROFIL ================= */
@@ -1547,10 +1718,43 @@ function figerNom(){
 
 /* Lien d'invitation : le code voyage dans l'adresse, l'invité arrive avec le
    champ prérempli — et rejoint tout seul s'il a déjà un nom enregistré. */
+/* ---------- défi asynchrone : un record voyage dans un lien ---------- */
+let defi = null;              /* { nom, valeur } reçu par l'adresse */
+let defiReleve = false;
+function lienDefi(){
+  const r = lireRecords();
+  const base = location.origin + location.pathname;
+  return base + "?d=" + (r.echange || 0) + "&n=" + encodeURIComponent(monNom);
+}
+function majDefi(){
+  const e = document.getElementById("defiBandeau");
+  if (!e || !defi) return;
+  e.textContent = defi.nom + " vous défie : tenir un échange de " + defi.valeur +
+                  " renvois. Lancez une partie et dépassez-le.";
+  e.classList.remove("cache");
+}
+function verifierDefi(){
+  if (!defi || defiReleve) return;
+  if (recordEnCours.echange > defi.valeur){
+    defiReleve = true;
+    annoncer("DÉFI RELEVÉ : " + recordEnCours.echange + " RENVOIS", CO_OR);
+  }
+}
+
 function lienInvitation(code){
   const base = location.origin + location.pathname;
   return base + "?p=" + encodeURIComponent(code);
 }
+$("btnDefi").addEventListener("click", async () => {
+  const r = lireRecords();
+  if (!r.echange){ etatLobby.textContent = "Jouez une partie d'abord : vous n'avez pas encore de record."; return; }
+  const lien = lienDefi();
+  try{
+    await navigator.clipboard.writeText(lien);
+    etatLobby.textContent = "Défi copié : " + r.echange + " renvois à battre.";
+  }catch(e){ etatLobby.textContent = lien; }
+});
+
 $("btnLien").addEventListener("click", async () => {
   const code = codePartie.textContent.trim();
   if (!code) return;
@@ -1748,6 +1952,34 @@ function erreurLobby(e){
 }
 
 /* ================= CONNEXION ================= */
+/* Relance : sans ce décompte, c'est le moment où l'on repose le téléphone. */
+const RELANCE_DELAI = 6000;
+let relanceMinuteur = 0, relanceFin = 0;
+function lancerDecompteRelance(){
+  arreterDecompteRelance();
+  if (!partieEnCours) return;
+  relanceFin = performance.now() + RELANCE_DELAI;
+  const el = $("voileRelance");
+  el.classList.remove("cache");
+  const tic = () => {
+    const reste = Math.ceil((relanceFin - performance.now()) / 1000);
+    if (reste <= 0){
+      arreterDecompteRelance();
+      /* seul l'hôte relance : sinon les deux côtés déclencheraient un match */
+      if (estHote) lancerRevanche(); else envoyerFiable({ t: "rm" });
+      return;
+    }
+    el.innerHTML = "Nouvelle partie dans <b>" + reste + "</b> s · toucher pour annuler";
+  };
+  tic();
+  relanceMinuteur = setInterval(tic, 250);
+}
+function arreterDecompteRelance(){
+  if (relanceMinuteur){ clearInterval(relanceMinuteur); relanceMinuteur = 0; }
+  const el = document.getElementById("voileRelance");
+  if (el) el.classList.add("cache");
+}
+
 const REPRISE_DUREE = 18000, REPRISE_INTERVALLE = 2200;
 let repriseFin = 0, repriseMinuteur = 0, codePartie2 = "";
 const minuteurs = [];
@@ -1971,7 +2203,7 @@ function recevoir(m){
         for (let j = 0; j < 2; j++) if (m.s[j] > ancienScore[j]) noterPoint(j);
         majScore(true);
       } else majScore(false);
-      if (typeof m.re === "number") noterEchange(m.re);
+      if (typeof m.re === "number"){ noterEchange(m.re); verifierDefi(); }
       if (m.ph !== phInvite){
         gererPhaseInvite(phInvite, m.ph);
         phInvite = m.ph;
@@ -2028,6 +2260,7 @@ function gererPhaseInvite(avant, apres){
   if (apres === "compte"){ masquerPanneaux(); if (avant === "fin"){ monViceNom = null; chargeLocal = 0; } }
   if (avant === "compte" && apres === "jeu") sonGo();
   if (apres === "vs"){
+    arreterDecompteRelance();
     recordEnCours = { echange: 0, serie: 0, dernierMarqueur: -1, retard: 0 };
     masquerPanneaux(); afficherVersus();
   }
@@ -2590,6 +2823,7 @@ function frapper(b, xRaq, largeur, sensY, vitRaq, frappeur){
 
   rebondsEchange++;
   noterEchange(rebondsEchange);
+  verifierDefi();
   if (!enFeu && rebondsEchange >= FEU_SEUIL){
     enFeu = true;
     fxLocal("feu", b.x, b.y);
@@ -2824,6 +3058,7 @@ function montrerVoile(titre, sous, avecBouton){
 $("btnMenu").addEventListener("click", () => {
   partieEnCours = false;
   arreterMinuteurs();
+  arreterDecompteRelance();
   try{ if (conn) conn.close(); }catch(e){}
   try{ if (connVoix) connVoix.close(); }catch(e){}
   try{ if (peer && !peer.destroyed) peer.destroy(); }catch(e){}
@@ -2861,16 +3096,28 @@ function afficherFin(){
     const rec = texteRecords();
     if (rec) $("voilePhrase").textContent += "\n" + rec;
   }
+  $("btnPartage").classList.remove("cache");
+  lancerDecompteRelance();
   sonFin(jAiGagne);
 }
+$("btnPartage").addEventListener("click", () => { arreterDecompteRelance(); partagerResultat(); });
+
+$("voileRelance").addEventListener("click", () => {
+  arreterDecompteRelance();
+  annoncer("RELANCE ANNULÉE", "#8AB4FF");
+});
+
 btnRevanche.addEventListener("click", () => {
+  arreterDecompteRelance();
   if (estHote) lancerRevanche();
   else envoyerFiable({ t:"rm" });
   btnRevanche.disabled = true;
   setTimeout(() => btnRevanche.disabled = false, 1200);
 });
 function lancerRevanche(){
+  arreterDecompteRelance();
   $("btnMenu").classList.add("cache");
+  $("btnPartage").classList.add("cache");
   duelEnregistre = false;
   etat.score = [0, 0]; manches = [0, 0];
   vices = [null, null]; viceQuand = [0, 0]; tempsJeu = 0; monViceNom = null;
