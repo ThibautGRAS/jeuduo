@@ -138,7 +138,7 @@ canvas{
 .panneau button{width:auto;padding:13px 34px}
 #btnMenu{padding:11px 26px;font-size:14px}
 /* ---------- écran VERSUS ---------- */
-.vsScene{display:flex;align-items:center;justify-content:center;gap:6px;width:100%}
+.vsScene{position:relative;display:flex;align-items:flex-end;justify-content:center;gap:26px;width:100%;padding-top:56px}
 .combattant{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;min-width:0}
 .combattant.gauche{animation:entreeG .5s cubic-bezier(.16,1.1,.3,1) both}
 .combattant.droite{animation:entreeD .5s cubic-bezier(.16,1.1,.3,1) both}
@@ -156,7 +156,8 @@ canvas{
 }
 .vsNom.adv{color:var(--adv);text-shadow:0 0 14px rgba(244,113,181,.5)}
 .vsLogo{
-  font-size:52px;font-weight:700;font-style:italic;letter-spacing:-.04em;
+  position:absolute;top:0;left:0;right:0;text-align:center;z-index:3;
+  font-size:64px;font-weight:700;font-style:italic;letter-spacing:-.04em;
   background:linear-gradient(120deg,var(--moi),#FFFFFF 45%,var(--adv));
   -webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 0 22px rgba(255,255,255,.45));
@@ -303,7 +304,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v9.4 · 2026-08-07</div>
+  <div id="version">DUO v9.5 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -344,11 +345,11 @@ canvas{
     <div id="versus" class="panneau cache">
       <div class="vsFlash" id="vsFlash"></div>
       <div class="vsScene">
+        <div class="vsLogo" id="vsLogo">VS</div>
         <div class="combattant gauche" id="vsG">
           <div class="vignette geant" id="vsPhotoG">?</div>
           <div class="vsNom" id="vsNomG">MOI</div>
         </div>
-        <div class="vsLogo" id="vsLogo">VS</div>
         <div class="combattant droite" id="vsD">
           <div class="vignette geant" id="vsPhotoD">?</div>
           <div class="vsNom adv" id="vsNomD">ADV</div>
@@ -421,7 +422,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "9.4";
+const VERSION = "9.5";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -431,12 +432,12 @@ function murG_(){ return CADRE_X + margeMur; }
 function murD_(){ return LARG - CADRE_X - margeMur; }
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
 const BALLE_R = 8;
-const VIT_INIT = 9.2, VIT_MAX = 19, VIT_MAX_ECLAIR = 23, ACCEL = 1.06;
+const VIT_INIT = 7.4, VIT_MAX = 15.2, VIT_MAX_ECLAIR = 18.4, ACCEL = 1.06;   /* −20% : le jeu était trop rapide */
 const SPIN_FACTEUR = 0.46, SPIN_MAX = 8.5, LIFT_VITESSE = 0.52;
 const LIFT_SEUIL = 0.30, SPIN_VISIBLE = SPIN_MAX * LIFT_SEUIL;   /* geste franc = doré + vitesse */
 const SPIN_SURVOL = SPIN_MAX * 0.62;   /* au-delà : la balle décolle et survole les blocs */
 const MAGNUS = 0.026, SPIN_AMORTI = 0.985;
-const VY_MIN = 2.2;
+const VY_MIN = 1.8;
 const SCORE_MANCHE = 5;
 const MODES = {
   arcade:    { bonus: true,  obstacles: true,  vices: true,  degats: true },
@@ -449,13 +450,13 @@ const TICK_ENVOI = 33, DUREE_COMPTE = 800;
 const MAX_BALLES = 3, MAX_BONUS = 2, INTERVALLE_BONUS = 3800;
 const DUREE_TAILLE = 8000, DUREE_FANTOME = 2600, DUREE_BOULE_FEU = 7000;
 const RAYON_BONUS = 15;
-const FEU_SEUIL = 8, VIT_FEU = 21;
+const FEU_SEUIL = 8, VIT_FEU = 16.8;
 const MUR_MAX = 88, MUR_VITESSE = 0.05;          // mort subite : rétrécissement px/frame
 const SEUIL_CHARGE = 0.45;                        // vitesse raquette max pour charger
 const DUREE_INV = 3000, DUREE_BROU = 4000, DUREE_GRAV = 5000, GRAV_FORCE = 0.09;
 const OBST_L = 72, OBST_H = 14;                   // blocs de décor détachés
 const IMMU_BLOC = 340;   /* un bloc ne peut encaisser qu'un impact par 340 ms */
-const SMASH_MUR = 20.5;                            // vitesse minimale qui fissure un mur
+const SMASH_MUR = 16.4;                            // vitesse minimale qui fissure un mur
 const FISSURE_PORTEE = 60, FISSURE_TROU = 3;       // regroupement des impacts / niveau "troué"
 const MAX_DEBRIS = 8, DEBRIS_R_MIN = 6, DEBRIS_R_MAX = 12;
 /* Arc électrique de l'arène ORAGE : il traverse le terrain, et toute balle qui
@@ -594,9 +595,9 @@ let monNom = "JOUEUR", nomAdverse = "";
 let rttMs = 60;                      /* aller-retour mesuré, pour la compensation de latence */
 function assainirNom(s){ return String(s || "").replace(/[<>&"'`]/g, "").trim().toUpperCase().slice(0, 12) || "JOUEUR"; }
 const IA_NIVEAUX = {
-  facile:    { vit: 3.2,  err: 95, anticipe: false, smash: false, zone: 0.52 },
-  moyen:     { vit: 5.6,  err: 34, anticipe: false, smash: false, zone: 0.85 },
-  difficile: { vit: 10.5, err: 7,  anticipe: true,  smash: true,  zone: 1 },
+  facile:    { vit: 2.6, err: 95, anticipe: false, smash: false, zone: 0.52 },
+  moyen:     { vit: 4.5, err: 34, anticipe: false, smash: false, zone: 0.85 },
+  difficile: { vit: 8.4, err: 7,  anticipe: true,  smash: true,  zone: 1 },
 };
 let iaErr = 0, iaChangement = 0, iaVit = 0;
 let dernierPingEnvoi = 0;
@@ -2361,7 +2362,6 @@ function dessiner(){
   ctx.beginPath(); ctx.moveTo(0, HAUT/2); ctx.lineTo(LARG, HAUT/2); ctx.stroke();
   ctx.setLineDash([]);
 
-  if (effetsRiches){ dessinerLumieres(Y); dessinerOmbresBlocs(Y); }
 
   /* fissures des murs — tracé organique ramifié */
   for (let cote = 0; cote < 2; cote++){
@@ -2675,59 +2675,6 @@ function appliquerGrain(){
   ctx.fillStyle = motifGrain;
   ctx.fillRect(-10, -10, LARG + 20, HAUT + 20);
   ctx.restore();
-}
-
-/* lumières émises par les balles et les raquettes, projetées sur le décor */
-function dessinerLumieres(Y){
-  ctx.save();
-  ctx.globalCompositeOperation = "lighter";
-  for (const b of balles){
-    const coul = bouleFeu ? "251,146,60" : (enFeu ? "251,113,133" : "170,200,255");
-    const R = 165;
-    const g = ctx.createRadialGradient(b.x, Y(b.y), 0, b.x, Y(b.y), R);
-    g.addColorStop(0, "rgba(" + coul + ",0.13)");
-    g.addColorStop(0.4, "rgba(" + coul + ",0.05)");
-    g.addColorStop(1, "rgba(" + coul + ",0)");
-    ctx.fillStyle = g;
-    ctx.fillRect(b.x - R, Y(b.y) - R, R*2, R*2);
-  }
-  const lMoi = estHote ? taillesAffichees[0] : taillesAffichees[1];
-  const lAdv = estHote ? taillesAffichees[1] : taillesAffichees[0];
-  for (const [px, py, coul, lg] of [
-      [maRaquette, HAUT - RAQ_MARGE, "34,211,238", lMoi],
-      [raqAdvAffichee, RAQ_MARGE + RAQ_H, "244,113,181", lAdv]]){
-    const R = 104;
-    const g = ctx.createRadialGradient(px, py, 0, px, py, R);
-    g.addColorStop(0, "rgba(" + coul + ",0.085)");
-    g.addColorStop(1, "rgba(" + coul + ",0)");
-    ctx.fillStyle = g;
-    ctx.fillRect(px - R, py - R, R*2, R*2);
-  }
-  ctx.restore();
-}
-
-/* ombres projetées : chaque bloc s'assombrit à l'opposé de la balle la plus proche */
-function dessinerOmbresBlocs(Y){
-  if (!obstacles.length || !balles.length) return;
-  for (const o of obstacles){
-    const ocx = o.x + o.l/2, ocy = Y(o.y);
-    let sx = balles[0].x, sy = Y(balles[0].y), best = Infinity;
-    for (const b of balles){
-      const d = (b.x - ocx)*(b.x - ocx) + (Y(b.y) - ocy)*(Y(b.y) - ocy);
-      if (d < best){ best = d; sx = b.x; sy = Y(b.y); }
-    }
-    const dx = ocx - sx, dy = ocy - sy;
-    const d = Math.hypot(dx, dy) || 1;
-    const proche = Math.min(1, d / 320);
-    const dec = 7 + 20 * proche;
-    ctx.save();
-    ctx.globalAlpha = 0.42 * (1 - proche * 0.55);
-    ctx.fillStyle = "#01030A";
-    ctx.translate((dx/d) * dec, (dy/d) * dec);
-    cheminRoche(o.x, ocy, o.l * 1.08, o.h * 1.4, o.germe || 1);
-    ctx.fill();
-    ctx.restore();
-  }
 }
 
 /* garde-fou : si l'appareil peine, on retombe sur un rendu léger */
@@ -3256,7 +3203,6 @@ function dessinerArcOrage(Y, t){
 function dessinerBloc(o, yEcran, t){
   const A = areneCourante();
   const g = o.germe || 1;
-  const abime = !!o.ebreche;
   if (A.bloc === "glace"){
     /* glaçon translucide : on voit le fond au travers */
     ctx.save();
@@ -3392,20 +3338,17 @@ function dessinerBloc(o, yEcran, t){
     ctx.fillRect(o.x + 6, yEcran - o.h*0.55, o.l - 12, 1.1);
   }
 
-  /* bloc encaissé : fissures traversantes et éclat qui manque */
-  if (abime){
-    const r = graine(g + 991);
-    ctx.strokeStyle = "rgba(12,16,28,.75)";
-    ctx.lineWidth = 1.8; ctx.lineCap = "round";
-    ctx.beginPath();
-    let px = o.x + 10 + r()*(o.l - 20), py = yEcran - o.h*0.7;
-    ctx.moveTo(px, py);
-    for (let j = 0; j < 4; j++){ px += (r() - 0.5) * 26; py += o.h * 0.36; ctx.lineTo(px, py); }
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = 0.8;
-    ctx.stroke();
-    ctx.lineCap = "butt";
-  }
+  /* Lisibilité : un liseré sombre puis un liseré clair détachent la bûche
+     de n'importe quel fond, clair comme sombre. */
+  cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g);
+  ctx.strokeStyle = "rgba(4,7,14,.8)";
+  ctx.lineWidth = 3.2;
+  ctx.stroke();
+  cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g);
+  ctx.strokeStyle = "rgba(255,255,255,.62)";
+  ctx.lineWidth = 1.3;
+  ctx.stroke();
+  bloomCercle(o.x + o.l/2, yEcran, o.l * 0.85, A.accent, 0.28);
 }
 
 function dessinerCompte(){
