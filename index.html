@@ -417,6 +417,7 @@ canvas{
     <div class="rangSolo">
       <button class="btnMode secondaire" data-mode="arcade">Arcade</button>
       <button class="btnMode secondaire" data-mode="classique">Classique</button>
+      <button class="btnMode secondaire" data-mode="gravite">Gravité</button>
     </div>
     <div class="aideMode" id="aideMode">Orbes, blocs, vices et arènes à thème.</div>
     <h2>GRAPHISMES</h2>
@@ -463,7 +464,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v10.13 · 2026-08-09</div>
+  <div id="version">DUO v11.0 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -490,6 +491,7 @@ canvas{
       <div id="reglesListe" class="cache">
         <b class="c">DÉPLACEMENT</b> — Glissez pour bouger votre raquette. Vous êtes toujours en bas, en cyan.<br>
         <b class="c">MODES</b> — <b>Arcade</b> : orbes, blocs, vices et matières d'arène. <b>Classique</b> : duel pur, sans aucun de ces éléments — mais vous gardez le décor et la musique de l'arène de votre choix.<br>
+        <b class="v">GRAVITÉ</b> — Chacun projette un puits d'attraction dans la moitié adverse, à l'aplomb de sa propre raquette. Bouger sert donc à défendre <i>et</i> à dévier la balle de l'autre : à vous de choisir ce qui prime.<br>
         <b class="c">MANCHES</b> — 5 points gagnent une manche ; le nombre de manches gagnantes se règle au menu. À 4-4 : <b class="f">MORT SUBITE</b>, le terrain rétrécit et les orbes disparaissent.<br>
         <b class="c">LIFT</b> — Fouettez la raquette à l'impact : la balle part courbée, bien plus rapide, et si le geste est franc elle <b>décolle et survole les blocs</b> (halo doré, ombre qui s'écarte).<br>
         <b class="c">SMASH</b> — Raquette immobile 1 s : elle se charge et vire à l'<span style="color:#FBBF24">or</span>. La frappe suivante part à pleine puissance.<br>
@@ -593,7 +595,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "10.13";
+const VERSION = "11.0";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -613,9 +615,27 @@ const MAGNUS = 0.026, SPIN_AMORTI = 0.985;
 const VY_MIN = 1.8;
 const SCORE_MANCHE = 5;
 const MODES = {
-  arcade:    { bonus: true,  obstacles: true,  vices: true,  degats: true },
-  classique: { bonus: false, obstacles: false, vices: false, degats: false },
+  arcade:    { bonus: true,  obstacles: true,  vices: true,  degats: true,  puits: false },
+  classique: { bonus: false, obstacles: false, vices: false, degats: false, puits: false },
+  gravite:   { bonus: false, obstacles: false, vices: false, degats: true,  puits: true },
 };
+
+/* ---------- mode GRAVITÉ ----------
+   Chaque joueur projette un puits d'attraction dans la moitié ADVERSE, à
+   l'aplomb de sa propre raquette. Déplacer sa raquette sert donc à deux choses
+   à la fois : se placer pour défendre, et tordre la trajectoire chez l'autre.
+   Un seul geste, deux enjeux — et rien de nouveau à apprendre.
+   Calibré par simulation : 112 px d'écart au point d'arrivée entre un puits
+   à gauche et un puits à droite, soit une largeur de raquette. */
+const PUITS_FORCE = 0.7, PUITS_PORTEE = 245, PUITS_HAUTEUR = 0.30;
+function puitsActifs(){
+  if (!cfgMode().puits) return [];
+  return [
+    { x: etat.raqBas,  y: HAUT * PUITS_HAUTEUR,       j: 0 },
+    { x: etat.raqHaut, y: HAUT * (1 - PUITS_HAUTEUR), j: 1 },
+  ];
+}
+function couleurJoueur(j){ return j === (estHote ? 0 : 1) ? CO_MOI : CO_ADV; }
 let modeJeu = "arcade";                 /* arcade par défaut */
 let choixArene = -1;                    /* -1 = tirage au sort à chaque match */
 let MANCHES_GAGNANTES = 2;              /* 2, 3 ou 5 */
@@ -1399,6 +1419,7 @@ function gestionnaireConnexion(c){
 /* ================= RÉGLAGES DE PARTIE ================= */
 const AIDE_MODE = {
   arcade: "Orbes, blocs destructibles, vices et 5 arènes tirées au sort.",
+  gravite: "Chaque joueur projette un puits d'attraction chez l'adversaire, à l'aplomb de sa raquette. Se placer, c'est à la fois défendre et dévier la balle de l'autre.",
   classique: "Duel pur : ni orbe, ni bloc, ni vice. Le décor et la musique de l'arène restent, la balle accélère pour éviter les échanges interminables.",
 };
 function majReglages(){
@@ -2599,6 +2620,16 @@ function physique(){
   const aMarquer = [];
   for (const b of balles){
     /* arène VIDE : chaque bloc exerce un puits de gravité sur la balle */
+    /* puits du mode gravité : ils agissent avant la matière de l'arène */
+    for (const p of puitsActifs()){
+      const dx = p.x - b.x, dy = p.y - b.y, d2 = dx*dx + dy*dy;
+      if (d2 > 400 && d2 < PUITS_PORTEE*PUITS_PORTEE){
+        const d = Math.sqrt(d2), u = 1 - d / PUITS_PORTEE;
+        const f = PUITS_FORCE * u * u;
+        b.vx += (dx/d) * f; b.vy += (dy/d) * f;
+      }
+    }
+
     const Aatt = areneCourante();
     if (Aatt.attraction && !survolePrecalc(b)){
       const portee = Aatt.portee || 205;
@@ -3419,6 +3450,7 @@ function dessiner(){
     ctx.fillText(def.court, o.x, yy + r + 13);
   }
 
+  dessinerPuits(Y, t);
   dessinerArcOrage(Y, t);
 
   /* balles + traînes */
@@ -4288,6 +4320,47 @@ function assombrir(hex, k){
   const n = parseInt(hex.slice(1), 16);
   const m = c => Math.round(c * (1 - k));
   return "rgb(" + m((n>>16)&255) + "," + m((n>>8)&255) + "," + m(n&255) + ")";
+}
+
+function dessinerPuits(Y, t){
+  for (const p of puitsActifs()){
+    const x = p.x, y = Y(p.y);
+    const coul = couleurJoueur(p.j);
+    ctx.save();
+    /* halo d'influence : on voit jusqu'où le puits agit */
+    const g = ctx.createRadialGradient(x, y, 4, x, y, PUITS_PORTEE * 0.55);
+    g.addColorStop(0, rgba(coul, 0.22));
+    g.addColorStop(0.45, rgba(coul, 0.07));
+    g.addColorStop(1, rgba(coul, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, PUITS_PORTEE * 0.55, 0, Math.PI*2); ctx.fill();
+
+    /* spirales contrarotatives : la matière tombe vers le centre */
+    ctx.strokeStyle = rgba(coul, 0.5);
+    ctx.lineWidth = 1.6;
+    for (let s = 0; s < 3; s++){
+      const dep = t * (s % 2 ? -0.9 : 1.1) + s * 2.09;
+      ctx.beginPath();
+      for (let i = 0; i <= 26; i++){
+        const u = i / 26;
+        const r = 12 + u * 46;
+        const a = dep + u * 3.4;
+        const px = x + Math.cos(a) * r, py = y + Math.sin(a) * r * 0.92;
+        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.stroke();
+    }
+
+    /* cœur */
+    const c = ctx.createRadialGradient(x, y, 0, x, y, 15);
+    c.addColorStop(0, "rgba(255,255,255,.9)");
+    c.addColorStop(0.4, rgba(coul, 0.8));
+    c.addColorStop(1, rgba(coul, 0));
+    ctx.fillStyle = c;
+    ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+    bloomCercle(x, y, 70, coul, 0.4);
+  }
 }
 
 function dessinerArcOrage(Y, t){
