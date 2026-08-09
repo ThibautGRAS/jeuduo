@@ -264,7 +264,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v8.2 · 2026-08-07</div>
+  <div id="version">DUO v8.3 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -286,10 +286,11 @@ canvas{
         <b class="c">DÉPLACEMENT</b> — Glissez pour bouger votre raquette. Vous êtes toujours en bas, en cyan.<br>
         <b class="c">MODES</b> — <b>Arcade</b> : orbes, blocs, vices, arènes à thème. <b>Classique</b> : duel pur, sans aucun de ces éléments.<br>
         <b class="c">MANCHES</b> — 5 points gagnent une manche ; le nombre de manches gagnantes se règle au menu. À 4-4 : <b class="f">MORT SUBITE</b>, le terrain rétrécit et les orbes disparaissent.<br>
-        <b class="c">LIFT</b> — Fouettez la raquette latéralement à l'impact : la balle part courbée (halo <span style="color:#FB923C">orange</span>).<br>
+        <b class="c">LIFT</b> — Fouettez la raquette à l'impact : la balle part courbée, bien plus rapide, et si le geste est franc elle <b>décolle et survole les blocs</b> (halo doré, ombre qui s'écarte).<br>
         <b class="c">SMASH</b> — Raquette immobile 1 s : elle se charge et vire à l'<span style="color:#FBBF24">or</span>. La frappe suivante part à pleine puissance.<br>
         <b class="o">ORBES</b> — Touchez-les avec la balle : le bonus va au dernier frappeur. Agrandir · rétrécir l'autre · éclair · balle double · fantôme · <span style="color:#FB923C">boule de feu</span> (7 s : la balle pulvérise les blocs).<br>
-        <b class="o">ARÈNES</b> — Manche 1 <b>ROCHE</b>, manche 2 <b>GLACE</b> (les glaçons ralentissent la balle), manche 3 <b>LAVE</b> (les roches en fusion l'accélèrent).<br>
+        <b class="o">ARÈNES</b> — Ordre tiré au sort à chaque match, dès la manche 1 : <b>ROCHE</b> (neutre), <b>GLACE</b> (ralentit), <b>LAVE</b> (accélère), <b>ORAGE</b> (décharge et dévie), <b>VIDE</b> (les cristaux attirent la balle). Décor et musique changent avec l'arène.<br>
+        <b class="o">BLOCS</b> — Deux impacts et ils éclatent. La boule de feu les pulvérise d'un coup.<br>
         <b class="f">BALLE EN FEU</b> — 8 rebonds sans point : la balle s'enflamme à vitesse maximale.<br>
         <b class="o">DÉCOR</b> — À partir de la manche 2, des blocs de la ligne médiane se détachent et dérivent au centre du terrain.<br>
         <b class="f">DÉGÂTS</b> — Les frappes surpuissantes fissurent les murs : les rebonds y deviennent imprévisibles et des débris sont projetés sur le terrain jusqu'à la fin de la manche.<br>
@@ -363,14 +364,15 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "8.2";
+const VERSION = "8.3";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
 const BALLE_R = 8;
 const VIT_INIT = 9.2, VIT_MAX = 19, VIT_MAX_ECLAIR = 23, ACCEL = 1.06;
-const SPIN_FACTEUR = 0.46, SPIN_MAX = 8.5, LIFT_VITESSE = 0.34;
+const SPIN_FACTEUR = 0.46, SPIN_MAX = 8.5, LIFT_VITESSE = 0.52;
 const LIFT_SEUIL = 0.30, SPIN_VISIBLE = SPIN_MAX * LIFT_SEUIL;   /* geste franc = doré + vitesse */
+const SPIN_SURVOL = SPIN_MAX * 0.62;   /* au-delà : la balle décolle et survole les blocs */
 const MAGNUS = 0.026, SPIN_AMORTI = 0.985;
 const VY_MIN = 2.2;
 const SCORE_MANCHE = 5;
@@ -390,6 +392,7 @@ const MUR_MAX = 88, MUR_VITESSE = 0.05;          // mort subite : rétrécisseme
 const SEUIL_CHARGE = 0.45;                        // vitesse raquette max pour charger
 const DUREE_INV = 3000, DUREE_BROU = 4000, DUREE_GRAV = 5000, GRAV_FORCE = 0.09;
 const OBST_L = 72, OBST_H = 14;                   // blocs de décor détachés
+const PV_BLOC = 2;                                 // deux impacts et le bloc éclate
 const SMASH_MUR = 20.5;                            // vitesse minimale qui fissure un mur
 const FISSURE_PORTEE = 60, FISSURE_TROU = 3;       // regroupement des impacts / niveau "troué"
 const MAX_DEBRIS = 8, DEBRIS_R_MIN = 6, DEBRIS_R_MAX = 12;
@@ -725,12 +728,6 @@ function sonFin(gagne){
 
 /* ---------- MUSIQUE RÉTRO PERCUSSIVE (batterie + basse + lead synthétisés)
      Le tempo suit l'intensité de l'échange : plus il dure, plus ça pousse. ---------- */
-const TEMPO_BASE = 142, TEMPO_MAX = 194;
-const LEAD   = [659,0,784,880, 0,784,659,0, 587,0,659,784, 0,659,587,0];
-const BASSE  = [110,0,110,110, 82,0,82,0,   98,0,98,98,    73,0,73,0];
-const KICK   = [1,0,0,0, 0,0,1,0, 1,0,0,0, 0,0,1,0];
-const CAISSE = [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,1];
-const CHARLEY= [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,1];
 let musiqueOn = true, gainMusique = null, pasMusique = 0, prochainPas = 0, minuteurMusique = 0;
 let bufBruit = null;
 
@@ -787,20 +784,26 @@ function noteMusique(freq, quand, duree, type, vol){
   o.connect(g); g.connect(gainMusique);
   o.start(quand); o.stop(quand + duree + 0.02);
 }
+function musiqueArene(){
+  const A = areneCourante();
+  return (A && A.mus) ? A.mus : ARENES[0].mus;
+}
 function tempoCourant(){
+  const M = musiqueArene();
   const intensite = Math.min(1, (rebondsEchange || 0) / 10);
-  return TEMPO_BASE + (TEMPO_MAX - TEMPO_BASE) * intensite;
+  return M.tempo + (M.max - M.tempo) * intensite;
 }
 function planifierMusique(){
   if (!ac || !musiqueOn || !gainMusique) return;
   while (prochainPas < ac.currentTime + 0.28){
+    const M = musiqueArene();
     const duree = 60 / tempoCourant() / 2;
     const i = pasMusique % 16;
-    if (LEAD[i])    noteMusique(LEAD[i],  prochainPas, duree * 0.8, "square",   0.042);
-    if (BASSE[i])   noteMusique(BASSE[i], prochainPas, duree * 1.3, "sawtooth", 0.075);
-    if (KICK[i])    grosseCaisse(prochainPas);
-    if (CAISSE[i])  caisseClaire(prochainPas);
-    if (CHARLEY[i]) charleston(prochainPas, i === 15);
+    if (M.L[i]) noteMusique(M.L[i], prochainPas, duree * 0.8, M.lead,  0.042);
+    if (M.B[i]) noteMusique(M.B[i], prochainPas, duree * 1.3, M.basse, 0.075);
+    if (M.K[i]) grosseCaisse(prochainPas);
+    if (M.C[i]) caisseClaire(prochainPas);
+    if (M.H[i]) charleston(prochainPas, i === 15);
     prochainPas += duree; pasMusique++;
   }
 }
@@ -888,7 +891,7 @@ function gestionnaireConnexion(c){
 
 /* ================= RÉGLAGES DE PARTIE ================= */
 const AIDE_MODE = {
-  arcade: "Orbes, blocs, vices et arènes à thème.",
+  arcade: "Orbes, blocs destructibles, vices et 5 arènes tirées au sort.",
   classique: "Duel pur : ni orbe, ni bloc, ni vice. La balle accélère pour éviter les échanges interminables.",
 };
 function majReglages(){
@@ -1234,6 +1237,7 @@ btnLu.addEventListener("click", () => {
 function verifierLus(){
   if (estHote && lus[0] && (lus[1] || modeSolo) && phase === "regles"){
     masquerPanneaux();
+    melangerArenes();
     construireObstacles();
     debris = []; fissures = [[], []];
     preparerService(Math.random() < 0.5 ? 1 : -1);
@@ -1254,8 +1258,8 @@ function envoyerEtatHote(){
     ch: [Math.round(chargeLocal*100), Math.round(chargeHaut*100)],
     vw: viceGagnant, vh: [vices[0] ? 1 : 0, vices[1] ? 1 : 0],
     sk: sarcasmeIdx, rg: recapGagnant, sm: sarcasmeMatch,
-    mj: modeJeu, mg: MANCHES_GAGNANTES,
-    ob: obstacles.map(o => [Math.round(o.x), o.y, o.l, o.h]),
+    mj: modeJeu, mg: MANCHES_GAGNANTES, sa: sequenceArenes,
+    ob: obstacles.map(o => [Math.round(o.x), o.y, o.l, o.h, o.pv, o.germe]),
     de: debris.filter(d => !d.naissance || performance.now() >= d.naissance)
               .map(d => [Math.round(d.x), Math.round(d.y), Math.round(d.r), Math.round(d.rot*100)/100]),
     fi: fissures[0].map(f => [0, Math.round(f.y), f.niv]).concat(fissures[1].map(f => [1, Math.round(f.y), f.niv])),
@@ -1292,7 +1296,7 @@ function recevoir(m){
       etat.raqBas = m.r;
       tailles = m.ta; fantome = !!m.fa; bouleFeu = !!m.bf;
       manches = m.ma; margeMur = m.mu; enFeu = !!m.fe;
-      obstacles = (m.ob || []).map(o => ({ x: o[0], y: o[1], l: o[2], h: o[3] }));
+      obstacles = (m.ob || []).map(o => ({ x: o[0], y: o[1], l: o[2], h: o[3], pv: o[4], germe: o[5] }));
       debris = (m.de || []).map(d => ({ x: d[0], y: d[1], r: d[2], rot: d[3] }));
       fissures = [[], []];
       for (const f of (m.fi || [])) fissures[f[0]].push({ y: f[1], niv: f[2] });
@@ -1303,6 +1307,7 @@ function recevoir(m){
       if (typeof m.sm === "number") sarcasmeMatch = m.sm;
       if (typeof m.mj === "string" && MODES[m.mj]) modeJeu = m.mj;   /* l'hôte impose les réglages */
       if (typeof m.mg === "number" && m.mg > 0) MANCHES_GAGNANTES = m.mg;
+      if (Array.isArray(m.sa) && m.sa.length) sequenceArenes = m.sa;
       vfx.invVictime = m.iv; vfx.finInv = m.iv >= 0 ? performance.now() + 500 : 0;
       vfx.brouVictime = m.bv; vfx.finBrou = m.bv >= 0 ? performance.now() + 500 : 0;
       vfx.gravSens = m.gs;
@@ -1359,6 +1364,7 @@ function jouerFx(k, x, y, extra){
     }
   }
   if (k === "mur"){ explosion(x, y, "#8AB4FF", 7, 2.2); sonMur(); }
+  if (k === "survol"){ annoncer("BALLE LIFTÉE — ELLE SURVOLE", CO_OR); }
   if (k === "bloc"){
     const coul = extra === "glace" ? "#BAE6FD" : (extra === "lave" ? "#FB923C" : "#8AB4FF");
     explosion(x, y, coul, 10, 2.6);
@@ -1481,7 +1487,7 @@ function construireObstacles(){
     obstacles.push({
       base: LARG/2, y: HAUT/2 + decalY[i], l: OBST_L, h: OBST_H,
       amp: 130 + i*36, vitOsc: 0.7 + i*0.32, phase: i*2.1, x: LARG/2 - OBST_L/2,
-      germe: 1000 + i * 977,
+      germe: 1000 + i * 977, pv: PV_BLOC,
     });
   }
 }
@@ -1609,6 +1615,20 @@ function physique(){
 
   const aMarquer = [];
   for (const b of balles){
+    /* arène VIDE : chaque bloc exerce un puits de gravité sur la balle */
+    const Aatt = areneCourante();
+    if (Aatt.attraction && !survolePrecalc(b)){
+      for (const o of obstacles){
+        const cx = o.x + o.l/2, cy = o.y;
+        const dx = cx - b.x, dy = cy - b.y;
+        const d2 = dx*dx + dy*dy;
+        if (d2 > 25 && d2 < 20000){
+          const d = Math.sqrt(d2);
+          const f = Aatt.attraction * (1 - d/141);
+          b.vx += (dx/d) * f; b.vy += (dy/d) * f;
+        }
+      }
+    }
     b.vx += b.spin * MAGNUS + gravite;
     b.spin *= SPIN_AMORTI;
     if (Math.abs(b.vy) < VY_MIN) b.vy = VY_MIN * (b.vy >= 0 ? 1 : -1);
@@ -1626,26 +1646,39 @@ function physique(){
     if (b.x < murG){ b.x = murG; b.vx = Math.abs(b.vx); toucherMur(b, 0, margeMur); }
     if (b.x > murD){ b.x = murD; b.vx = -Math.abs(b.vx); toucherMur(b, 1, LARG - margeMur); }
 
-    for (let oi = obstacles.length - 1; oi >= 0; oi--){
+    const survole = Math.abs(b.spin || 0) > SPIN_SURVOL;   /* balle liftée en cloche */
+    if (!survole) for (let oi = obstacles.length - 1; oi >= 0; oi--){
       const o = obstacles[oi];
       if (!collisionRect(b, o.x, o.y - o.h/2, o.l, o.h)) continue;
       const A = areneCourante();
       if (bouleFeu){
-        obstacles.splice(oi, 1);                 /* la boule de feu pulvérise le bloc */
+        obstacles.splice(oi, 1);                 /* la boule de feu pulvérise d'un coup */
         fxLocal("casse", o.x + o.l/2, o.y, A.bloc);
       } else {
-        if (A.facteur !== 1){                    /* glace ralentit, lave accélère */
-          b.vx *= A.facteur; b.vy *= A.facteur;
+        o.pv = (o.pv === undefined ? PV_BLOC : o.pv) - 1;
+        if (o.pv <= 0){
+          obstacles.splice(oi, 1);
+          fxLocal("casse", o.x + o.l/2, o.y, A.bloc);
+        } else {
+          if (A.facteur !== 1){                  /* glace ralentit, lave accélère */
+            b.vx *= A.facteur; b.vy *= A.facteur;
+          }
+          if (A.chaos){                          /* orage : décharge et déviation */
+            const ang = (Math.random() - 0.5) * A.chaos * 2;
+            const c = Math.cos(ang), s = Math.sin(ang);
+            const nvx = b.vx*c - b.vy*s, nvy = b.vx*s + b.vy*c;
+            b.vx = nvx; b.vy = nvy;
+          }
           const v = Math.hypot(b.vx, b.vy);
           const vMin = VIT_INIT * 0.55;
           if (v < vMin && v > 0){ b.vx *= vMin/v; b.vy *= vMin/v; }
           if (v > VIT_MAX_ECLAIR){ b.vx *= VIT_MAX_ECLAIR/v; b.vy *= VIT_MAX_ECLAIR/v; }
+          fxLocal("bloc", b.x, b.y, A.bloc);
         }
-        fxLocal("bloc", b.x, b.y, A.bloc);
       }
       break;
     }
-    for (let di = debris.length - 1; di >= 0; di--){
+    if (!survole) for (let di = debris.length - 1; di >= 0; di--){
       const d = debris[di];
       if (d.naissance && performance.now() < d.naissance) continue;
       if (!collisionDebris(b, d)) continue;
@@ -1729,6 +1762,8 @@ function physique(){
     }
   }
 }
+
+function survolePrecalc(b){ return Math.abs(b.spin || 0) > SPIN_SURVOL; }
 
 /* frappe de raquette : rebond + spin + smash + compteur de feu */
 function frapper(b, xRaq, largeur, sensY, vitRaq, frappeur){
@@ -1962,6 +1997,7 @@ btnRevanche.addEventListener("click", () => {
 function lancerRevanche(){
   $("btnMenu").classList.add("cache");
   duelEnregistre = false;
+  melangerArenes();
   etat.score = [0, 0]; manches = [0, 0];
   construireObstacles();
   debris = []; fissures = [[], []];
@@ -2202,11 +2238,20 @@ function dessiner(){
       if (liftee && Math.random() < 0.4)
         particules.push({ x: b.x, y: b.y, vx: (Math.random()-0.5)*1.3, vy: (Math.random()-0.5)*1.3, vie: 0.6, couleur: CO_OR });
 
-      /* ombre portée : donne la profondeur et suit la balle avec un léger décalage */
-      ctx.fillStyle = "rgba(2,4,10,.42)";
+      /* hauteur : une balle fortement liftée décolle et survole les blocs.
+         L'ombre s'écarte et rétrécit, la balle grossit — la profondeur se lit. */
+      const hauteur = Math.max(0, (Math.abs(b.spin || 0) - SPIN_VISIBLE) / (SPIN_MAX - SPIN_VISIBLE));
+      const enVol = Math.abs(b.spin || 0) > SPIN_SURVOL;
+      ctx.fillStyle = "rgba(2,4,10," + (0.42 - hauteur*0.2).toFixed(2) + ")";
       ctx.beginPath();
-      ctx.ellipse(b.x + 3.5, Y(b.y) + 5, BALLE_R * 0.95, BALLE_R * 0.55, 0, 0, Math.PI*2);
+      ctx.ellipse(b.x + 3.5 + hauteur*13, Y(b.y) + 5 + hauteur*15,
+                  BALLE_R * (0.95 - hauteur*0.3), BALLE_R * (0.55 - hauteur*0.18), 0, 0, Math.PI*2);
       ctx.fill();
+      if (enVol){
+        ctx.strokeStyle = rgba(CO_OR, 0.5);
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(b.x, Y(b.y), BALLE_R + 5 + hauteur*4, 0, Math.PI*2); ctx.stroke();
+      }
 
       /* corps : dégradé cœur clair -> robe colorée, étiré dans le sens du vol */
       const vScrX = b.vx || 0, vScrY = (flip ? -(b.vy || 0) : (b.vy || 0));
@@ -2216,7 +2261,7 @@ function dessiner(){
       ctx.save();
       ctx.translate(b.x, Y(b.y));
       ctx.rotate(Math.atan2(vScrY, vScrX));
-      ctx.scale(etirement, 1 / Math.sqrt(etirement));
+      ctx.scale(etirement * (1 + hauteur*0.3), (1 / Math.sqrt(etirement)) * (1 + hauteur*0.3));
       const gradB = ctx.createRadialGradient(-BALLE_R*0.28, -BALLE_R*0.28, 1, 0, 0, BALLE_R + 1.5);
       gradB.addColorStop(0, coeur);
       gradB.addColorStop(0.5, coeur);
@@ -2319,16 +2364,65 @@ function rgba(hex, a){
 
 /* ---------- ARÈNE : grille en défilement, cercle central, zones, vignette ---------- */
 const ARENES = [
-  { nom: "ROCHE", halo: "28,48,104", grille: "120,160,255", trait: "120,160,255", pas: 45,
-    bloc: "roche", facteur: 1,    accent: "#8AB4FF" },
-  { nom: "GLACE", halo: "16,72,92",  grille: "150,240,255", trait: "150,240,255", pas: 54,
-    bloc: "glace", facteur: 0.78, accent: "#7DD3FC" },
-  { nom: "LAVE",  halo: "96,26,10",  grille: "255,150,80",  trait: "255,140,60",  pas: 38,
-    bloc: "lave",  facteur: 1.22, accent: "#FB923C" },
+  { nom: "ROCHE", bloc: "roche", halo: "28,48,104", grille: "120,160,255", trait: "120,160,255",
+    pas: 45, facteur: 1, accent: "#8AB4FF",
+    mus: { tempo: 142, max: 190, lead: "square", basse: "sawtooth",
+           L: [659,0,784,880, 0,784,659,0, 587,0,659,784, 0,659,587,0],
+           B: [110,0,110,110, 82,0,82,0, 98,0,98,98, 73,0,73,0],
+           K: [1,0,0,0, 0,0,1,0, 1,0,0,0, 0,0,1,0],
+           C: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,1],
+           H: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,1] } },
+
+  { nom: "GLACE", bloc: "glace", halo: "16,72,92", grille: "150,240,255", trait: "150,240,255",
+    pas: 54, facteur: 0.78, accent: "#7DD3FC",
+    mus: { tempo: 124, max: 158, lead: "triangle", basse: "sine",
+           L: [1047,0,1245,0, 1397,0,1245,0, 1047,0,880,0, 1047,1245,0,0],
+           B: [65,0,0,0, 65,0,0,0, 49,0,0,0, 58,0,0,0],
+           K: [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+           C: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+           H: [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1] } },
+
+  { nom: "LAVE", bloc: "lave", halo: "96,26,10", grille: "255,150,80", trait: "255,140,60",
+    pas: 38, facteur: 1.22, accent: "#FB923C",
+    mus: { tempo: 168, max: 208, lead: "sawtooth", basse: "sawtooth",
+           L: [415,0,415,494, 554,0,494,415, 370,0,415,494, 554,494,415,0],
+           B: [55,55,0,55, 55,0,55,0, 49,49,0,49, 49,0,49,0],
+           K: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,1],
+           C: [0,0,0,0, 1,0,0,1, 0,0,0,0, 1,0,1,0],
+           H: [0,1,0,1, 0,1,0,1, 0,1,0,1, 0,1,1,1] } },
+
+  { nom: "ORAGE", bloc: "orage", halo: "40,32,86", grille: "196,181,253", trait: "216,180,254",
+    pas: 34, facteur: 1.10, accent: "#C4B5FD", chaos: 0.34,
+    mus: { tempo: 176, max: 214, lead: "square", basse: "sawtooth",
+           L: [0,0,880,0, 988,0,0,880, 0,0,784,0, 880,0,988,0],
+           B: [73,73,73,0, 73,0,73,73, 65,65,65,0, 65,0,65,65],
+           K: [1,0,1,1, 0,1,1,0, 1,0,1,1, 0,1,1,1],
+           C: [0,0,0,0, 1,0,0,0, 0,0,1,0, 1,0,1,1],
+           H: [1,1,0,1, 1,1,0,1, 1,1,0,1, 1,1,1,1] } },
+
+  { nom: "VIDE", bloc: "vide", halo: "10,14,46", grille: "148,163,220", trait: "165,180,252",
+    pas: 66, facteur: 0.94, accent: "#A5B4FC", attraction: 0.055,
+    mus: { tempo: 104, max: 132, lead: "sine", basse: "sine",
+           L: [523,0,0,0, 0,0,622,0, 0,0,466,0, 0,0,0,0],
+           B: [41,0,0,0, 0,0,0,0, 39,0,0,0, 0,0,0,0],
+           K: [1,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,0],
+           C: [0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+           H: [0,0,1,0, 0,0,0,0, 0,0,1,0, 0,0,1,0] } },
 ];
+/* ordre des arènes tiré au sort par l'hôte au début du match */
+let sequenceArenes = [0, 1, 2, 3, 4];
+function melangerArenes(){
+  const s = ARENES.map((_, i) => i);
+  for (let i = s.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = s[i]; s[i] = s[j]; s[j] = tmp;
+  }
+  sequenceArenes = s;
+}
 function areneCourante(){
   if (modeJeu === "classique") return ARENES[0];
-  return ARENES[Math.min(ARENES.length - 1, manches[0] + manches[1])];
+  const idx = Math.min(sequenceArenes.length - 1, manches[0] + manches[1]);
+  return ARENES[sequenceArenes[idx]] || ARENES[0];
 }
 
 function dessinerArene(Y, t){
@@ -2352,6 +2446,50 @@ function dessinerArene(Y, t){
   ctx.lineWidth = 1.2;
   ctx.beginPath(); ctx.arc(LARG/2, HAUT/2, 78, 0, Math.PI*2); ctx.stroke();
   ctx.beginPath(); ctx.arc(LARG/2, HAUT/2, 26, 0, Math.PI*2); ctx.stroke();
+
+  /* signature visuelle du thème */
+  if (A.bloc === "vide"){
+    const r = graine(4242);
+    ctx.fillStyle = "rgba(226,232,255,.75)";
+    for (let i = 0; i < 60; i++){
+      const sx = r() * LARG, sy = r() * HAUT, sr = 0.4 + r()*1.3;
+      ctx.globalAlpha = 0.25 + 0.6 * Math.abs(Math.sin(t*0.7 + i));
+      ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  } else if (A.bloc === "orage"){
+    const cycle = (t * 0.55) % 4;
+    if (cycle < 0.14){
+      ctx.fillStyle = "rgba(216,180,254," + (0.16 * (1 - cycle/0.14)).toFixed(3) + ")";
+      ctx.fillRect(0, 0, LARG, HAUT);
+      const r = graine(Math.floor(t * 0.55) * 31 + 5);
+      ctx.strokeStyle = "rgba(237,233,254,.85)";
+      ctx.lineWidth = 1.8; ctx.lineCap = "round";
+      ctx.beginPath();
+      let px = 40 + r() * (LARG - 80), py = 0;
+      ctx.moveTo(px, py);
+      for (let s = 0; s < 6; s++){ px += (r() - 0.5) * 70; py += HAUT / 6; ctx.lineTo(px, py); }
+      ctx.stroke(); ctx.lineCap = "butt";
+    }
+  } else if (A.bloc === "lave"){
+    ctx.fillStyle = "rgba(251,146,60,.10)";
+    for (let i = 0; i < 5; i++){
+      const bx = ((i * 137 + t * 22) % (LARG + 60)) - 30;
+      const by = HAUT/2 + Math.sin(t * 0.8 + i) * HAUT * 0.32;
+      ctx.beginPath(); ctx.arc(bx, by, 26 + i * 5, 0, Math.PI*2); ctx.fill();
+    }
+  } else if (A.bloc === "glace"){
+    ctx.strokeStyle = "rgba(224,247,255,.10)";
+    ctx.lineWidth = 1;
+    const r = graine(77);
+    ctx.beginPath();
+    for (let i = 0; i < 14; i++){
+      const cx = r() * LARG, cy = r() * HAUT, ln = 12 + r()*26, a = r() * Math.PI;
+      ctx.moveTo(cx - Math.cos(a)*ln, cy - Math.sin(a)*ln);
+      ctx.lineTo(cx + Math.cos(a)*ln, cy + Math.sin(a)*ln);
+    }
+    ctx.stroke();
+  }
 
   /* équerres de coin */
   ctx.strokeStyle = "rgba(" + A.trait + ",.24)";
@@ -2497,6 +2635,7 @@ function cheminRoche(x, y, l, h, germe){
 function dessinerBloc(o, yEcran, t){
   const A = areneCourante();
   const g = o.germe || 1;
+  const abime = (o.pv !== undefined && o.pv < PV_BLOC);
   if (A.bloc === "glace"){
     /* glaçon translucide : on voit le fond au travers */
     ctx.save();
@@ -2549,6 +2688,45 @@ function dessinerBloc(o, yEcran, t){
     if (Math.random() < 0.25)
       particules.push({ x: o.x + Math.random()*o.l, y: o.y, vx: (Math.random()-0.5)*0.6,
                         vy: -0.5 - Math.random()*0.7, vie: 0.7, couleur: "#FB923C" });
+  } else if (A.bloc === "orage"){
+    /* pylône électrifié : métal sombre et arcs grésillants */
+    const gd = ctx.createLinearGradient(o.x, yEcran - o.h, o.x, yEcran + o.h);
+    gd.addColorStop(0, "#C7BFF5"); gd.addColorStop(0.5, "#5B4E9C"); gd.addColorStop(1, "#2A2350");
+    ctx.shadowBlur = 20; ctx.shadowColor = "rgba(196,181,253,.7)";
+    ctx.fillStyle = gd;
+    cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g); ctx.fill();
+    ctx.shadowBlur = 0;
+    const r = graine(g + 53);
+    ctx.strokeStyle = "rgba(237,233,254," + (0.4 + 0.6*Math.abs(Math.sin(t*9 + g))).toFixed(2) + ")";
+    ctx.lineWidth = 1.4; ctx.lineCap = "round";
+    ctx.beginPath();
+    for (let i = 0; i < 2; i++){
+      let px = o.x + 8 + r()*(o.l - 16), py = yEcran - o.h*0.6;
+      ctx.moveTo(px, py);
+      for (let j = 0; j < 3; j++){ px += (r() - 0.5) * 22; py += o.h * 0.45; ctx.lineTo(px, py); }
+    }
+    ctx.stroke(); ctx.lineCap = "butt";
+    if (Math.random() < 0.2)
+      particules.push({ x: o.x + Math.random()*o.l, y: o.y, vx: (Math.random()-0.5)*2,
+                        vy: (Math.random()-0.5)*2, vie: 0.5, couleur: "#C4B5FD" });
+  } else if (A.bloc === "vide"){
+    /* éclat de cristal en lévitation, cerclé de son puits de gravité */
+    ctx.save();
+    ctx.globalAlpha = 0.72;
+    const gd = ctx.createLinearGradient(o.x, yEcran - o.h, o.x + o.l, yEcran + o.h);
+    gd.addColorStop(0, "#E0E7FF"); gd.addColorStop(0.5, "#818CF8"); gd.addColorStop(1, "#312E81");
+    ctx.shadowBlur = 26; ctx.shadowColor = "rgba(165,180,252,.85)";
+    ctx.fillStyle = gd;
+    cheminRoche(o.x, yEcran, o.l, o.h * 1.25, g); ctx.fill();
+    ctx.restore();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = "rgba(165,180,252," + (0.1 + 0.08*Math.sin(t*2 + g)).toFixed(3) + ")";
+    ctx.lineWidth = 1;
+    for (let k = 1; k <= 2; k++){
+      ctx.beginPath();
+      ctx.arc(o.x + o.l/2, yEcran, 44 * k + Math.sin(t*1.6 + g + k) * 5, 0, Math.PI*2);
+      ctx.stroke();
+    }
   } else {
     /* roche minérale grise à facettes */
     const gd = ctx.createLinearGradient(o.x, yEcran - o.h, o.x, yEcran + o.h);
@@ -2567,6 +2745,21 @@ function dessinerBloc(o, yEcran, t){
     ctx.stroke();
     ctx.fillStyle = "rgba(255,255,255,.28)";
     ctx.fillRect(o.x + 6, yEcran - o.h*0.55, o.l - 12, 1.1);
+  }
+
+  /* bloc encaissé : fissures traversantes et éclat qui manque */
+  if (abime){
+    const r = graine(g + 991);
+    ctx.strokeStyle = "rgba(12,16,28,.75)";
+    ctx.lineWidth = 1.8; ctx.lineCap = "round";
+    ctx.beginPath();
+    let px = o.x + 10 + r()*(o.l - 20), py = yEcran - o.h*0.7;
+    ctx.moveTo(px, py);
+    for (let j = 0; j < 4; j++){ px += (r() - 0.5) * 26; py += o.h * 0.36; ctx.lineTo(px, py); }
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = 0.8;
+    ctx.stroke();
+    ctx.lineCap = "butt";
   }
 }
 
