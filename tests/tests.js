@@ -252,6 +252,24 @@ verifier("raquette adverse distinguée sans couleur", /if \(!estMienne\)/.test(s
 verifier("historique et records", /duo_historique/.test(script) && /function cloturerRecords\(/.test(script));
 verifier("manifeste installable", /rel="manifest"/.test(html));
 
+/* ======================= 8sexies. RECORDS ======================= */
+titre("8sexies. Records des deux côtés");
+verifier("l'invité reçoit la longueur d'échange", /re: rebondsEchange/.test(script),
+  "la physique ne tourne que chez l'hôte");
+verifier("l'invité crédite les points marqués",
+  /if \(m\.s\[j\] > ancienScore\[j\]\) noterPoint\(j\)/.test(script));
+verifier("l'invité remet ses compteurs à zéro au début du match",
+  /apres === "vs"\)\{[\s\S]{0,120}recordEnCours = \{/.test(script));
+verifier("records échangés en fin de match", /t: "rec", r: lireRecords\(\)/.test(script) && /case "rec":/.test(script));
+verifier("tableau comparatif", /function majRecordsVoile\(/.test(script) && /id="voileRecords"/.test(html));
+{
+  /* la remontée ne se crédite qu'au vainqueur */
+  const bloc = (script.match(/function cloturerRecords\([\s\S]*?\n\}/) || [""])[0];
+  verifier("remontée réservée au vainqueur", /jAiGagne && recordEnCours\.retard/.test(bloc));
+}
+verifier("records rangés localement, sans service distant",
+  /localStorage\.setItem\("duo_records"/.test(script) && !/fetch\([^)]*record/i.test(script));
+
 /* ======================= 9. RÉFÉRENCES ======================= */
 titre("9. Toute fonction appelée est définie");
 {
