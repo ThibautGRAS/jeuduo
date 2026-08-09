@@ -419,6 +419,13 @@ canvas{
       <button class="btnMode secondaire" data-mode="classique">Classique</button>
     </div>
     <div class="aideMode" id="aideMode">Orbes, blocs, vices et arènes à thème.</div>
+    <h2>GRAPHISMES</h2>
+    <div class="rangSolo">
+      <button class="btnQualite secondaire" data-q="minimal">Minimal</button>
+      <button class="btnQualite secondaire" data-q="normal">Normal</button>
+      <button class="btnQualite secondaire" data-q="max">Maximum</button>
+    </div>
+    <div class="aideMode" id="aideQualite"></div>
     <h2 style="margin-top:4px">VOLUME</h2>
     <input id="curseurVolume" type="range" min="0" max="100" value="32" aria-label="Volume">
     <h2 style="margin-top:4px">ARÈNE</h2>
@@ -454,7 +461,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v10.10 · 2026-08-09</div>
+  <div id="version">DUO v10.11 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -576,7 +583,6 @@ canvas{
     <button id="btnMusique" class="icone" aria-label="Musique">♪</button>
     <div id="micEtat" class="cache">REC</div>
     <div class="espace"></div>
-    <button id="btnEffets" class="icone" aria-label="Effets visuels">✦</button>
     <button id="btnMicToggle" class="icone eteint" aria-label="Micro">🎙</button>
   </div>
 </div>
@@ -585,7 +591,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "10.10";
+const VERSION = "10.11";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -1006,8 +1012,6 @@ async function basculerMicro(){
   majIcones();
 }
 function majIcones(){
-  const be = document.getElementById("btnEffets");
-  if (be){ be.classList.toggle("actif", effetsRiches); be.classList.toggle("eteint", !effetsRiches); }
   const bm = document.getElementById("btnMusique");
   const bt = document.getElementById("btnMicToggle");
   if (bm){ bm.classList.toggle("actif", musiqueOn); bm.classList.toggle("eteint", !musiqueOn); }
@@ -1056,9 +1060,9 @@ function recevoirFiable(m){
 /* ================= EFFETS VISUELS ================= */
 const traines = [], particules = [];
 let secousse = 0, flashBut = 0;
-const MAX_PARTICULES = 150;
+const MAX_PARTICULES = 240;   /* plafond absolu ; le cran de qualité en fixe un plus bas */
 function explosion(x, y, couleur, n, force){
-  if (particules.length > MAX_PARTICULES) return;
+  if (particules.length > cfgQualite().particules) return;
   for (let i = 0; i < n; i++){
     const a = Math.random() * Math.PI * 2;
     const v = (0.5 + Math.random()) * force;
@@ -2106,16 +2110,7 @@ function demarrerPartie(){
 }
 
 /* ================= RÈGLES — double validation ================= */
-document.getElementById("btnEffets").addEventListener("click", () => {
-  effetsRiches = !effetsRiches;
-  if (effetsRiches) bloomActif = true;
-  try{ localStorage.setItem("duo_effets", effetsRiches ? "1" : "0"); }catch(e){}
-  tempsFrames = [];
-  majIcones();
-});
-(function initEffets(){
-  try{ if (localStorage.getItem("duo_effets") === "1") effetsRiches = true; }catch(e){}
-})();
+
 document.getElementById("btnMusique").addEventListener("click", basculerMusique);
 document.getElementById("btnMicToggle").addEventListener("click", basculerMicro);
 
@@ -3489,7 +3484,7 @@ function dessiner(){
   }
 
   /* particules */
-  while (particules.length > MAX_PARTICULES) particules.shift();
+  while (particules.length > cfgQualite().particules) particules.shift();
   for (let i = particules.length - 1; i >= 0; i--){
     const p = particules[i];
     p.x += p.vx; p.y += p.vy; p.vx *= 0.94; p.vy *= 0.94; p.vie -= 0.03;
@@ -3574,8 +3569,15 @@ function dessiner(){
    Le bloom passe par un canevas au quart de résolution : on y peint les sources
    lumineuses, puis on le recompose agrandi en mode "lighter". L'agrandissement
    fait le flou gratuitement, sans filtre coûteux. */
-/* Rendu léger par défaut : le bloom, peu coûteux, reste actif ; le grain et les
-   passes supplémentaires ne s'ajoutent que si on les demande. */
+/* Trois crans de rendu. Le cran de départ est déduit d'une mesure réelle, pas
+   du modèle d'appareil : iOS ne le communique pas dans son identification. */
+const QUALITES = {
+  minimal: { bloom: false, grain: false, particules: 60,  libelle: "Aucun effet ajouté : le maximum de fluidité." },
+  normal:  { bloom: true,  grain: false, particules: 150, libelle: "Lumières et halos, sans grain." },
+  max:     { bloom: true,  grain: true,  particules: 240, libelle: "Lumières, grain de pellicule et particules denses." },
+};
+let qualite = "normal";
+function cfgQualite(){ return QUALITES[qualite] || QUALITES.normal; }
 let effetsRiches = false;
 const ECHB = 0.25;
 const cvBloom = document.createElement("canvas");
@@ -3605,6 +3607,15 @@ function construireGrain(){
 function flou(v){ return 0; }
 
 let bloomActif = true;
+function appliquerQualite(){
+  const q = cfgQualite();
+  bloomActif = q.bloom;
+  effetsRiches = q.grain;
+  const a = document.getElementById("aideQualite");
+  if (a) a.textContent = q.libelle;
+  for (const b of document.querySelectorAll(".btnQualite"))
+    b.classList.toggle("choisi", b.dataset.q === qualite);
+}
 function preparerBloom(){
   if (!bloomActif) return;
   ctxB.clearRect(0, 0, cvBloom.width, cvBloom.height);
@@ -3656,8 +3667,15 @@ function surveillerPerf(dtMs){
   derniereVerifPerf = now;
   const moy = tempsFrames.reduce((a, x) => a + x, 0) / tempsFrames.length;
   if (moy <= 33) return;
-  if (effetsRiches){ effetsRiches = false; majIcones(); annoncer("RENDU ALLÉGÉ", "#8AB4FF"); }
-  else if (bloomActif){ bloomActif = false; annoncer("RENDU MINIMAL", "#8AB4FF"); }
+  /* on descend d'un cran, jamais plus : le joueur garde la main depuis le menu */
+  const ordre = ["max", "normal", "minimal"];
+  const i = ordre.indexOf(qualite);
+  if (i >= 0 && i < ordre.length - 1){
+    qualite = ordre[i + 1];
+    try{ localStorage.setItem("duo_qualite", qualite); }catch(e){}
+    appliquerQualite();
+    annoncer("GRAPHISMES : " + qualite.toUpperCase(), "#8AB4FF");
+  }
 }
 
 /* Traînée continue : au lieu d'une file de disques, on construit un ruban
@@ -4552,6 +4570,49 @@ function arrondi(x, y, l, h, r){
   ctx.arcTo(x, y, x + l, y, r);
   ctx.fill();
 }
+
+/* Placé en fin de script : ce calibrage lit QUALITES, bloomActif et
+   effetsRiches, déclarés plus bas dans le fichier. Plus haut, il déclencherait
+   une erreur de zone morte temporelle. */
+/* Calibrage : on chronomètre un petit lot d'opérations de rendu représentatives.
+   Plus fiable que de deviner le modèle — l'identification d'iOS est identique
+   d'un iPhone SE à un Pro Max. */
+function mesurerPuissance(){
+  try{
+    const c = document.createElement("canvas");
+    c.width = 220; c.height = 360;
+    const g = c.getContext("2d");
+    const t0 = performance.now();
+    for (let i = 0; i < 400; i++){
+      const d = g.createRadialGradient(110, 180, 0, 110, 180, 90);
+      d.addColorStop(0, "rgba(255,255,255,.5)");
+      d.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = d;
+      g.beginPath(); g.arc(110, 180, 90, 0, Math.PI*2); g.fill();
+    }
+    return performance.now() - t0;
+  }catch(e){ return 999; }
+}
+(function initQualite(){
+  let choisi = null;
+  try{ choisi = localStorage.getItem("duo_qualite"); }catch(e){}
+  if (choisi && QUALITES[choisi]) qualite = choisi;
+  else {
+    const ms = mesurerPuissance();
+    const coeurs = navigator.hardwareConcurrency || 4;
+    /* un appareil récent avale ce lot en quelques millisecondes */
+    qualite = (ms < 18 && coeurs >= 4) ? "max" : (ms < 45 ? "normal" : "minimal");
+  }
+  for (const b of document.querySelectorAll(".btnQualite")){
+    b.addEventListener("click", () => {
+      qualite = b.dataset.q;
+      try{ localStorage.setItem("duo_qualite", qualite); }catch(e){}
+      tempsFrames = [];
+      appliquerQualite();
+    });
+  }
+  appliquerQualite();
+})();
 </script>
 </body>
 </html>
