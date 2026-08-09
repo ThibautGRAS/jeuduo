@@ -316,7 +316,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v9.10 · 2026-08-07</div>
+  <div id="version">DUO v10.0 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -434,7 +434,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "9.10";
+const VERSION = "10.0";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -876,10 +876,11 @@ function enregistrerEtEnvoyer(){
   rec.start();
   setTimeout(() => { try{ rec.stop(); } catch(e){} }, 2000);
 }
-function jouerVoix(m){
-  if (!m || !m.d) return;
-  if (m.t === "ph"){ photoAdverse = m.d; return; }
-  if (m.t !== "vx") return;
+function recevoirFiable(m){
+  if (!m) return;
+  if (m.t === "ph" && m.d){ photoAdverse = m.d; return; }
+  if (m.t !== "vx"){ recevoir(m); return; }   /* contrôle : même traitement */
+  if (!m.d) return;
   try{
     const blob = new Blob([m.d], { type: m.mt || "audio/webm" });
     const url = URL.createObjectURL(blob);
@@ -1180,13 +1181,19 @@ function gestionnaireConnexion(c){
   if (c.label === "voix"){
     if (connVoix && connVoix.open){ try{ c.close(); }catch(e){} return; }
     connVoix = c;
-    connVoix.on("data", jouerVoix);
-    connVoix.on("open", () => setTimeout(envoyerPhoto, 250));
-    setTimeout(envoyerPhoto, 400);
+    connVoix.on("data", recevoirFiable);
+    connVoix.on("open", () => { setTimeout(envoyerPhoto, 250); viderFilePrioritaire(); });
+    setTimeout(() => { envoyerPhoto(); viderFilePrioritaire(); }, 400);
     return;
   }
-  if (conn){ try{ c.close(); }catch(e){} return; }   /* déjà en partie : on refuse */
+  if (conn && conn.open){ try{ c.close(); }catch(e){} return; }   /* déjà en partie */
+  const reprise = partieEnCours;                 /* liaison rétablie en cours de match */
   conn = c;
+  if (reprise){
+    brancherConnexion();
+    if (c.open) finirReprise(true); else c.on("open", () => finirReprise(true));
+    return;
+  }
   conn.on("open", demarrerPartie);
   brancherConnexion();
 }
@@ -1339,6 +1346,7 @@ function creerHote(iBroker){
     ouvert = true;
     clearTimeout(bascule);
     peer = p;
+    codePartie2 = code;
     const affiche = code + (iBroker === 1 ? "2" : "");
     codePartie.textContent = affiche;
     codePartie.classList.remove("cache");
@@ -1456,13 +1464,14 @@ $("btnRejoindre").addEventListener("click", () => {
   demanderEcranAllume();
   peer.on("open", () => {
     codeRejoint = code;
+    codePartie2 = code;
     conn = peer.connect(PREFIXE + code, { reliable: false });
     conn.on("open", () => {
       demarrerPartie();
       /* canal séparé FIABLE pour la voix : l'audio ne tolère pas la perte de paquets */
       connVoix = peer.connect(PREFIXE + code, { reliable: true, label: "voix" });
-      connVoix.on("data", jouerVoix);
-      connVoix.on("open", () => setTimeout(envoyerPhoto, 250));
+      connVoix.on("data", recevoirFiable);
+      connVoix.on("open", () => { setTimeout(envoyerPhoto, 250); viderFilePrioritaire(); });
     });
     brancherConnexion();
     setTimeout(() => {
@@ -1494,13 +1503,58 @@ function erreurLobby(e){
 }
 
 /* ================= CONNEXION ================= */
+const REPRISE_DUREE = 18000, REPRISE_INTERVALLE = 2200;
+let repriseFin = 0, repriseMinuteur = 0, codePartie2 = "";
+const minuteurs = [];
+function arreterMinuteurs(){
+  while (minuteurs.length) clearInterval(minuteurs.pop());
+  if (repriseMinuteur){ clearInterval(repriseMinuteur); repriseMinuteur = 0; }
+}
+
 function brancherConnexion(){
   conn.on("data", recevoir);
   conn.on("close", () => {
-    partieEnCours = false;
-    masquerPanneaux();
-    montrerVoile("—", "ADVERSAIRE DÉCONNECTÉ · RECHARGEZ POUR REJOUER", false);
+    if (!partieEnCours) return;
+    conn = null;
+    /* La partie n'est pas perdue : l'état vit chez l'hôte. On gèle l'affichage
+       et on retente la liaison pendant 18 s avant d'abandonner. */
+    demarrerReprise();
   });
+}
+
+function demarrerReprise(){
+  if (repriseMinuteur) return;
+  repriseFin = performance.now() + REPRISE_DUREE;
+  masquerPanneaux();
+  montrerVoile("…", "LIAISON PERDUE · RECONNEXION EN COURS", false);
+  btnRevanche.classList.add("cache");
+  repriseMinuteur = setInterval(() => {
+    if (conn && conn.open){ finirReprise(true); return; }
+    if (performance.now() > repriseFin){ finirReprise(false); return; }
+    const reste = Math.ceil((repriseFin - performance.now()) / 1000);
+    voileSous.textContent = "LIAISON PERDUE · RECONNEXION… " + reste + " s";
+    if (!estHote && peer && !peer.destroyed && codePartie2){
+      try{
+        const c = peer.connect(PREFIXE + codePartie2, { reliable: false });
+        c.on("open", () => { conn = c; brancherConnexion(); finirReprise(true); });
+      }catch(e){}
+    }
+  }, REPRISE_INTERVALLE);
+}
+
+function finirReprise(reussie){
+  clearInterval(repriseMinuteur); repriseMinuteur = 0;
+  if (reussie){
+    voile.classList.add("cache");
+    annoncer("LIAISON RÉTABLIE", "#4ADE80");
+    envoyerFiable({ t: "nm", n: monNom });
+    envoyerPhoto();
+    viderFilePrioritaire();
+  } else {
+    partieEnCours = false;
+    arreterMinuteurs();
+    montrerVoile("—", "ADVERSAIRE DÉCONNECTÉ · RETOUR AU MENU", false);
+  }
 }
 
 function demarrerPartie(){
@@ -1509,17 +1563,17 @@ function demarrerPartie(){
   lobby.style.display = "none";
   jeu.style.display = "flex";
   majNoms();
-  if (!modeSolo && conn && conn.open) conn.send({ t: "nm", n: monNom });
+  if (!modeSolo) envoyerFiable({ t: "nm", n: monNom });
   phase = "regles";
   panRegles.classList.remove("cache");
   if (modeSolo){
     elPing.textContent = "IA";
   } else {
-    if (estHote) setInterval(envoyerEtatHote, TICK_ENVOI);
-    else setInterval(envoyerRaquetteInvite, 16);   /* raquette à 60 Hz : critique pour la collision */
-    setInterval(envoyerPing, 2000);
+    if (estHote) minuteurs.push(setInterval(envoyerEtatHote, TICK_ENVOI));
+    else minuteurs.push(setInterval(envoyerRaquetteInvite, 16));  /* 60 Hz : critique pour la collision */
+    minuteurs.push(setInterval(envoyerPing, 2000));
     setTimeout(mesurerVoie, 2500);
-    setInterval(mesurerVoie, 15000);
+    minuteurs.push(setInterval(mesurerVoie, 15000));
   }
   requestAnimationFrame(boucle);
 }
@@ -1545,7 +1599,7 @@ btnLu.addEventListener("click", () => {
   btnLu.disabled = true;
   etatLu.textContent = "EN ATTENTE DE L'ADVERSAIRE…";
   if (estHote){ lus[0] = true; verifierLus(); }
-  else if (conn && conn.open) conn.send({ t:"lu" });
+  else envoyerFiable({ t:"lu" });
 });
 function verifierLus(){
   if (estHote && lus[0] && (lus[1] || modeSolo) && phase === "regles"){
@@ -1583,6 +1637,29 @@ function envoyerRaquetteInvite(){
   if (!conn || !conn.open) return;
   conn.send({ t:"r", r: maRaquette, v: vitRaqLisse, c: Math.round(chargeLocal*100) });
 }
+/* ================= ACHEMINEMENT FIABLE =================
+   Le canal de jeu est volontairement non fiable : perdre un paquet de position
+   n'a aucune importance, le suivant arrive 33 ms plus tard. Mais un message de
+   contrôle perdu (« je suis prêt », choix de vice, nom, revanche) ne se rattrape
+   jamais et bloque la partie sans rien afficher. Ceux-là passent donc par le
+   canal fiable, avec file d'attente tant qu'il n'est pas ouvert. */
+const filePrioritaire = [];
+function envoyerFiable(msg){
+  if (connVoix && connVoix.open){
+    try{ connVoix.send(msg); return true; }catch(e){}
+  }
+  filePrioritaire.push(msg);
+  if (conn && conn.open){ try{ conn.send(msg); }catch(e){} }  /* tentative immédiate en doublon */
+  return false;
+}
+function viderFilePrioritaire(){
+  if (!connVoix || !connVoix.open) return;
+  while (filePrioritaire.length){
+    const m = filePrioritaire.shift();
+    try{ connVoix.send(m); }catch(e){ filePrioritaire.unshift(m); break; }
+  }
+}
+
 function envoyerFx(k, x, y, extra){
   if (conn && conn.open) conn.send({ t:"fx", k, x, y, e: extra === undefined ? "" : extra });
 }
@@ -1643,7 +1720,7 @@ function recevoir(m){
     case "nm":
       nomAdverse = assainirNom(m.n);
       majNoms();
-      if (conn && conn.open) conn.send({ t: "nm2", n: monNom });
+      envoyerFiable({ t: "nm2", n: monNom });
       break;
     case "nm2": nomAdverse = assainirNom(m.n); majNoms(); break;
     case "lu": if (estHote){ lus[1] = true; verifierLus(); } break;
@@ -2341,8 +2418,8 @@ for (const btn of document.querySelectorAll(".carteVice")){
     panChoixVice.classList.add("cache");
     if (estHote){
       if (viceGagnant === 0){ vices[0] = k; planifierVice(0); viceGagnant = -1; mancheSuivante(); }
-    } else if (conn && conn.open){
-      conn.send({ t:"vc", k });
+    } else {
+      envoyerFiable({ t:"vc", k });
     }
   });
 }
@@ -2415,6 +2492,7 @@ function montrerVoile(titre, sous, avecBouton){
    stockage local, et aucun minuteur résiduel ne peut subsister. */
 $("btnMenu").addEventListener("click", () => {
   partieEnCours = false;
+  arreterMinuteurs();
   try{ if (conn) conn.close(); }catch(e){}
   try{ if (connVoix) connVoix.close(); }catch(e){}
   try{ if (peer && !peer.destroyed) peer.destroy(); }catch(e){}
@@ -2443,7 +2521,7 @@ function afficherFin(){
 }
 btnRevanche.addEventListener("click", () => {
   if (estHote) lancerRevanche();
-  else if (conn && conn.open) conn.send({ t:"rm" });
+  else envoyerFiable({ t:"rm" });
   btnRevanche.disabled = true;
   setTimeout(() => btnRevanche.disabled = false, 1200);
 });
