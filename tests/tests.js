@@ -169,6 +169,28 @@ const noyau = (l, c) => Math.max(0, (l - Math.min(13, l*0.16)*2 - 6) * Math.min(
 verifier("noyau de charge monotone et borné",
   [62,104,168].every(l => noyau(l,0) === 0 && noyau(l,1) > 8 && noyau(l,1) < l));
 
+/* ======================= 8bis. CHOIX D'ARÈNE ET PANNEAUX ======================= */
+titre("8bis. Choix d'arène et tenue des panneaux");
+verifier("sélecteur d'arène présent", /id="choixArenes"/.test(html));
+verifier("arène imposée respectée dans le mélange",
+  /if \(choixArene >= 0 && choixArene < ARENES\.length\)/.test(script));
+verifier("choix mémorisé", /localStorage\.setItem\("duo_arene"/.test(script));
+verifier("boutons construits après la définition des arènes",
+  script.indexOf("const ARENES = [") < script.indexOf("initChoixArene"),
+  "sinon zone morte temporelle");
+{
+  /* un panneau ne doit jamais dépasser le terrain sans pouvoir défiler */
+  const css = (html.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || "";
+  const bloc = (css.match(/\.panneau\{[^}]*\}/) || [""])[0];
+  verifier("panneaux défilables", /overflow-y:\s*auto/.test(bloc));
+  /* hauteur estimée du panneau des vices sur le plus petit écran visé */
+  const terrain = Math.min(0.92*360, (640 - 215)*0.75, 540);
+  const hTerrain = terrain * 720/540;
+  const hVices = 21*1.15 + 2*13 + 3*(12.5 + 2 + 2*10.5*1.35 + 18) + 2*7 + 28;
+  verifier("panneau des vices tient sur petit écran",
+    hVices < hTerrain, Math.round(hVices) + " px pour " + Math.round(hTerrain) + " px");
+}
+
 /* ======================= 9. RÉFÉRENCES ======================= */
 titre("9. Toute fonction appelée est définie");
 {
