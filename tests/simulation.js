@@ -102,10 +102,12 @@ const doc = {
     let liste = [];
     if (sel === ".btnSolo") liste = ["facile", "moyen", "difficile"].map(n => {
       const e = element("solo:" + n); e.dataset.niveau = n; return e; });
-    else if (sel === ".btnMode") liste = ["arcade", "classique"].map(n => {
+    else if (sel === ".btnMode") liste = ["arcade", "classique", "gravite"].map(n => {
       const e = element("mode:" + n); e.dataset.mode = n; return e; });
     else if (sel === ".btnManches") liste = ["2", "3", "5"].map(n => {
       const e = element("manches:" + n); e.dataset.n = n; return e; });
+    else if (sel === ".btnQualite") liste = ["minimal", "normal", "max"].map(n => {
+      const e = element("q:" + n); e.dataset.q = n; return e; });
     else if (sel === ".carteVice") liste = ["I", "B", "G"].map(k => {
       const e = element("vice:" + k); e.dataset.vice = k; return e; });
     groupes.set(sel, liste);
@@ -232,7 +234,30 @@ verifier("aucune valeur invalide dans les blocs", obstaclesInvalides === 0,
   jeu.obstacles.length + " bloc(s)");
 verifier("particules plafonnées", jeu.particules.length <= 200, jeu.particules.length + " particules");
 
-console.log("\n5. Robustesse : deux minutes de plus");
+console.log("\n5. Mode gravité");
+try {
+  obtenir("btnMenu").declencher("click");
+  avancer(300);
+  doc.querySelectorAll(".btnMode")[2].declencher("click");   /* gravité */
+  doc.querySelectorAll(".btnSolo")[1].declencher("click");   /* moyen */
+  obtenir("btnLu").declencher("click");
+  avancer(300);
+  let boum = null;
+  const avant = journalDessin.length;
+  try { for (let i = 0; i < 25; i++) avancer(1000); } catch (e){ boum = e; }
+  verifier("le mode gravité tourne sans exception", !boum, boum ? boum.message : "25 s simulées");
+  verifier("le rendu continue", journalDessin.length - avant > 1000,
+    (journalDessin.length - avant) + " opérations");
+  let mauvais = 0;
+  for (const b of jeu.balles)
+    for (const k of ["x","y","vx","vy"]) if (!Number.isFinite(b[k])) mauvais++;
+  verifier("les puits ne produisent pas de valeur invalide", mauvais === 0);
+  const s2 = jeu.etat.score, m2 = jeu.manches;
+  verifier("le jeu progresse en gravité", s2[0] + s2[1] + m2[0] + m2[1] > 0,
+    "score " + s2.join("-") + " | manches " + m2.join("-"));
+} catch (e){ verifier("le mode gravité démarre", false, e.message); }
+
+console.log("\n6. Robustesse : deux minutes de plus");
 try {
   for (let i = 0; i < 120; i++) avancer(1000);
   verifier("aucune exception sur la durée", true, "140 s de jeu au total");
