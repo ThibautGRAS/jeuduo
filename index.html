@@ -399,7 +399,7 @@ canvas{
 
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v10.6 · 2026-08-09</div>
+  <div id="version">DUO v10.7 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -432,6 +432,7 @@ canvas{
         <b class="o">ORBES</b> — Touchez-les avec la balle : le bonus va au dernier frappeur. Agrandir · rétrécir l'autre · éclair · balle double · fantôme · <span style="color:#FB923C">boule de feu</span> (7 s : la balle pulvérise les blocs).<br>
         <b class="o">ARÈNES</b> — Six arènes, ordre tiré au sort dès la manche 1 : <b>MÉTAL</b> (neutre), <b>GLACE</b> (ralentit), <b>LAVE</b> (accélère), <b>ORAGE</b> (dévie et charge), <b>VIDE</b> (attire la balle), <b>JUNGLE</b> (absorbe l'effet). Décor, musique et physique changent avec elle.<br>
         <b class="o">BLOCS</b> — Une ou deux bûches mobiles selon l'arène. Elles se fêlent au premier choc mais ne changent jamais de taille et ne peuvent pas être détruites.<br>
+        <b class="o">ÉCLATS</b> — Les petits rochers arrachés aux murs, eux, s'écornent au premier impact et se pulvérisent au second. Une balle bien liftée les survole sans les toucher.<br>
         <b class="v">ARC ÉLECTRIQUE</b> — Dans l'arène ORAGE, un arc traverse le terrain par intermittence, dans une orientation quelconque. Il se révèle progressivement avant la décharge : toute balle qui le franchit repart dans une direction imprévisible.<br>
         <b class="f">BALLE EN FEU</b> — 8 rebonds sans point : la balle s'enflamme à vitesse maximale.<br>
         <b class="o">DÉCOR</b> — À partir de la manche 2, des blocs de la ligne médiane se détachent et dérivent au centre du terrain.<br>
@@ -525,7 +526,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "10.6";
+const VERSION = "10.7";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -563,6 +564,10 @@ const IMMU_BLOC = 340;   /* un bloc ne peut encaisser qu'un impact par 340 ms */
 const SMASH_MUR = 16.4;                            // vitesse minimale qui fissure un mur
 const FISSURE_PORTEE = 60, FISSURE_TROU = 3;       // regroupement des impacts / niveau "troué"
 const MAX_DEBRIS = 8, DEBRIS_R_MIN = 6, DEBRIS_R_MAX = 12;
+/* Un éclat encaisse deux chocs : le premier l'écorne, le second le pulvérise.
+   Fenêtre d'immunité comme pour les bûches, car un éclat dérive et peut
+   revenir dans la balle à l'image suivante. */
+const DEBRIS_RETRECIT = 0.62, DEBRIS_R_PLANCHER = 4.5, IMMU_DEBRIS = 300;
 /* Arc électrique de l'arène ORAGE : il traverse le terrain, et toute balle qui
    le franchit repart dans une direction imprévisible. */
 const ARC_INTERVALLE = 5200, ARC_PREAVIS = 850, ARC_DUREE = 1500;
@@ -1879,7 +1884,8 @@ function envoyerEtatHote(){
 
     ob: obstacles.map(o => [Math.round(o.x), Math.round(o.y), Math.round(o.l), Math.round(o.h), o.ebreche || 0, o.germe]),
     de: debris.filter(d => !d.naissance || performance.now() >= d.naissance)
-              .map(d => [Math.round(d.x), Math.round(d.y), Math.round(d.r), Math.round(d.rot*100)/100]),
+              .map(d => [Math.round(d.x), Math.round(d.y), Math.round(d.r * 10) / 10,
+                         Math.round(d.rot*100)/100, d.ecorne || 0]),
     fi: fissures[0].map(f => [0, Math.round(f.y), f.niv]).concat(fissures[1].map(f => [1, Math.round(f.y), f.niv])),
     iv: performance.now() < vfx.finInv ? vfx.invVictime : -1,
     bv: performance.now() < vfx.finBrou ? vfx.brouVictime : -1,
@@ -1943,7 +1949,7 @@ function recevoir(m){
       arcOrage.debut = performance.now() + ao[5];
       manches = m.ma; margeMur = m.mu; enFeu = !!m.fe;
       obstacles = (m.ob || []).map(o => ({ x: o[0], y: o[1], l: o[2], h: o[3], ebreche: o[4], germe: o[5] }));
-      debris = (m.de || []).map(d => ({ x: d[0], y: d[1], r: d[2], rot: d[3] }));
+      debris = (m.de || []).map(d => ({ x: d[0], y: d[1], r: d[2], rot: d[3], ecorne: d[4] }));
       fissures = [[], []];
       for (const f of (m.fi || [])) fissures[f[0]].push({ y: f[1], niv: f[2] });
       chargesAffichees[1] = (m.ch[0] || 0) / 100;   // charge de l'hôte = mon adversaire
@@ -2060,6 +2066,14 @@ function jouerFx(k, x, y, extra){
     const coul = extra === "glace" ? "#BAE6FD" : (extra === "lave" ? "#FB923C" : "#8AB4FF");
     explosion(x, y, coul, 10, 2.6);
     secousse = Math.max(secousse, extra === "lave" ? 5 : 3);
+    sonBloc(extra);
+  }
+  if (k === "miettes"){
+    const coul = extra === "glace" ? "#BAE6FD" : (extra === "lave" ? "#FB923C"
+               : (extra === "jungle" ? "#86EFAC" : (extra === "orage" ? "#C4B5FD"
+               : (extra === "vide" ? "#9AA3B8" : "#94A3B8"))));
+    explosion(x, y, coul, 14, 3.4);
+    secousse = Math.max(secousse, 3);
     sonBloc(extra);
   }
   if (k === "casse"){
@@ -2237,6 +2251,7 @@ function toucherMur(b, cote, murX){
         r: DEBRIS_R_MIN + Math.random()*(DEBRIS_R_MAX - DEBRIS_R_MIN),
         rot: Math.random()*6.28, vr: (Math.random()-0.5)*0.1,
         naissance: tImpact + 280 + i*170 + Math.random()*150, ne: false,
+        ecorne: 0, tImpact: -1e9,
       });
     }
     fxLocal("fissure", murX, b.y, f.niv);
@@ -2390,8 +2405,24 @@ function physique(){
       const d = debris[di];
       if (d.naissance && performance.now() < d.naissance) continue;
       if (!collisionDebris(b, d)) continue;
-      if (bouleFeu){ debris.splice(di, 1); fxLocal("casse", d.x, d.y, areneCourante().bloc); }
-      else fxLocal("mur", b.x, b.y);
+      const matiere = areneCourante().bloc;
+      if (bouleFeu){
+        debris.splice(di, 1);
+        fxLocal("casse", d.x, d.y, matiere);
+      } else {
+        const tNow = performance.now();
+        if (tNow - (d.tImpact === undefined ? -1e9 : d.tImpact) >= IMMU_DEBRIS){
+          d.tImpact = tNow;
+          if (d.ecorne){
+            debris.splice(di, 1);
+            fxLocal("miettes", d.x, d.y, matiere);
+          } else {
+            d.ecorne = 1;
+            d.r = Math.max(DEBRIS_R_PLANCHER, d.r * DEBRIS_RETRECIT);
+            fxLocal("bloc", b.x, b.y, matiere);
+          }
+        } else fxLocal("mur", b.x, b.y);
+      }
       break;
     }
 
@@ -3042,6 +3073,13 @@ function dessiner(){
     ctx.lineTo(d.r*0.55, d.r*0.9);
     ctx.lineTo(-d.r*0.7, d.r*0.6);
     ctx.closePath(); ctx.fill();
+    if (d.ecorne){
+      ctx.strokeStyle = "rgba(8,12,22,.75)";
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(-d.r*0.7, -d.r*0.2); ctx.lineTo(0, d.r*0.15); ctx.lineTo(d.r*0.6, -d.r*0.3);
+      ctx.stroke();
+    }
     ctx.restore();
     ctx.shadowBlur = flou(0); ctx.globalAlpha = 1;
   }
