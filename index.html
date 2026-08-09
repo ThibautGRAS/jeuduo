@@ -302,7 +302,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v8.8 · 2026-08-07</div>
+  <div id="version">DUO v9.0 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -327,7 +327,7 @@ canvas{
         <b class="c">LIFT</b> — Fouettez la raquette à l'impact : la balle part courbée, bien plus rapide, et si le geste est franc elle <b>décolle et survole les blocs</b> (halo doré, ombre qui s'écarte).<br>
         <b class="c">SMASH</b> — Raquette immobile 1 s : elle se charge et vire à l'<span style="color:#FBBF24">or</span>. La frappe suivante part à pleine puissance.<br>
         <b class="o">ORBES</b> — Touchez-les avec la balle : le bonus va au dernier frappeur. Agrandir · rétrécir l'autre · éclair · balle double · fantôme · <span style="color:#FB923C">boule de feu</span> (7 s : la balle pulvérise les blocs).<br>
-        <b class="o">ARÈNES</b> — Six arènes, ordre tiré au sort dès la manche 1 : <b>ROCHE</b> (neutre), <b>GLACE</b> (ralentit), <b>LAVE</b> (accélère), <b>ORAGE</b> (dévie et charge), <b>VIDE</b> (attire la balle), <b>JUNGLE</b> (absorbe l'effet). Décor, musique et physique changent avec elle.<br>
+        <b class="o">ARÈNES</b> — Six arènes, ordre tiré au sort dès la manche 1 : <b>MÉTAL</b> (neutre), <b>GLACE</b> (ralentit), <b>LAVE</b> (accélère), <b>ORAGE</b> (dévie et charge), <b>VIDE</b> (attire la balle), <b>JUNGLE</b> (absorbe l'effet). Décor, musique et physique changent avec elle.<br>
         <b class="o">BLOCS</b> — Les blocs mobiles s'ébrèchent et rétrécissent à chaque impact, mais ne disparaissent jamais d'eux-mêmes : seule la boule de feu les pulvérise.<br>
         <b class="f">BALLE EN FEU</b> — 8 rebonds sans point : la balle s'enflamme à vitesse maximale.<br>
         <b class="o">DÉCOR</b> — À partir de la manche 2, des blocs de la ligne médiane se détachent et dérivent au centre du terrain.<br>
@@ -419,9 +419,14 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "8.8";
+const VERSION = "9.0";
 const LARG = 540, HAUT = 720;
-const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
+const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
+/* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
+   rebondissent exactement sur la bordure visible de l'image. */
+const CADRE_X = 42, CADRE_Y = 50;
+function murG_(){ return CADRE_X + margeMur; }
+function murD_(){ return LARG - CADRE_X - margeMur; }
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
 const BALLE_R = 8;
 const VIT_INIT = 9.2, VIT_MAX = 19, VIT_MAX_ECLAIR = 23, ACCEL = 1.06;
@@ -1693,7 +1698,7 @@ function physique(){
   if (mortSubite && margeMur < MUR_MAX) margeMur = Math.min(MUR_MAX, margeMur + MUR_VITESSE);
 
   const gravite = maintenant < vfx.finGrav ? vfx.gravSens * GRAV_FORCE : 0;
-  const murG = margeMur + BALLE_R, murD = LARG - margeMur - BALLE_R;
+  const murG = murG_() + BALLE_R, murD = murD_() - BALLE_R;
 
   /* COMPENSATION DE LATENCE (raquette invitée uniquement) :
      sa position reçue est vieille d'un demi-ping ; on la projette en avant
@@ -1703,7 +1708,7 @@ function physique(){
   if (!modeSolo){
     const retardPas = Math.min(7, (rttMs/2 + 12) / (1000/60));
     raqHautComp = etat.raqHaut + vitRaqHaut * retardPas;
-    raqHautComp = Math.max(margeMur + tailles[1]/2, Math.min(LARG - margeMur - tailles[1]/2, raqHautComp));
+    raqHautComp = Math.max(murG_() + tailles[1]/2, Math.min(murD_() - tailles[1]/2, raqHautComp));
     toleranceHaut = Math.min(30, rttMs * 0.17);
   }
 
@@ -1711,15 +1716,15 @@ function physique(){
   const tSec = maintenant / 1000;
   for (const o of obstacles){
     o.x = o.base + Math.sin(tSec * o.vitOsc + o.phase) * o.amp - o.l/2;
-    o.x = Math.max(margeMur + 4, Math.min(LARG - margeMur - 4 - o.l, o.x));
+    o.x = Math.max(murG_() + 4, Math.min(murD_() - 4 - o.l, o.x));
   }
   /* dérive des débris (ceux qui ne sont pas encore détachés attendent) */
   for (const d of debris){
     if (d.naissance && maintenant < d.naissance) continue;
     if (d.naissance && !d.ne){ d.ne = true; explosion(d.x, d.y, "#94A3B8", 7, 2.2); }
     d.x += d.vx; d.y += d.vy; d.rot += d.vr;
-    if (d.x < margeMur + d.r){ d.x = margeMur + d.r; d.vx = Math.abs(d.vx); }
-    if (d.x > LARG - margeMur - d.r){ d.x = LARG - margeMur - d.r; d.vx = -Math.abs(d.vx); }
+    if (d.x < murG_() + d.r){ d.x = murG_() + d.r; d.vx = Math.abs(d.vx); }
+    if (d.x > murD_() - d.r){ d.x = murD_() - d.r; d.vx = -Math.abs(d.vx); }
     if (d.y < HAUT*0.18 + d.r){ d.y = HAUT*0.18 + d.r; d.vy = Math.abs(d.vy); }
     if (d.y > HAUT*0.82 - d.r){ d.y = HAUT*0.82 - d.r; d.vy = -Math.abs(d.vy); }
   }
@@ -1754,8 +1759,8 @@ function physique(){
     const prevX = b.x, prevY = b.y;
     b.x += b.vx; b.y += b.vy;
 
-    if (b.x < murG){ b.x = murG; b.vx = Math.abs(b.vx); toucherMur(b, 0, margeMur); }
-    if (b.x > murD){ b.x = murD; b.vx = -Math.abs(b.vx); toucherMur(b, 1, LARG - margeMur); }
+    if (b.x < murG){ b.x = murG; b.vx = Math.abs(b.vx); toucherMur(b, 0, murG_()); }
+    if (b.x > murD){ b.x = murD; b.vx = -Math.abs(b.vx); toucherMur(b, 1, murD_()); }
 
     const survole = Math.abs(b.spin || 0) > SPIN_SURVOL;   /* balle liftée en cloche */
     if (!survole) for (let oi = obstacles.length - 1; oi >= 0; oi--){
@@ -1994,6 +1999,7 @@ function afficherVersus(){
 function demarrerMatch(){
   melangerArenes();
   construireObstacles();
+  precharger();
   debris = []; fissures = [[], []];
   phase = "vs";
   masquerPanneaux();
@@ -2036,6 +2042,7 @@ function mancheSuivante(){
   etat.score = [0, 0];
   margeMur = 0;
   construireObstacles();
+  precharger();
   debris = []; fissures = [[], []];
   effets.finBas = effets.finHaut = effets.finFantome = effets.finBouleFeu = 0;
   majScore(false);
@@ -2098,7 +2105,7 @@ function iaJouer(){
     vise += iaErr;
   }
   const demi = tailles[1]/2;
-  vise = Math.max(margeMur + demi, Math.min(LARG - margeMur - demi, vise));
+  vise = Math.max(murG_() + demi, Math.min(murD_() - demi, vise));
 
   const delta = vise - etat.raqHaut;
   const pas = Math.max(-cfg.vit, Math.min(cfg.vit, delta));
@@ -2181,7 +2188,7 @@ function posDepuisEvenement(clientX){
   let x = (clientX - rect.left) / rect.width * LARG;
   if (suisJeInverse()) x = LARG - x;
   const demi = (estHote ? taillesAffichees[0] : taillesAffichees[1]) / 2;
-  maRaquette = Math.max(demi, Math.min(LARG - demi, x));
+  maRaquette = Math.max(murG_() + demi, Math.min(murD_() - demi, x));
 }
 cv.addEventListener("touchstart", e => { e.preventDefault(); posDepuisEvenement(e.touches[0].clientX); }, {passive:false});
 cv.addEventListener("touchmove",  e => { e.preventDefault(); posDepuisEvenement(e.touches[0].clientX); }, {passive:false});
@@ -2271,11 +2278,11 @@ function dessiner(){
   if (margeMur > 1){
     ctx.shadowBlur = 20; ctx.shadowColor = CO_FEU;
     ctx.fillStyle = "rgba(251,113,133,.22)";
-    ctx.fillRect(0, 0, margeMur, HAUT);
-    ctx.fillRect(LARG - margeMur, 0, margeMur, HAUT);
+    ctx.fillRect(CADRE_X, 0, margeMur, HAUT);
+    ctx.fillRect(LARG - CADRE_X - margeMur, 0, margeMur, HAUT);
     ctx.fillStyle = CO_FEU;
-    ctx.fillRect(margeMur - 2, 0, 2, HAUT);
-    ctx.fillRect(LARG - margeMur, 0, 2, HAUT);
+    ctx.fillRect(murG_() - 2, 0, 2, HAUT);
+    ctx.fillRect(murD_(), 0, 2, HAUT);
     ctx.shadowBlur = 0;
   }
 
@@ -2704,7 +2711,7 @@ function rgba(hex, a){
 
 /* ---------- ARÈNE : grille en défilement, cercle central, zones, vignette ---------- */
 const ARENES = [
-  { nom: "ROCHE", bloc: "roche", halo: "28,48,104", grille: "120,160,255", trait: "120,160,255",
+  { nom: "MÉTAL", bloc: "roche", img: "arenes/metal.webp", halo: "28,48,104", grille: "120,160,255", trait: "120,160,255",
     pas: 45, facteur: 1, accent: "#8AB4FF",
     mus: { tempo: 142, max: 190, lead: "square", basse: "sawtooth",
            L: [659,0,784,880, 0,784,659,0, 587,0,659,784, 0,659,587,0],
@@ -2714,7 +2721,7 @@ const ARENES = [
            H: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,1],
            lVol: 0.15, bVol: 0.17, kVol: 0.4, kHaut: 165, kBas: 44 } },
 
-  { nom: "GLACE", bloc: "glace", halo: "16,72,92", grille: "150,240,255", trait: "150,240,255",
+  { nom: "GLACE", bloc: "glace", img: "arenes/glace.webp", halo: "16,72,92", grille: "150,240,255", trait: "150,240,255",
     pas: 54, facteur: 0.78, accent: "#7DD3FC",
     mus: { tempo: 124, max: 158, lead: "triangle", basse: "sine",
            L: [1047,0,1245,0, 1397,0,1245,0, 1047,0,880,0, 1047,1245,0,0],
@@ -2725,7 +2732,7 @@ const ARENES = [
            lVol: 0.2, bVol: 0.14, kVol: 0.26, kHaut: 120, kBas: 52, kClic: 0,
            cFreq: 3200, cVol: 0.14, hFreq: 11000, hVol: 1.3 } },
 
-  { nom: "LAVE", bloc: "lave", halo: "96,26,10", grille: "255,150,80", trait: "255,140,60",
+  { nom: "LAVE", bloc: "lave", img: "arenes/lave.webp", halo: "96,26,10", grille: "255,150,80", trait: "255,140,60",
     pas: 38, facteur: 1.22, accent: "#FB923C",
     mus: { tempo: 168, max: 208, lead: "sawtooth", basse: "sawtooth",
            L: [415,0,415,494, 554,0,494,415, 370,0,415,494, 554,494,415,0],
@@ -2747,7 +2754,7 @@ const ARENES = [
            lVol: 0.16, bVol: 0.19, kVol: 0.42, kHaut: 210, kBas: 60, kGliss: 0.07,
            cFreq: 2100, cVol: 0.26, hFreq: 6500 } },
 
-  { nom: "VIDE", bloc: "vide", halo: "10,14,46", grille: "148,163,220", trait: "165,180,252",
+  { nom: "VIDE", bloc: "vide", img: "arenes/espace.webp", halo: "10,14,46", grille: "148,163,220", trait: "165,180,252",
     pas: 66, facteur: 0.94, accent: "#A5B4FC", attraction: 0.055,
     mus: { tempo: 104, max: 132, lead: "sine", basse: "sine",
            L: [523,0,0,0, 0,0,622,0, 0,0,466,0, 0,0,0,0],
@@ -2758,7 +2765,7 @@ const ARENES = [
            lVol: 0.22, bVol: 0.22, kVol: 0.3, kHaut: 90, kBas: 30, kGliss: 0.2, kDuree: 0.4,
            kClic: 0, cVol: 0.1, hVol: 0.6 } },
 
-  { nom: "JUNGLE", bloc: "jungle", halo: "12,58,32", grille: "134,239,172", trait: "134,239,172",
+  { nom: "JUNGLE", bloc: "jungle", img: "arenes/jungle.webp", halo: "12,58,32", grille: "134,239,172", trait: "134,239,172",
     pas: 48, facteur: 1, accent: "#4ADE80", absorbe: true,
     mus: { tempo: 150, max: 188, lead: "triangle", basse: "triangle",
            L: [587,0,659,0, 587,523,0,587, 440,0,523,0, 587,0,523,0],
@@ -2779,6 +2786,21 @@ function melangerArenes(){
   }
   sequenceArenes = s;
 }
+/* chargement paresseux des décors : on ne télécharge que ce qui sert */
+function chargerDecor(A){
+  if (!A || !A.img || A._img) return;
+  const im = new Image();
+  A._img = im;
+  im.onload = () => { A._pret = true; };
+  im.onerror = () => { A._echec = true; };   /* repli sur le décor procédural */
+  im.src = A.img;
+}
+function precharger(){
+  const idx = Math.min(sequenceArenes.length - 1, manches[0] + manches[1]);
+  chargerDecor(ARENES[sequenceArenes[idx]]);
+  if (idx + 1 < sequenceArenes.length) chargerDecor(ARENES[sequenceArenes[idx + 1]]);
+}
+
 function areneCourante(){
   if (modeJeu === "classique") return ARENES[0];
   const idx = Math.min(sequenceArenes.length - 1, manches[0] + manches[1]);
@@ -2787,6 +2809,17 @@ function areneCourante(){
 
 function dessinerArene(Y, t){
   const A = areneCourante();
+  chargerDecor(A);
+
+  /* décor peint : l'image fournit déjà cadre, sol, cercle central et ligne
+     médiane — on saute alors tous les tracés procéduraux correspondants. */
+  if (A._pret && !A._echec){
+    ctx.drawImage(A._img, 0, 0, LARG, HAUT);
+    signatureArene(A, Y, t, 0.45);
+    bandesJoueurs();
+    return true;
+  }
+
   const vg = ctx.createRadialGradient(LARG/2, HAUT/2, 30, LARG/2, HAUT/2, HAUT*0.72);
   vg.addColorStop(0, "rgba(" + A.halo + ",.34)");
   vg.addColorStop(0.6, "rgba(" + A.halo + ",.15)");
@@ -2807,7 +2840,35 @@ function dessinerArene(Y, t){
   ctx.beginPath(); ctx.arc(LARG/2, HAUT/2, 78, 0, Math.PI*2); ctx.stroke();
   ctx.beginPath(); ctx.arc(LARG/2, HAUT/2, 26, 0, Math.PI*2); ctx.stroke();
 
-  /* signature visuelle du thème */
+  signatureArene(A, Y, t, 1);
+
+  /* équerres de coin */
+  ctx.strokeStyle = "rgba(" + A.trait + ",.24)";
+  ctx.lineWidth = 2;
+  const m = 16, L = 26;
+  for (const [cx, cy, sx, sy] of [[m,m,1,1],[LARG-m,m,-1,1],[m,HAUT-m,1,-1],[LARG-m,HAUT-m,-1,-1]]){
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + sy*L); ctx.lineTo(cx, cy); ctx.lineTo(cx + sx*L, cy);
+    ctx.stroke();
+  }
+  bandesJoueurs();
+  return false;
+}
+
+function bandesJoueurs(){
+  for (const [yBande, coul] of [[HAUT - 4, CO_MOI], [0, CO_ADV]]){
+    const gb = ctx.createLinearGradient(0, yBande, 0, yBande === 0 ? 42 : HAUT - 42);
+    gb.addColorStop(0, rgba(coul, 0.16));
+    gb.addColorStop(1, rgba(coul, 0));
+    ctx.fillStyle = gb;
+    ctx.fillRect(0, yBande === 0 ? 0 : HAUT - 42, LARG, 42);
+  }
+}
+
+/* effets animés propres au thème, superposés au décor peint comme au procédural */
+function signatureArene(A, Y, t, force){
+  ctx.save();
+  ctx.globalAlpha = force;
   if (A.bloc === "vide"){
     const r = graine(4242);
     ctx.fillStyle = "rgba(226,232,255,.75)";
@@ -2938,24 +2999,7 @@ function dessinerArene(Y, t){
     ctx.stroke();
   }
 
-  /* équerres de coin */
-  ctx.strokeStyle = "rgba(" + A.trait + ",.24)";
-  ctx.lineWidth = 2;
-  const m = 16, L = 26;
-  for (const [cx, cy, sx, sy] of [[m,m,1,1],[LARG-m,m,-1,1],[m,HAUT-m,1,-1],[LARG-m,HAUT-m,-1,-1]]){
-    ctx.beginPath();
-    ctx.moveTo(cx, cy + sy*L); ctx.lineTo(cx, cy); ctx.lineTo(cx + sx*L, cy);
-    ctx.stroke();
-  }
-
-  /* bandes lumineuses derrière chaque raquette (ma couleur en bas) */
-  for (const [yBande, coul] of [[HAUT - 4, CO_MOI], [0, CO_ADV]]){
-    const gb = ctx.createLinearGradient(0, yBande, 0, yBande === 0 ? 42 : HAUT - 42);
-    gb.addColorStop(0, rgba(coul, 0.16));
-    gb.addColorStop(1, rgba(coul, 0));
-    ctx.fillStyle = gb;
-    ctx.fillRect(0, yBande === 0 ? 0 : HAUT - 42, LARG, 42);
-  }
+  ctx.restore();
 }
 
 /* ---------- GLYPHES DES BONUS (vectoriels) ---------- */
@@ -3019,7 +3063,7 @@ function graine(n){
   return function(){ s = (s * 1664525 + 1013904223) | 0; return ((s >>> 8) / 16777216); };
 }
 function dessinerFissure(cote, f, Y){
-  const xm = cote === 0 ? margeMur : LARG - margeMur;
+  const xm = cote === 0 ? murG_() : murD_();
   const dir = cote === 0 ? 1 : -1;
   const niv = Math.min(f.niv, FISSURE_TROU);
   const long = 16 + niv * 12;
