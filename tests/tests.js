@@ -390,6 +390,16 @@ verifier("puits projeté chez l'adversaire",
 verifier("aucun orbe ni bloc en gravité",
   /gravite:\s*\{ bonus: false,\s*obstacles: false,\s*vices: false/.test(script));
 verifier("puits dessinés", /function dessinerPuits\(/.test(script));
+verifier("lentille gravitationnelle sur le décor",
+  /function deformerFond\(/.test(script) && /ctx\.clip\("evenodd"\)/.test(script) &&
+  /drawImage\(cvLentille/.test(script),
+  "le fond est prélevé puis reposé en anneaux tournés");
+verifier("lentille désactivée au cran minimal",
+  /if \(qualite === "minimal"\) return;/.test(script), "passe coûteuse");
+verifier("alignement conservé au bord du terrain",
+  /ix0 - sx, iy0 - sy/.test(script), "sinon l'image se décalerait près des bords");
+verifier("horizon noir et anneau de photons",
+  /rgba\(0,0,0,1\)/.test(script) && /ctx\.ellipse\(0, 0, 19\.5, 17\.5/.test(script));
 verifier("aucune donnée réseau supplémentaire",
   /x: etat\.raqBas/.test(script) && /x: etat\.raqHaut/.test(script),
   "les puits se déduisent des raquettes déjà synchronisées");
@@ -419,9 +429,16 @@ verifier("aucune donnée réseau supplémentaire",
   };
   const g = tir(140), d = tir(400);
   const amplitude = (g !== null && d !== null) ? Math.abs(d - g) : 0;
-  verifier("le puits déplace l'arrivée d'environ une raquette",
-    amplitude > 70 && amplitude < 190,
-    Math.round(amplitude) + " px pour une raquette de 104 px");
+  verifier("le puits déplace l'arrivée d'une à deux raquettes",
+    amplitude > 120 && amplitude < 260,
+    Math.round(amplitude) + " px, soit " + (amplitude/104).toFixed(2) + " largeur de raquette");
+  /* la balle ne doit jamais rester prisonnière du puits */
+  let perdues = 0;
+  for (let k = 0; k < 1200; k++){
+    const arrivee = tir(60 + Math.random()*420);
+    if (arrivee === null) perdues++;
+  }
+  verifier("aucune balle prisonnière du puits", perdues === 0, "1200 trajectoires simulées");
 }
 
 /* ======================= 9. RÉFÉRENCES ======================= */
