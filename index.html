@@ -7,7 +7,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#04060C">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icone.png">
+<!-- iOS ignore le manifeste pour l'icône : il lui faut sa propre balise en 180 px -->
+<link rel="apple-touch-icon" sizes="180x180" href="icone-180.png">
+<meta name="apple-mobile-web-app-title" content="DUO">
 <title>DUO — duel néon réflexe</title>
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
