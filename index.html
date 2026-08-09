@@ -139,7 +139,7 @@ canvas{
 #btnMenu{padding:11px 26px;font-size:14px}
 /* ---------- écran VERSUS ---------- */
 .vsScene{display:flex;align-items:center;justify-content:center;gap:6px;width:100%}
-.combattant{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1}
+.combattant{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;min-width:0}
 .combattant.gauche{animation:entreeG .5s cubic-bezier(.16,1.1,.3,1) both}
 .combattant.droite{animation:entreeD .5s cubic-bezier(.16,1.1,.3,1) both}
 .vignette.geant{
@@ -149,8 +149,9 @@ canvas{
 .combattant.gauche .vignette.geant{border-color:rgba(34,211,238,.85);box-shadow:0 0 34px rgba(34,211,238,.4)}
 .combattant.droite .vignette.geant{border-color:rgba(244,113,181,.85);box-shadow:0 0 34px rgba(244,113,181,.4)}
 .vsNom{
-  font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;letter-spacing:.14em;
-  color:var(--moi);max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-family:"JetBrains Mono",monospace;font-size:12.5px;font-weight:700;letter-spacing:.08em;
+  color:var(--moi);max-width:126px;line-height:1.3;text-align:center;
+  overflow-wrap:anywhere;word-break:break-word;
   text-shadow:0 0 14px rgba(34,211,238,.5);
 }
 .vsNom.adv{color:var(--adv);text-shadow:0 0 14px rgba(244,113,181,.5)}
@@ -302,7 +303,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v9.1 · 2026-08-07</div>
+  <div id="version">DUO v9.2 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -419,7 +420,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "9.1";
+const VERSION = "9.2";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -452,8 +453,7 @@ const MUR_MAX = 88, MUR_VITESSE = 0.05;          // mort subite : rétrécisseme
 const SEUIL_CHARGE = 0.45;                        // vitesse raquette max pour charger
 const DUREE_INV = 3000, DUREE_BROU = 4000, DUREE_GRAV = 5000, GRAV_FORCE = 0.09;
 const OBST_L = 72, OBST_H = 14;                   // blocs de décor détachés
-const PV_BLOC = 2;                                 // 1er impact : il rétrécit — 2e : il éclate
-const OBST_RETRECIT = 0.55, OBST_L_MIN = 30;
+const OBST_RETRECIT = 0.66, OBST_L_MIN = 46;   /* un seul ébrèchement, bloc toujours lisible */
 const IMMU_BLOC = 340;   /* un bloc ne peut encaisser qu'un impact par 340 ms */
 const SMASH_MUR = 20.5;                            // vitesse minimale qui fissure un mur
 const FISSURE_PORTEE = 60, FISSURE_TROU = 3;       // regroupement des impacts / niveau "troué"
@@ -1373,7 +1373,7 @@ function envoyerEtatHote(){
     vw: viceGagnant, vh: [vices[0] ? 1 : 0, vices[1] ? 1 : 0],
     sk: sarcasmeIdx, rg: recapGagnant, sm: sarcasmeMatch, ra: recapArene,
     mj: modeJeu, mg: MANCHES_GAGNANTES, sa: sequenceArenes,
-    ob: obstacles.map(o => [Math.round(o.x), o.y, o.l, o.h, o.pv, o.germe]),
+    ob: obstacles.map(o => [Math.round(o.x), Math.round(o.y), Math.round(o.l), Math.round(o.h), o.ebreche || 0, o.germe]),
     de: debris.filter(d => !d.naissance || performance.now() >= d.naissance)
               .map(d => [Math.round(d.x), Math.round(d.y), Math.round(d.r), Math.round(d.rot*100)/100]),
     fi: fissures[0].map(f => [0, Math.round(f.y), f.niv]).concat(fissures[1].map(f => [1, Math.round(f.y), f.niv])),
@@ -1410,7 +1410,7 @@ function recevoir(m){
       etat.raqBas = m.r;
       tailles = m.ta; fantome = !!m.fa; bouleFeu = !!m.bf;
       manches = m.ma; margeMur = m.mu; enFeu = !!m.fe;
-      obstacles = (m.ob || []).map(o => ({ x: o[0], y: o[1], l: o[2], h: o[3], pv: o[4], germe: o[5] }));
+      obstacles = (m.ob || []).map(o => ({ x: o[0], y: o[1], l: o[2], h: o[3], ebreche: o[4], germe: o[5] }));
       debris = (m.de || []).map(d => ({ x: d[0], y: d[1], r: d[2], rot: d[3] }));
       fissures = [[], []];
       for (const f of (m.fi || [])) fissures[f[0]].push({ y: f[1], niv: f[2] });
@@ -1532,6 +1532,7 @@ function nouvelleBalle(x, y, sens, dernier){
     spin: 0, dernier: dernier === undefined ? -1 : dernier };
 }
 function preparerService(sens){
+  chargeLocal = 0; chargeHaut = 0;    /* la charge se mérite pendant l'échange */
   phase = "compte";
   finCompte = performance.now() + DUREE_COMPTE;
   sensService = sens;
@@ -1603,7 +1604,7 @@ function construireObstacles(){
     obstacles.push({
       base: LARG/2, y: HAUT/2 + decalY[i], l: OBST_L, h: OBST_H,
       amp: 130 + i*36, vitOsc: 0.7 + i*0.32, phase: i*2.1, x: LARG/2 - OBST_L/2,
-      germe: 1000 + i * 977, pv: PV_BLOC, tImpact: -1e9,
+      germe: 1000 + i * 977, ebreche: 0, tImpact: -1e9,
     });
   }
 }
@@ -1767,10 +1768,11 @@ function physique(){
       const o = obstacles[oi];
       if (!collisionRect(b, o.x, o.y - o.h/2, o.l, o.h)) continue;
       const A = areneCourante();
-      if (bouleFeu){
-        obstacles.splice(oi, 1);                 /* la boule de feu pulvérise d'un coup */
-        fxLocal("casse", o.x + o.l/2, o.y, A.bloc);
-      } else {
+      {
+        /* Les obstacles mobiles du centre sont INDESTRUCTIBLES : ni le contact,
+           ni la boule de feu ne les font disparaître. Ils s'ébrèchent une fois,
+           puis restent en jeu jusqu'à la fin de la manche. Seuls les éclats
+           détachés des murs, eux, peuvent être pulvérisés. */
         /* Le rebond et les effets d'arène s'appliquent à CHAQUE contact… */
         if (A.facteur !== 1){                    /* glace ralentit, lave accélère */
           b.vx *= A.facteur; b.vy *= A.facteur;
@@ -1794,11 +1796,11 @@ function physique(){
            ils s'ébrèchent et rétrécissent jusqu'à une taille plancher, puis
            restent en jeu. Seule la boule de feu peut les faire disparaître. */
         const tNow = performance.now();
-        if (tNow - (o.tImpact === undefined ? -1e9 : o.tImpact) >= IMMU_BLOC
-            && o.l > OBST_L_MIN + 0.5){
+        if (!o.ebreche && tNow - (o.tImpact === undefined ? -1e9 : o.tImpact) >= IMMU_BLOC){
+          o.ebreche = 1;                       /* une seule fois, jamais davantage */
           o.tImpact = tNow;
           o.l = Math.max(OBST_L_MIN, o.l * OBST_RETRECIT);
-          o.h = Math.max(9, o.h * 0.82);
+          o.h = Math.max(10, o.h * 0.88);
         }
         fxLocal("bloc", b.x, b.y, A.bloc);
       }
@@ -2450,7 +2452,7 @@ function dessiner(){
       ctx.beginPath(); ctx.arc(0, 0, BALLE_R, 0, Math.PI*2); ctx.fill();
       ctx.restore();
       ctx.shadowBlur = 0;
-      bloomCercle(b.x, Y(b.y), BALLE_R * (bouleFeu || enFeu ? 7.5 : 5.5), robe, 0.85);
+      bloomCercle(b.x, Y(b.y), BALLE_R * (bouleFeu || enFeu ? 5.5 : 3.8), robe, 0.55);
     }
   }
 
@@ -2478,8 +2480,8 @@ function dessiner(){
   ctx.fillStyle = cAdv >= 1 ? "#FDE68A" : CO_ADV;
   arrondi(raqAdvAffichee - lAdv/2, RAQ_MARGE, lAdv, RAQ_H, 6);
   ctx.shadowBlur = 0;
-  bloomCercle(maRaquette, HAUT - RAQ_MARGE - RAQ_H/2, 62 + cMoi*36, cMoi >= 1 ? CO_OR : CO_MOI, 0.6);
-  bloomCercle(raqAdvAffichee, RAQ_MARGE + RAQ_H/2, 62 + cAdv*36, cAdv >= 1 ? CO_OR : CO_ADV, 0.6);
+  bloomCercle(maRaquette, HAUT - RAQ_MARGE - RAQ_H/2, 44 + cMoi*16, cMoi >= 1 ? CO_OR : CO_MOI, 0.34);
+  bloomCercle(raqAdvAffichee, RAQ_MARGE + RAQ_H/2, 44 + cAdv*16, cAdv >= 1 ? CO_OR : CO_ADV, 0.34);
 
   /* ALERTE DE MENACE : ma ligne de fond s'embrase quand une balle fonce sur moi,
      avec un curseur qui indique son point d'arrivée */
@@ -2584,9 +2586,9 @@ function appliquerBloom(){
   if (!effetsRiches) return;
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
-  ctx.globalAlpha = 0.62;
+  ctx.globalAlpha = 0.42;
   ctx.drawImage(cvBloom, 0, 0, LARG, HAUT);
-  ctx.globalAlpha = 0.30;
+  ctx.globalAlpha = 0.18;
   ctx.drawImage(cvBloom, -4, -4, LARG + 8, HAUT + 8);
   ctx.restore();
   ctx.globalCompositeOperation = "source-over";
@@ -2611,8 +2613,8 @@ function dessinerLumieres(Y){
     const coul = bouleFeu ? "251,146,60" : (enFeu ? "251,113,133" : "170,200,255");
     const R = 165;
     const g = ctx.createRadialGradient(b.x, Y(b.y), 0, b.x, Y(b.y), R);
-    g.addColorStop(0, "rgba(" + coul + ",0.22)");
-    g.addColorStop(0.4, "rgba(" + coul + ",0.08)");
+    g.addColorStop(0, "rgba(" + coul + ",0.13)");
+    g.addColorStop(0.4, "rgba(" + coul + ",0.05)");
     g.addColorStop(1, "rgba(" + coul + ",0)");
     ctx.fillStyle = g;
     ctx.fillRect(b.x - R, Y(b.y) - R, R*2, R*2);
@@ -2622,9 +2624,9 @@ function dessinerLumieres(Y){
   for (const [px, py, coul, lg] of [
       [maRaquette, HAUT - RAQ_MARGE, "34,211,238", lMoi],
       [raqAdvAffichee, RAQ_MARGE + RAQ_H, "244,113,181", lAdv]]){
-    const R = 120;
+    const R = 104;
     const g = ctx.createRadialGradient(px, py, 0, px, py, R);
-    g.addColorStop(0, "rgba(" + coul + ",0.17)");
+    g.addColorStop(0, "rgba(" + coul + ",0.085)");
     g.addColorStop(1, "rgba(" + coul + ",0)");
     ctx.fillStyle = g;
     ctx.fillRect(px - R, py - R, R*2, R*2);
@@ -2871,52 +2873,29 @@ function bandesJoueurs(){
 /* effets animés propres au thème, superposés au décor peint comme au procédural */
 /* Éclair d'orage : effet animé, conservé y compris par-dessus un décor peint. */
 function eclairOrage(t){
-const periode = 3.4;
-    const cycle = (t % periode) / periode;
-    if (cycle < 0.1){
-      const p = cycle / 0.1;                       /* 0 -> 1 sur la durée du flash */
-      const eclat = Math.pow(1 - p, 2.2);          /* éblouissement qui retombe vite */
-      const r = graine(Math.floor(t / periode) * 31 + 5);
-      const xArr = 40 + r() * (LARG - 80);
-
-      ctx.fillStyle = "rgba(237,233,254," + (0.42 * eclat).toFixed(3) + ")";
-      ctx.fillRect(0, 0, LARG, HAUT);
-      const gl = ctx.createRadialGradient(xArr, HAUT*0.35, 10, xArr, HAUT*0.35, HAUT*0.75);
-      gl.addColorStop(0, "rgba(233,213,255," + (0.5 * eclat).toFixed(3) + ")");
-      gl.addColorStop(1, "rgba(233,213,255,0)");
-      ctx.fillStyle = gl; ctx.fillRect(0, 0, LARG, HAUT);
-
-      const tracer = (largeur, couleur, flou) => {
-        ctx.strokeStyle = couleur; ctx.lineWidth = largeur;
-        ctx.shadowBlur = flou; ctx.shadowColor = "rgba(216,180,254,.95)";
-        ctx.lineCap = "round"; ctx.lineJoin = "round";
-        const rr = graine(Math.floor(t / periode) * 31 + 5);
-        let px = 40 + rr() * (LARG - 80), py = 0;
-        ctx.beginPath(); ctx.moveTo(px, py);
-        const pts = [];
-        for (let s = 0; s < 8; s++){
-          px += (rr() - 0.5) * 62; py += HAUT / 8;
-          ctx.lineTo(px, py); pts.push([px, py]);
-        }
-        ctx.stroke();
-        /* ramifications */
-        for (let k = 1; k < pts.length - 1; k += 2){
-          ctx.beginPath(); ctx.moveTo(pts[k][0], pts[k][1]);
-          let bx = pts[k][0], by = pts[k][1];
-          const sens = rr() < 0.5 ? -1 : 1;
-          for (let j = 0; j < 2; j++){ bx += sens * (14 + rr()*30); by += 18 + rr()*26; ctx.lineTo(bx, by); }
-          ctx.stroke();
-        }
-        ctx.shadowBlur = 0; ctx.lineCap = "butt"; ctx.lineJoin = "miter";
-      };
-      tracer(9, "rgba(196,181,253," + (0.30 * eclat).toFixed(3) + ")", 34);
-      tracer(4, "rgba(233,213,255," + (0.75 * eclat).toFixed(3) + ")", 26);
-      tracer(1.6, "rgba(255,255,255," + (0.95 * eclat).toFixed(3) + ")", 14);
-    } else if (cycle < 0.3){
-      const p = (cycle - 0.1) / 0.2;
-      ctx.fillStyle = "rgba(196,181,253," + (0.07 * (1 - p)).toFixed(3) + ")";
-      ctx.fillRect(0, 0, LARG, HAUT);
-    }
+  /* Le décor peint porte ses propres éclairs : on n'ajoute qu'un embrasement
+     lumineux. Le tracé en polyligne, qui faisait bricolé, est supprimé. */
+  const periode = 3.6;
+  const cycle = (t % periode) / periode;
+  if (cycle < 0.085){
+    const p = cycle / 0.085;
+    const eclat = Math.pow(1 - p, 2.4);
+    const r = graine(Math.floor(t / periode) * 31 + 5);
+    const xArr = 60 + r() * (LARG - 120);
+    ctx.fillStyle = "rgba(237,233,254," + (0.30 * eclat).toFixed(3) + ")";
+    ctx.fillRect(0, 0, LARG, HAUT);
+    const gl = ctx.createRadialGradient(xArr, HAUT*0.28, 8, xArr, HAUT*0.28, HAUT*0.8);
+    gl.addColorStop(0, "rgba(233,213,255," + (0.42 * eclat).toFixed(3) + ")");
+    gl.addColorStop(0.45, "rgba(196,181,253," + (0.14 * eclat).toFixed(3) + ")");
+    gl.addColorStop(1, "rgba(196,181,253,0)");
+    ctx.fillStyle = gl;
+    ctx.fillRect(0, 0, LARG, HAUT);
+    bloomCercle(xArr, HAUT*0.28, 300, "#C4B5FD", 0.5 * eclat);
+  } else if (cycle < 0.26){
+    const p = (cycle - 0.085) / 0.175;
+    ctx.fillStyle = "rgba(196,181,253," + (0.05 * (1 - p)).toFixed(3) + ")";
+    ctx.fillRect(0, 0, LARG, HAUT);
+  }
 }
 
 /* Éléments ANIMÉS seulement — ce qui se superpose légitimement à un décor peint.
@@ -3100,49 +3079,40 @@ function graine(n){
   return function(){ s = (s * 1664525 + 1013904223) | 0; return ((s >>> 8) / 16777216); };
 }
 function dessinerFissure(cote, f, Y){
+  /* La brèche appartient à la PAROI : entaille déchiquetée creusée dans la
+     bordure, énergie qui s'en échappe, aux couleurs de l'arène. */
+  const A = areneCourante();
   const xm = cote === 0 ? murG_() : murD_();
   const dir = cote === 0 ? 1 : -1;
   const niv = Math.min(f.niv, FISSURE_TROU);
-  const long = 16 + niv * 12;
   const yA = Y(f.y);
-  ctx.lineCap = "round"; ctx.lineJoin = "round";
-  for (let passe = 0; passe < 2; passe++){
-    const r = graine(Math.round(f.y * 13) + cote * 7919);
-    ctx.strokeStyle = passe === 0 ? "rgba(6,10,20,.9)"
-      : (f.niv >= FISSURE_TROU ? "rgba(203,213,225,.92)" : "rgba(124,138,165,.78)");
-    ctx.lineWidth = passe === 0 ? (niv >= 3 ? 3.8 : 2.6) : (niv >= 3 ? 1.6 : 1);
-    ctx.beginPath();
-    let x = xm, y = yA - (5 + r()*10);
-    ctx.moveTo(x, y);
-    const nSeg = 4 + niv;
-    for (let i = 0; i < nSeg; i++){
-      x += dir * (2 + r() * (long / nSeg) * 1.5);
-      y += (r() - 0.45) * 16;
-      ctx.lineTo(x, y);
-      if (niv >= 2 && (i === 1 || i === nSeg - 2)){
-        ctx.moveTo(x, y);
-        let xx = x, yy = y;
-        const sens = r() < 0.5 ? -1 : 1;
-        for (let j = 0; j < 2; j++){
-          xx += dir * (2 + r()*7);
-          yy += sens * (4 + r()*9);
-          ctx.lineTo(xx, yy);
-        }
-        ctx.moveTo(x, y);
-      }
-    }
-    ctx.stroke();
+  const h = 30 + niv * 15;
+  const prof = 5 + niv * 5;
+  const r = graine(Math.round(f.y * 13) + cote * 7919);
+
+  const g = ctx.createRadialGradient(xm, yA, 2, xm, yA, h * 1.1);
+  g.addColorStop(0, rgba(A.accent, 0.42));
+  g.addColorStop(0.45, rgba(A.accent, 0.13));
+  g.addColorStop(1, rgba(A.accent, 0));
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(xm, yA, h * 1.1, 0, Math.PI*2); ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(xm - dir * CADRE_X, yA - h/2);
+  const n = 5 + niv;
+  for (let i = 0; i <= n; i++){
+    const u = i / n;
+    const px = xm + dir * prof * (0.3 + r() * 0.9) * Math.sin(u * Math.PI);
+    ctx.lineTo(px, yA - h/2 + h * u);
   }
-  if (f.niv >= FISSURE_TROU){
-    const r = graine(Math.round(f.y * 29) + cote);
-    ctx.fillStyle = "rgba(2,4,10,.94)";
-    for (let i = 0; i < 3; i++){
-      ctx.beginPath();
-      ctx.ellipse(xm + dir * r() * 4, yA + (r()-0.5)*18, 4 + r()*4, 9 + r()*12, (r()-0.5)*0.8, 0, Math.PI*2);
-      ctx.fill();
-    }
-  }
-  ctx.lineCap = "butt"; ctx.lineJoin = "miter";
+  ctx.lineTo(xm - dir * CADRE_X, yA + h/2);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(3,5,12,.88)";
+  ctx.fill();
+  ctx.strokeStyle = rgba(A.accent, niv >= FISSURE_TROU ? 0.95 : 0.6);
+  ctx.lineWidth = niv >= FISSURE_TROU ? 2 : 1.3;
+  ctx.stroke();
+  bloomCercle(xm, yA, h * 1.4, A.accent, niv >= FISSURE_TROU ? 0.5 : 0.3);
 }
 
 /* contour rocheux déterministe (même bloc = même silhouette) */
@@ -3163,7 +3133,7 @@ function cheminRoche(x, y, l, h, germe){
 function dessinerBloc(o, yEcran, t){
   const A = areneCourante();
   const g = o.germe || 1;
-  const abime = (o.pv !== undefined && o.pv < PV_BLOC);
+  const abime = !!o.ebreche;
   if (A.bloc === "glace"){
     /* glaçon translucide : on voit le fond au travers */
     ctx.save();
