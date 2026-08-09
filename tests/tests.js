@@ -269,10 +269,24 @@ titre("8quater. Mise en page stable et rendu léger");
   verifier("flou d'ombre définitivement neutralisé",
     /function flou\(v\)\{ return 0; \}/.test(script.replace(/\s+/g, " ").replace("function flou(v){ return 0; }", "function flou(v){ return 0; }")) ||
     /return 0;/.test((script.match(/function flou\(v\)\{[^}]*\}/) || [""])[0]));
-  verifier("rendu léger par défaut", /let effetsRiches = false;/.test(script));
-  verifier("repli progressif : grain puis bloom",
-    /if \(effetsRiches\)\{[^}]*\}\s*else if \(bloomActif\)/.test(script.replace(/\n/g, "")));
-  verifier("particules plafonnées", /MAX_PARTICULES/.test(script));
+  verifier("trois crans de rendu", /const QUALITES = \{/.test(script) &&
+    /minimal:/.test(script) && /normal:/.test(script) && /max:/.test(script));
+  verifier("cran déduit d'une mesure, pas du modèle",
+    /function mesurerPuissance\(/.test(script) && /performance\.now\(\) - t0/.test(script),
+    "iOS n'expose pas le modèle d'iPhone");
+  verifier("réglage sorti de la barre de jeu et placé au menu",
+    !/btnEffets/.test(html) && /btnQualite/.test(html) && /GRAPHISMES/.test(html));
+  verifier("repli d'un seul cran à la fois",
+    /const ordre = \["max", "normal", "minimal"\]/.test(script));
+  verifier("choix mémorisé", /localStorage\.setItem\("duo_qualite"/.test(script));
+  verifier("particules plafonnées par cran", /cfgQualite\(\)\.particules/.test(script));
+  {
+    /* le calibrage doit être lu APRÈS les déclarations qu'il utilise */
+    const iDecl = script.indexOf("const QUALITES = {");
+    const iInit = script.indexOf("function mesurerPuissance(");
+    verifier("calibrage placé après ses dépendances", iDecl < iInit,
+      "sinon zone morte temporelle au chargement");
+  }
 }
 
 /* ======================= 8quinquies. ENTRÉE EN JEU ET CONFORT ======================= */
