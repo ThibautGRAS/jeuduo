@@ -1,0 +1,171 @@
+# MEMOIRE.md — ce que le projet a appris
+
+Mémoire technique de `jeuduo`. Complète `CLAUDE.md`, qui décrit la méthode.
+
+---
+
+## 1. Architecture
+
+### Réseau
+
+Pair-à-pair par **PeerJS**, sans serveur de jeu. L'hôte fait autorité sur toute
+la physique ; l'invité envoie sa raquette et affiche ce qu'il reçoit.
+
+**Deux canaux, et c'est essentiel :**
+
+| Canal | Fiabilité | Contenu |
+|---|---|---|
+| `conn` | non fiable | positions, ping, effets visuels — un paquet perdu est rattrapé 33 ms plus tard |
+| `connVoix` | fiable | **messages de contrôle** (`lu`, `vc`, `rm`, `nm`), photos, clips vocaux |
+
+Tout message dont la perte bloquerait la partie passe par `envoyerFiable()`,
+qui met en file d'attente si le canal fiable n'est pas encore ouvert.
+
+**Mise en relation** : deux serveurs de signalisation, l'officiel PeerJS et
+`peerjs.92k.de` en secours. Quand le secours est utilisé, le code de partie
+passe à 5 caractères, le `2` final routant l'invité vers le bon serveur.
+
+**Traversée de réseau** : STUN Google + relais TURN Metered (identifiants
+statiques, conçus pour vivre côté client). Le relais ne sert que si le direct
+échoue — le HUD affiche `DIRECT` ou `RELAIS` pour le vérifier sur pièces.
+
+### Boucle de jeu
+
+Pas de temps **fixe** à 60 Hz avec accumulateur : la physique est identique sur
+un écran 60, 90 ou 120 Hz. Rattrapage borné à 5 pas après une mise en veille.
+
+Phases : `regles` → `vs` → `compte` → `jeu` → `recap` → `vice` → … → `fin`.
+
+### Compensation de latence
+
+L'hôte lit sa raquette en direct, celle de l'invité arrive avec un demi-ping de
+retard. Il la **projette en avant** avec sa vitesse reçue et lui accorde une
+tolérance proportionnelle au ping (lissé par moyenne glissante). Sans cela, à
+200 ms de ping, 40 % des interceptions de l'invité étaient ignorées.
+
+---
+
+## 2. Réglages calibrés
+
+Ces valeurs ont été réglées par mesure, pas au jugé. Les changer demande de
+relancer la suite.
+
+| Réglage | Valeur | Justification |
+|---|---|---|
+| Vitesse au service | 7,4 | −20 % après retour de jeu : c'était trop rapide |
+| Plafond normal / éclair | 15,2 / 18,4 | hiérarchie vérifiée par test |
+| Plancher balle en feu | 16,8 | sous le plafond éclair |
+| Lift : gain de vitesse | +52 % | en dessous, le geste n'apportait rien |
+| Lift : seuil de survol | 62 % du spin max | un geste moyen ne doit pas suffire |
+| Attraction du VIDE | 0,5 sur 245 px | balayage de 5 valeurs ; 0,55 faisait traîner la balle |
+| Immunité des blocs | 340 ms | un bloc oscillant recognait la balle à l'image suivante |
+| IA facile / moyen / difficile | 37 / 64 / 90 % d'interception | mesuré sur 3 000 échanges simulés |
+| Cadre des arènes | 42 × 50 | correspond exactement au cadre peint des décors |
+
+**Arènes** : six, tirées au sort dès la manche 1 ou imposées depuis le menu.
+Chacune a sa matière (facteur de vitesse, chaos, absorption, attraction), son
+décor peint, sa musique et son nombre de bûches (une ou deux).
+
+**Bûches centrales** : indestructibles, taille fixe, une simple fêlure au
+premier choc. Seuls les éclats arrachés aux murs sont pulvérisables.
+
+---
+
+## 3. Pièges rencontrés
+
+Chacun a coûté du temps, et chacun est désormais surveillé par la suite.
+
+### Le joueur 0 est falsy
+`if (gagnant)` sautait silencieusement le joueur 0. Toujours comparer
+explicitement : `=== 0`, `>= 0`. Vaut aussi pour les horodatages : `!o.tImpact`
+contournait l'immunité quand la valeur était nulle.
+
+### Fonction appelée mais jamais définie
+Une édition partiellement appliquée a laissé `dessinerRaquette` invoquée sans
+corps. `node --check` n'a rien vu, la version est partie en production. La suite
+reconstruit désormais la liste des fonctions définies et la confronte aux
+appels.
+
+### Édition partielle
+Un script de remplacement qui échoue en cours de route ne doit rien écrire, et
+il faut **relire ce qui a réellement été appliqué** avant de continuer. Deux
+incidents : les fonctions de raquette manquantes, et un numéro de version resté
+en arrière parce que l'incrément faisait partie du script échoué.
+
+### Publication malgré un test rouge
+Enchaîner avec `&&`. Des commandes séparées par des retours à la ligne ont
+poussé une version alors que la suite venait d'échouer.
+
+### `animation-fill-mode: both`
+L'élément applique son **premier état pendant le délai** : un éclair blanc à
+85 % couvrait tout l'écran VS en permanence. Préférer une opacité par défaut
+explicite et aucun remplissage.
+
+### `dvh` sur iOS
+L'unité change de valeur quand Safari masque sa barre d'adresse au défilement,
+d'où des sauts de mise en page inexplicables. Utiliser `svh`.
+
+### Hauteur de barre variable
+Un nom long passant sur deux lignes, ou une pastille de plus selon le format de
+match, faisait grandir le bandeau et **décalait le terrain centré**. Figer la
+hauteur des barres, tronquer plutôt que renvoyer à la ligne.
+
+### Panneau plus haut que le terrain
+Avec un contenu centré, le dépassement se produit **en haut et en bas à la
+fois**, sans possibilité de défiler. Rendre les panneaux défilables et compacter
+le contenu.
+
+### `shadowBlur` du canevas
+Force une passe de rendu séparée par objet : 29 appels suffisaient à faire
+chuter la fluidité et à déclencher le repli automatique des effets, ce qui
+donnait l'impression que « la lumière disparaît après le premier échange ». Le
+bloom rend le même service pour une fraction du prix. Le flou est neutralisé
+partout.
+
+### Traversée de raquette
+Trois causes cumulées, corrigées séparément : la physique lisait une position de
+raquette jamais rafraîchie en solo, la détection ne testait que la position
+finale au lieu du franchissement, et l'entrée latérale n'était pas couverte.
+
+### Plafond incohérent
+La traînée était plafonnée à 12 points à l'empilement alors que le mode lifté en
+demandait 20 : la traîne longue était inatteignable. Vérifier qu'un plafond est
+bien au-dessus de la plus grande valeur demandée.
+
+### Secrets
+Une clé secrète Metered a été publiée dans un dépôt public avant d'être retirée
+et régénérée. Distinguer les identifiants **conçus pour le client** (TURN
+statiques) des clés serveur. Le dépôt est public : rien de sensible dedans.
+
+---
+
+## 4. Points en suspens
+
+Par ordre d'intérêt, issus de l'audit :
+
+1. **Trafic réseau** — 620 octets à 30 Hz, dont environ 2 Ko/s de données qui ne
+   changent jamais en cours de match. Un envoi initial fiable pour le statique
+   et une cadence réduite pour le décor feraient gagner un bon quart.
+2. **Clavier et pause** — aucun gestionnaire de touches, aucune interruption
+   possible en cours de partie.
+3. **Manifeste PWA** — pas d'ajout à l'écran d'accueil ni de plein écran.
+4. **Volume** — activable ou coupé, sans réglage intermédiaire.
+5. **Compteur de duels** — local à chaque appareil, donc chacun compte sa propre
+   vision du score.
+
+Écartés volontairement : découper le fichier en modules, et ajouter un vrai
+serveur de jeu. L'architecture hôte-autoritaire suffit largement pour du duel
+entre proches.
+
+---
+
+## 5. Repères de version
+
+| Version | Apport |
+|---|---|
+| 1 → 3 | Pong pair-à-pair, direction artistique néon, orbes de bonus |
+| 5 | Manches, vices secrets, smash chargé, mort subite |
+| 6 → 7 | Solo contre IA, micro, arènes à matière, TURN, diagnostic réseau |
+| 8 | Modes arcade et classique, écran VERSUS, récap de manche |
+| 9 | Décors peints, éclairage puis son retrait, arc électrique, rimes |
+| 10 | Fiabilité du canal de contrôle, reprise après coupure, suite de tests |
