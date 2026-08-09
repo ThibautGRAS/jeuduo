@@ -270,6 +270,15 @@ canvas{
   text-shadow:0 0 14px rgba(251,191,36,.28);
 }
 #recapDuels{opacity:.75}
+#voileRecords{
+  display:grid;grid-template-columns:auto 1fr 1fr;gap:3px 12px;
+  font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.08em;
+  color:var(--sourd);margin-top:2px;
+}
+#voileRecords .t{color:rgba(234,240,255,.55);text-align:left}
+#voileRecords .m{color:var(--moi);text-align:center;font-weight:700}
+#voileRecords .a{color:var(--adv);text-align:center;font-weight:700}
+#voileRecords .gagne{text-shadow:0 0 10px currentColor}
 #voilePhrase{
   font-size:13px;line-height:1.6;color:var(--or);text-align:center;max-width:320px;
   text-shadow:0 0 14px rgba(251,191,36,.28);
@@ -388,7 +397,7 @@ canvas{
 
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v10.5 · 2026-08-09</div>
+  <div id="version">DUO v10.6 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -496,6 +505,7 @@ canvas{
       <div class="grand" id="voileTitre"></div>
       <div class="petit" id="voileSous"></div>
       <div id="voilePhrase"></div>
+      <div id="voileRecords" class="cache"></div>
       <button id="btnRevanche" class="cache">Revanche</button>
       <button id="btnMenu" class="secondaire cache">Menu principal</button>
     </div>
@@ -513,7 +523,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "10.5";
+const VERSION = "10.6";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -828,6 +838,7 @@ let monNom = "JOUEUR", nomAdverse = "";
 let rttMs = 60;                      /* aller-retour lissé, pour la compensation de latence */
 let voieConnexion = "";              /* "DIRECT" ou "RELAIS", mesuré sur la session */
 let versionAdverse = "";             /* renseignée si elle diffère de la nôtre */
+let recordsAdverse = null;           /* records reçus en fin de match */
 function majPing(){
   elPing.textContent = Math.round(rttMs) + " ms" + (voieConnexion ? " · " + voieConnexion : "");
 }
@@ -1430,6 +1441,30 @@ function cloturerRecords(jAiGagne){
   ecrireRecords(r);
   return battu;
 }
+/* Tableau comparatif : un record n'a de sel que confronté à quelqu'un. */
+function majRecordsVoile(){
+  const el = document.getElementById("voileRecords");
+  if (!el) return;
+  const moi = lireRecords();
+  if (modeSolo || !recordsAdverse){ el.classList.add("cache"); return; }
+  const adv = recordsAdverse;
+  el.innerHTML = "";
+  const cellule = (texte, classe) => {
+    const d = document.createElement("div");
+    d.className = classe; d.textContent = texte; el.appendChild(d);
+  };
+  cellule("", "t");
+  cellule(monNom, "m");
+  cellule(nomAdverse || "ADVERSAIRE", "a");
+  for (const [libelle, cle] of [["ÉCHANGE", "echange"], ["SÉRIE", "serie"], ["REMONTÉE", "remontee"]]){
+    const a = moi[cle] || 0, b = adv[cle] || 0;
+    cellule(libelle, "t");
+    cellule(String(a), "m" + (a > b ? " gagne" : ""));
+    cellule(String(b), "a" + (b > a ? " gagne" : ""));
+  }
+  el.classList.remove("cache");
+}
+
 function texteRecords(){
   const r = lireRecords();
   if (!r.echange && !r.serie && !r.remontee) return "";
@@ -1835,7 +1870,7 @@ function envoyerEtatHote(){
          Math.round(arcOrage.x1), Math.round(arcOrage.y1),
          Math.round(arcOrage.x2), Math.round(arcOrage.y2),
          Math.round(arcOrage.debut - performance.now())],
-    ma: manches, mu: Math.round(margeMur), fe: enFeu ? 1 : 0,
+    ma: manches, mu: Math.round(margeMur), fe: enFeu ? 1 : 0, re: rebondsEchange,
     ch: [Math.round(chargeLocal*100), Math.round(chargeHaut*100)],
     vw: viceGagnant, vh: [vices[0] ? 1 : 0, vices[1] ? 1 : 0],
     sk: sarcasmeIdx, rg: recapGagnant, sm: sarcasmeMatch, ra: recapArene,
@@ -1919,9 +1954,16 @@ function recevoir(m){
       vfx.invVictime = m.iv; vfx.finInv = m.iv >= 0 ? performance.now() + 500 : 0;
       vfx.brouVictime = m.bv; vfx.finBrou = m.bv >= 0 ? performance.now() + 500 : 0;
       vfx.gravSens = m.gs;
-      const scoreChange = m.s[0] !== etat.score[0] || m.s[1] !== etat.score[1];
+      /* La physique ne tourne que chez l'hôte : sans ces deux lignes, les
+         records d'un invité ne progressaient jamais. */
+      const ancienScore = [etat.score[0], etat.score[1]];
+      const scoreChange = m.s[0] !== ancienScore[0] || m.s[1] !== ancienScore[1];
       etat.score = m.s;
-      if (scoreChange) majScore(true); else majScore(false);
+      if (scoreChange){
+        for (let j = 0; j < 2; j++) if (m.s[j] > ancienScore[j]) noterPoint(j);
+        majScore(true);
+      } else majScore(false);
+      if (typeof m.re === "number") noterEchange(m.re);
       if (m.ph !== phInvite){
         gererPhaseInvite(phInvite, m.ph);
         phInvite = m.ph;
@@ -1944,6 +1986,10 @@ function recevoir(m){
       if (typeof m.mg === "number" && m.mg > 0) MANCHES_GAGNANTES = m.mg;
       if (Array.isArray(m.sa) && m.sa.length) sequenceArenes = m.sa;
       majScore(false);
+      break;
+    case "rec":
+      recordsAdverse = m.r || null;
+      majRecordsVoile();
       break;
     case "ver":
       /* Sans ce contrôle, un adversaire resté sur une version en cache pouvait
@@ -1973,7 +2019,10 @@ function recevoir(m){
 function gererPhaseInvite(avant, apres){
   if (apres === "compte"){ masquerPanneaux(); if (avant === "fin"){ monViceNom = null; chargeLocal = 0; } }
   if (avant === "compte" && apres === "jeu") sonGo();
-  if (apres === "vs"){ masquerPanneaux(); afficherVersus(); }
+  if (apres === "vs"){
+    recordEnCours = { echange: 0, serie: 0, dernierMarqueur: -1, retard: 0 };
+    masquerPanneaux(); afficherVersus();
+  }
   if (apres === "recap"){ masquerPanneaux(); afficherRecap(); sonManche(); }
   if (apres === "vice"){
     masquerPanneaux();
@@ -2602,6 +2651,7 @@ function envoyerConfig(){
 
 function demarrerMatch(){
   recordEnCours = { echange: 0, serie: 0, dernierMarqueur: -1, retard: 0 };
+  recordsAdverse = null;
   melangerArenes();
   envoyerConfig();
   construireObstacles();
@@ -2771,8 +2821,13 @@ function afficherFin(){
   voileTitre.style.filter = jAiGagne
     ? "drop-shadow(0 0 26px rgba(251,191,36,.6))"
     : "drop-shadow(0 0 20px rgba(124,138,165,.4))";
-  const rec = texteRecords();
-  if (rec) $("voilePhrase").textContent += "\n" + rec;
+  if (!modeSolo){
+    envoyerFiable({ t: "rec", r: lireRecords() });
+    majRecordsVoile();
+  } else {
+    const rec = texteRecords();
+    if (rec) $("voilePhrase").textContent += "\n" + rec;
+  }
   sonFin(jAiGagne);
 }
 btnRevanche.addEventListener("click", () => {
