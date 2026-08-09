@@ -158,10 +158,12 @@ statiques) des clés serveur. Le dépôt est public : rien de sensible dedans.
 Quatre pistes retenues, à construire et éprouver une par une. Toutes réutilisent
 le moteur et les six arènes existantes.
 
-**GRAVITÉ** — chaque joueur traîne un puits d'attraction placé devant sa
-raquette et qui la suit. Un seul geste pilote alors deux choses : où l'on
-défend, et comment on tord la trajectoire chez l'adversaire. Prolonge
-directement la mécanique de l'arène VIDE, sans commande nouvelle.
+**GRAVITÉ** — *construit en v11.0.* Le puits est projeté dans la moitié
+ADVERSE, à l'aplomb de sa propre raquette — et non devant soi, ce qui aurait
+facilité sa propre défense. Calibré à 0,7 de force sur 245 px : le point
+d'arrivée se déplace d'environ 100 px selon la position du puits, soit une
+largeur de raquette. Aucune donnée réseau supplémentaire, les puits se
+déduisent des raquettes déjà synchronisées.
 
 **CASSE-MUR** — un mur de blocs occupe la moitié du terrain, dans la matière de
 l'arène : la glace ralentit, la lave accélère, les cristaux attirent. Chacun
