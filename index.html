@@ -302,7 +302,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v8.6 · 2026-08-07</div>
+  <div id="version">DUO v8.6.1 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -418,7 +418,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "8.6";
+const VERSION = "8.6.1";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -1594,7 +1594,7 @@ function construireObstacles(){
     obstacles.push({
       base: LARG/2, y: HAUT/2 + decalY[i], l: OBST_L, h: OBST_H,
       amp: 130 + i*36, vitOsc: 0.7 + i*0.32, phase: i*2.1, x: LARG/2 - OBST_L/2,
-      germe: 1000 + i * 977, pv: PV_BLOC, tImpact: 0,
+      germe: 1000 + i * 977, pv: PV_BLOC, tImpact: -1e9,
     });
   }
 }
@@ -1782,7 +1782,7 @@ function physique(){
            un bloc qui oscille revient dans la balle à l'image suivante, ou deux
            balles le touchent dans la même image, et il éclatait au premier contact. */
         const tNow = performance.now();
-        if (!o.tImpact || tNow - o.tImpact >= IMMU_BLOC){
+        if (tNow - (o.tImpact === undefined ? -1e9 : o.tImpact) >= IMMU_BLOC){
           o.tImpact = tNow;
           o.pv = (o.pv === undefined ? PV_BLOC : o.pv) - 1;
           if (o.pv <= 0){
