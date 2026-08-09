@@ -122,14 +122,21 @@ button.choisi{
      saut de mise en page quand Safari masque puis réaffiche sa barre. */
   #jeu{ --terrain:min(92vw, calc((100svh - 215px) * 0.75), 540px); }
 }
-#hud{display:flex;justify-content:space-between;align-items:center;width:var(--terrain);font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--sourd)}
-#score{font-size:26px;font-weight:700;letter-spacing:.1em;color:var(--texte);display:flex;align-items:center;gap:10px}
+#hud{
+  display:flex;justify-content:space-between;align-items:center;
+  width:var(--terrain);height:36px;flex:0 0 36px;
+  font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--sourd);
+  /* hauteur figée : un nom long ou un format à 5 manches faisait grandir la
+     barre, et le terrain — centré — se décalait d'autant. */
+}
+#role{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ping{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+#score{font-size:24px;font-weight:700;letter-spacing:.06em;color:var(--texte);display:flex;align-items:center;gap:8px;white-space:nowrap;flex:0 0 auto}
 #score .s1{color:var(--moi);text-shadow:0 0 14px rgba(34,211,238,.5)}
 #score .s2{color:var(--adv);text-shadow:0 0 14px rgba(244,113,181,.5)}
 #score .pop{display:inline-block;animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
 .dots{font-size:11px;letter-spacing:.2em}
 @keyframes pop{from{transform:scale(1.9)}to{transform:scale(1)}}
-#ping{min-width:64px;text-align:right}
 #scene{position:relative;width:var(--terrain);aspect-ratio:540 / 720}
 canvas{
   display:block;width:100%;height:100%;border-radius:18px;border:1px solid var(--bord);
@@ -274,13 +281,8 @@ canvas{
 .carteVice:active{transform:scale(.97);border-color:var(--vice)}
 .carteVice .nomV{font-weight:700;letter-spacing:.1em;color:var(--vice);font-size:12.5px}
 .carteVice .descV{font-size:10.5px;color:var(--sourd);line-height:1.35;margin-top:2px}
-#barreBasse{display:flex;gap:10px;width:var(--terrain);align-items:center}
-#bandeau{
-  flex:1;font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.18em;
-  min-height:18px;color:var(--or);text-shadow:0 0 12px rgba(251,191,36,.5);
-  transition:opacity .3s;opacity:0;
-}
-#bandeau.actif{opacity:1}
+#barreBasse{display:flex;gap:10px;width:var(--terrain);height:38px;flex:0 0 38px;align-items:center;justify-content:space-between}
+.espace{flex:1}
 .icone{
   width:34px;height:34px;flex:0 0 34px;padding:0;font-size:14px;line-height:34px;
   border-radius:10px;background:rgba(255,255,255,.05);
@@ -367,7 +369,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v10.3 · 2026-08-09</div>
+  <div id="version">DUO v10.4 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -475,9 +477,9 @@ canvas{
   </div>
   <div id="barreBasse">
     <button id="btnMusique" class="icone" aria-label="Musique">♪</button>
-    <div id="bandeau"></div>
     <div id="micEtat" class="cache">REC</div>
-    <button id="btnEffets" class="icone actif" aria-label="Effets visuels">✦</button>
+    <div class="espace"></div>
+    <button id="btnEffets" class="icone" aria-label="Effets visuels">✦</button>
     <button id="btnMicToggle" class="icone eteint" aria-label="Micro">🎙</button>
   </div>
 </div>
@@ -486,7 +488,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "10.3";
+const VERSION = "10.4";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -949,7 +951,9 @@ function recevoirFiable(m){
 /* ================= EFFETS VISUELS ================= */
 const traines = [], particules = [];
 let secousse = 0, flashBut = 0;
+const MAX_PARTICULES = 150;
 function explosion(x, y, couleur, n, force){
+  if (particules.length > MAX_PARTICULES) return;
   for (let i = 0; i < n; i++){
     const a = Math.random() * Math.PI * 2;
     const v = (0.5 + Math.random()) * force;
@@ -965,18 +969,33 @@ const cv = $("cv"), ctx = cv.getContext("2d");
 const elPing = $("ping"), elRole = $("role");
 const pts1 = $("pts1"), pts2 = $("pts2"), dots1 = $("dots1"), dots2 = $("dots2");
 const voile = $("voile"), voileTitre = $("voileTitre"), voileSous = $("voileSous");
-const btnRevanche = $("btnRevanche"), bandeau = $("bandeau");
+const btnRevanche = $("btnRevanche");
 const panRegles = $("regles"), etatLu = $("etatLu"), btnLu = $("btnLu");
 const panChoixVice = $("choixVice"), panAttenteVice = $("attenteVice");
-let bandeauTimer = 0;
 
+/* L'annonce s'affiche dans le terrain plutôt que sous lui : le texte sous le
+   jeu changeait de hauteur et faisait bouger toute la mise en page. */
+const annonce = { texte: "", couleur: "#FBBF24", fin: 0 };
 function annoncer(texte, couleur){
-  bandeau.textContent = texte;
-  bandeau.style.color = couleur;
-  bandeau.style.textShadow = "0 0 12px " + couleur;
-  bandeau.classList.add("actif");
-  clearTimeout(bandeauTimer);
-  bandeauTimer = setTimeout(() => bandeau.classList.remove("actif"), 1800);
+  annonce.texte = texte;
+  annonce.couleur = couleur || "#FBBF24";
+  annonce.fin = performance.now() + 1700;
+}
+function dessinerAnnonce(){
+  const reste = annonce.fin - performance.now();
+  if (reste <= 0 || !annonce.texte) return;
+  const a = Math.min(1, reste / 350) * Math.min(1, (1700 - reste) / 160);
+  ctx.save();
+  ctx.globalAlpha = Math.max(0, a);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.font = "700 15px 'JetBrains Mono', monospace";
+  const y = HAUT * 0.16;
+  const l = ctx.measureText(annonce.texte).width + 26;
+  ctx.fillStyle = "rgba(4,6,12,.62)";
+  arrondi(LARG/2 - l/2, y - 14, l, 28, 8);
+  ctx.fillStyle = annonce.couleur;
+  ctx.fillText(annonce.texte, LARG/2, y + 1);
+  ctx.restore();
 }
 function masquerPanneaux(){
   const r = document.getElementById("recap");
@@ -1638,12 +1657,13 @@ function demarrerPartie(){
 /* ================= RÈGLES — double validation ================= */
 document.getElementById("btnEffets").addEventListener("click", () => {
   effetsRiches = !effetsRiches;
+  if (effetsRiches) bloomActif = true;
   try{ localStorage.setItem("duo_effets", effetsRiches ? "1" : "0"); }catch(e){}
   tempsFrames = [];
   majIcones();
 });
 (function initEffets(){
-  try{ if (localStorage.getItem("duo_effets") === "0") effetsRiches = false; }catch(e){}
+  try{ if (localStorage.getItem("duo_effets") === "1") effetsRiches = true; }catch(e){}
 })();
 document.getElementById("btnMusique").addEventListener("click", basculerMusique);
 document.getElementById("btnMicToggle").addEventListener("click", basculerMicro);
@@ -2880,6 +2900,7 @@ function dessiner(){
   }
 
   /* particules */
+  while (particules.length > MAX_PARTICULES) particules.shift();
   for (let i = particules.length - 1; i >= 0; i--){
     const p = particules[i];
     p.x += p.vx; p.y += p.vy; p.vx *= 0.94; p.vy *= 0.94; p.vie -= 0.03;
@@ -2949,6 +2970,7 @@ function dessiner(){
     ctx.shadowBlur = flou(0);
   }
 
+  dessinerAnnonce();
   appliquerBloom();
   appliquerGrain();
 
@@ -2963,7 +2985,9 @@ function dessiner(){
    Le bloom passe par un canevas au quart de résolution : on y peint les sources
    lumineuses, puis on le recompose agrandi en mode "lighter". L'agrandissement
    fait le flou gratuitement, sans filtre coûteux. */
-let effetsRiches = true;
+/* Rendu léger par défaut : le bloom, peu coûteux, reste actif ; le grain et les
+   passes supplémentaires ne s'ajoutent que si on les demande. */
+let effetsRiches = false;
 const ECHB = 0.25;
 const cvBloom = document.createElement("canvas");
 cvBloom.width = Math.round(LARG * ECHB);
@@ -2984,17 +3008,20 @@ function construireGrain(){
   g.putImageData(img, 0, 0);
   motifGrain = ctx.createPattern(c, "repeat");
 }
-/* Le flou d'ombre du canevas force une passe de rendu par objet : très coûteux
-   sur mobile. Quand le bloom est actif, il fait le même travail bien moins cher,
-   donc on neutralise le flou ; en mode allégé (sans bloom) on le conserve. */
-function flou(v){ return effetsRiches ? 0 : v; }
+/* Le flou d'ombre du canevas force une passe de rendu séparée par objet : c'est
+   l'opération la plus coûteuse du canevas sur mobile. Le bloom rend le même
+   service pour une fraction du prix, donc le flou est désormais toujours
+   désactivé — y compris en mode allégé, où il pénalisait justement les
+   appareils les plus lents. */
+function flou(v){ return 0; }
 
+let bloomActif = true;
 function preparerBloom(){
-  if (!effetsRiches) return;
+  if (!bloomActif) return;
   ctxB.clearRect(0, 0, cvBloom.width, cvBloom.height);
 }
 function bloomCercle(x, y, r, couleur, alpha){
-  if (!effetsRiches) return;
+  if (!bloomActif) return;
   const cx = x * ECHB, cy = y * ECHB, cr = Math.max(1, r * ECHB);
   const g = ctxB.createRadialGradient(cx, cy, 0, cx, cy, cr);
   g.addColorStop(0, rgba(couleur, alpha));
@@ -3004,7 +3031,7 @@ function bloomCercle(x, y, r, couleur, alpha){
   ctxB.beginPath(); ctxB.arc(cx, cy, cr, 0, Math.PI*2); ctxB.fill();
 }
 function appliquerBloom(){
-  if (!effetsRiches) return;
+  if (!bloomActif) return;
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
   ctx.globalAlpha = 0.5;
@@ -3039,11 +3066,9 @@ function surveillerPerf(dtMs){
   if (now - derniereVerifPerf < 6000 || tempsFrames.length < 140) return;
   derniereVerifPerf = now;
   const moy = tempsFrames.reduce((a, x) => a + x, 0) / tempsFrames.length;
-  if (moy > 33 && effetsRiches){
-    effetsRiches = false;
-    majIcones();
-    annoncer("EFFETS ALLÉGÉS POUR LA FLUIDITÉ", "#8AB4FF");
-  }
+  if (moy <= 33) return;
+  if (effetsRiches){ effetsRiches = false; majIcones(); annoncer("RENDU ALLÉGÉ", "#8AB4FF"); }
+  else if (bloomActif){ bloomActif = false; annoncer("RENDU MINIMAL", "#8AB4FF"); }
 }
 
 /* Traînée continue : au lieu d'une file de disques, on construit un ruban
