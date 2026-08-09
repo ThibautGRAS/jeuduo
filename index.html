@@ -134,12 +134,12 @@ button.choisi{
   gap:8px;width:100%;height:100%;justify-content:center;
   /* Le terrain est borné par la largeur ET par la hauteur disponible : sans ça,
      sur écran court il débordait et la barre du bas sortait de l'écran. */
-  --terrain:min(92vw, calc((100vh - 215px) * 0.75), 540px);
+  --terrain:min(96vw, calc((100vh - 100px) * 0.6136), 540px);
 }
 @supports (height:100svh){
   /* svh = hauteur avec la barre d'adresse visible : valeur stable, donc plus de
      saut de mise en page quand Safari masque puis réaffiche sa barre. */
-  #jeu{ --terrain:min(92vw, calc((100svh - 215px) * 0.75), 540px); }
+  #jeu{ --terrain:min(96vw, calc((100svh - 100px) * 0.6136), 540px); }
 }
 #hud{
   display:flex;justify-content:space-between;align-items:center;
@@ -156,7 +156,7 @@ button.choisi{
 #score .pop{display:inline-block;animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
 .dots{font-size:11px;letter-spacing:.2em}
 @keyframes pop{from{transform:scale(1.9)}to{transform:scale(1)}}
-#scene{position:relative;width:var(--terrain);aspect-ratio:540 / 720}
+#scene{position:relative;width:var(--terrain);aspect-ratio:540 / 880}
 canvas{
   display:block;width:100%;height:100%;border-radius:18px;border:1px solid var(--bord);
   background:radial-gradient(ellipse at 50% 50%, #070B16 0%, #04060C 75%);
@@ -411,7 +411,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v10.8 · 2026-08-09</div>
+  <div id="version">DUO v10.9 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -425,7 +425,7 @@ canvas{
     <div id="ping">— ms</div>
   </div>
   <div id="scene">
-    <canvas id="cv" width="540" height="720"></canvas>
+    <canvas id="cv" width="540" height="880"></canvas>
 
     <div id="regles" class="panneau">
       <h3>RÈGLES</h3>
@@ -542,8 +542,10 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "10.8";
-const LARG = 540, HAUT = 720;
+const VERSION = "10.9";
+const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
+                                   disponible sur un iPhone en Safari, contre
+                                   0,75 auparavant où 130 pt restaient inutilisés */
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
    rebondissent exactement sur la bordure visible de l'image. */
