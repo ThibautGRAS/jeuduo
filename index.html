@@ -36,6 +36,43 @@ body{
 @keyframes derive{from{transform:translate(0,0) scale(1)}to{transform:translate(6vmax,-5vmax) scale(1.15)}}
 @media (prefers-reduced-motion: reduce){.aurore span{animation:none}}
 
+#rotation{
+  position:fixed;inset:0;z-index:60;display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  background:#04060C;text-align:center;padding:24px;
+}
+#rotation .pivot{
+  font-size:56px;color:var(--moi);
+  filter:drop-shadow(0 0 20px rgba(34,211,238,.5));
+  animation:pivote 2.4s ease-in-out infinite;
+}
+#rotation .titre{
+  font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:700;letter-spacing:.2em;
+  color:var(--texte);
+}
+#rotation .petit{max-width:340px;line-height:1.6}
+@keyframes pivote{0%,55%{transform:rotate(0)}75%,100%{transform:rotate(-90deg)}}
+@media (prefers-reduced-motion: reduce){ #rotation .pivot{animation:none} }
+
+/* Couché, le terrain tomberait à 123 x 200 pt : injouable. On demande la
+   rotation plutôt que de laisser jouer dans de mauvaises conditions. */
+@media (orientation: landscape) and (max-height: 520px){
+  #rotation{display:flex}
+  #lobby, #jeu, #capPhoto{display:none !important}
+}
+
+/* Écrans courts : on resserre les barres pour rendre la hauteur au terrain. */
+@media (max-height: 700px){
+  #hud{height:30px;flex:0 0 30px;font-size:11px}
+  #barreBasse{height:32px;flex:0 0 32px}
+  #jeu{--terrain:min(96vw, calc((100vh - 84px) * 0.6136), 540px)}
+}
+@supports (height:100svh){
+  @media (max-height: 700px){
+    #jeu{--terrain:min(96vw, calc((100svh - 84px) * 0.6136), 540px)}
+  }
+}
+
 #lobby{
   position:relative;z-index:1;display:flex;flex-direction:column;gap:20px;align-items:center;
   padding:28px;max-width:420px;width:100%;
@@ -338,6 +375,12 @@ canvas{
 
 <div class="aurore" aria-hidden="true"><span></span><span></span><span></span></div>
 
+<div id="rotation">
+  <div class="pivot">⟲</div>
+  <div class="titre">TOURNEZ VOTRE TÉLÉPHONE</div>
+  <div class="petit">DUO se joue à la verticale : couché, le terrain deviendrait deux fois trop petit.</div>
+</div>
+
 <div id="capPhoto">
   <video id="fluxPhoto" playsinline autoplay muted></video>
   <div class="rang">
@@ -411,7 +454,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v10.9 · 2026-08-09</div>
+  <div id="version">DUO v10.10 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -542,7 +585,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "10.9";
+const VERSION = "10.10";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
