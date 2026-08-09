@@ -79,6 +79,8 @@ input:focus{outline:none;border-color:var(--moi)}
 #version{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.22em;color:rgba(124,138,165,.55);margin-top:2px}
 @supports (height:100svh){ #lobby{ max-height:100svh; } }
 .aideMode{font-family:"JetBrains Mono",monospace;font-size:10.5px;line-height:1.5;color:var(--sourd)}
+.grilleArenes{display:flex;flex-wrap:wrap;gap:6px}
+.grilleArenes button{width:auto;flex:1 1 30%;min-width:88px;padding:9px 6px;font-size:12.5px;letter-spacing:.02em}
 button.choisi{
   color:var(--fond);background:linear-gradient(120deg,var(--moi),#67E8F9);
   border-color:transparent;box-shadow:0 6px 20px rgba(34,211,238,.32);
@@ -136,12 +138,17 @@ canvas{
 }
 .panneau{
   position:absolute;inset:0;border-radius:18px;z-index:5;
-  display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;
+  display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;
   background:rgba(4,6,12,.72);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
-  padding:22px;
+  padding:14px 12px;
+  /* Un panneau plus haut que le terrain débordait par le haut ET par le bas :
+     on le rend défilable et on l'aligne en haut dès qu'il ne tient plus. */
+  overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;
 }
+.panneau > *{flex-shrink:0}
+@supports (justify-content:safe center){ .panneau{justify-content:safe center} }
 .panneau .grand{
-  font-size:56px;font-weight:700;
+  font-size:46px;font-weight:700;
   background:linear-gradient(120deg,var(--moi),var(--adv));
   -webkit-background-clip:text;background-clip:text;color:transparent;
   animation:pop .4s cubic-bezier(.2,1.6,.4,1) both;
@@ -191,7 +198,7 @@ canvas{
 }
 .duel{display:flex;align-items:center;justify-content:center;gap:14px;width:100%}
 .joueurCarte{display:flex;flex-direction:column;align-items:center;gap:6px;width:92px}
-.vignette.gros{width:68px;height:68px;flex:0 0 68px;border-radius:18px;font-size:22px}
+.vignette.gros{width:58px;height:58px;flex:0 0 58px;border-radius:16px;font-size:19px}
 .nomJ{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.1em;color:var(--moi);
   max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nomJ.adv{color:var(--adv)}
@@ -215,16 +222,16 @@ canvas{
 #reglesListe b{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.14em}
 #reglesListe .c{color:var(--moi)} #reglesListe .o{color:var(--or)}
 #reglesListe .f{color:var(--feu)} #reglesListe .v{color:var(--vice)}
-.cartesVice{display:flex;flex-direction:column;gap:10px;width:100%;max-width:360px}
+.cartesVice{display:flex;flex-direction:column;gap:7px;width:100%;max-width:360px}
 .carteVice{
-  text-align:left;border-radius:14px;padding:13px 16px;cursor:pointer;width:100%;
+  text-align:left;border-radius:12px;padding:9px 12px;cursor:pointer;width:100%;
   background:rgba(20,14,40,.65);border:1px solid rgba(167,139,250,.4);
   color:var(--texte);box-shadow:0 6px 22px rgba(167,139,250,.15);
   font-family:inherit;transition:transform .12s ease, border-color .12s;
 }
 .carteVice:active{transform:scale(.97);border-color:var(--vice)}
-.carteVice .nomV{font-weight:700;letter-spacing:.12em;color:var(--vice);font-size:14px}
-.carteVice .descV{font-size:12px;color:var(--sourd);line-height:1.5;margin-top:3px}
+.carteVice .nomV{font-weight:700;letter-spacing:.1em;color:var(--vice);font-size:12.5px}
+.carteVice .descV{font-size:10.5px;color:var(--sourd);line-height:1.35;margin-top:2px}
 #barreBasse{display:flex;gap:10px;width:var(--terrain);align-items:center}
 #bandeau{
   flex:1;font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.18em;
@@ -280,6 +287,8 @@ canvas{
       <button class="btnMode secondaire" data-mode="classique">Classique</button>
     </div>
     <div class="aideMode" id="aideMode">Orbes, blocs, vices et arènes à thème.</div>
+    <h2 style="margin-top:4px">ARÈNE</h2>
+    <div class="grilleArenes" id="choixArenes"></div>
     <h2 style="margin-top:4px">MANCHES GAGNANTES</h2>
     <div class="rangSolo">
       <button class="btnManches secondaire" data-n="2">2</button>
@@ -316,7 +325,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v10.0 · 2026-08-07</div>
+  <div id="version">DUO v10.2 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -390,26 +399,26 @@ canvas{
     </div>
 
     <div id="choixVice" class="panneau cache">
-      <div class="grand" style="font-size:34px">MANCHE GAGNÉE</div>
-      <div class="petit">CHOISISSEZ VOTRE VICE — L'ADVERSAIRE NE LE VERRA PAS</div>
+      <div class="grand" style="font-size:21px;line-height:1.15">MANCHE GAGNÉE</div>
+      <div class="petit">CHOISISSEZ VOTRE VICE — IL NE LE VERRA PAS</div>
       <div class="cartesVice">
         <button class="carteVice" data-vice="I">
           <div class="nomV">INVERSION</div>
-          <div class="descV">Les contrôles de l'adversaire sont inversés pendant 3 secondes.</div>
+          <div class="descV">Contrôles de l'adversaire inversés pendant 3 s.</div>
         </button>
         <button class="carteVice" data-vice="B">
           <div class="nomV">BROUILLARD</div>
-          <div class="descV">La moitié lointaine du terrain adverse se voile pendant 4 secondes : il voit la balle partir, pas revenir.</div>
+          <div class="descV">Sa moitié de terrain se voile 4 s : il voit la balle partir, pas revenir.</div>
         </button>
         <button class="carteVice" data-vice="G">
           <div class="nomV">GRAVITÉ</div>
-          <div class="descV">Le terrain s'incline pendant 5 secondes : la balle dérive vers un bord.</div>
+          <div class="descV">Le terrain s'incline 5 s : la balle dérive vers un bord.</div>
         </button>
       </div>
     </div>
 
     <div id="attenteVice" class="panneau cache">
-      <div class="grand" style="font-size:34px">MANCHE PERDUE</div>
+      <div class="grand" style="font-size:21px;line-height:1.15">MANCHE PERDUE</div>
       <div class="petit">L'ADVERSAIRE CHOISIT UN VICE SECRET…</div>
     </div>
 
@@ -434,7 +443,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "10.0";
+const VERSION = "10.2";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 52;
 /* Cadre décoratif des arènes : le terrain jouable est en retrait, les murs
@@ -456,6 +465,7 @@ const MODES = {
   classique: { bonus: false, obstacles: false, vices: false, degats: false },
 };
 let modeJeu = "arcade";                 /* arcade par défaut */
+let choixArene = -1;                    /* -1 = tirage au sort à chaque match */
 let MANCHES_GAGNANTES = 2;              /* 2, 3 ou 5 */
 function cfgMode(){ return MODES[modeJeu] || MODES.arcade; }
 const TICK_ENVOI = 33, DUREE_COMPTE = 800;
@@ -1203,7 +1213,7 @@ function gestionnaireConnexion(c){
 /* ================= RÉGLAGES DE PARTIE ================= */
 const AIDE_MODE = {
   arcade: "Orbes, blocs destructibles, vices et 5 arènes tirées au sort.",
-  classique: "Duel pur : ni orbe, ni bloc, ni vice. La balle accélère pour éviter les échanges interminables.",
+  classique: "Duel pur : ni orbe, ni bloc, ni vice, ni arène à thème. La balle accélère pour éviter les échanges interminables.",
 };
 function majReglages(){
   for (const b of document.querySelectorAll(".btnMode"))
@@ -1218,6 +1228,8 @@ function majReglages(){
     if (m && MODES[m]) modeJeu = m;
     const n = Number(localStorage.getItem("duo_manches"));
     if ([2,3,5].includes(n)) MANCHES_GAGNANTES = n;
+    const a = localStorage.getItem("duo_arene");
+    if (a !== null && !isNaN(Number(a))) choixArene = Number(a);
   }catch(e){}
   for (const b of document.querySelectorAll(".btnMode")){
     b.addEventListener("click", () => {
@@ -3098,6 +3110,11 @@ const ARENES = [
 /* ordre des arènes tiré au sort par l'hôte au début du match */
 let sequenceArenes = [0, 1, 2, 3, 4];
 function melangerArenes(){
+  /* arène imposée : toutes les manches se jouent dans la même */
+  if (choixArene >= 0 && choixArene < ARENES.length){
+    sequenceArenes = ARENES.map(() => choixArene);
+    return;
+  }
   const s = ARENES.map((_, i) => i);
   for (let i = s.length - 1; i > 0; i--){
     const j = Math.floor(Math.random() * (i + 1));
@@ -3830,6 +3847,32 @@ function cheminArrondi(x, y, l, h, r){
   ctx.arcTo(x, y + h, x, y, r);
   ctx.arcTo(x, y, x + l, y, r);
 }
+/* Les boutons d'arène sont construits ici, après la définition de ARENES :
+   les créer plus haut lèverait une erreur de zone morte temporelle. */
+(function initChoixArene(){
+  const zone = document.getElementById("choixArenes");
+  if (!zone) return;
+  const ajouter = (libelle, idx) => {
+    const b = document.createElement("button");
+    b.className = "secondaire";
+    b.textContent = libelle;
+    b.dataset.arene = String(idx);
+    b.addEventListener("click", () => {
+      choixArene = idx;
+      try{ localStorage.setItem("duo_arene", String(idx)); }catch(e){}
+      majChoixArene();
+    });
+    zone.appendChild(b);
+  };
+  ajouter("Aléatoire", -1);
+  ARENES.forEach((A, i) => ajouter(A.nom, i));
+  majChoixArene();
+})();
+function majChoixArene(){
+  for (const b of document.querySelectorAll("#choixArenes button"))
+    b.classList.toggle("choisi", Number(b.dataset.arene) === choixArene);
+}
+
 function arrondi(x, y, l, h, r){
   ctx.beginPath();
   ctx.moveTo(x + r, y);
