@@ -84,11 +84,26 @@ margeMur = nombre("MUR_MAX") || 88;
 verifier("mort subite : terrain encore jouable", murD() - murG() > 150,
   (murD() - murG()) + " px");
 margeMur = 0;
-function terrain(L, H){ return Math.min(0.92*L, (H - 215)*0.75, 540); }
-for (const [nom, L, H] of [["iPhone SE",375,667],["iPhone 13",390,844],["Android compact",360,640],["paysage",844,390]]){
-  const t = terrain(L, H);
-  verifier("mise en page tient sur " + nom, t > 0 && t*720/540 + 215 <= H + 1,
-    Math.round(t) + " px de large");
+{
+  /* le rapport et la réserve sont lus dans le code, pas supposés */
+  const LARG_JEU = nombre("LARG"), HAUT_JEU = nombre("HAUT");
+  const rapport = LARG_JEU / HAUT_JEU;
+  const css = (html.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || "";
+  const mCss = css.match(/--terrain:min\((\d+)vw, calc\(\(100svh - (\d+)px\) \* ([0-9.]+)\)/);
+  verifier("la mise en page suit le format du terrain",
+    !!mCss && Math.abs(Number(mCss[3]) - rapport) < 0.01,
+    mCss ? "css " + mCss[3] + " contre jeu " + rapport.toFixed(4) : "règle introuvable");
+  const partVw = mCss ? Number(mCss[1]) / 100 : 0.96, reserve = mCss ? Number(mCss[2]) : 100;
+  const terrain = (L, H) => Math.min(partVw*L, (H - reserve)*rapport, LARG_JEU);
+  for (const [nom, L, H] of [["iPhone SE",375,667],["iPhone 13",390,844],
+                             ["Android compact",360,640],["paysage",844,390]]){
+    const t = terrain(L, H);
+    verifier("mise en page tient sur " + nom, t > 0 && t/rapport + reserve <= H + 1,
+      Math.round(t) + " x " + Math.round(t/rapport) + " pt");
+  }
+  verifier("le terrain exploite la hauteur disponible",
+    terrain(390, 700) / rapport > 560,
+    Math.round(terrain(390, 700) / rapport) + " pt de haut sur iPhone 13");
 }
 
 /* ======================= 5. ARÈNES ======================= */
