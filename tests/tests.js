@@ -234,6 +234,24 @@ titre("8quater. Mise en page stable et rendu léger");
   verifier("particules plafonnées", /MAX_PARTICULES/.test(script));
 }
 
+/* ======================= 8quinquies. ENTRÉE EN JEU ET CONFORT ======================= */
+titre("8quinquies. Entrée en jeu, robustesse du protocole, confort");
+verifier("lien d'invitation", /function lienInvitation\(/.test(script) && /URLSearchParams/.test(script));
+verifier("arrivée par lien préremplie", /\$\("champCode"\)\.value = code/.test(script));
+verifier("solo proposé en premier", html.indexOf("JOUER TOUT DE SUITE") < html.indexOf("MODE DE JEU"));
+verifier("règles condensées avec repli", /id="reglesCourt"/.test(html) && /id="btnPlus"/.test(html));
+verifier("poignée de main de version", /t: "ver", v: VERSION/.test(script) && /case "ver":/.test(script));
+verifier("réglages hors du flux 30 Hz",
+  !/mj: modeJeu, mg: MANCHES_GAGNANTES, sa: sequenceArenes,/.test(script) && /case "cfg":/.test(script),
+  "envoyés une fois sur le canal fiable");
+verifier("clavier pris en charge", /keydown/.test(script) && /function majClavier\(/.test(script));
+verifier("pause réservée au solo", /if \(!partieEnCours \|\| !modeSolo\) return;/.test(script));
+verifier("volume réglable et mémorisé", /curseurVolume/.test(html) && /duo_volume/.test(script));
+verifier("raquette adverse distinguée sans couleur", /if \(!estMienne\)/.test(script),
+  "encoches sur la raquette d'en face");
+verifier("historique et records", /duo_historique/.test(script) && /function cloturerRecords\(/.test(script));
+verifier("manifeste installable", /rel="manifest"/.test(html));
+
 /* ======================= 9. RÉFÉRENCES ======================= */
 titre("9. Toute fonction appelée est définie");
 {
@@ -267,7 +285,8 @@ titre("9. Toute fonction appelée est définie");
     "clearInterval","requestAnimationFrame","fetch","Peer","Image","Audio","Blob","URL",
     "MediaRecorder","AudioContext","RTCPeerConnection","AbortSignal","Uint8ClampedArray",
     "console","localStorage","navigator","document","window","performance","location","eval",
-    "async","await","of","in","do","else","try","delete","void","instanceof"]);
+    "async","await","of","in","do","else","try","delete","void","instanceof",
+    "URLSearchParams","encodeURIComponent","decodeURIComponent","structuredClone"]);
   const appelees = new Set([...nu.matchAll(/(?:^|[^.\w$])(\w+)\s*\(/g)].map(m => m[1]));
   const manquantes = [...appelees].filter(n =>
     !definies.has(n) && !NATIF.has(n) && !/^[A-Z_]+$/.test(n) && isNaN(Number(n)));
