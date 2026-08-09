@@ -211,6 +211,29 @@ titre("8ter. Écran VERSUS");
     [2,3,5].every(mg => Number(bandeau(mg,"a","","").match(/DES (\d+)/)[1]) === 2*mg - 1));
 }
 
+/* ======================= 8quater. STABILITÉ DE MISE EN PAGE ET FLUIDITÉ ======================= */
+titre("8quater. Mise en page stable et rendu léger");
+{
+  const css = (html.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || "";
+  const hud = (css.match(/#hud\{[^}]*\}/) || [""])[0];
+  const bas = (css.match(/#barreBasse\{[^}]*\}/) || [""])[0];
+  verifier("hauteur du bandeau haut figée", /height:\s*\d+px/.test(hud),
+    "un nom long ou un format en 5 manches décalait le terrain");
+  verifier("hauteur de la barre basse figée", /height:\s*\d+px/.test(bas));
+  verifier("nom tronqué plutôt que passé à la ligne",
+    /#role\{[^}]*white-space:nowrap/.test(css) && /#role\{[^}]*text-overflow:ellipsis/.test(css));
+  verifier("score sur une seule ligne", /#score\{[^}]*white-space:nowrap/.test(css));
+  verifier("plus de texte sous le terrain", !/id="bandeau"/.test(html));
+  verifier("annonces peintes dans le terrain", /function dessinerAnnonce\(/.test(script));
+  verifier("flou d'ombre définitivement neutralisé",
+    /function flou\(v\)\{ return 0; \}/.test(script.replace(/\s+/g, " ").replace("function flou(v){ return 0; }", "function flou(v){ return 0; }")) ||
+    /return 0;/.test((script.match(/function flou\(v\)\{[^}]*\}/) || [""])[0]));
+  verifier("rendu léger par défaut", /let effetsRiches = false;/.test(script));
+  verifier("repli progressif : grain puis bloom",
+    /if \(effetsRiches\)\{[^}]*\}\s*else if \(bloomActif\)/.test(script.replace(/\n/g, "")));
+  verifier("particules plafonnées", /MAX_PARTICULES/.test(script));
+}
+
 /* ======================= 9. RÉFÉRENCES ======================= */
 titre("9. Toute fonction appelée est définie");
 {
@@ -261,8 +284,9 @@ verifier("aucun test de véracité sur un index de joueur",
 verifier("immunité des blocs sans dépendance à un horodatage nul",
   !/!o\.tImpact\s*\|\|/.test(script));
 verifier("pas de code mort après un return", !/return;\s*\/\* ancienne version/.test(script));
-verifier("le flou d'ombre passe par flou()",
-  !/ctx\.shadowBlur = (?!flou\()/.test(script));
+verifier("aucun flou d'ombre direct",
+  !/ctx\.shadowBlur = (?!flou\()/.test(script),
+  "tous les appels passent par flou(), qui renvoie 0");
 verifier("traînée : plafond d'empilement au-dessus de la longueur voulue",
   /tr\.length > 24/.test(script) && /\? 20 : 13/.test(script));
 
