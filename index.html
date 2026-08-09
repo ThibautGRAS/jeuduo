@@ -302,7 +302,7 @@ canvas{
   </div>
 
   <div id="etatLobby"></div>
-  <div id="version">DUO v8.7 · 2026-08-07</div>
+  <div id="version">DUO v8.8 · 2026-08-07</div>
 </div>
 
 <div id="jeu">
@@ -328,7 +328,7 @@ canvas{
         <b class="c">SMASH</b> — Raquette immobile 1 s : elle se charge et vire à l'<span style="color:#FBBF24">or</span>. La frappe suivante part à pleine puissance.<br>
         <b class="o">ORBES</b> — Touchez-les avec la balle : le bonus va au dernier frappeur. Agrandir · rétrécir l'autre · éclair · balle double · fantôme · <span style="color:#FB923C">boule de feu</span> (7 s : la balle pulvérise les blocs).<br>
         <b class="o">ARÈNES</b> — Six arènes, ordre tiré au sort dès la manche 1 : <b>ROCHE</b> (neutre), <b>GLACE</b> (ralentit), <b>LAVE</b> (accélère), <b>ORAGE</b> (dévie et charge), <b>VIDE</b> (attire la balle), <b>JUNGLE</b> (absorbe l'effet). Décor, musique et physique changent avec elle.<br>
-        <b class="o">BLOCS</b> — Premier impact : le bloc se fend et rétrécit de moitié. Deuxième : il éclate. La boule de feu le pulvérise d'un coup.<br>
+        <b class="o">BLOCS</b> — Les blocs mobiles s'ébrèchent et rétrécissent à chaque impact, mais ne disparaissent jamais d'eux-mêmes : seule la boule de feu les pulvérise.<br>
         <b class="f">BALLE EN FEU</b> — 8 rebonds sans point : la balle s'enflamme à vitesse maximale.<br>
         <b class="o">DÉCOR</b> — À partir de la manche 2, des blocs de la ligne médiane se détachent et dérivent au centre du terrain.<br>
         <b class="f">DÉGÂTS</b> — Les frappes surpuissantes fissurent les murs : les rebonds y deviennent imprévisibles et des débris sont projetés sur le terrain jusqu'à la fin de la manche.<br>
@@ -419,7 +419,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "8.7";
+const VERSION = "8.8";
 const LARG = 540, HAUT = 720;
 const RAQ_L_BASE = 104, RAQ_H = 12, RAQ_MARGE = 34;
 const RAQ_L_GRAND = 168, RAQ_L_PETIT = 62;
@@ -1482,14 +1482,6 @@ function jouerFx(k, x, y, extra){
     secousse = Math.max(secousse, extra === "lave" ? 5 : 3);
     sonBloc(extra);
   }
-  if (k === "miette"){
-    const coul = extra === "glace" ? "#BAE6FD" : (extra === "lave" ? "#FB923C"
-               : (extra === "jungle" ? "#86EFAC" : (extra === "orage" ? "#C4B5FD"
-               : (extra === "vide" ? "#A5B4FC" : "#94A3B8"))));
-    explosion(x, y, coul, 16, 3.2);
-    secousse = Math.max(secousse, 3.5);
-    sonBloc(extra);
-  }
   if (k === "casse"){
     const coul = extra === "glace" ? "#BAE6FD" : (extra === "lave" ? "#FB923C" : "#94A3B8");
     explosion(x, y, coul, 34, 5.4);
@@ -1793,21 +1785,17 @@ function physique(){
         /* …mais les DÉGÂTS sont limités à un par fenêtre d'immunité : sans ça,
            un bloc qui oscille revient dans la balle à l'image suivante, ou deux
            balles le touchent dans la même image, et il éclatait au premier contact. */
+        /* Les blocs d'origine ne sont JAMAIS détruits par un simple contact :
+           ils s'ébrèchent et rétrécissent jusqu'à une taille plancher, puis
+           restent en jeu. Seule la boule de feu peut les faire disparaître. */
         const tNow = performance.now();
-        if (tNow - (o.tImpact === undefined ? -1e9 : o.tImpact) >= IMMU_BLOC){
+        if (tNow - (o.tImpact === undefined ? -1e9 : o.tImpact) >= IMMU_BLOC
+            && o.l > OBST_L_MIN + 0.5){
           o.tImpact = tNow;
-          o.pv = (o.pv === undefined ? PV_BLOC : o.pv) - 1;
-          if (o.pv <= 0){
-            obstacles.splice(oi, 1);
-            fxLocal("miette", o.x + o.l/2, o.y, A.bloc);
-          } else {
-            o.l = Math.max(OBST_L_MIN, o.l * OBST_RETRECIT);
-            o.h = Math.max(9, o.h * 0.82);
-            fxLocal("bloc", b.x, b.y, A.bloc);
-          }
-        } else {
-          fxLocal("bloc", b.x, b.y, A.bloc);
+          o.l = Math.max(OBST_L_MIN, o.l * OBST_RETRECIT);
+          o.h = Math.max(9, o.h * 0.82);
         }
+        fxLocal("bloc", b.x, b.y, A.bloc);
       }
       break;
     }
@@ -2400,7 +2388,7 @@ function dessiner(){
   while (traines.length > balles.length) traines.pop();
   for (let i = 0; i < balles.length; i++){
     const b = balles[i], tr = traines[i];
-    if (phase === "jeu"){ tr.push({ x: b.x, y: b.y }); if (tr.length > 12) tr.shift(); }
+    if (phase === "jeu"){ tr.push({ x: b.x, y: b.y }); if (tr.length > 24) tr.shift(); }
     else tr.length = 0;
 
     const visible = !fantome || (Math.sin(t*22 + i*2) > 0.15);
@@ -2409,17 +2397,13 @@ function dessiner(){
       /* traînée : orange ardent en boule de feu, dorée en lift */
       const coulTraine = bouleFeu ? "251,146,60" : (enFeu ? "251,113,133" : (liftee ? "251,191,36" : "138,180,255"));
       const alphaTraine = bouleFeu ? 0.5 : (enFeu ? 0.4 : (liftee ? 0.42 : 0.22));
-      const longTraine = (bouleFeu || liftee) ? 20 : 12;
+      const longTraine = (bouleFeu || liftee) ? 20 : 13;
       if (bouleFeu && Math.random() < 0.8)
         particules.push({ x: b.x + (Math.random()-0.5)*8, y: b.y + (Math.random()-0.5)*8,
                           vx: (Math.random()-0.5)*1.6, vy: (Math.random()-0.5)*1.6,
                           vie: 0.75, couleur: Math.random() < 0.5 ? "#FB923C" : "#FDE68A" });
       while (tr.length > longTraine) tr.shift();
-      for (let j = 0; j < tr.length; j++){
-        const a = (j+1) / tr.length;
-        ctx.fillStyle = "rgba(" + coulTraine + "," + (a*alphaTraine).toFixed(3) + ")";
-        ctx.beginPath(); ctx.arc(tr[j].x, Y(tr[j].y), BALLE_R * a * (enFeu || liftee ? 1.3 : 1), 0, Math.PI*2); ctx.fill();
-      }
+      dessinerTraine(tr, Y, coulTraine, alphaTraine, BALLE_R * (enFeu || liftee ? 1.15 : 0.92));
       if (enFeu && Math.random() < 0.5)
         particules.push({ x: b.x, y: b.y, vx: (Math.random()-0.5)*1.5, vy: (Math.random()-0.5)*1.5, vie: 0.7, couleur: Math.random() < 0.5 ? CO_FEU : CO_OR });
       if (liftee && Math.random() < 0.4)
@@ -2680,6 +2664,37 @@ function surveillerPerf(dtMs){
     majIcones();
     annoncer("EFFETS ALLÉGÉS POUR LA FLUIDITÉ", "#8AB4FF");
   }
+}
+
+/* Traînée continue : au lieu d'une file de disques, on construit un ruban
+   dont la largeur s'effile vers la queue, rempli d'un dégradé longitudinal. */
+function dessinerTraine(tr, Y, coulRGB, alphaMax, largeurMax){
+  const n = tr.length;
+  if (n < 2) return;
+  const pts = new Array(n);
+  for (let i = 0; i < n; i++) pts[i] = [tr[i].x, Y(tr[i].y)];
+  const gauche = new Array(n), droite = new Array(n);
+  for (let i = 0; i < n; i++){
+    const p = pts[i];
+    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
+    let dx = b[0] - a[0], dy = b[1] - a[1];
+    const d = Math.hypot(dx, dy) || 1;
+    dx /= d; dy /= d;
+    const w = largeurMax * ((i + 1) / n);       /* effilé vers la queue */
+    gauche[i] = [p[0] - dy * w, p[1] + dx * w];
+    droite[i] = [p[0] + dy * w, p[1] - dx * w];
+  }
+  ctx.beginPath();
+  ctx.moveTo(gauche[0][0], gauche[0][1]);
+  for (let i = 1; i < n; i++) ctx.lineTo(gauche[i][0], gauche[i][1]);
+  for (let i = n - 1; i >= 0; i--) ctx.lineTo(droite[i][0], droite[i][1]);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(pts[0][0], pts[0][1], pts[n-1][0], pts[n-1][1]);
+  g.addColorStop(0, "rgba(" + coulRGB + ",0)");
+  g.addColorStop(0.55, "rgba(" + coulRGB + "," + (alphaMax * 0.45).toFixed(3) + ")");
+  g.addColorStop(1, "rgba(" + coulRGB + "," + alphaMax.toFixed(3) + ")");
+  ctx.fillStyle = g;
+  ctx.fill();
 }
 
 function rgba(hex, a){
@@ -3227,8 +3242,8 @@ function dessinerCompte(){
   ctx.shadowBlur = 30; ctx.shadowColor = CO_MOI;
   ctx.fillText("GO", LARG/2, HAUT/2 - 90);
   ctx.shadowBlur = 0;
-  /* nom de l'arène, bien lisible au service */
-  if (modeJeu !== "classique"){
+  /* nom de l'arène : seulement au tout premier service de la manche (0-0) */
+  if (modeJeu !== "classique" && etat.score[0] === 0 && etat.score[1] === 0){
     ctx.font = "700 30px 'Space Grotesk', sans-serif";
     ctx.fillStyle = A.accent;
     ctx.shadowBlur = 24; ctx.shadowColor = A.accent;
