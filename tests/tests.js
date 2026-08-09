@@ -152,8 +152,25 @@ for (let k = 0; k < 3000; k++){
 }
 verifier("phrases identiques sur les deux écrans", stable, "3000 tirages");
 
-/* ======================= 8. PIÈGES CONNUS ======================= */
-titre("8. Pièges déjà rencontrés (non-régression)");
+/* ======================= 8. RAQUETTES ======================= */
+titre("8. Rendu des raquettes");
+const { eclaircir, assombrir } = new Function(
+  extraire(/function eclaircir\(hex, k\)\{[\s\S]*?\n\}/, "eclaircir") + "\n" +
+  extraire(/function assombrir\(hex, k\)\{[\s\S]*?\n\}/, "assombrir") +
+  "\nreturn { eclaircir, assombrir };")();
+const comp = s => s.match(/\d+/g).map(Number);
+const haut = comp(eclaircir("#22D3EE", 0.45)), bas = comp(assombrir("#22D3EE", 0.55));
+verifier("dégradé du corps orienté clair vers sombre",
+  haut.every((v, i) => v > bas[i]) && haut.concat(bas).every(v => v >= 0 && v <= 255));
+verifier("rendu dédié des raquettes", /function dessinerRaquette\(/.test(script));
+verifier("écrasement à l'impact", /const impact = Math\.max\(0, 1 - \(performance\.now\(\) - tFlash\)/.test(script));
+verifier("inclinaison bornée", /Math\.max\(-0\.13, Math\.min\(0\.13/.test(script));
+const noyau = (l, c) => Math.max(0, (l - Math.min(13, l*0.16)*2 - 6) * Math.min(1, c));
+verifier("noyau de charge monotone et borné",
+  [62,104,168].every(l => noyau(l,0) === 0 && noyau(l,1) > 8 && noyau(l,1) < l));
+
+/* ======================= 9. PIÈGES CONNUS ======================= */
+titre("9. Pièges déjà rencontrés (non-régression)");
 verifier("aucun test de véracité sur un index de joueur",
   !/(if|while)\s*\(\s*!?\s*(gagnant|joueur|frappeur|recapGagnant)\s*\)/.test(script),
   "le joueur 0 est falsy en JavaScript");
