@@ -191,6 +191,26 @@ verifier("boutons construits après la définition des arènes",
     hVices < hTerrain, Math.round(hVices) + " px pour " + Math.round(hTerrain) + " px");
 }
 
+/* ======================= 8ter. ÉCRAN VERSUS ======================= */
+titre("8ter. Écran VERSUS");
+{
+  const css = (html.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || "";
+  const flash = ((css.match(/\.vsFlash\{[^}]*\}/) || [""])[0]).replace(/\/\*[\s\S]*?\*\//g, "");
+  verifier("le voile blanc ne peut pas persister",
+    !/both|forwards/.test(flash) && /opacity:\s*0/.test(flash),
+    "un remplissage d'animation appliquait le premier état pendant le délai");
+  verifier("fond dédié au lieu d'un aplat", /\.vsFond\{/.test(css));
+  verifier("plaques nominatives inclinées", /\.vsPlaque\{/.test(css));
+  const bandeau = (mg, mode, arene, duels) =>
+    ["AU MEILLEUR DES " + (2*mg - 1), mode.toUpperCase(), arene, duels].filter(Boolean).join(" · ");
+  const exemples = [bandeau(2,"arcade","",""), bandeau(5,"classique","","DUELS A 1 — 0 B"),
+                    bandeau(3,"arcade","ARÈNE LAVE","")];
+  verifier("bandeau sans séparateur orphelin",
+    exemples.every(t => !/·\s*$/.test(t) && !/^\s*·/.test(t) && !/·\s*·/.test(t)));
+  verifier("format cohérent avec les manches gagnantes",
+    [2,3,5].every(mg => Number(bandeau(mg,"a","","").match(/DES (\d+)/)[1]) === 2*mg - 1));
+}
+
 /* ======================= 9. RÉFÉRENCES ======================= */
 titre("9. Toute fonction appelée est définie");
 {
