@@ -1,0 +1,15 @@
+{
+  "name": "DUO — duel néon",
+  "short_name": "DUO",
+  "description": "Duel de raquettes en pair-à-pair, à deux ou contre l'ordinateur.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#04060C",
+  "theme_color": "#04060C",
+  "lang": "fr",
+  "icons": [
+    { "src": "icone.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
