@@ -172,11 +172,16 @@ const RIEN = {
    famille et de la bande, on lui ménage la vérité ; Thibaut est un
    inconnu, on se surveille moins devant lui. C'est ce qui fait que les
    deux interrogatoires ne se valent pas. */
+/* `bas` est la ligne sur laquelle le personnage POSE, relevée sur le
+   décor : l'assise du canapé à 80 %, le plateau de la table à 73,5 %,
+   le sol du couloir à 90 %, celui du salon à 92,5 %. Poser tout le monde
+   sur la même ligne mettait Charles debout devant sa table et faisait
+   flotter Teo au-dessus du canapé. */
 const PLACES_FIXES = {
-  teo:     { x:0.272, y:0.70, ancre:"assis",  taille:0.30 },
-  charles: { x:0.606, y:0.66, ancre:"assis",  taille:0.26 },
-  soeur:   { x:0.876, y:0.92, ancre:"sol",    taille:0.54 },
-  chat:    { x:0.452, y:0.88, ancre:"assis",  taille:0.17 },
+  teo:     { x:0.268, bas:0.805, taille:0.29 },   /* avachi sur le canapé */
+  charles: { x:0.548, bas:0.735, taille:0.225 },  /* accoudé au bout de la table */
+  soeur:   { x:0.818, bas:0.900, taille:0.575 },  /* debout dans le couloir */
+  chat:    { x:0.452, bas:0.925, taille:0.170 },  /* par terre            */
 };
 
 const SUSPECTS_BANQUE = [
@@ -293,7 +298,7 @@ function composerSuspects(){
     const jeu = coupable ? s.evasif : s.innocent;
     SUSPECTS.push({
       id:s.id, nom:s.nom, sprite:s.sprite, role:s.role,
-      x:p.x, y:p.y, ancre:p.ancre, taille:p.taille,
+      x:p.x, bas:p.bas, taille:p.taille,
       diresPF:piocher(jeu.pf).slice(),
       diresTH:piocher(jeu.th).slice(),
       fond:piocher(s.fond),
@@ -700,9 +705,10 @@ const Enquete = {
     if (ins.fouille > 0) return false;
     const iz = this.zoneProche();
     if (iz >= 0){ ins.fouille = ENQ_FOUILLE; ins.cible = iz; ins.marche = 0; Sons.tarteVol(); return true; }
-    const is = this.suspectProche();
-    if (is >= 0){ this.interroger(is); return true; }
-    this.dire("Rien à portée.", 1.0);
+    /* On n'interroge PLUS ici : quand quelqu'un se tient devant un
+       meuble, on ne savait pas ce que le bouton allait faire. Parler a
+       sa propre commande. */
+    this.dire("Aucun meuble à portée.", 1.2);
     return false;
   },
 
@@ -781,6 +787,15 @@ const Enquete = {
     ins.cible = -1;
   },
 
+  /* Commande « INTERROGER » : elle ne cherche que des gens. */
+  parler(){
+    if (!this.actif || this.gele > 0 || this.dossierOuvert) return false;
+    const is = this.suspectProche();
+    if (is < 0){ this.dire("Personne à portée.", 1.2); return false; }
+    this.interroger(is);
+    return true;
+  },
+
   interroger(is){
     const s = SUSPECTS[is];
     const ins = this.actifIns();
@@ -793,7 +808,10 @@ const Enquete = {
     const compte = pf ? "vusPF" : "vus";
     const d = serie[s[compte] % serie.length];
     s[compte]++;
-    Effets.parole({ heros:ins.heros }, d, 2.4);
+    /* La réponse sort de la bouche du témoin, pas de celle de
+       l'inspecteur : les faire parler tous par la même bulle mélangeait
+       qui disait quoi. */
+    Effets.parole({ temoin:is }, d, 2.6);
     Sons.bip(pf ? 470 : 540, 0.08, "sine", 0.1);
 
     /* Une remarque de fond au premier passage : ce qu'on voit, pas ce

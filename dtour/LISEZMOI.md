@@ -47,10 +47,15 @@ Deux ombres les asseyent dans la pièce, une large et douce, une courte
 et franche au contact des pieds, et un voile chaud posé **après** eux
 les met à la lumière de l'appartement.
 
-**Commandes.** `←` `→` marcher, `E` inspecter ou interroger, `TAB`
-changer d'inspecteur, `ESPACE` action contextuelle et esquive, `D` le
-dossier, `A` accuser. Au doigt : quatre grandes touches sous les pouces,
-celle du milieu devenant **ESQUIVER** quand la tarte arrive.
+**Commandes.** `←` `→` marcher, `E` fouiller un meuble, `I` interroger
+quelqu'un, `TAB` changer d'inspecteur, `ESPACE` action contextuelle et
+esquive, `D` le dossier, `A` accuser, `Échap` pause.
+
+**Fouiller et interroger sont deux touches**, pas une. Quand quelqu'un se
+tient devant un meuble — et c'est le cas de Charles, assis à la table —
+on ne savait pas ce que le bouton allait faire. Chacune s'éteint quand
+elle n'a rien à faire, et un petit signe violet s'allume au-dessus de la
+personne à portée.
 
 **Ils se parlent.** Trouver un indice déclenche un échange à deux voix :
 celui qui fouille annonce, l'autre commente. Un mot en entrant dans
@@ -80,6 +85,17 @@ change ce qu'on obtient de lui.
 | **CHARLES** — table | L'amant de la colocataire. Personne n'est censé savoir qu'il était là : c'est son seul mobile, et il vaut toutes les pizzas du monde. |
 | **LA SŒUR D'HORTENSE** — couloir | Colocataire, sœur de celle qui lance des tartes, et belle-sœur de Pierre-François. |
 | **RISOTO** — au sol | Le chat. Il ne dira rien, mais il laisse des traces. |
+
+Chacun **pose sur une ligne relevée sur le décor** : l'assise du canapé à
+80 %, le plateau de la table à 73,5 %, le sol du couloir à 90 %. Les
+poser tous sur la même ligne mettait Charles debout devant sa table et
+faisait flotter Teo au-dessus du canapé.
+
+**On voit qui parle.** Les inspecteurs ont une bulle blanche avec un
+liseré de leur couleur — vert pour Pierre-François, bleu pour Thibaut.
+Les habitants répondent au-dessus d'eux-mêmes, dans une bulle papier
+crème signée de leur nom. Auparavant tout sortait de la même bouche et
+on ne savait plus qui demandait quoi.
 
 **Les deux inspecteurs n'entendent pas la même chose, et c'est le
 cœur du niveau.** Pierre-François est de la famille et de la bande : sa

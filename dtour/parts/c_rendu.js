@@ -91,7 +91,8 @@ const Effets = {
        s'écrivaient l'une sur l'autre et devenaient illisibles. */
     this.paroles = this.paroles.filter(p =>
       !(p.cible.pnj && p.cible.pnj === cible.pnj) &&
-      !(p.cible.heros !== undefined && p.cible.heros === cible.heros));
+      !(p.cible.heros !== undefined && p.cible.heros === cible.heros) &&
+      !(p.cible.temoin !== undefined && p.cible.temoin === cible.temoin));
     this.paroles.push({ cible, txt, t:0, duree:duree || 1.4 });
   },
 

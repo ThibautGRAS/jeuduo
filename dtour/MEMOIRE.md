@@ -155,6 +155,24 @@ inspecteur seul ne peut pas réunir tous les indices. Quand la place
 manque, on raccourcit un libellé ou on passe en pastille ; on ne retire
 pas la commande. Un test refuse désormais toute règle qui masque `#c2C`.
 
+### Une bulle par bouche
+Les réponses des témoins sortaient de la bulle de l'inspecteur qui
+posait la question. À trois personnes dans le champ, on ne savait plus
+qui parlait. Chaque bouche a maintenant sa bulle et son style :
+blanc + liseré de couleur pour les inspecteurs, papier crème signé du
+nom pour les habitants.
+
+### Un bouton contextuel qui fait deux choses n'en fait aucune
+`INSPECTER` cherchait un meuble, puis à défaut quelqu'un à interroger.
+Charles étant assis à la table, l'appui ne faisait jamais ce qu'on
+attendait. Deux commandes distinctes, chacune éteinte quand elle n'a
+rien à faire. Une action doit être prévisible avant l'appui, pas après.
+
+### Poser un personnage assis
+Chaque habitant a une ligne d'appui relevée sur le décor — assise du
+canapé, plateau de la table, sol du couloir — et non la ligne de sol
+commune. Un buste calé sur le sol se retrouve debout devant sa table.
+
 ### Deux bulles au même endroit
 Deux répliques déclenchées en même temps s'écrivaient l'une sur l'autre.
 Une bulle par personne — la nouvelle chasse l'ancienne — et les bulles

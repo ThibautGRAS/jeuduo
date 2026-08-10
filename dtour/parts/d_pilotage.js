@@ -3,7 +3,7 @@
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -265,6 +265,10 @@ const Interface = {
     if (E.c2ATxt) E.c2ATxt.textContent = esq ? "ESQUIVER !" : "INSPECTER";
     if (E.c2A) E.c2A.classList.toggle("esquive", !!esq);
     if (E.c2DosN) E.c2DosN.textContent = String(Dossier.compte());
+    /* Les deux commandes disent chacune si elles ont quelque chose à
+       faire : plus de doute sur ce qui va se passer. */
+    if (E.c2A) E.c2A.classList.toggle("eteint", Enquete.zoneProche() < 0);
+    if (E.c2Int) E.c2Int.classList.toggle("eteint", Enquete.suspectProche() < 0);
     /* Le bouton CHANGER porte le visage de CELUI QU'ON VA PRENDRE : on
        sait d'un coup d'œil qui on a en main et qui on récupère. */
     if (E.c2CImg && Enquete.inspecteurs.length === 2){
@@ -461,6 +465,8 @@ const Entrees = {
       } else if (t === " "){
         e.preventDefault(); Sons.reveiller();
         if (Enquete.esquiveOuverte) Enquete.esquiver(); else Enquete.action();
+      } else if (t === "i"){
+        e.preventDefault(); Sons.reveiller(); Enquete.parler();
       } else if (t === "tab"){
         e.preventDefault(); Enquete.changer();
       } else if (t === "d"){
@@ -548,13 +554,16 @@ const Entrees = {
       ev.preventDefault(); Sons.reveiller();
       if (Intro.actif) Intro.passer(); else Enquete.action();
     });
+    if (E.c2Int) E.c2Int.addEventListener("pointerdown", ev => {
+      ev.preventDefault(); Sons.reveiller(); Enquete.parler();
+    });
     if (E.c2C) E.c2C.addEventListener("pointerdown", ev => { ev.preventDefault(); Enquete.changer(); });
     if (E.c2Dos) E.c2Dos.addEventListener("pointerdown", ev => { ev.preventDefault(); Enquete.basculerDossier(); });
     if (E.c2Acc) E.c2Acc.addEventListener("pointerdown", ev => {
       ev.preventDefault(); Sons.reveiller();
       if (Enquete.accusation) Enquete.accusation = false; else Enquete.ouvrirAccusation();
     });
-    for (const b of [E.c2G, E.c2D, E.c2A, E.c2C, E.c2Dos, E.c2Acc]) if (b) b.addEventListener("click", ev => ev.preventDefault());
+    for (const b of [E.c2G, E.c2D, E.c2A, E.c2Int, E.c2C, E.c2Dos, E.c2Acc]) if (b) b.addEventListener("click", ev => ev.preventDefault());
     if (E.outilsBtn) E.outilsBtn.addEventListener("click", () => Debug.basculer());
 
     globalThis.addEventListener("resize", () => { ajusterCanevas(); Interface.pensePivot(); });

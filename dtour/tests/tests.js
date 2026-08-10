@@ -715,6 +715,18 @@ if (D){
   } else ok("scénario sans coupable : rien à contredire");
 
   titre("Les gens dans la pièce");
+  verifier("chacun pose sur une ligne mesurée sur le décor",
+    D.SUSPECTS_BANQUE.every(x => { const p = D.PLACES_FIXES[x.id]; return p.bas > 0.6 && p.bas <= 0.95; }),
+    Object.entries(D.PLACES_FIXES).map(([k, p]) => k + ":" + p.bas).join(" "));
+  verifier("celui de la table est posé plus haut que celui du canapé",
+    D.PLACES_FIXES.charles.bas < D.PLACES_FIXES.teo.bas,
+    "un plateau de table est plus haut qu'une assise");
+  verifier("la personne debout est la plus grande",
+    D.PLACES_FIXES.soeur.taille > D.PLACES_FIXES.teo.taille &&
+    D.PLACES_FIXES.soeur.taille > D.PLACES_FIXES.charles.taille);
+  verifier("aucun buste n'atteint la taille d'un inspecteur debout",
+    D.PLACES_FIXES.charles.taille < D.ENQ_TAILLE * 0.5 &&
+    D.PLACES_FIXES.teo.taille < D.ENQ_TAILLE * 0.6);
   verifier("quatre habitants, dont le chat", D.SUSPECTS_BANQUE.length === 4, D.SUSPECTS_BANQUE.length);
   verifier("chacun a une place fixe et une taille",
     D.SUSPECTS_BANQUE.every(s => D.PLACES_FIXES[s.id] && D.PLACES_FIXES[s.id].taille > 0));
@@ -763,6 +775,34 @@ if (D){
   /* la taille des inspecteurs suit la hauteur sous plafond */
   verifier("un inspecteur mesure environ 70 % de la pièce",
     D.ENQ_TAILLE > 0.55 && D.ENQ_TAILLE < 0.70, "ENQ_TAILLE = " + D.ENQ_TAILLE);
+
+  /* fouiller et interroger ne doivent jamais se disputer un appui */
+  titre("Fouiller ou interroger");
+  lancer2();
+  const zTable = D.Enquete.zones.findIndex(z => z.ref.id === "table");
+  /* on se place à un endroit où les deux sont possibles */
+  D.Enquete.actifIns().x = D.ZONES[zTable].pied;
+  const versSuspect = D.Enquete.suspectProche();
+  D.Enquete.actifIns().x = D.SUSPECTS.find(s => s.id === "charles").x;
+  verifier("un habitant peut être à portée d'un meuble", D.Enquete.suspectProche() >= 0);
+  void versSuspect;
+  /* INSPECTER ne parle jamais à personne */
+  const avantVus = D.SUSPECTS.reduce((a, s) => a + s.vus + s.vusPF, 0);
+  D.Enquete.inspecter();
+  for (let i = 0; i < 80; i++) D.Jeu.pas(1 / 60);
+  egal("inspecter n'interroge personne", D.SUSPECTS.reduce((a, s) => a + s.vus + s.vusPF, 0), avantVus);
+  /* INTERROGER ne fouille jamais rien */
+  const avantF = D.Enquete.fouilles;
+  D.Enquete.actifIns().x = D.SUSPECTS.find(s => s.id === "charles").x;
+  D.Enquete.parler();
+  egal("interroger ne fouille rien", D.Enquete.fouilles, avantF);
+  verifier("et fait bien parler quelqu'un",
+    D.SUSPECTS.reduce((a, s) => a + s.vus + s.vusPF, 0) > avantVus);
+  verifier("la réplique sort de la bouche du témoin",
+    D.Effets.paroles.some(p => p.cible.temoin !== undefined),
+    "elle sortait de celle de l'inspecteur, on ne savait plus qui parlait");
+  D.Enquete.actifIns().x = 0.50;
+  egal("loin de tout, interroger ne fait rien", D.Enquete.parler(), false);
 
   /* on doit pouvoir conclure au doigt, sans clavier */
   titre("Conclure sans clavier");

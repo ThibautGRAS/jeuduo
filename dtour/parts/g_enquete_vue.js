@@ -67,7 +67,19 @@ const EnqVue = {
       const px = this.ex(ins.x) + trem;
       if (Math.abs(px - precX) < Camera.L * 0.30) etage++; else etage = 0;
       precX = px;
-      dessinerParoleLibre(p, px, this.ey(ENQ_LIGNE) - H * ENQ_TAILLE - etage * H * 0.115);
+      dessinerParoleLibre(p, px, this.ey(ENQ_LIGNE) - H * ENQ_TAILLE - etage * H * 0.115,
+        { bord:Heros[ins.heros].couleur });
+    }
+    /* Les témoins parlent au-dessus d'eux-mêmes, dans une bulle de
+       couleur différente et signée de leur nom : on ne confond plus qui
+       répond et qui demande. */
+    for (const p of Effets.paroles){
+      if (p.cible.temoin === undefined) continue;
+      const s = SUSPECTS[p.cible.temoin];
+      if (!s) continue;
+      const h = H * (s.taille || 0.30);
+      dessinerParoleLibre(p, this.ex(s.x) + trem, this.ey(s.bas) - h - H * 0.055,
+        { temoin:true, nom:s.nom });
     }
 
     if (Enquete.actif) this.dessinerBandeau();
@@ -137,7 +149,7 @@ const EnqVue = {
          meuble sur lequel ils sont censés être. */
       const h = H * (s.taille || 0.30);
       const l = h * img.naturalWidth / img.naturalHeight;
-      const bas = s.ancre === "sol" ? this.ey(ENQ_LIGNE) : this.ey(s.y) + h * 0.5;
+      const bas = this.ey(s.bas);
       const g3 = ctx.createRadialGradient(px, bas, 0, px, bas, h * 0.34);
       g3.addColorStop(0, "rgba(24,14,6,.32)"); g3.addColorStop(1, "rgba(24,14,6,0)");
       ctx.fillStyle = g3;
@@ -158,7 +170,7 @@ const EnqVue = {
       const pres = Math.abs(Enquete.actifIns().x - s.x) < ENQ_PORTEE * 2.2;
       if (!pres && !s.vus) continue;
       const h = H * (s.taille || 0.30);
-      const bas = s.ancre === "sol" ? this.ey(ENQ_LIGNE) : this.ey(s.y) + h * 0.5;
+      const bas = this.ey(s.bas);
       const taille = Math.max(9, H * 0.034);
       const py = bas - h - H * 0.018;
       ctx.save();
@@ -171,10 +183,21 @@ const EnqVue = {
       ctx.strokeStyle = "rgba(255,255,255,.24)"; ctx.lineWidth = 1; ctx.stroke();
       ctx.fillStyle = s.coince ? "#FFF3F2" : "#F1F5FF";
       ctx.fillText(s.nom, px, py + taille * 0.06);
-      if (pres && !Enquete.estPF(Enquete.actifIns())){
-        ctx.font = "700 " + Math.round(taille * 0.8) + "px 'Baloo 2', system-ui, sans-serif";
-        ctx.fillStyle = "rgba(247,179,43,.95)";
-        ctx.fillText("INTERROGER", px, py - taille * 1.6);
+      /* Un signe, pas un mot : la commande INTERROGER s'allume en bas
+         de l'écran, répéter le mot ici chevauchait la plaque de nom. */
+      if (pres){
+        const r = taille * 0.62;
+        const cy = py - taille * 1.9;
+        ctx.beginPath(); ctx.arc(px, cy, r, 0, 6.2832);
+        ctx.fillStyle = "rgba(126,92,196,.95)"; ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(px - r * 0.34, cy + r * 0.72); ctx.lineTo(px + r * 0.16, cy + r * 0.72);
+        ctx.lineTo(px - r * 0.10, cy + r * 1.34); ctx.closePath();
+        ctx.fillStyle = "rgba(126,92,196,.95)"; ctx.fill();
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "800 " + Math.round(r * 1.25) + "px 'Baloo 2', system-ui, sans-serif";
+        ctx.fillText("?", px, cy + r * 0.06);
       }
       ctx.restore();
     }
@@ -483,31 +506,50 @@ const EnqVue = {
 };
 /* Une bulle posée à un endroit libre : le niveau 2 place ses héros
    lui-même, la version du niveau 1 irait les chercher dans la file. */
-function dessinerParoleLibre(p, px, pyTete){
+function dessinerParoleLibre(p, px, pyTete, style){
+  const st = style || {};
   const t = p.t / p.duree;
   const monte = Math.min(1, p.t * 8);
   const py = pyTete - Camera.H * 0.02 - monte * Camera.H * 0.02;
-  const taille = Math.max(11, Camera.H * 0.055);
+  const taille = Math.max(11, Camera.H * 0.052);
   ctx.save();
   ctx.globalAlpha = borne(1 - Math.pow(t, 4), 0, 1) * (0.35 + 0.65 * monte);
   ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   const l = ctx.measureText(p.txt).width;
-  const pad = taille * 0.62, bh = taille * 1.72, bl = l + pad * 2;
+  const pad = taille * 0.62;
+  const hNom = st.temoin ? taille * 0.86 : 0;
+  const bh = taille * 1.72 + hNom;
+  const bl = l + pad * 2;
   const bx = borne(px - bl / 2, 4, Camera.L - bl - 4);
   const by = py - bh;
-  arrondi(bx, by, bl, bh, bh * 0.42);
-  ctx.fillStyle = "rgba(252,253,255,.96)"; ctx.fill();
+
+  /* Deux styles bien séparés : blanc pour les inspecteurs, avec un
+     liseré de leur couleur, et papier crème signé pour les témoins. */
+  const fond = st.temoin ? "rgba(247,240,224,.97)" : "rgba(252,253,255,.97)";
+  arrondi(bx, by, bl, bh, bh * 0.30);
+  ctx.fillStyle = fond; ctx.fill();
   ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1.5, taille * 0.10); ctx.stroke();
-  const qx = borne(px, bx + bh * 0.5, bx + bl - bh * 0.5);
+  if (st.bord){
+    ctx.fillStyle = st.bord;
+    arrondi(bx, by + bh * 0.22, Math.max(3, taille * 0.16), bh * 0.56, taille * 0.08); ctx.fill();
+  }
+  const qx = borne(px, bx + bh * 0.4, bx + bl - bh * 0.4);
   ctx.beginPath();
-  ctx.moveTo(qx - bh * 0.18, by + bh - 1);
-  ctx.lineTo(qx + bh * 0.18, by + bh - 1);
-  ctx.lineTo(qx, by + bh + bh * 0.36);
+  ctx.moveTo(qx - bh * 0.14, by + bh - 1);
+  ctx.lineTo(qx + bh * 0.14, by + bh - 1);
+  ctx.lineTo(qx, by + bh + bh * 0.28);
   ctx.closePath();
-  ctx.fillStyle = "rgba(252,253,255,.96)"; ctx.fill();
+  ctx.fillStyle = fond; ctx.fill();
   ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1.5, taille * 0.10); ctx.stroke();
-  ctx.fillStyle = "#1A1420";
-  ctx.fillText(p.txt, bx + bl / 2, by + bh / 2);
+
+  if (st.temoin && st.nom){
+    ctx.font = "800 " + Math.round(taille * 0.56) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillStyle = "#8A6B34";
+    ctx.fillText(st.nom, bx + bl / 2, by + hNom * 0.62);
+  }
+  ctx.font = (st.temoin ? "700 " : "800 ") + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+  ctx.fillStyle = st.temoin ? "#2A2117" : "#1A1420";
+  ctx.fillText(p.txt, bx + bl / 2 + (st.bord ? taille * 0.12 : 0), by + hNom + taille * 0.86);
   ctx.restore();
 }

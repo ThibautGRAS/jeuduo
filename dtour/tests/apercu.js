@@ -282,7 +282,7 @@ function jouerJusqua(D, condition, limite){
     D.amorcer();
     D.Camera.mesurer(1280, 620, 1);
     D.Jeu.demarrer(2); D.Intro.finir();
-    const z = D.Enquete.zones.findIndex(x => x.ref.id === "frigo");
+    const z = D.Enquete.zones.findIndex(x => x.ref.id === "table");
     D.Enquete.actifIns().x = D.Enquete.zones[z].ref.pied;
     for (let i = 0; i < 30; i++) D.Jeu.pas(1 / 60);
     dessinerVia(D, canevas);
@@ -320,11 +320,12 @@ function jouerJusqua(D, condition, limite){
     D.amorcer(); D.Camera.mesurer(844, 318, 1);
     D.Jeu.demarrer(2); D.Intro.finir();
     D.Enquete.actifIdx = D.Heros.findIndex(h => h.sprite === "thibaut");
-    D.Enquete.actifIns().x = D.SUSPECTS[0].x;
-    D.Enquete.autreIns().x = D.SUSPECTS[0].x - 0.05;
+    const cible = D.SUSPECTS.find(s => s.id === "charles") || D.SUSPECTS[0];
+    D.Enquete.actifIns().x = cible.x - 0.02;
+    D.Enquete.autreIns().x = cible.x - 0.07;
     for (let i = 0; i < 30; i++) D.Jeu.pas(1 / 60);
-    D.Enquete.interroger(0);
-    for (let i = 0; i < 20; i++) D.Jeu.pas(1 / 60);
+    D.Enquete.parler();
+    for (let i = 0; i < 24; i++) D.Jeu.pas(1 / 60);
     dessinerVia(D, canevas);
     ecrire(canevas, "12_suspect_844");
   }

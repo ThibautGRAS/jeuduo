@@ -220,7 +220,13 @@ kbd{
 }
 /* INSPECTER reste le plus large, mais plafonné : il mangeait un
    tiers du décor. */
-.cmd2.large{flex:0 1 auto;min-width:0;max-width:30vw;padding:0 16px}
+.cmd2.large{flex:0 1 auto;min-width:0;max-width:24vw;padding:0 12px}
+/* INTERROGER a sa propre touche : quand quelqu'un se tenait devant un
+   meuble, on ne savait pas ce qu'INSPECTER allait faire. Elle s'éteint
+   quand personne n'est à portée. */
+#c2Int{background:linear-gradient(180deg,rgba(126,92,196,.94),rgba(88,60,150,.94))}
+#c2Int.eteint{opacity:.34;filter:grayscale(.6)}
+#c2A.eteint{opacity:.40;filter:grayscale(.5)}
 #c2A{background:linear-gradient(180deg,rgba(247,179,43,.94),rgba(198,133,14,.94));color:#1A1305}
 #c2A.esquive{animation:tartePrete .45s ease-in-out infinite}
 #c2C{background:linear-gradient(180deg,rgba(42,138,228,.9),rgba(28,98,170,.9))}
@@ -465,12 +471,13 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v3.2</div>
+  <div id="version">CALLAGHAN v3.3</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
     <button class="cmd2" id="c2D" aria-label="Aller à droite">▶</button>
     <button class="cmd2 large" id="c2A"><span id="c2ATxt">INSPECTER</span></button>
+    <button class="cmd2 large" id="c2Int">INTERROGER</button>
     <button class="cmd2" id="c2C" aria-label="Changer d'inspecteur"><img id="c2CImg" alt="">⇄</button>
     <button class="cmd2" id="c2Acc">ACCUSER<b id="c2AccN">2</b></button>
     <button class="cmd2" id="c2Dos" aria-label="Dossier d'enquête">🗂<b id="c2DosN">0</b></button>
@@ -524,7 +531,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "3.2";
+const VERSION = "3.3";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1740,7 +1747,8 @@ const Effets = {
        s'écrivaient l'une sur l'autre et devenaient illisibles. */
     this.paroles = this.paroles.filter(p =>
       !(p.cible.pnj && p.cible.pnj === cible.pnj) &&
-      !(p.cible.heros !== undefined && p.cible.heros === cible.heros));
+      !(p.cible.heros !== undefined && p.cible.heros === cible.heros) &&
+      !(p.cible.temoin !== undefined && p.cible.temoin === cible.temoin));
     this.paroles.push({ cible, txt, t:0, duree:duree || 1.4 });
   },
 
@@ -3035,11 +3043,16 @@ const RIEN = {
    famille et de la bande, on lui ménage la vérité ; Thibaut est un
    inconnu, on se surveille moins devant lui. C'est ce qui fait que les
    deux interrogatoires ne se valent pas. */
+/* `bas` est la ligne sur laquelle le personnage POSE, relevée sur le
+   décor : l'assise du canapé à 80 %, le plateau de la table à 73,5 %,
+   le sol du couloir à 90 %, celui du salon à 92,5 %. Poser tout le monde
+   sur la même ligne mettait Charles debout devant sa table et faisait
+   flotter Teo au-dessus du canapé. */
 const PLACES_FIXES = {
-  teo:     { x:0.272, y:0.70, ancre:"assis",  taille:0.30 },
-  charles: { x:0.606, y:0.66, ancre:"assis",  taille:0.26 },
-  soeur:   { x:0.876, y:0.92, ancre:"sol",    taille:0.54 },
-  chat:    { x:0.452, y:0.88, ancre:"assis",  taille:0.17 },
+  teo:     { x:0.268, bas:0.805, taille:0.29 },   /* avachi sur le canapé */
+  charles: { x:0.548, bas:0.735, taille:0.225 },  /* accoudé au bout de la table */
+  soeur:   { x:0.818, bas:0.900, taille:0.575 },  /* debout dans le couloir */
+  chat:    { x:0.452, bas:0.925, taille:0.170 },  /* par terre            */
 };
 
 const SUSPECTS_BANQUE = [
@@ -3156,7 +3169,7 @@ function composerSuspects(){
     const jeu = coupable ? s.evasif : s.innocent;
     SUSPECTS.push({
       id:s.id, nom:s.nom, sprite:s.sprite, role:s.role,
-      x:p.x, y:p.y, ancre:p.ancre, taille:p.taille,
+      x:p.x, bas:p.bas, taille:p.taille,
       diresPF:piocher(jeu.pf).slice(),
       diresTH:piocher(jeu.th).slice(),
       fond:piocher(s.fond),
@@ -3563,9 +3576,10 @@ const Enquete = {
     if (ins.fouille > 0) return false;
     const iz = this.zoneProche();
     if (iz >= 0){ ins.fouille = ENQ_FOUILLE; ins.cible = iz; ins.marche = 0; Sons.tarteVol(); return true; }
-    const is = this.suspectProche();
-    if (is >= 0){ this.interroger(is); return true; }
-    this.dire("Rien à portée.", 1.0);
+    /* On n'interroge PLUS ici : quand quelqu'un se tient devant un
+       meuble, on ne savait pas ce que le bouton allait faire. Parler a
+       sa propre commande. */
+    this.dire("Aucun meuble à portée.", 1.2);
     return false;
   },
 
@@ -3644,6 +3658,15 @@ const Enquete = {
     ins.cible = -1;
   },
 
+  /* Commande « INTERROGER » : elle ne cherche que des gens. */
+  parler(){
+    if (!this.actif || this.gele > 0 || this.dossierOuvert) return false;
+    const is = this.suspectProche();
+    if (is < 0){ this.dire("Personne à portée.", 1.2); return false; }
+    this.interroger(is);
+    return true;
+  },
+
   interroger(is){
     const s = SUSPECTS[is];
     const ins = this.actifIns();
@@ -3656,7 +3679,10 @@ const Enquete = {
     const compte = pf ? "vusPF" : "vus";
     const d = serie[s[compte] % serie.length];
     s[compte]++;
-    Effets.parole({ heros:ins.heros }, d, 2.4);
+    /* La réponse sort de la bouche du témoin, pas de celle de
+       l'inspecteur : les faire parler tous par la même bulle mélangeait
+       qui disait quoi. */
+    Effets.parole({ temoin:is }, d, 2.6);
     Sons.bip(pf ? 470 : 540, 0.08, "sine", 0.1);
 
     /* Une remarque de fond au premier passage : ce qu'on voit, pas ce
@@ -3922,7 +3948,19 @@ const EnqVue = {
       const px = this.ex(ins.x) + trem;
       if (Math.abs(px - precX) < Camera.L * 0.30) etage++; else etage = 0;
       precX = px;
-      dessinerParoleLibre(p, px, this.ey(ENQ_LIGNE) - H * ENQ_TAILLE - etage * H * 0.115);
+      dessinerParoleLibre(p, px, this.ey(ENQ_LIGNE) - H * ENQ_TAILLE - etage * H * 0.115,
+        { bord:Heros[ins.heros].couleur });
+    }
+    /* Les témoins parlent au-dessus d'eux-mêmes, dans une bulle de
+       couleur différente et signée de leur nom : on ne confond plus qui
+       répond et qui demande. */
+    for (const p of Effets.paroles){
+      if (p.cible.temoin === undefined) continue;
+      const s = SUSPECTS[p.cible.temoin];
+      if (!s) continue;
+      const h = H * (s.taille || 0.30);
+      dessinerParoleLibre(p, this.ex(s.x) + trem, this.ey(s.bas) - h - H * 0.055,
+        { temoin:true, nom:s.nom });
     }
 
     if (Enquete.actif) this.dessinerBandeau();
@@ -3992,7 +4030,7 @@ const EnqVue = {
          meuble sur lequel ils sont censés être. */
       const h = H * (s.taille || 0.30);
       const l = h * img.naturalWidth / img.naturalHeight;
-      const bas = s.ancre === "sol" ? this.ey(ENQ_LIGNE) : this.ey(s.y) + h * 0.5;
+      const bas = this.ey(s.bas);
       const g3 = ctx.createRadialGradient(px, bas, 0, px, bas, h * 0.34);
       g3.addColorStop(0, "rgba(24,14,6,.32)"); g3.addColorStop(1, "rgba(24,14,6,0)");
       ctx.fillStyle = g3;
@@ -4013,7 +4051,7 @@ const EnqVue = {
       const pres = Math.abs(Enquete.actifIns().x - s.x) < ENQ_PORTEE * 2.2;
       if (!pres && !s.vus) continue;
       const h = H * (s.taille || 0.30);
-      const bas = s.ancre === "sol" ? this.ey(ENQ_LIGNE) : this.ey(s.y) + h * 0.5;
+      const bas = this.ey(s.bas);
       const taille = Math.max(9, H * 0.034);
       const py = bas - h - H * 0.018;
       ctx.save();
@@ -4026,10 +4064,21 @@ const EnqVue = {
       ctx.strokeStyle = "rgba(255,255,255,.24)"; ctx.lineWidth = 1; ctx.stroke();
       ctx.fillStyle = s.coince ? "#FFF3F2" : "#F1F5FF";
       ctx.fillText(s.nom, px, py + taille * 0.06);
-      if (pres && !Enquete.estPF(Enquete.actifIns())){
-        ctx.font = "700 " + Math.round(taille * 0.8) + "px 'Baloo 2', system-ui, sans-serif";
-        ctx.fillStyle = "rgba(247,179,43,.95)";
-        ctx.fillText("INTERROGER", px, py - taille * 1.6);
+      /* Un signe, pas un mot : la commande INTERROGER s'allume en bas
+         de l'écran, répéter le mot ici chevauchait la plaque de nom. */
+      if (pres){
+        const r = taille * 0.62;
+        const cy = py - taille * 1.9;
+        ctx.beginPath(); ctx.arc(px, cy, r, 0, 6.2832);
+        ctx.fillStyle = "rgba(126,92,196,.95)"; ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(px - r * 0.34, cy + r * 0.72); ctx.lineTo(px + r * 0.16, cy + r * 0.72);
+        ctx.lineTo(px - r * 0.10, cy + r * 1.34); ctx.closePath();
+        ctx.fillStyle = "rgba(126,92,196,.95)"; ctx.fill();
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "800 " + Math.round(r * 1.25) + "px 'Baloo 2', system-ui, sans-serif";
+        ctx.fillText("?", px, cy + r * 0.06);
       }
       ctx.restore();
     }
@@ -4338,32 +4387,51 @@ const EnqVue = {
 };
 /* Une bulle posée à un endroit libre : le niveau 2 place ses héros
    lui-même, la version du niveau 1 irait les chercher dans la file. */
-function dessinerParoleLibre(p, px, pyTete){
+function dessinerParoleLibre(p, px, pyTete, style){
+  const st = style || {};
   const t = p.t / p.duree;
   const monte = Math.min(1, p.t * 8);
   const py = pyTete - Camera.H * 0.02 - monte * Camera.H * 0.02;
-  const taille = Math.max(11, Camera.H * 0.055);
+  const taille = Math.max(11, Camera.H * 0.052);
   ctx.save();
   ctx.globalAlpha = borne(1 - Math.pow(t, 4), 0, 1) * (0.35 + 0.65 * monte);
   ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   const l = ctx.measureText(p.txt).width;
-  const pad = taille * 0.62, bh = taille * 1.72, bl = l + pad * 2;
+  const pad = taille * 0.62;
+  const hNom = st.temoin ? taille * 0.86 : 0;
+  const bh = taille * 1.72 + hNom;
+  const bl = l + pad * 2;
   const bx = borne(px - bl / 2, 4, Camera.L - bl - 4);
   const by = py - bh;
-  arrondi(bx, by, bl, bh, bh * 0.42);
-  ctx.fillStyle = "rgba(252,253,255,.96)"; ctx.fill();
+
+  /* Deux styles bien séparés : blanc pour les inspecteurs, avec un
+     liseré de leur couleur, et papier crème signé pour les témoins. */
+  const fond = st.temoin ? "rgba(247,240,224,.97)" : "rgba(252,253,255,.97)";
+  arrondi(bx, by, bl, bh, bh * 0.30);
+  ctx.fillStyle = fond; ctx.fill();
   ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1.5, taille * 0.10); ctx.stroke();
-  const qx = borne(px, bx + bh * 0.5, bx + bl - bh * 0.5);
+  if (st.bord){
+    ctx.fillStyle = st.bord;
+    arrondi(bx, by + bh * 0.22, Math.max(3, taille * 0.16), bh * 0.56, taille * 0.08); ctx.fill();
+  }
+  const qx = borne(px, bx + bh * 0.4, bx + bl - bh * 0.4);
   ctx.beginPath();
-  ctx.moveTo(qx - bh * 0.18, by + bh - 1);
-  ctx.lineTo(qx + bh * 0.18, by + bh - 1);
-  ctx.lineTo(qx, by + bh + bh * 0.36);
+  ctx.moveTo(qx - bh * 0.14, by + bh - 1);
+  ctx.lineTo(qx + bh * 0.14, by + bh - 1);
+  ctx.lineTo(qx, by + bh + bh * 0.28);
   ctx.closePath();
-  ctx.fillStyle = "rgba(252,253,255,.96)"; ctx.fill();
+  ctx.fillStyle = fond; ctx.fill();
   ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1.5, taille * 0.10); ctx.stroke();
-  ctx.fillStyle = "#1A1420";
-  ctx.fillText(p.txt, bx + bl / 2, by + bh / 2);
+
+  if (st.temoin && st.nom){
+    ctx.font = "800 " + Math.round(taille * 0.56) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillStyle = "#8A6B34";
+    ctx.fillText(st.nom, bx + bl / 2, by + hNom * 0.62);
+  }
+  ctx.font = (st.temoin ? "700 " : "800 ") + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+  ctx.fillStyle = st.temoin ? "#2A2117" : "#1A1420";
+  ctx.fillText(p.txt, bx + bl / 2 + (st.bord ? taille * 0.12 : 0), by + hNom + taille * 0.86);
   ctx.restore();
 }
 
@@ -4371,7 +4439,7 @@ function dessinerParoleLibre(p, px, pyTete){
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -4633,6 +4701,10 @@ const Interface = {
     if (E.c2ATxt) E.c2ATxt.textContent = esq ? "ESQUIVER !" : "INSPECTER";
     if (E.c2A) E.c2A.classList.toggle("esquive", !!esq);
     if (E.c2DosN) E.c2DosN.textContent = String(Dossier.compte());
+    /* Les deux commandes disent chacune si elles ont quelque chose à
+       faire : plus de doute sur ce qui va se passer. */
+    if (E.c2A) E.c2A.classList.toggle("eteint", Enquete.zoneProche() < 0);
+    if (E.c2Int) E.c2Int.classList.toggle("eteint", Enquete.suspectProche() < 0);
     /* Le bouton CHANGER porte le visage de CELUI QU'ON VA PRENDRE : on
        sait d'un coup d'œil qui on a en main et qui on récupère. */
     if (E.c2CImg && Enquete.inspecteurs.length === 2){
@@ -4829,6 +4901,8 @@ const Entrees = {
       } else if (t === " "){
         e.preventDefault(); Sons.reveiller();
         if (Enquete.esquiveOuverte) Enquete.esquiver(); else Enquete.action();
+      } else if (t === "i"){
+        e.preventDefault(); Sons.reveiller(); Enquete.parler();
       } else if (t === "tab"){
         e.preventDefault(); Enquete.changer();
       } else if (t === "d"){
@@ -4916,13 +4990,16 @@ const Entrees = {
       ev.preventDefault(); Sons.reveiller();
       if (Intro.actif) Intro.passer(); else Enquete.action();
     });
+    if (E.c2Int) E.c2Int.addEventListener("pointerdown", ev => {
+      ev.preventDefault(); Sons.reveiller(); Enquete.parler();
+    });
     if (E.c2C) E.c2C.addEventListener("pointerdown", ev => { ev.preventDefault(); Enquete.changer(); });
     if (E.c2Dos) E.c2Dos.addEventListener("pointerdown", ev => { ev.preventDefault(); Enquete.basculerDossier(); });
     if (E.c2Acc) E.c2Acc.addEventListener("pointerdown", ev => {
       ev.preventDefault(); Sons.reveiller();
       if (Enquete.accusation) Enquete.accusation = false; else Enquete.ouvrirAccusation();
     });
-    for (const b of [E.c2G, E.c2D, E.c2A, E.c2C, E.c2Dos, E.c2Acc]) if (b) b.addEventListener("click", ev => ev.preventDefault());
+    for (const b of [E.c2G, E.c2D, E.c2A, E.c2Int, E.c2C, E.c2Dos, E.c2Acc]) if (b) b.addEventListener("click", ev => ev.preventDefault());
     if (E.outilsBtn) E.outilsBtn.addEventListener("click", () => Debug.basculer());
 
     globalThis.addEventListener("resize", () => { ajusterCanevas(); Interface.pensePivot(); });
