@@ -166,7 +166,7 @@ try {
   /* on expose quelques repères internes pour pouvoir observer la partie */
   const sonde = "\nreturn { get etat(){ return etat; }, get phase(){ return phase; }," +
                 " get balles(){ return balles; }, get manches(){ return manches; }," +
-                " get obstacles(){ return obstacles; }, get particules(){ return particules; }," +
+                " get obstacles(){ return obstacles; }, get particules(){ return particules; }, get debris(){ return debris; }, puits: () => puitsActifs()," +
                 " get lus(){ return lus; }, VERSION };";
   jeu = new Function(...noms, script + sonde)(...valeurs);
   verifier("le script s'exécute sans exception", true, "version " + jeu.VERSION);
@@ -272,6 +272,18 @@ try {
   const s2 = jeu.etat.score, m2 = jeu.manches;
   verifier("le jeu progresse en gravité", s2[0] + s2[1] + m2[0] + m2[1] > 0,
     "score " + s2.join("-") + " | manches " + m2.join("-"));
+  verifier("des rochers gravitent dès le départ", jeu.debris.length > 0,
+    jeu.debris.length + " rochers en jeu");
+  {
+    /* ils doivent tourner AUTOUR, pas être collés au trou */
+    const dists = jeu.debris.map(d => {
+      const p = jeu.puits();
+      return Math.min(...p.map(q => Math.hypot(q.x - d.x, q.y - d.y)));
+    });
+    const moy = dists.reduce((a, b) => a + b, 0) / (dists.length || 1);
+    verifier("ils gardent leurs distances", dists.length === 0 || moy > 40,
+      "distance moyenne au trou : " + Math.round(moy) + " px");
+  }
 } catch (e){ verifier("le mode gravité démarre", false, e.message); }
 
 console.log("\n5bis. Mode relais");
