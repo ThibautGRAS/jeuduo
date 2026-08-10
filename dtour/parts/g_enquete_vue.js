@@ -62,27 +62,68 @@ const EnqVue = {
 
     /* Deux inspecteurs côte à côte parlent parfois en même temps : on
        empile les bulles au lieu de les superposer. */
-    const bulles = Effets.paroles.filter(p => p.cible.heros !== undefined && E2.inspecteurs[p.cible.heros]);
-    bulles.sort((a, b) => E2.inspecteurs[a.cible.heros].x - E2.inspecteurs[b.cible.heros].x);
-    let etage = 0, precX = -1e9;
-    for (const p of bulles){
-      const ins = E2.inspecteurs[p.cible.heros];
-      const px = this.ex(ins.x) + trem;
-      if (Math.abs(px - precX) < Camera.L * 0.30) etage++; else etage = 0;
-      precX = px;
-      dessinerParoleLibre(p, px, this.ey(ENQ_LIGNE) - H * ENQ_TAILLE - etage * H * 0.115,
-        { bord:Heros[ins.heros].couleur });
-    }
-    /* Les témoins parlent au-dessus d'eux-mêmes, dans une bulle de
-       couleur différente et signée de leur nom : on ne confond plus qui
-       répond et qui demande. */
+    /* Toutes les bulles passent par le même calage : on les mesure, puis
+       on remonte celles qui se recouvrent jusqu'à ce que plus aucune n'en
+       touche une autre. L'empilement à l'estime laissait encore la
+       question et la réponse l'une sur l'autre. */
+    const bulles = [];
     for (const p of Effets.paroles){
-      if (p.cible.temoin === undefined) continue;
-      const s = SUSPECTS[p.cible.temoin];
-      if (!s) continue;
-      const h = H * (s.taille || 0.30);
-      dessinerParoleLibre(p, this.ex(s.x) + trem, this.ey(s.bas) - h - H * 0.055,
-        { temoin:true, nom:s.nom });
+      if (p.cible.heros !== undefined){
+        const ins = E2.inspecteurs[p.cible.heros];
+        if (!ins) continue;
+        bulles.push({ p, px:this.ex(ins.x) + trem,
+          base:this.ey(ENQ_LIGNE) - H * ENQ_TAILLE,
+          style:{ bord:Heros[ins.heros].couleur } });
+      } else if (p.cible.temoin !== undefined){
+        const s = SUSPECTS[p.cible.temoin];
+        if (!s) continue;
+        bulles.push({ p, px:this.ex(s.x) + trem,
+          base:this.ey(s.bas) - H * (s.taille || 0.30) - H * 0.05,
+          style:{ temoin:true, nom:s.nom } });
+      }
+    }
+    /* Les plus anciennes gardent leur place : une réponse qui arrive ne
+       fait pas sauter la question qu'on est en train de lire. */
+    bulles.sort((a, b) => b.p.t - a.p.t);
+    const posees = [];
+    const marge = Math.max(4, H * 0.014);
+    /* Plafond : au-dessus, on passerait sous le chrono et le compteur
+       d'indices. Une bulle cachée par le bandeau ne vaut pas mieux
+       qu'une bulle recouverte. */
+    const plafond = H * 0.155;
+    const chevauche = (a, b2) =>
+      a.x0 < b2.x0 + b2.bl + marge && b2.x0 < a.x0 + a.bl + marge &&
+      (a.y - a.bh) < b2.y + marge && (b2.y - b2.bh) < a.y + marge;
+    for (const b of bulles){
+      const m = mesurerParole(b.p, b.style);
+      b.bl = m.bl; b.bh = m.bh;
+      b.y = b.base - H * 0.02;
+      b.x0 = borne(b.px - b.bl / 2, 4, Math.max(4, Camera.L - b.bl - 4));
+      /* D'abord on remonte, tant qu'il reste de la place. */
+      let garde = 0, libre = false;
+      while (!libre && garde++ < 12){
+        libre = true;
+        for (const q of posees){
+          if (!chevauche(b, q)) continue;
+          const remonte = q.y - q.bh - marge;
+          if (remonte - b.bh < plafond) break;      /* plus de place en hauteur */
+          b.y = remonte; libre = false; break;
+        }
+      }
+      /* Puis, si le plafond est atteint, on se décale sur le côté. */
+      if (!libre){
+        b.y = Math.max(b.y, plafond + b.bh);
+        for (let essai = 0; essai < 8; essai++){
+          const gene = posees.find(q => chevauche(b, q));
+          if (!gene) break;
+          const versDroite = b.px >= gene.px;
+          b.x0 = versDroite ? gene.x0 + gene.bl + marge : gene.x0 - b.bl - marge;
+          b.x0 = borne(b.x0, 4, Math.max(4, Camera.L - b.bl - 4));
+          b.px = b.x0 + b.bl / 2;
+        }
+      }
+      posees.push(b);
+      dessinerParoleLibre(b.p, b.px, b.y, b.style, b.x0);
     }
 
     if (Enquete.actif) this.dessinerBandeau();
@@ -182,7 +223,7 @@ const EnqVue = {
     for (const s of SUSPECTS){
       const px = this.ex(s.x);
       if (px < -140 || px > Camera.L + 140) continue;
-      const pres = Math.abs(Enquete.actifIns().x - s.x) < ENQ_PORTEE * 2.2;
+      const pres = Math.abs(Enquete.actifIns().x - s.x) < ENQ_PORTEE_GENS;
       if (!pres && !s.vus) continue;
       const h = H * (s.taille || 0.30);
       const bas = this.ey(s.bas);
@@ -521,26 +562,34 @@ const EnqVue = {
 };
 /* Une bulle posée à un endroit libre : le niveau 2 place ses héros
    lui-même, la version du niveau 1 irait les chercher dans la file. */
-function dessinerParoleLibre(p, px, pyTete, style){
+/* Mesure d'une bulle sans la dessiner : le calage en a besoin avant de
+   savoir où la poser, et deux calculs séparés auraient fini par
+   divorcer. */
+function mesurerParole(p, style){
+  const st = style || {};
+  const taille = Math.max(10, Camera.H * 0.046);
+  ctx.save();
+  ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+  const l = ctx.measureText(p.txt).width;
+  ctx.restore();
+  const pad = taille * 0.62;
+  const hNom = st.temoin ? taille * 0.86 : 0;
+  return { bl:l + pad * 2, bh:taille * 1.72 + hNom, taille, hNom };
+}
+
+function dessinerParoleLibre(p, px, pyBas, style, x0){
   const st = style || {};
   const t = p.t / p.duree;
   const monte = Math.min(1, p.t * 8);
-  const py = pyTete - Camera.H * 0.02 - monte * Camera.H * 0.02;
-  const taille = Math.max(11, Camera.H * 0.052);
+  const m = mesurerParole(p, st);
+  const taille = m.taille, hNom = m.hNom, bl = m.bl, bh = m.bh;
+  const bx = x0 != null ? x0 : borne(px - bl / 2, 4, Math.max(4, Camera.L - bl - 4));
+  const by = pyBas - bh - monte * Camera.H * 0.012;
+
   ctx.save();
   ctx.globalAlpha = borne(1 - Math.pow(t, 4), 0, 1) * (0.35 + 0.65 * monte);
-  ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  const l = ctx.measureText(p.txt).width;
-  const pad = taille * 0.62;
-  const hNom = st.temoin ? taille * 0.86 : 0;
-  const bh = taille * 1.72 + hNom;
-  const bl = l + pad * 2;
-  const bx = borne(px - bl / 2, 4, Camera.L - bl - 4);
-  const by = py - bh;
 
-  /* Deux styles bien séparés : blanc pour les inspecteurs, avec un
-     liseré de leur couleur, et papier crème signé pour les témoins. */
   const fond = st.temoin ? "rgba(247,240,224,.97)" : "rgba(252,253,255,.97)";
   arrondi(bx, by, bl, bh, bh * 0.30);
   ctx.fillStyle = fond; ctx.fill();

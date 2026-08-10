@@ -471,7 +471,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v3.4</div>
+  <div id="version">CALLAGHAN v3.5</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -531,7 +531,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "3.4";
+const VERSION = "3.5";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -2893,7 +2893,11 @@ function dessinerDebugTarte(){
 
 const ENQ_DUREE = 300;              /* cinq minutes */
 const ENQ_OBJECTIF = 6;             /* indices à réunir */
-const ENQ_PORTEE = 0.026;           /* distance d'interaction, en fraction d'image */
+const ENQ_PORTEE = 0.026;           /* portée pour les meubles, en fraction d'image */
+/* Les gens s'abordent de plus loin qu'un tiroir ne s'ouvre : la portée
+   de la parole est celle à laquelle leur nom s'affiche, pas moins. On
+   voyait le nom sans pouvoir encore adresser la parole. */
+const ENQ_PORTEE_GENS = ENQ_PORTEE * 2.2;
 const ENQ_MARCHE = 0.20;            /* fraction d'image parcourue par seconde */
 const ENQ_LIGNE = 0.920;   /* la ligne de sol du salon, relevée sur le décor */
 /* Un adulte fait environ 70 % de la hauteur sous plafond, et la pièce
@@ -2996,6 +3000,31 @@ const BAVARDAGES = [
 ];
 
 
+
+/* ---------- ce que les inspecteurs demandent ----------
+   Une question avant la réponse : sans elle, un témoin répondait à rien
+   et l'échange n'existait pas. Les deux n'interrogent pas pareil —
+   Pierre-François vérifie des faits, Thibaut cherche des gens. Les
+   questions défilent, donc trois passages font un vrai entretien. */
+const QUESTIONS = {
+  pf:[
+    "Où étiez-vous à dix-neuf heures quarante ?",
+    "Qu'avez-vous mangé, exactement ?",
+    "Avez-vous ouvert le réfrigérateur ?",
+    "Vous êtes resté combien de temps ?",
+  ],
+  th:[
+    "Une pizza a disparu. Ça vous parle ?",
+    "Qui est passé ce soir ?",
+    "Vous avez entendu quelque chose ?",
+    "Vous étiez avec qui ?",
+  ],
+};
+/* Et quand le lien personnel s'en mêle, la question dérape. */
+const QUESTIONS_LIEN = {
+  soeur:"Bon. Comment va ta sœur ?",
+  teo:"Tu ne vas pas me mentir, hein ?",
+};
 
 /* ---------- ce qu'on trouve quand on ne trouve rien ----------
    Deux lectures par meuble, jamais la même. Pierre-François décrit ce
@@ -3528,6 +3557,9 @@ const Enquete = {
   /* Une réplique après l'autre, cadencées par le chrono du jeu. Les
      empiler d'un coup les rendait illisibles ; un setTimeout les aurait
      laissées courir pendant le dossier. */
+  /* `qui` est soit l'indice d'un inspecteur, soit { temoin:i } : la file
+     sert aux deux, sinon la réponse d'un témoin aurait dû passer par un
+     minuteur séparé. */
   dialogue(paires, delai){
     this.fileDial = (this.fileDial || []).concat(paires.map((p, i) => ({
       qui:p[0], txt:p[1], quand:(delai || 0) + i * 1.5,
@@ -3538,7 +3570,8 @@ const Enquete = {
     for (const r of this.fileDial) r.quand -= dt;
     while (this.fileDial.length && this.fileDial[0].quand <= 0){
       const r = this.fileDial.shift();
-      Effets.parole({ heros:this.inspecteurs[r.qui].heros }, r.txt, 2.0);
+      if (r.qui && r.qui.temoin !== undefined) Effets.parole(r.qui, r.txt, 2.6);
+      else if (this.inspecteurs[r.qui]) Effets.parole({ heros:this.inspecteurs[r.qui].heros }, r.txt, 2.2);
     }
   },
   poserBadge(nom){ this.badge = nom; this.badgeT = 0; },
@@ -3556,7 +3589,7 @@ const Enquete = {
   },
   suspectProche(){
     const ins = this.actifIns();
-    let meilleur = -1, dmin = ENQ_PORTEE;
+    let meilleur = -1, dmin = ENQ_PORTEE_GENS;
     for (let i = 0; i < SUSPECTS.length; i++){
       const d = Math.abs(SUSPECTS[i].x - ins.x);
       if (d < dmin){ dmin = d; meilleur = i; }
@@ -3677,13 +3710,22 @@ const Enquete = {
        seul Thibaut fait tomber une contradiction. */
     const serie = pf ? s.diresPF : s.diresTH;
     const compte = pf ? "vusPF" : "vus";
-    const d = serie[s[compte] % serie.length];
+    const tour = s[compte];
+    const d = serie[tour % serie.length];
     s[compte]++;
+
+    /* La question d'abord, la réponse ensuite. Pierre-François glisse sa
+       question de famille au premier tour, ce qui explique pourquoi il
+       n'obtient jamais rien. */
+    const banque = pf ? QUESTIONS.pf : QUESTIONS.th;
+    const lien = pf ? QUESTIONS_LIEN[s.id] : null;
+    const q = (lien && tour === 0) ? lien : banque[tour % banque.length];
+    Effets.parole({ heros:ins.heros }, q, 2.0);
+    Sons.bip(pf ? 470 : 540, 0.08, "sine", 0.1);
     /* La réponse sort de la bouche du témoin, pas de celle de
        l'inspecteur : les faire parler tous par la même bulle mélangeait
        qui disait quoi. */
-    Effets.parole({ temoin:is }, d, 2.6);
-    Sons.bip(pf ? 470 : 540, 0.08, "sine", 0.1);
+    this.dialogue([[{ temoin:is }, d]], 1.25);
 
     /* Une remarque de fond au premier passage : ce qu'on voit, pas ce
        qu'on entend. Elle vaut pour les deux. */
@@ -3943,27 +3985,68 @@ const EnqVue = {
 
     /* Deux inspecteurs côte à côte parlent parfois en même temps : on
        empile les bulles au lieu de les superposer. */
-    const bulles = Effets.paroles.filter(p => p.cible.heros !== undefined && E2.inspecteurs[p.cible.heros]);
-    bulles.sort((a, b) => E2.inspecteurs[a.cible.heros].x - E2.inspecteurs[b.cible.heros].x);
-    let etage = 0, precX = -1e9;
-    for (const p of bulles){
-      const ins = E2.inspecteurs[p.cible.heros];
-      const px = this.ex(ins.x) + trem;
-      if (Math.abs(px - precX) < Camera.L * 0.30) etage++; else etage = 0;
-      precX = px;
-      dessinerParoleLibre(p, px, this.ey(ENQ_LIGNE) - H * ENQ_TAILLE - etage * H * 0.115,
-        { bord:Heros[ins.heros].couleur });
-    }
-    /* Les témoins parlent au-dessus d'eux-mêmes, dans une bulle de
-       couleur différente et signée de leur nom : on ne confond plus qui
-       répond et qui demande. */
+    /* Toutes les bulles passent par le même calage : on les mesure, puis
+       on remonte celles qui se recouvrent jusqu'à ce que plus aucune n'en
+       touche une autre. L'empilement à l'estime laissait encore la
+       question et la réponse l'une sur l'autre. */
+    const bulles = [];
     for (const p of Effets.paroles){
-      if (p.cible.temoin === undefined) continue;
-      const s = SUSPECTS[p.cible.temoin];
-      if (!s) continue;
-      const h = H * (s.taille || 0.30);
-      dessinerParoleLibre(p, this.ex(s.x) + trem, this.ey(s.bas) - h - H * 0.055,
-        { temoin:true, nom:s.nom });
+      if (p.cible.heros !== undefined){
+        const ins = E2.inspecteurs[p.cible.heros];
+        if (!ins) continue;
+        bulles.push({ p, px:this.ex(ins.x) + trem,
+          base:this.ey(ENQ_LIGNE) - H * ENQ_TAILLE,
+          style:{ bord:Heros[ins.heros].couleur } });
+      } else if (p.cible.temoin !== undefined){
+        const s = SUSPECTS[p.cible.temoin];
+        if (!s) continue;
+        bulles.push({ p, px:this.ex(s.x) + trem,
+          base:this.ey(s.bas) - H * (s.taille || 0.30) - H * 0.05,
+          style:{ temoin:true, nom:s.nom } });
+      }
+    }
+    /* Les plus anciennes gardent leur place : une réponse qui arrive ne
+       fait pas sauter la question qu'on est en train de lire. */
+    bulles.sort((a, b) => b.p.t - a.p.t);
+    const posees = [];
+    const marge = Math.max(4, H * 0.014);
+    /* Plafond : au-dessus, on passerait sous le chrono et le compteur
+       d'indices. Une bulle cachée par le bandeau ne vaut pas mieux
+       qu'une bulle recouverte. */
+    const plafond = H * 0.155;
+    const chevauche = (a, b2) =>
+      a.x0 < b2.x0 + b2.bl + marge && b2.x0 < a.x0 + a.bl + marge &&
+      (a.y - a.bh) < b2.y + marge && (b2.y - b2.bh) < a.y + marge;
+    for (const b of bulles){
+      const m = mesurerParole(b.p, b.style);
+      b.bl = m.bl; b.bh = m.bh;
+      b.y = b.base - H * 0.02;
+      b.x0 = borne(b.px - b.bl / 2, 4, Math.max(4, Camera.L - b.bl - 4));
+      /* D'abord on remonte, tant qu'il reste de la place. */
+      let garde = 0, libre = false;
+      while (!libre && garde++ < 12){
+        libre = true;
+        for (const q of posees){
+          if (!chevauche(b, q)) continue;
+          const remonte = q.y - q.bh - marge;
+          if (remonte - b.bh < plafond) break;      /* plus de place en hauteur */
+          b.y = remonte; libre = false; break;
+        }
+      }
+      /* Puis, si le plafond est atteint, on se décale sur le côté. */
+      if (!libre){
+        b.y = Math.max(b.y, plafond + b.bh);
+        for (let essai = 0; essai < 8; essai++){
+          const gene = posees.find(q => chevauche(b, q));
+          if (!gene) break;
+          const versDroite = b.px >= gene.px;
+          b.x0 = versDroite ? gene.x0 + gene.bl + marge : gene.x0 - b.bl - marge;
+          b.x0 = borne(b.x0, 4, Math.max(4, Camera.L - b.bl - 4));
+          b.px = b.x0 + b.bl / 2;
+        }
+      }
+      posees.push(b);
+      dessinerParoleLibre(b.p, b.px, b.y, b.style, b.x0);
     }
 
     if (Enquete.actif) this.dessinerBandeau();
@@ -4063,7 +4146,7 @@ const EnqVue = {
     for (const s of SUSPECTS){
       const px = this.ex(s.x);
       if (px < -140 || px > Camera.L + 140) continue;
-      const pres = Math.abs(Enquete.actifIns().x - s.x) < ENQ_PORTEE * 2.2;
+      const pres = Math.abs(Enquete.actifIns().x - s.x) < ENQ_PORTEE_GENS;
       if (!pres && !s.vus) continue;
       const h = H * (s.taille || 0.30);
       const bas = this.ey(s.bas);
@@ -4402,26 +4485,34 @@ const EnqVue = {
 };
 /* Une bulle posée à un endroit libre : le niveau 2 place ses héros
    lui-même, la version du niveau 1 irait les chercher dans la file. */
-function dessinerParoleLibre(p, px, pyTete, style){
+/* Mesure d'une bulle sans la dessiner : le calage en a besoin avant de
+   savoir où la poser, et deux calculs séparés auraient fini par
+   divorcer. */
+function mesurerParole(p, style){
+  const st = style || {};
+  const taille = Math.max(10, Camera.H * 0.046);
+  ctx.save();
+  ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+  const l = ctx.measureText(p.txt).width;
+  ctx.restore();
+  const pad = taille * 0.62;
+  const hNom = st.temoin ? taille * 0.86 : 0;
+  return { bl:l + pad * 2, bh:taille * 1.72 + hNom, taille, hNom };
+}
+
+function dessinerParoleLibre(p, px, pyBas, style, x0){
   const st = style || {};
   const t = p.t / p.duree;
   const monte = Math.min(1, p.t * 8);
-  const py = pyTete - Camera.H * 0.02 - monte * Camera.H * 0.02;
-  const taille = Math.max(11, Camera.H * 0.052);
+  const m = mesurerParole(p, st);
+  const taille = m.taille, hNom = m.hNom, bl = m.bl, bh = m.bh;
+  const bx = x0 != null ? x0 : borne(px - bl / 2, 4, Math.max(4, Camera.L - bl - 4));
+  const by = pyBas - bh - monte * Camera.H * 0.012;
+
   ctx.save();
   ctx.globalAlpha = borne(1 - Math.pow(t, 4), 0, 1) * (0.35 + 0.65 * monte);
-  ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  const l = ctx.measureText(p.txt).width;
-  const pad = taille * 0.62;
-  const hNom = st.temoin ? taille * 0.86 : 0;
-  const bh = taille * 1.72 + hNom;
-  const bl = l + pad * 2;
-  const bx = borne(px - bl / 2, 4, Camera.L - bl - 4);
-  const by = py - bh;
 
-  /* Deux styles bien séparés : blanc pour les inspecteurs, avec un
-     liseré de leur couleur, et papier crème signé pour les témoins. */
   const fond = st.temoin ? "rgba(247,240,224,.97)" : "rgba(252,253,255,.97)";
   arrondi(bx, by, bl, bh, bh * 0.30);
   ctx.fillStyle = fond; ctx.fill();
@@ -5210,7 +5301,7 @@ globalThis.DTOUR = {
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS,
-  ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, Progres, Intro,
+  ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, QUESTIONS, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, HORTENSE_ECART, TARTE_DUREE,
   __dessiner:() => dessiner(),

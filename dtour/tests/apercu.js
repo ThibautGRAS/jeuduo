@@ -325,7 +325,8 @@ function jouerJusqua(D, condition, limite){
     D.Enquete.autreIns().x = cible.x - 0.07;
     for (let i = 0; i < 30; i++) D.Jeu.pas(1 / 60);
     D.Enquete.parler();
-    for (let i = 0; i < 24; i++) D.Jeu.pas(1 / 60);
+    /* assez tard pour que la question ET la réponse soient à l'écran */
+    for (let i = 0; i < 90; i++) D.Jeu.pas(1 / 60);
     dessinerVia(D, canevas);
     ecrire(canevas, "12_suspect_844");
   }

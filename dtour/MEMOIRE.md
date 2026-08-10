@@ -155,6 +155,13 @@ inspecteur seul ne peut pas réunir tous les indices. Quand la place
 manque, on raccourcit un libellé ou on passe en pastille ; on ne retire
 pas la commande. Un test refuse désormais toute règle qui masque `#c2C`.
 
+### Empiler des bulles finit toujours par les cacher
+Le premier calage les remontait d'un étage par collision. Sur un écran
+de 318 px, la deuxième passait sous le chrono. Le calage résout
+maintenant les recouvrements en hauteur **jusqu'à un plafond**, puis se
+replie latéralement. Et la mesure d'une bulle est une fonction séparée
+du dessin : deux calculs parallèles auraient fini par divorcer.
+
 ### Une bulle par bouche
 Les réponses des témoins sortaient de la bulle de l'inspecteur qui
 posait la question. À trois personnes dans le champ, on ne savait plus

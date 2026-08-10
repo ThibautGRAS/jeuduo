@@ -93,11 +93,27 @@ plante l'inspecteur qui fouille la table. Les
 poser tous sur la même ligne mettait Charles debout devant sa table et
 faisait flotter Teo au-dessus du canapé.
 
+**Un interrogatoire est un échange.** L'inspecteur pose sa question, le
+témoin répond une seconde plus tard. Les deux ne demandent pas la même
+chose : Pierre-François vérifie des faits — « Où étiez-vous à dix-neuf
+heures quarante ? » — Thibaut cherche des gens — « Qui est passé ce
+soir ? ». Les questions défilent, donc trois passages font un vrai
+entretien. Et quand le lien personnel s'en mêle, la question dérape :
+« Bon. Comment va ta sœur ? »
+
+On aborde quelqu'un **dès que son nom s'affiche**, pas plus près : la
+portée de la parole vaut plus du double de celle d'un tiroir.
+
 **On voit qui parle.** Les inspecteurs ont une bulle blanche avec un
 liseré de leur couleur — vert pour Pierre-François, bleu pour Thibaut.
 Les habitants répondent au-dessus d'eux-mêmes, dans une bulle papier
 crème signée de leur nom. Auparavant tout sortait de la même bouche et
 on ne savait plus qui demandait quoi.
+
+Toutes les bulles passent par un **calage commun** : on les mesure, on
+remonte celles qui se recouvrent, et quand le plafond est atteint — sous
+le chrono — elles se décalent sur le côté plutôt que de disparaître
+derrière le bandeau.
 
 **Les deux inspecteurs n'entendent pas la même chose, et c'est le
 cœur du niveau.** Pierre-François est de la famille et de la bande : sa

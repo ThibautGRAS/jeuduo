@@ -690,6 +690,10 @@ if (D){
   verifier("les deux inspecteurs ont chacun leur spécialité",
     D.INDICES.some(i => i.expert) && D.INDICES.some(i => i.social),
     "sinon on joue tout le niveau avec le même");
+  verifier("les deux inspecteurs ont leurs propres questions",
+    D.QUESTIONS.pf.length >= 4 && D.QUESTIONS.th.length >= 4 &&
+    !D.QUESTIONS.pf.some(q => D.QUESTIONS.th.indexOf(q) >= 0),
+    "ils ne doivent pas poser les mêmes");
   verifier("les quatre pièces ont leur réplique d'entrée",
     D.PIECES.length === 4 && D.PIECES.every(p => p.ligne && p.jusqua > 0));
   verifier("le bavardage va par paires", D.BAVARDAGES.length % 2 === 0);
@@ -706,12 +710,12 @@ if (D){
     D.Enquete.interroger(coupable);
     verifier("Pierre-François n'arrache pas la contradiction", !D.SUSPECTS[coupable].coince);
     D.Enquete.actifIdx = D.Heros.findIndex(h => h.sprite === "thibaut");
-    D.Enquete.fileDial = [];
     D.Enquete.interroger(coupable);
-    verifier("Thibaut, oui", D.SUSPECTS[coupable].coince && D.Enquete.fileDial.length >= 1);
-    D.Enquete.fileDial = [];
+    verifier("Thibaut, oui", D.SUSPECTS[coupable].coince);
+    const avantC = D.Enquete.fileDial.filter(r => typeof r.qui === "number").length;
     D.Enquete.interroger(coupable);
-    verifier("elle ne tombe qu'une fois", D.Enquete.fileDial.length === 0);
+    egal("elle ne tombe qu'une fois",
+      D.Enquete.fileDial.filter(r => typeof r.qui === "number").length, avantC);
   } else ok("scénario sans coupable : rien à contredire");
 
   titre("Les gens dans la pièce");
@@ -798,10 +802,21 @@ if (D){
   egal("interroger ne fouille rien", D.Enquete.fouilles, avantF);
   verifier("et fait bien parler quelqu'un",
     D.SUSPECTS.reduce((a, s) => a + s.vus + s.vusPF, 0) > avantVus);
-  verifier("la réplique sort de la bouche du témoin",
+  verifier("l'inspecteur pose d'abord une question",
+    D.Effets.paroles.some(p => p.cible.heros !== undefined),
+    "un témoin qui répond à rien, ce n'est pas un interrogatoire");
+  verifier("la réponse est différée, pas simultanée",
+    !D.Effets.paroles.some(p => p.cible.temoin !== undefined) &&
+    D.Enquete.fileDial.some(r => r.qui && r.qui.temoin !== undefined));
+  for (let i = 0; i < 90; i++) D.Jeu.pas(1 / 60);
+  verifier("puis la réplique sort de la bouche du témoin",
     D.Effets.paroles.some(p => p.cible.temoin !== undefined),
     "elle sortait de celle de l'inspecteur, on ne savait plus qui parlait");
-  D.Enquete.actifIns().x = 0.50;
+  /* on peut aborder quelqu'un dès que son nom s'affiche */
+  verifier("on parle d'aussi loin que le nom s'affiche",
+    D.ENQ_PORTEE_GENS > D.ENQ_PORTEE * 2,
+    "le nom apparaissait bien avant qu'on puisse adresser la parole");
+  D.Enquete.actifIns().x = 0.20;
   egal("loin de tout, interroger ne fait rien", D.Enquete.parler(), false);
 
   /* on doit pouvoir conclure au doigt, sans clavier */

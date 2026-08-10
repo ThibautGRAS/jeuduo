@@ -22,7 +22,11 @@
 
 const ENQ_DUREE = 300;              /* cinq minutes */
 const ENQ_OBJECTIF = 6;             /* indices à réunir */
-const ENQ_PORTEE = 0.026;           /* distance d'interaction, en fraction d'image */
+const ENQ_PORTEE = 0.026;           /* portée pour les meubles, en fraction d'image */
+/* Les gens s'abordent de plus loin qu'un tiroir ne s'ouvre : la portée
+   de la parole est celle à laquelle leur nom s'affiche, pas moins. On
+   voyait le nom sans pouvoir encore adresser la parole. */
+const ENQ_PORTEE_GENS = ENQ_PORTEE * 2.2;
 const ENQ_MARCHE = 0.20;            /* fraction d'image parcourue par seconde */
 const ENQ_LIGNE = 0.920;   /* la ligne de sol du salon, relevée sur le décor */
 /* Un adulte fait environ 70 % de la hauteur sous plafond, et la pièce
@@ -125,6 +129,31 @@ const BAVARDAGES = [
 ];
 
 
+
+/* ---------- ce que les inspecteurs demandent ----------
+   Une question avant la réponse : sans elle, un témoin répondait à rien
+   et l'échange n'existait pas. Les deux n'interrogent pas pareil —
+   Pierre-François vérifie des faits, Thibaut cherche des gens. Les
+   questions défilent, donc trois passages font un vrai entretien. */
+const QUESTIONS = {
+  pf:[
+    "Où étiez-vous à dix-neuf heures quarante ?",
+    "Qu'avez-vous mangé, exactement ?",
+    "Avez-vous ouvert le réfrigérateur ?",
+    "Vous êtes resté combien de temps ?",
+  ],
+  th:[
+    "Une pizza a disparu. Ça vous parle ?",
+    "Qui est passé ce soir ?",
+    "Vous avez entendu quelque chose ?",
+    "Vous étiez avec qui ?",
+  ],
+};
+/* Et quand le lien personnel s'en mêle, la question dérape. */
+const QUESTIONS_LIEN = {
+  soeur:"Bon. Comment va ta sœur ?",
+  teo:"Tu ne vas pas me mentir, hein ?",
+};
 
 /* ---------- ce qu'on trouve quand on ne trouve rien ----------
    Deux lectures par meuble, jamais la même. Pierre-François décrit ce
@@ -657,6 +686,9 @@ const Enquete = {
   /* Une réplique après l'autre, cadencées par le chrono du jeu. Les
      empiler d'un coup les rendait illisibles ; un setTimeout les aurait
      laissées courir pendant le dossier. */
+  /* `qui` est soit l'indice d'un inspecteur, soit { temoin:i } : la file
+     sert aux deux, sinon la réponse d'un témoin aurait dû passer par un
+     minuteur séparé. */
   dialogue(paires, delai){
     this.fileDial = (this.fileDial || []).concat(paires.map((p, i) => ({
       qui:p[0], txt:p[1], quand:(delai || 0) + i * 1.5,
@@ -667,7 +699,8 @@ const Enquete = {
     for (const r of this.fileDial) r.quand -= dt;
     while (this.fileDial.length && this.fileDial[0].quand <= 0){
       const r = this.fileDial.shift();
-      Effets.parole({ heros:this.inspecteurs[r.qui].heros }, r.txt, 2.0);
+      if (r.qui && r.qui.temoin !== undefined) Effets.parole(r.qui, r.txt, 2.6);
+      else if (this.inspecteurs[r.qui]) Effets.parole({ heros:this.inspecteurs[r.qui].heros }, r.txt, 2.2);
     }
   },
   poserBadge(nom){ this.badge = nom; this.badgeT = 0; },
@@ -685,7 +718,7 @@ const Enquete = {
   },
   suspectProche(){
     const ins = this.actifIns();
-    let meilleur = -1, dmin = ENQ_PORTEE;
+    let meilleur = -1, dmin = ENQ_PORTEE_GENS;
     for (let i = 0; i < SUSPECTS.length; i++){
       const d = Math.abs(SUSPECTS[i].x - ins.x);
       if (d < dmin){ dmin = d; meilleur = i; }
@@ -806,13 +839,22 @@ const Enquete = {
        seul Thibaut fait tomber une contradiction. */
     const serie = pf ? s.diresPF : s.diresTH;
     const compte = pf ? "vusPF" : "vus";
-    const d = serie[s[compte] % serie.length];
+    const tour = s[compte];
+    const d = serie[tour % serie.length];
     s[compte]++;
+
+    /* La question d'abord, la réponse ensuite. Pierre-François glisse sa
+       question de famille au premier tour, ce qui explique pourquoi il
+       n'obtient jamais rien. */
+    const banque = pf ? QUESTIONS.pf : QUESTIONS.th;
+    const lien = pf ? QUESTIONS_LIEN[s.id] : null;
+    const q = (lien && tour === 0) ? lien : banque[tour % banque.length];
+    Effets.parole({ heros:ins.heros }, q, 2.0);
+    Sons.bip(pf ? 470 : 540, 0.08, "sine", 0.1);
     /* La réponse sort de la bouche du témoin, pas de celle de
        l'inspecteur : les faire parler tous par la même bulle mélangeait
        qui disait quoi. */
-    Effets.parole({ temoin:is }, d, 2.6);
-    Sons.bip(pf ? 470 : 540, 0.08, "sine", 0.1);
+    this.dialogue([[{ temoin:is }, d]], 1.25);
 
     /* Une remarque de fond au premier passage : ce qu'on voit, pas ce
        qu'on entend. Elle vaut pour les deux. */
