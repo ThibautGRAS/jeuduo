@@ -918,7 +918,12 @@ if (D){
   egal("loin de tout, interroger ne fait rien", D.Enquete.parler(), false);
 
   titre("Les visiteurs de passage");
-  verifier("sept passants au moins", D.VISITEURS.length >= 7, D.VISITEURS.length);
+  verifier("huit passants au moins", D.VISITEURS.length >= 8, D.VISITEURS.length);
+  verifier("Jojo est dans le registre",
+    D.VISITEURS.some(v => v.id === "jojo" && v.lie && v.lie.plomberie && v.lie.hauteur));
+  verifier("les deux barmen se partagent le thème de l'alcool",
+    D.VISITEURS.filter(v => v.lie && v.lie.alcool).length >= 2,
+    "Francky et Jojo doivent tous deux pouvoir en parler");
   verifier("Francky est dans le registre",
     D.VISITEURS.some(v => v.id === "francky" && v.lie && v.lie.dodo && v.lie.alcool));
   verifier("une réplique liée ne sort que dans les affaires concernées",
@@ -935,6 +940,15 @@ if (D){
   verifier("les affaires de cocktail existent",
     D.SCENARIOS.filter(sc => (sc.tags || []).indexOf("dodo") >= 0).length >= 3,
     "il faut de quoi faire parler Francky");
+  verifier("chaque thème de visiteur a au moins deux affaires",
+    (() => {
+      const themes = new Set();
+      for (const v of D.VISITEURS) if (v.lie) Object.keys(v.lie).forEach(k => themes.add(k));
+      for (const t2 of themes){
+        if (D.SCENARIOS.filter(sc => (sc.tags || []).indexOf(t2) >= 0).length < 1) return false;
+      }
+      return true;
+    })(), "un thème sans affaire, c'est un personnage muet");
   verifier("chacun a un sprite chargé au démarrage",
     D.VISITEURS.every(v => /^pnj\d\d$|^pers_/.test(v.sprite)),
     D.VISITEURS.map(v => v.sprite).join(", "));

@@ -471,7 +471,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v4.2</div>
+  <div id="version">CALLAGHAN v4.3</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -531,7 +531,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "4.2";
+const VERSION = "4.3";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -938,7 +938,7 @@ const IMAGES_NIVEAU2 = [
   "ind_miettes", "ind_chorizo", "ind_fromage", "ind_serviette",
   "ind_sauce", "ind_assiette", "ind_ticket", "ind_pattes", "ind_billet",
   "pizza_entiere", "pizza_entamee", "pizza_part", "pizza_boite_ouverte",
-  "susp_chat", "pers_teo", "pers_charles", "pers_soeur", "pers_francky",
+  "susp_chat", "pers_teo", "pers_charles", "pers_soeur", "pers_francky", "pers_jojo",
   "badge_indice", "badge_suspect",
 ];
 
@@ -3451,6 +3451,45 @@ const SCENARIOS = [
       ok:"Tout, jusqu'à un certain point. Après, un trou.", ko:"Un trou. Un beau trou bien net.",
       pf:"Tu m'inquiètes quand tu ne te souviens de rien." } },
 
+  { id:"la_fuite", temoinCle:"teo", tags:["plomberie", "salon"], coupable:null,
+    cachettes:["evier"],
+    porteurs:["ticket", "sauce", "assiette"],
+    piste:[[0, "Le sol est humide sous le placard du bas."],
+           [1, "On a vidé ce placard en urgence. Et tout remis dedans."]],
+    trouvaille:[[0, "{Ou}. Entre une bassine et une clé de douze."],
+                [1, "Personne ne l'a volée. On l'a déménagée."]],
+    contradiction:"Vous avez vidé le placard pendant la fuite. Vous avez tout remis. Tout.",
+    chute:"L'évier a fui vers la fin du repas. On a vidé le placard du bas en urgence, tout entassé, et la pizza est partie avec le reste. Jojo avait pourtant bien posé le siphon.",
+    anecdote:{ suspect:"teo", qTH:"Il y a eu une fuite, ce soir ?", qPF:"Tu as encore bricolé quelque chose ?",
+      ok:"Un filet d'eau. On a épongé.", ko:"Une vraie fuite. J'ai tout sorti de ce placard.",
+      pf:"Tu bricoles toujours quand il ne faut pas." } },
+
+  { id:"le_placard_haut", tags:["hauteur", "porte"], coupable:"soeur",
+    cachettes:["placards"],
+    porteurs:["ticket", "menu", "miettes"],
+    piste:[[0, "Elle est en haut. Bien en haut."],
+           [1, "Personne ici n'atteint ça sans tabouret."]],
+    trouvaille:[[0, "{Ou}. Sans une trace de tabouret par terre."],
+                [1, "Il a donc fallu quelqu'un de grand. Ou de l'aide."]],
+    contradiction:"Vous n'atteignez pas ce placard. Quelqu'un l'a fait pour vous.",
+    chute:"Elle a demandé un coup de main à la femme de Jojo, qui attendait en bas et qui atteint tout sans monter sur rien. Deux personnes pour cacher une pizza : c'est une organisation.",
+    anecdote:{ suspect:"soeur", qTH:"Qui vous a aidée à ranger, en haut ?", qPF:"Tu as fait ça toute seule ?",
+      ok:"Personne. Je ne range jamais en haut.", ko:"On m'a tendu la boîte. Je n'ai fait que la pousser.",
+      pf:"Tu ne montes jamais sur un tabouret, je le sais." } },
+
+  { id:"les_deux_bars", tags:["alcool", "porte"], coupable:"charles",
+    cachettes:["manteaux", "sac"],
+    porteurs:["ticket", "serviette", "fromage"],
+    piste:[[0, "Deux additions. Deux bars. La même soirée."],
+           [1, "Quelqu'un est rentré bien après les autres."]],
+    trouvaille:[[0, "{Ou}. Froide, oubliée là."],
+                [1, "Il l'a prise en partant, puis il a oublié qu'il l'avait prise."]],
+    contradiction:"Vous êtes rentré du second bar. Personne ne vous a vu revenir.",
+    chute:"Il a fini la soirée chez Jojo après le D'Tour, il est remonté chercher son manteau, et il a emporté la pizza sans y penser. Au matin, il ne s'en souvenait plus.",
+    anecdote:{ suspect:"charles", qTH:"Vous êtes allé dans quel bar ?", qPF:"Vous buvez où, vous ?",
+      ok:"Aucun. Je ne bois pas en semaine.", ko:"Le D'Tour. Puis l'autre. Je crois.",
+      pf:"Vous avez une drôle de mémoire des lieux." } },
+
   { id:"la_tarte", temoinCle:"soeur", tags:["porte", "chat"], coupable:null, cachettes:["placards", "evier"],
     porteurs:["ticket", "chorizo", "assiette"],
     piste:[[0, "Quelqu'un est venu, a échangé quelque chose, et est reparti."],
@@ -3735,6 +3774,21 @@ const VISITEURS = [
       alcool:["Ils ont bu chez moi avant de monter. Beaucoup.",
               "Un cocktail comme le mien, ça efface une soirée entière.",
               "Vous voulez la vérité ? Demandez à quelqu'un qui n'a pas bu."],
+    } },
+  { id:"jojo", nom:"JOJO LE NAIN", sprite:"pers_jojo", cote:1, taille:1.0,
+    banal:["Je tenais le bar de l'Entrepotes. Ce soir, c'est relâche.",
+           "Francky met trop de sirop. Je le dis depuis dix ans.",
+           "Ma femme m'attend en bas. Elle voit par-dessus les voitures."],
+    lie:{
+      plomberie:["Le siphon de l'évier, c'est moi qui l'ai posé. Il fuit encore ?",
+                 "Quelqu'un a démonté sous l'évier. Et l'a remonté de travers.",
+                 "Si ça a fui vers {heure}, on a forcément vidé le placard du bas."],
+      hauteur:["Ma femme atteint les placards du haut sans monter sur rien.",
+               "Ici, personne ne va là-haut sans tabouret. Sauf elle.",
+               "Le placard du haut, c'est un cachette de grande personne."],
+      alcool:["Ils sont passés chez moi après le D'Tour. Deux bars dans une soirée, ça se paie.",
+              "Je sers, je ne juge pas. Mais là, j'ai jugé un peu.",
+              "Le plus grand des deux ne se souvenait déjà plus de son prénom."],
     } },
   { id:"voisine",  nom:"LA VOISINE DU 3e",   sprite:"pnj02", cote:-1,
     banal:["Vous auriez du sel ?", "C'est vous qui avez le vélo dans le couloir ?",

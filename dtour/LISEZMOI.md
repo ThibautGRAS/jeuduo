@@ -63,7 +63,7 @@ chaque pièce, une fois par partie. Et de loin en loin, quand on les
 laisse tranquilles, ils bavardent. Tout est cadencé par le chrono du
 jeu, jamais par `setTimeout`.
 
-**Dix-neuf affaires écrites** qui se servent de ces liens : la pizza mise de
+**Vingt-deux affaires écrites** qui se servent de ces liens : la pizza mise de
 côté pour Hortense, Charles qui efface sa visite, le prof d'histoire qui
 date la soirée à la minute parce qu'il en faisait partie, la chaîne
 Risoto-puis-Charles, le troc contre une tarte au citron, la reconstitution du prof
@@ -240,6 +240,17 @@ Trois affaires lui donnent la parole : la sieste, la tournée « bonne
 nuit les petits » où la seule personne à jeun a tout mangé, et le
 réveil où l'appartement entier s'était endormi et où plus personne ne
 savait où il avait posé la boîte.
+
+**Jojo le nain**, barman de l'Entrepotes, plombier le reste du temps, et
+marié à une femme de très grande taille. Trois thèmes lui répondent :
+`plomberie` — c'est lui qui a posé le siphon de l'évier —, `alcool` — il
+sert le second verre après celui de Francky —, et `hauteur`, parce que sa
+femme atteint les placards du haut sans monter sur rien.
+
+Ses trois affaires : la fuite d'évier qui a fait vider le placard du bas
+avec la pizza dedans, le placard du haut que personne ici n'atteint sans
+tabouret, et la tournée des deux bars d'où l'on revient sans se souvenir
+de ce qu'on a emporté.
 
 ### Ajouter un visiteur
 
