@@ -539,7 +539,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v14.3 · 2026-08-09</div>
+  <div id="version">DUO v14.4 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -679,7 +679,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "14.3";
+const VERSION = "14.4";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -765,6 +765,9 @@ const puitsPrec = [LARG/2, LARG/2];
 const DEBRIS_DEPART = 7;
 function semerDebris(){
   if (!cfgMode().puits) return;
+  /* pas de rochers en première manche : on découvre les puits sans encombrement,
+     ils n'arrivent qu'à partir de la deuxième */
+  if (manches[0] + manches[1] < 1) return;
   const p = puitsActifs();
   for (let i = 0; i < DEBRIS_DEPART; i++){
     const cible = p[i % Math.max(1, p.length)];
@@ -4893,12 +4896,12 @@ function deformerFond(Y, t){
          laissait une couture nette, d'où l'aspect de rouage cranté */
       const r0 = Math.max(0, R * (i - 1) / N - 1.5), r1 = R * i / N;
       const u = 1 - r1 / R;                        /* 0 au bord, 1 au centre */
-      /* Facteur INFÉRIEUR à 1 : chaque anneau va chercher le décor plus loin
-         et le repose plus près du centre. Le fond est donc aspiré vers le
-         trou — un entonnoir — au lieu d'être grossi comme une loupe, ce qui
-         dédoublait le cercle peint des arènes. */
-      const angle = 1.05 * Math.pow(u, 2.1) + t * 0.32 * u;
-      const echelle = 1 - 0.42 * u * u;
+      /* Retour au GROSSISSEMENT : comprimer le décor rendait la déformation
+         invisible, puisque les détails rétrécissaient au lieu de s'étirer.
+         C'est aussi ce que fait une vraie lentille gravitationnelle. La
+         sensation d'entonnoir vient du creusement lumineux, pas de l'échelle. */
+      const angle = 1.30 * Math.pow(u, 2.1) + t * 0.32 * u;
+      const echelle = 1 + 0.55 * u * u;
       ctx.save();
       ctx.beginPath();
       ctx.arc(cx, cy, r1, 0, Math.PI*2);
@@ -4925,9 +4928,9 @@ function dessinerTrouNoir(x, y, coul, t){
      et s'approfondit graduellement. C'est ce dégradé large qui donne la
      sensation d'un entonnoir plutôt que d'une pastille posée sur le décor. */
   const creux = ctx.createRadialGradient(x, y, R * 0.8, x, y, PUITS_R_VISU);
-  creux.addColorStop(0,    "rgba(2,4,10,.55)");
-  creux.addColorStop(0.35, "rgba(3,5,12,.30)");
-  creux.addColorStop(0.68, "rgba(4,6,14,.12)");
+  creux.addColorStop(0,    "rgba(2,4,10,.28)");
+  creux.addColorStop(0.35, "rgba(3,5,12,.14)");
+  creux.addColorStop(0.68, "rgba(4,6,14,.04)");
   creux.addColorStop(1,    "rgba(4,6,14,0)");
   ctx.fillStyle = creux;
   ctx.beginPath(); ctx.arc(x, y, PUITS_R_VISU, 0, Math.PI*2); ctx.fill();
@@ -4939,10 +4942,10 @@ function dessinerTrouNoir(x, y, coul, t){
 
   /* extinction progressive : le fond enroulé reste perceptible au centre */
   const g = ctx.createRadialGradient(x, y, 0, x, y, R);
-  g.addColorStop(0,    "rgba(2,3,8,.90)");
-  g.addColorStop(0.42, "rgba(3,4,11,.74)");
-  g.addColorStop(0.74, "rgba(4,6,14,.55)");
-  g.addColorStop(0.93, "rgba(5,7,16,.16)");
+  g.addColorStop(0,    "rgba(2,3,8,.82)");
+  g.addColorStop(0.42, "rgba(3,4,11,.62)");
+  g.addColorStop(0.74, "rgba(4,6,14,.38)");
+  g.addColorStop(0.93, "rgba(5,7,16,.10)");
   g.addColorStop(1,    "rgba(5,7,16,0)");
   ctx.fillStyle = g;
   ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI*2); ctx.fill();
