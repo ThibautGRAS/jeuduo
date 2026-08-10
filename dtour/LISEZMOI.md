@@ -63,10 +63,15 @@ chaque pièce, une fois par partie. Et de loin en loin, quand on les
 laisse tranquilles, ils bavardent. Tout est cadencé par le chrono du
 jeu, jamais par `setTimeout`.
 
-**Onze affaires écrites** qui se servent de ces liens : la pizza mise de
+**Dix-sept affaires écrites** qui se servent de ces liens : la pizza mise de
 côté pour Hortense, Charles qui efface sa visite, le prof d'histoire qui
 date la soirée à la minute parce qu'il en faisait partie, la chaîne
-Risoto-puis-Charles, le troc contre une tarte au citron, ou la vraie :
+Risoto-puis-Charles, le troc contre une tarte au citron, la reconstitution du prof
+d'histoire qui a remangé la pizza pour être sûr de comprendre, le pari
+perdu contre le chat, la pizza mise au congélateur pour la garder au
+chaud, le régime qui a tenu quarante minutes, la deuxième pizza
+commandée pour masquer la disparition de la première, la sieste de
+Pierre-François qui avait tout mangé avant de partir — ou la vraie :
 nous étions sortis, elle a tout mangé, laissé des miettes et un **billet
 de cinq euros** pour qu'on en rachète une. « Personne ne paie pour un
 vol. » « Alors ce n'est pas un vol. C'est un remboursement. » Qui, où et
@@ -185,7 +190,12 @@ doublon, six meubles distincts, jamais d'indice sur la cachette, et les
 deux indices porteurs toujours présents.
 
 **Hortense** intervient une fois, entre 35 % et 65 % du temps, jamais
-pendant le dossier ni pendant l'accusation. Elle lance sa tarte, on a
+pendant le dossier ni pendant l'accusation. Mais **parler à sa sœur,
+c'est la prévenir** : une fois sur deux elle rapplique dans les
+secondes qui suivent, sinon l'attente est franchement raccourcie — et
+insister finit toujours par payer. La sœur le dit elle-même : « Je viens
+de prévenir ma sœur, au fait. » L'attente moyenne tombe de 150 à 37
+secondes. Elle lance sa tarte, on a
 450 ms pour se baisser, et en repartant elle laisse tomber une rondelle
 de chorizo — le doute est permis, la réponse non.
 

@@ -667,7 +667,7 @@ if (D){
   for (let i = 0; i < 60 * 2; i++) D.Jeu.pas(1 / 60);
   verifier("la seconde arrive après, pas en même temps",
     D.Enquete.fileDial.length === 0, "il reste " + D.Enquete.fileDial.length + " réplique(s)");
-  verifier("onze affaires au moins", D.SCENARIOS.length >= 11, D.SCENARIOS.length + " scénarios");
+  verifier("dix-sept affaires au moins", D.SCENARIOS.length >= 17, D.SCENARIOS.length + " scénarios");
   verifier("celle du billet de cinq euros existe",
     D.SCENARIOS.some(sc => sc.porteurs.indexOf("billet") >= 0),
     "c'est l'affaire vraie : elle a tout mangé et laissé de quoi en racheter");
@@ -903,6 +903,46 @@ if (D){
   /* Hortense doit intervenir, une fois, au milieu */
   titre("Hortense au niveau 2");
   lancer2();
+  /* Parler à la sœur fait venir Hortense beaucoup plus vite. */
+  verifier("interroger la sœur avance la venue d'Hortense",
+    (() => {
+      let avances = 0, essais = 0;
+      for (let n = 0; n < 200; n++){
+        D.Jeu.demarrer(2); D.Intro.finir();
+        const avant = D.HortenseApp.quand;
+        const is = D.SUSPECTS.findIndex(x => x.id === "soeur");
+        D.Enquete.actifIdx = D.Heros.findIndex(h => h.sprite === "thibaut");
+        D.Enquete.interroger(is);
+        essais++;
+        if (D.HortenseApp.quand < avant - 0.5) avances++;
+      }
+      return avances === essais;
+    })(), "chaque passage doit rapprocher son arrivée");
+  verifier("et une fois sur deux environ, elle arrive tout de suite",
+    (() => {
+      let vite = 0;
+      for (let n = 0; n < 400; n++){
+        D.Jeu.demarrer(2); D.Intro.finir();
+        const is = D.SUSPECTS.findIndex(x => x.id === "soeur");
+        D.Enquete.interroger(is);
+        if (D.HortenseApp.quand - (D.ENQ_DUREE - D.Enquete.restant) < 9) vite++;
+      }
+      return vite > 160 && vite < 280;
+    })(), "ni jamais, ni à tous les coups");
+  verifier("interroger quelqu'un d'autre ne la fait pas venir",
+    (() => {
+      for (let n = 0; n < 60; n++){
+        D.Jeu.demarrer(2); D.Intro.finir();
+        const avant = D.HortenseApp.quand;
+        const is = D.SUSPECTS.findIndex(x => x.id === "charles");
+        if (is < 0) continue;
+        D.Enquete.interroger(is);
+        if (D.HortenseApp.quand !== avant) return false;
+      }
+      return true;
+    })());
+
+  D.Jeu.demarrer(2); D.Intro.finir();
   verifier("elle est programmée entre 35 % et 65 %",
     D.HortenseApp.quand >= D.ENQ_DUREE * 0.35 && D.HortenseApp.quand <= D.ENQ_DUREE * 0.65,
     "à " + D.HortenseApp.quand.toFixed(0) + " s");

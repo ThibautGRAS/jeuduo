@@ -442,6 +442,79 @@ const SCENARIOS = [
     anecdote:{ suspect:"charles", qTH:"Vous avez ramassé après le chat ?", qPF:"Vous avez ramassé après le chat ?", ok:"Quelqu'un devait le faire.", ko:"Ramasser, non. Cacher, oui.", pf:"Ce n'est pas un aveu." }
   },
 
+  /* --- les invraisemblables --- */
+  { id:"la_reconstitution", coupable:"teo", cachettes:["biblio", "tv", "commode"],
+    porteurs:["ticket", "miettes", "assiette"],
+    piste:[[0, "Tout est disposé exactement comme au moment des faits."],
+           [1, "Trop exactement."]],
+    trouvaille:[[0, "Ce qu'il en reste est rangé par ordre de taille."],
+                [1, "Il a refait la scène. En entier."]],
+    contradiction:"Pour reconstituer un repas, il faut le refaire. Vous l'avez refait.",
+    chute:"Il voulait comprendre comment ça s'était passé. Il a reconstitué la soirée, méthodiquement, et il a mangé la pizza deux fois pour être sûr.",
+    anecdote:{ suspect:"teo", qTH:"Vous avez reconstitué la soirée ?", qPF:"Tu as encore tout reconstitué ?",
+      ok:"Mentalement. C'est un exercice.", ko:"On ne reconstitue bien qu'en refaisant les gestes.",
+      pf:"Tu sais que ça m'inquiète, quand tu fais ça." } },
+
+  { id:"le_pari", coupable:"charles", cachettes:["basse", "sac"],
+    porteurs:["chorizo", "serviette", "part"],
+    piste:[[0, "Il a mangé vite. Très vite."],
+           [1, "Trop vite pour quelqu'un qui avait faim."]],
+    trouvaille:[[0, "Ce qu'il en reste tient dans une main."],
+                [1, "Quatre minutes. Il a dû s'entraîner."]],
+    contradiction:"On ne mange pas une pizza en quatre minutes sans raison.",
+    chute:"Il a parié avec le chat qu'il la finirait en moins de quatre minutes. Le chat n'a pas relevé. Il a mangé quand même.",
+    anecdote:{ suspect:"charles", qTH:"Vous avez parié quelque chose, ce soir ?", qPF:"Vous pariez souvent ?",
+      ok:"Jamais. Je n'ai personne avec qui parier.", ko:"Avec le chat. Il ne compte pas.",
+      pf:"Je ne vois pas le rapport avec la pizza." } },
+
+  { id:"le_congelateur", coupable:null, cachettes:["frigo"],
+    porteurs:["ticket", "fromage", "boite"],
+    piste:[[0, "Elle est passée du chaud au froid en dix minutes."],
+           [1, "Personne ne fait ça par accident."]],
+    trouvaille:[[0, "Au congélateur. Dure comme un carreau."],
+                [1, "Quelqu'un a voulu la garder au chaud. Au congélateur."]],
+    contradiction:"On ne garde pas une pizza au chaud dans un congélateur.",
+    chute:"Quelqu'un a voulu bien faire. Personne ne l'a volée : elle a été mise à congeler pour rester bonne, ce qui reste discutable.",
+    anecdote:{ suspect:"teo", qTH:"Qui range les restes, ici ?", qPF:"C'est toi qui ranges les restes ?",
+      ok:"Personne. C'est bien le problème de cet appartement.", ko:"Moi. Et je range bien.",
+      pf:"Tu ranges toujours des choses au mauvais endroit." } },
+
+  { id:"le_regime", coupable:"soeur", cachettes:["portant", "lit", "commode"],
+    porteurs:["billet", "serviette", "chorizo"],
+    piste:[[0, "Elle l'a cachée. Puis elle l'a retrouvée."],
+           [1, "Se cacher quelque chose à soi-même, ça se paie."]],
+    trouvaille:[[0, "Sous une pile de linge. Bien enfouie."],
+                [1, "Elle l'a cachée d'elle-même. Et elle a perdu."]],
+    contradiction:"Vous l'avez cachée pour ne pas la manger. Ça n'a pas suffi.",
+    chute:"Elle commençait un régime le lendemain. Elle a caché la pizza pour tenir. Elle a tenu quarante minutes.",
+    anecdote:{ suspect:"soeur", qTH:"Vous cachez souvent de la nourriture ?", qPF:"Tu caches encore des trucs à toi-même ?",
+      ok:"Jamais. Je n'ai rien à me cacher.", ko:"Une fois. Ça n'a pas marché.",
+      pf:"On avait dit qu'on ne parlait plus de ça." } },
+
+  { id:"la_sieste", coupable:null, cachettes:["four", "evier"],
+    porteurs:["ticket", "assiette", "miettes"],
+    piste:[[0, "Une assiette utilisée avant notre départ."],
+           [1, "Avant notre départ ?"]],
+    trouvaille:[[0, "Ce qu'il en reste était déjà là quand nous sommes partis."],
+                [1, "Pierre-François. Regarde-moi."]],
+    contradiction:"Personne n'a rien pris après notre départ. Le problème est avant.",
+    chute:"Personne n'a volé la pizza. Pierre-François en a mangé la moitié avant de sortir, puis a fait une sieste et a tout oublié. L'enquête aura duré cinq minutes de plus que nécessaire.",
+    anecdote:{ suspect:"teo", qTH:"Vous les avez vus partir ?", qPF:"Tu nous as vus partir ?",
+      ok:"Oui. L'un des deux avait l'air repu.", ko:"Je n'ai rien vu. Je jouais.",
+      pf:"Tu me regardes bizarrement, là." } },
+
+  { id:"le_double", coupable:"charles", cachettes:["sac", "manteaux", "poubelle"],
+    porteurs:["ticket", "boite", "billet"],
+    piste:[[0, "Deux tickets. Une seule livraison enregistrée."],
+           [1, "Il y en avait deux, donc."]],
+    trouvaille:[[0, "La première. Intacte, jamais ouverte."],
+                [1, "Il en a commandé une seconde pour cacher la première."]],
+    contradiction:"Vous avez payé deux fois. Une seule pizza a été mangée.",
+    chute:"Il en a commandé une deuxième pour que personne ne remarque la disparition de la première. Il a doublé le problème et le budget.",
+    anecdote:{ suspect:"charles", qTH:"Combien de pizzas sont arrivées ce soir ?", qPF:"Vous comptez bien, vous ?",
+      ok:"Une. J'ai vu passer le livreur une fois.", ko:"Une. Enfin, une à la fois.",
+      pf:"Vous hésitez sur un chiffre simple." } },
+
   { id:"la_tarte", coupable:null, cachettes:["placards", "evier"],
     porteurs:["ticket", "chorizo", "assiette"],
     piste:[[0, "Quelqu'un est venu, a échangé quelque chose, et est reparti."],
@@ -529,12 +602,28 @@ const ETAT_H2 = {
 };
 
 const HortenseApp = {
-  etat:ETAT_H2.CACHEE, x:0, vise:0, chrono:0, cible:0, tarte:null, quand:0, faite:false, phase:0,
+  etat:ETAT_H2.CACHEE, x:0, vise:0, chrono:0, cible:0, tarte:null, quand:0, faite:false, phase:0, appelee:false,
 
   raz(){
     this.etat = ETAT_H2.CACHEE; this.faite = false; this.tarte = null;
+    this.appelee = false;
     /* entre 35 % et 65 % de la durée : ni au tout début, ni à la fin */
     this.quand = ENQ_DUREE * hasard(0.35, 0.65);
+  },
+
+  /* Interroger sa sœur, c'est la prévenir. Une fois sur deux elle
+     rapplique dans les secondes qui suivent ; sinon l'attente est
+     franchement raccourcie, et insister finit toujours par payer. */
+  provoquer(){
+    if (this.faite || this.etat !== ETAT_H2.CACHEE) return false;
+    const reste = this.quand - this.ecoule();
+    if (Math.random() < 0.55){
+      this.quand = this.ecoule() + hasard(3.5, 8);
+      this.appelee = true;
+      return true;
+    }
+    if (reste > 6) this.quand = this.ecoule() + reste * 0.55;
+    return false;
   },
   ecoule(){ return ENQ_DUREE - Enquete.restant; },
   peutVenir(){
@@ -551,8 +640,8 @@ const HortenseApp = {
     this.x = borne(chef.x + cote * 0.17, -0.04, 1.04);
     this.vise = chef.x + cote * 0.08;
     this.etat = ETAT_H2.ENTREE;
-    Enquete.dire("Un silence. Puis quelqu'un.", 1.6);
-    Enquete.dialogue([[1 - this.cible, "Attends. Tu entends ?"]], 0.4);
+    Enquete.dire(this.appelee ? "Elle n'a pas mis longtemps." : "Un silence. Puis quelqu'un.", 1.8);
+    Enquete.dialogue([[1 - this.cible, this.appelee ? "Sa sœur l'a prévenue." : "Attends. Tu entends ?"]], 0.4);
     Sons.hortenseEntre();
   },
   majorer(dt){
@@ -863,6 +952,16 @@ const Enquete = {
     /* Une remarque de fond au premier passage : ce qu'on voit, pas ce
        qu'on entend. Elle vaut pour les deux. */
     if (s.vus + s.vusPF === 1) this.dialogue([[1 - this.actifIdx, s.fond]], 2.9);
+
+    /* Parler à la sœur d'Hortense revient à la prévenir. Elle le dit
+       elle-même, pour qu'on comprenne ce qui va suivre. */
+    if (s.id === "soeur" && HortenseApp.provoquer()){
+      this.dialogue([[{ temoin:is }, piocher([
+        "Je viens de prévenir ma sœur, au fait.",
+        "Ma sœur adore ce genre d'histoires. Je lui envoie un message.",
+        "Elle passait justement dans le quartier.",
+      ])]], 2.6);
+    }
 
     if (pf){
       if (!s.gene){
