@@ -695,10 +695,37 @@ if (D){
   verifier("les deux inspecteurs ont chacun leur spécialité",
     D.INDICES.some(i => i.expert) && D.INDICES.some(i => i.social),
     "sinon on joue tout le niveau avec le même");
-  verifier("les deux inspecteurs ont leurs propres questions",
-    D.QUESTIONS.pf.length >= 4 && D.QUESTIONS.th.length >= 4 &&
-    !D.QUESTIONS.pf.some(q => D.QUESTIONS.th.indexOf(q) >= 0),
-    "ils ne doivent pas poser les mêmes");
+  verifier("chaque habitant a ses sujets d'entretien",
+    D.SUSPECTS_BANQUE.every(x => (D.SUJETS[x.id] || []).length >= 3));
+  verifier("chaque sujet porte sa question ET ses réponses",
+    Object.values(D.SUJETS).every(l => l.every(su =>
+      su.qPF && su.qTH && su.pf && su.ok && su.ko)),
+    "une réponse doit répondre à la question posée");
+  verifier("les deux inspecteurs ne posent pas la même question",
+    Object.values(D.SUJETS).every(l => l.every(su => su.qPF !== su.qTH)),
+    "sauf pour le chat, qui ne répond de toute façon pas");
+  verifier("Pierre-François tutoie Teo et sa belle-sœur",
+    D.SUJETS.soeur.concat(D.SUJETS.teo).every(su => /\bTu\b|\bte\b|\bton\b|\bta\b/.test(su.qPF)),
+    D.SUJETS.soeur.concat(D.SUJETS.teo).filter(su => !/\bTu\b|\bte\b|\bton\b|\bta\b/.test(su.qPF)).map(su => su.qPF).join(" | "));
+  verifier("et vouvoie Charles, qu'il ne connaît pas",
+    D.SUJETS.charles.every(su => /\bVous\b|\bvous\b/.test(su.qPF)));
+  verifier("Thibaut vouvoie tout le monde",
+    D.SUJETS.soeur.concat(D.SUJETS.teo, D.SUJETS.charles).every(su => /\bvous\b/i.test(su.qTH)));
+  verifier("chaque affaire a son anecdote",
+    D.SCENARIOS.every(sc => sc.anecdote && sc.anecdote.suspect && sc.anecdote.qTH && sc.anecdote.ok && sc.anecdote.ko),
+    D.SCENARIOS.filter(sc => !sc.anecdote).map(sc => sc.id).join(", "));
+  verifier("l'anecdote vise quelqu'un qui est là",
+    D.SCENARIOS.every(sc => D.SUSPECTS_BANQUE.some(x => x.id === sc.anecdote.suspect)));
+  verifier("et elle est posée en premier dans l'entretien",
+    (() => {
+      for (let n = 0; n < 60; n++){
+        D.Jeu.demarrer(2); D.Intro.finir();
+        const an = D.Affaire.scenario.anecdote;
+        const cible = D.SUSPECTS.find(x => x.id === an.suspect);
+        if (!cible || cible.sujets[0] !== an) return false;
+      }
+      return true;
+    })(), "c'est elle qui porte le scénario");
   verifier("les quatre pièces ont leur réplique d'entrée",
     D.PIECES.length === 4 && D.PIECES.every(p => p.ligne && p.jusqua > 0));
   verifier("le bavardage va par paires", D.BAVARDAGES.length % 2 === 0);
@@ -757,21 +784,13 @@ if (D){
     D.SUSPECTS_BANQUE.every(s => D.PLACES_FIXES[s.id] && D.PLACES_FIXES[s.id].taille > 0));
   verifier("chacun a un rôle écrit", D.SUSPECTS_BANQUE.every(s => s.role && s.role.length > 12),
     D.SUSPECTS_BANQUE.filter(s => !s.role || s.role.length <= 12).map(s => s.id).join(", "));
-  verifier("chacun parle différemment aux deux inspecteurs",
-    D.SUSPECTS_BANQUE.every(s =>
-      s.innocent.pf.length && s.innocent.th.length && s.evasif.pf.length && s.evasif.th.length),
-    "il faut deux séries par rôle");
-  verifier("aucune réplique n'est servie aux deux",
-    (() => {
-      for (const s of D.SUSPECTS_BANQUE){
-        const pfs = new Set(s.innocent.pf.concat(s.evasif.pf).flat());
-        for (const l of s.innocent.th.concat(s.evasif.th).flat()) if (pfs.has(l)) return false;
-      }
-      return true;
-    })(), "Pierre-François et Thibaut doivent entendre autre chose");
-  verifier("toutes les séries font trois répliques",
-    D.SUSPECTS_BANQUE.every(s =>
-      [].concat(s.innocent.pf, s.innocent.th, s.evasif.pf, s.evasif.th).every(j => j.length === 3)));
+  verifier("chacun répond autrement selon qui demande et selon sa culpabilité",
+    D.SUSPECTS_BANQUE.every(s => (D.SUJETS[s.id] || []).every(su =>
+      su.pf !== su.ok && su.ok !== su.ko)));
+  verifier("aucune réponse n'est servie aux deux",
+    Object.values(D.SUJETS).every(l => l.every(su => su.pf !== su.ok && su.pf !== su.ko)),
+    "Pierre-François et Thibaut doivent entendre autre chose");
+
   verifier("chacun a des remarques de fond",
     D.SUSPECTS_BANQUE.every(s => s.fond.length >= 3));
   verifier("les trois humains ont leur propre sprite",
@@ -781,7 +800,7 @@ if (D){
     let coupablePresent = true, tousLa = true;
     for (let n = 0; n < 200; n++){
       D.Jeu.demarrer(2); D.Intro.finir();
-      voix.add(D.SUSPECTS.map(s => s.diresPF[0] + "|" + s.diresTH[0]).join("//"));
+      voix.add(D.SUSPECTS.map(s => s.sujets.map(u => u.qTH).join(">")).join("//"));
       if (D.SUSPECTS.length !== 4) tousLa = false;
       if (D.Affaire.bonneReponse() !== "personne" &&
           !D.SUSPECTS.some(s => s.id === D.Affaire.bonneReponse())) coupablePresent = false;

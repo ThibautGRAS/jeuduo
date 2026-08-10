@@ -103,13 +103,25 @@ plante l'inspecteur qui fouille la table. Les
 poser tous sur la même ligne mettait Charles debout devant sa table et
 faisait flotter Teo au-dessus du canapé.
 
-**Un interrogatoire est un échange.** L'inspecteur pose sa question, le
-témoin répond une seconde plus tard. Les deux ne demandent pas la même
-chose : Pierre-François vérifie des faits — « Où étiez-vous à dix-neuf
-heures quarante ? » — Thibaut cherche des gens — « Qui est passé ce
-soir ? ». Les questions défilent, donc trois passages font un vrai
-entretien. Et quand le lien personnel s'en mêle, la question dérape :
-« Bon. Comment va ta sœur ? »
+**Un interrogatoire est un échange, et la réponse répond.** Un *sujet*
+tient la question et ses réponses possibles — auparavant les questions
+défilaient d'un côté et les réponses de l'autre, si bien qu'on demandait
+l'heure et qu'on s'entendait répondre qu'il y avait deux pizzas.
+
+Trois réponses par sujet : ce qu'on dit à Pierre-François, qui est de la
+famille ou de la bande ; ce qu'on dit à Thibaut quand on n'a rien fait ;
+et ce qu'on lui dit quand c'est nous.
+
+**Pierre-François tutoie Teo et sa belle-sœur**, et vouvoie Charles qu'il
+ne connaît pas. Thibaut vouvoie tout le monde — c'est un inconnu, et
+c'est précisément ce qui le rend efficace. « Tu as ouvert à quelqu'un ? »
+appelle « On en reparle à Noël. » ; « Vous avez ouvert à quelqu'un ? »
+appelle « J'ai ouvert, oui. Ce n'était pas le livreur. »
+
+**Chaque affaire ajoute son anecdote**, posée en premier dans
+l'entretien : c'est elle qui porte le scénario. « Ces cinq euros, ils
+sortent d'où ? » — « De mon porte-monnaie. D'où veux-tu qu'ils
+sortent. »
 
 On aborde quelqu'un **dès que son nom s'affiche**, pas plus près : la
 portée de la parole vaut plus du double de celle d'un tiroir.

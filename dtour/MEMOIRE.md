@@ -162,6 +162,14 @@ maintenant les recouvrements en hauteur **jusqu'à un plafond**, puis se
 replie latéralement. Et la mesure d'une bulle est une fonction séparée
 du dessin : deux calculs parallèles auraient fini par divorcer.
 
+### Deux listes parallèles finissent par se désynchroniser
+Les questions des inspecteurs et les réponses des témoins étaient deux
+tableaux distincts, chacun avec son curseur. On demandait l'heure, on
+s'entendait répondre qu'il y avait deux pizzas. Un *sujet* tient
+désormais la question ET ses trois réponses possibles. C'est la même
+leçon que la mesure des bulles séparée de leur dessin : ce qui doit
+rester d'accord doit vivre au même endroit.
+
 ### Une bulle par bouche
 Les réponses des témoins sortaient de la bulle de l'inspecteur qui
 posait la question. À trois personnes dans le champ, on ne savait plus

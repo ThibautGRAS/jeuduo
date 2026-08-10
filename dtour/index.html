@@ -471,7 +471,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v3.6</div>
+  <div id="version">CALLAGHAN v3.7</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -531,7 +531,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "3.6";
+const VERSION = "3.7";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -3038,29 +3038,72 @@ const BAVARDAGES = [
 
 
 
-/* ---------- ce que les inspecteurs demandent ----------
-   Une question avant la réponse : sans elle, un témoin répondait à rien
-   et l'échange n'existait pas. Les deux n'interrogent pas pareil —
-   Pierre-François vérifie des faits, Thibaut cherche des gens. Les
-   questions défilent, donc trois passages font un vrai entretien. */
-const QUESTIONS = {
-  pf:[
-    "Où étiez-vous à dix-neuf heures quarante ?",
-    "Qu'avez-vous mangé, exactement ?",
-    "Avez-vous ouvert le réfrigérateur ?",
-    "Vous êtes resté combien de temps ?",
+/* ---------- ce dont on parle ----------
+   Un sujet tient la question ET les réponses possibles. Avant, les
+   questions défilaient d'un côté et les réponses de l'autre : on
+   demandait l'heure et on s'entendait répondre qu'il y avait deux
+   pizzas. Ici la réponse répond.
+
+   Trois versions par sujet :
+     pf  ce qu'on répond à Pierre-François, qui est de la famille ou de
+         la bande — il n'obtient donc jamais de fait ;
+     ok  ce qu'on répond à Thibaut quand on n'a rien fait ;
+     ko  ce qu'on lui répond quand c'est nous.
+
+   Pierre-François TUTOIE Teo et sa belle-sœur, et vouvoie Charles qu'il
+   ne connaît pas. Thibaut vouvoie tout le monde : c'est un inconnu, et
+   c'est précisément ce qui le rend efficace. */
+const SUJETS = {
+  soeur:[
+    { qPF:"Tu étais où, ce soir ?", qTH:"Vous étiez où, ce soir ?",
+      pf:"Chez moi. Comme tous les soirs. Passe dimanche.",
+      ok:"Dans ma chambre. La porte du couloir grince, je l'aurais entendue.",
+      ko:"Dans ma chambre. Enfin, pas tout le temps." },
+    { qPF:"Tu as ouvert à quelqu'un ?", qTH:"Vous avez ouvert à quelqu'un ?",
+      pf:"Tu me demandes ça à moi ? On en reparle à Noël.",
+      ok:"Ma sœur est passée. Elle ne reste jamais longtemps.",
+      ko:"J'ai ouvert, oui. Ce n'était pas le livreur." },
+    { qPF:"Tu as mangé quoi ?", qTH:"Qu'avez-vous mangé ?",
+      pf:"Tu diras à ta femme que j'ai appelé. Deux fois.",
+      ok:"Rien. J'attendais que vous rentriez.",
+      ko:"Un truc vite fait. Ne me regarde pas comme ça." },
   ],
-  th:[
-    "Une pizza a disparu. Ça vous parle ?",
-    "Qui est passé ce soir ?",
-    "Vous avez entendu quelque chose ?",
-    "Vous étiez avec qui ?",
+  teo:[
+    { qPF:"Tu as bougé de ce canapé ?", qTH:"Vous avez quitté cette pièce ?",
+      pf:"Tu me connais. Assieds-toi plutôt.",
+      ok:"Pas une fois. La manette peut en témoigner.",
+      ko:"Deux minutes. Pour la cuisine. C'est tout." },
+    { qPF:"Tu as entendu la porte ?", qTH:"Avez-vous entendu la porte ?",
+      pf:"J'entends surtout que tu me soupçonnes.",
+      ok:"Deux fois. À dix minutes d'écart. La seconde plus discrète.",
+      ko:"Non. J'avais le son fort." },
+    { qPF:"Tu as touché au frigo ?", qTH:"Avez-vous ouvert le réfrigérateur ?",
+      pf:"On ne va pas se fâcher pour un frigo.",
+      ok:"Jamais. Je ne me sers pas chez les gens.",
+      ko:"Ouvert, oui. Sans le toucher. C'est une manière de parler." },
   ],
-};
-/* Et quand le lien personnel s'en mêle, la question dérape. */
-const QUESTIONS_LIEN = {
-  soeur:"Bon. Comment va ta sœur ?",
-  teo:"Tu ne vas pas me mentir, hein ?",
+  charles:[
+    { qPF:"Vous êtes qui, exactement ?", qTH:"Vous êtes arrivé quand ?",
+      pf:"Vous êtes de la famille, vous ? Ah. Alors rien.",
+      ok:"Vers vingt heures. La porte était déjà ouverte.",
+      ko:"Je ne suis pas arrivé. Je veux dire : pas resté." },
+    { qPF:"Vous connaissez qui, ici ?", qTH:"Vous êtes venu voir qui ?",
+      pf:"Personne. Enfin, tout le monde. Enfin.",
+      ok:"J'attendais quelqu'un. Elle n'est pas descendue.",
+      ko:"Personne. Ne notez pas ça." },
+    { qPF:"Vous avez dîné ?", qTH:"Vous avez mangé quelque chose ?",
+      pf:"Vous posez des questions étranges.",
+      ok:"Non. Je ne comptais pas rester.",
+      ko:"J'ai rangé ce qui traînait. Ce n'est pas la même chose." },
+  ],
+  chat:[
+    { qPF:"Risoto. Regarde-moi.", qTH:"Risoto ?",
+      pf:"Il ronronne.", ok:"Il détourne la tête.", ko:"Il recule d'un pas." },
+    { qPF:"Tu étais où ?", qTH:"Vous étiez où ?",
+      pf:"Il se lèche la patte.", ok:"Il fixe la fenêtre.", ko:"Il a du rouge sur le poitrail." },
+    { qPF:"Tu as faim ?", qTH:"Vous avez mangé ?",
+      pf:"Il s'installe sur mes pieds.", ok:"Aucune déclaration.", ko:"Il se lèche la patte. Longuement." },
+  ],
 };
 
 /* ---------- ce qu'on trouve quand on ne trouve rien ----------
@@ -3124,26 +3167,6 @@ const PLACES_FIXES = {
 const SUSPECTS_BANQUE = [
   { id:"teo", nom:"TEOPEDO", sprite:"pers_teo",
     role:"Ami de Pierre-François. Professeur d'histoire.",
-    innocent:{
-      pf:[
-        ["Toi ici ? Assieds-toi.", "Je n'ai pas bougé de la soirée.", "Demande à la manette."],
-        ["Tu me connais.", "Je ne mange pas debout.", "Ni assis, d'ailleurs. J'oublie de manger."],
-      ],
-      th:[
-        ["Je jouais. En ligne.", "Vingt heures quatorze, dernière partie.", "Je note les horaires. Déformation."],
-        ["J'ai entendu la porte.", "Deux fois. À dix minutes d'écart.", "La deuxième était plus discrète."],
-      ],
-    },
-    evasif:{
-      pf:[
-        ["Tu ne vas pas me soupçonner, quand même.", "On se connaît depuis quinze ans.", "Change de sujet."],
-        ["J'étais là, oui.", "Comme toujours.", "Tu ne veux pas t'asseoir plutôt ?"],
-      ],
-      th:[
-        ["Le frigo ? Je l'ai ouvert, oui.", "Sans le toucher, en fait.", "C'est une manière de parler."],
-        ["J'ai des habitudes anciennes.", "On n'apprend pas à les perdre.", "Vous notez tout, vous."],
-      ],
-    },
     fond:[
       "Il récite la chronologie exacte de la soirée. À la minute.",
       "Il connaît le nom du livreur. Et celui d'avant.",
@@ -3152,26 +3175,6 @@ const SUSPECTS_BANQUE = [
 
   { id:"charles", nom:"CHARLES", sprite:"pers_charles",
     role:"Personne ne sait pourquoi il est là.",
-    innocent:{
-      pf:[
-        ["Je passais.", "Par hasard.", "Vous ne me connaissez pas, c'est normal."],
-        ["Je ne reste pas.", "J'attends quelqu'un.", "Enfin, non. Je ne l'attends pas."],
-      ],
-      th:[
-        ["Je suis arrivé vers vingt heures.", "La porte était ouverte.", "Je n'ai croisé personne."],
-        ["Je n'ai pas dîné ici.", "Je n'avais pas prévu de rester.", "Ne notez pas ça."],
-      ],
-    },
-    evasif:{
-      pf:[
-        ["Vous êtes de la famille, vous ?", "Ah. Alors rien.", "Vraiment rien."],
-        ["Je n'étais pas là.", "Enfin, pas longtemps.", "Ne demandez pas à qui je parlais."],
-      ],
-      th:[
-        ["Je n'y étais pas.", "Il n'y a aucune raison que j'y sois.", "Aucune, vous m'entendez."],
-        ["J'ai rangé ce qui traînait.", "Pour ne pas laisser de traces.", "De désordre. De désordre."],
-      ],
-    },
     fond:[
       "Il garde ses lunettes noires à l'intérieur.",
       "Il regarde la porte du couloir toutes les dix secondes.",
@@ -3180,26 +3183,6 @@ const SUSPECTS_BANQUE = [
 
   { id:"soeur", nom:"LA SŒUR D'HORTENSE", sprite:"pers_soeur",
     role:"Colocataire. Belle-sœur de Pierre-François.",
-    innocent:{
-      pf:[
-        ["Salut, beau-frère.", "Tu ne vas pas m'interroger, si ?", "Passe dimanche, sinon."],
-        ["Tu diras à ta femme que j'ai appelé.", "Deux fois.", "La pizza, aucune idée."],
-      ],
-      th:[
-        ["J'étais dans ma chambre.", "La porte du couloir grince, je l'aurais entendue.", "Elle n'a pas grincé."],
-        ["Ma sœur est passée.", "Elle passe souvent, sans prévenir.", "Elle n'est jamais restée longtemps."],
-      ],
-    },
-    evasif:{
-      pf:[
-        ["Salut, beau-frère.", "On parle de ça à Noël ?", "Voilà. À Noël."],
-        ["Tu ne veux pas savoir.", "Vraiment.", "Pour toi comme pour moi."],
-      ],
-      th:[
-        ["J'ai ouvert à quelqu'un.", "Ce n'était pas le livreur.", "Ne me demandez pas qui."],
-        ["Je l'ai mise de côté.", "Pour quelqu'un.", "Ce n'est pas un vol si on la garde."],
-      ],
-    },
     fond:[
       "Elle a un rouleau de papier toilette dans la poche. Sans explication.",
       "Elle jette un œil au couloir chaque fois qu'on parle de la chambre.",
@@ -3208,14 +3191,6 @@ const SUSPECTS_BANQUE = [
 
   { id:"chat", nom:"RISOTO", sprite:"susp_chat",
     role:"Le chat. Il était là avant tout le monde.",
-    innocent:{
-      pf:[["Il ronronne.", "Il se lèche la patte.", "Il s'installe sur mes pieds."]],
-      th:[["Il ne bouge pas.", "Il détourne la tête.", "Aucune déclaration."]],
-    },
-    evasif:{
-      pf:[["Il ronronne trop fort.", "Il se lèche la patte. Longuement.", "Beaucoup trop longuement."]],
-      th:[["Il a du rouge sur le poitrail.", "Il recule d'un pas.", "Aucune déclaration. Évidemment."]],
-    },
     fond:[
       "Il se frotte contre la jambe. Ce n'est pas un aveu.",
       "Il fixe le meuble du bas. Depuis un moment.",
@@ -3232,14 +3207,19 @@ function composerSuspects(){
   for (const s of SUSPECTS_BANQUE){
     const p = PLACES_FIXES[s.id];
     const coupable = Affaire.bonneReponse() === s.id;
-    const jeu = coupable ? s.evasif : s.innocent;
+    /* Les sujets de l'entretien : ceux de la personne, plus l'anecdote
+       propre à l'affaire en cours si elle la concerne. L'anecdote passe
+       en premier — c'est elle qui porte le scénario. */
+    const sujets = (SUJETS[s.id] || []).slice();
+    melangerTableau(sujets);
+    const an = Affaire.scenario && Affaire.scenario.anecdote;
+    if (an && an.suspect === s.id) sujets.unshift(an);
     SUSPECTS.push({
       id:s.id, nom:s.nom, sprite:s.sprite, role:s.role,
       x:p.x, bas:p.bas, taille:p.taille,
-      diresPF:piocher(jeu.pf).slice(),
-      diresTH:piocher(jeu.th).slice(),
+      sujets, coupable,
       fond:piocher(s.fond),
-      vus:0, vusPF:0, coince:false,
+      tour:0, vus:0, vusPF:0, coince:false,
     });
   }
   return SUSPECTS;
@@ -3260,7 +3240,9 @@ const SCENARIOS = [
     trouvaille:[[0, "Au frigo. Emballée. Étiquetée, presque."],
                 [1, "On garde une pizza comme ça pour quelqu'un qu'on aime."]],
     contradiction:"Vous l'avez rangée pour votre sœur. Elle repasse ce soir.",
-    chute:"Elle la gardait pour Hortense. Personne n'a rien volé, et personne n'a rien dit." },
+    chute:"Elle la gardait pour Hortense. Personne n'a rien volé, et personne n'a rien dit." ,
+    anecdote:{ suspect:"soeur", qTH:"Pourquoi au frigo, et pas sur le plan ?", qPF:"Pourquoi au frigo, et pas sur le plan ?", ok:"Parce qu'au frigo, ça se garde.", ko:"Elle se garde pour qui ?", pf:"Tu poses des questions de flic." }
+  },
 
   { id:"la_porte", coupable:"soeur", cachettes:["commode", "portant"],
     porteurs:["ticket", "boite", "pattes"],
@@ -3269,7 +3251,9 @@ const SCENARIOS = [
     trouvaille:[[0, "Dans la commode. Sous du linge propre."],
                 [1, "Il a fallu vouloir la cacher."]],
     contradiction:"Vous avez ouvert à quelqu'un. Ce n'était pas le livreur.",
-    chute:"Elle a ouvert la porte à quelqu'un qui n'aurait pas dû venir. La pizza a payé le silence." },
+    chute:"Elle a ouvert la porte à quelqu'un qui n'aurait pas dû venir. La pizza a payé le silence." ,
+    anecdote:{ suspect:"soeur", qTH:"Qui avez-vous laissé entrer ?", qPF:"Qui avez-vous laissé entrer ?", ok:"Quelqu'un qui n'aurait pas dû monter.", ko:"Et vous n'avez rien dit.", pf:"Ne me fais pas dire ça." }
+  },
 
   { id:"la_dette", coupable:"soeur", cachettes:["poubelle", "evier"],
     porteurs:["billet", "miettes", "boite"],
@@ -3278,7 +3262,9 @@ const SCENARIOS = [
     trouvaille:[[0, "La boîte est là. Vide, pliée, rangée."],
                 [1, "Elle a même fait le tri."]],
     contradiction:"Vous avez laissé cinq euros. On ne rembourse que ce qu'on a pris.",
-    chute:"Nous étions sortis. Elle a tout mangé, laissé des miettes et un billet de cinq euros pour qu'on en rachète une. C'est presque de la politesse." },
+    chute:"Nous étions sortis. Elle a tout mangé, laissé des miettes et un billet de cinq euros pour qu'on en rachète une. C'est presque de la politesse." ,
+    anecdote:{ suspect:"soeur", qTH:"Ces cinq euros, ils sortent d'où ?", qPF:"Ces cinq euros, ils sortent d'où ?", ok:"De mon porte-monnaie. D'où veux-tu qu'ils sortent.", ko:"On ne rembourse que ce qu'on a pris.", pf:"Tu comptes vraiment l'argent, maintenant ?" }
+  },
 
   /* --- Charles --- */
   { id:"amant", coupable:"charles", cachettes:["manteaux", "sac"],
@@ -3288,7 +3274,9 @@ const SCENARIOS = [
     trouvaille:[[0, "Dans la poche d'un manteau. Encore chaude."],
                 [1, "Ce manteau n'est pas à lui."]],
     contradiction:"Vous n'étiez pas là. Alors pourquoi votre manteau sent le chorizo ?",
-    chute:"Il n'était pas censé être là. Il a pris la pizza pour effacer sa visite. Il a effacé l'inverse." },
+    chute:"Il n'était pas censé être là. Il a pris la pizza pour effacer sa visite. Il a effacé l'inverse." ,
+    anecdote:{ suspect:"charles", qTH:"Ce manteau est à vous ?", qPF:"Ce manteau est à vous ?", ok:"Il traînait. J'avais froid.", ko:"Il sent le chorizo.", pf:"Il traînait, je vous dis." }
+  },
 
   { id:"effacer", coupable:"charles", cachettes:["poubelle"],
     porteurs:["boite", "sauce", "assiette"],
@@ -3297,7 +3285,9 @@ const SCENARIOS = [
     trouvaille:[[0, "À la poubelle. Entière, sous le sac."],
                 [1, "On ne jette pas une pizza. On jette une preuve."]],
     contradiction:"Vous avez lavé deux assiettes. Vous dîniez seul ?",
-    chute:"Il a tout nettoyé pour qu'on ne sache pas qu'il était venu. Y compris le dîner." },
+    chute:"Il a tout nettoyé pour qu'on ne sache pas qu'il était venu. Y compris le dîner." ,
+    anecdote:{ suspect:"charles", qTH:"Pourquoi deux assiettes lavées ?", qPF:"Pourquoi deux assiettes lavées ?", ok:"J'aime que ce soit propre.", ko:"Vous dîniez donc à deux.", pf:"C'est un crime, être ordonné ?" }
+  },
 
   { id:"le_couloir", coupable:"charles", cachettes:["lit", "commode"],
     porteurs:["ticket", "miettes", "part"],
@@ -3306,7 +3296,9 @@ const SCENARIOS = [
     trouvaille:[[0, "Sous le lit. Avec une part entamée."],
                 [1, "Il a été dérangé au milieu."]],
     contradiction:"Vous surveillez ce couloir depuis vingt minutes. Pourquoi ?",
-    chute:"Il s'était réfugié dans la chambre avec la pizza. Quelqu'un a frappé. Il a tout laissé là." },
+    chute:"Il s'était réfugié dans la chambre avec la pizza. Quelqu'un a frappé. Il a tout laissé là." ,
+    anecdote:{ suspect:"charles", qTH:"Qu'alliez-vous faire dans le couloir ?", qPF:"Qu'alliez-vous faire dans le couloir ?", ok:"Rien. Je cherchais la salle de bain.", ko:"Elle est de l'autre côté.", pf:"Elle est de ce côté, non ?" }
+  },
 
   /* --- TeoPedo --- */
   { id:"vieux_reflexe", coupable:"teo", cachettes:["frigo", "four"],
@@ -3316,7 +3308,9 @@ const SCENARIOS = [
     trouvaille:[[0, "Au four. Éteint. Refermé proprement."],
                 [1, "Un amateur laisse la porte ouverte."]],
     contradiction:"Vous avez ouvert le frigo sans le toucher. Où apprend-on ça ?",
-    chute:"Il a ouvert, pris, refermé, sans une marque. Un vieux réflexe, dit-il. Il n'a pas dit de quand." },
+    chute:"Il a ouvert, pris, refermé, sans une marque. Un vieux réflexe, dit-il. Il n'a pas dit de quand." ,
+    anecdote:{ suspect:"teo", qTH:"Où avez-vous appris à ouvrir sans laisser de trace ?", qPF:"Où avez-vous appris à ouvrir sans laisser de trace ?", ok:"On apprend des choses, dans une vie.", ko:"Quelle vie, exactement ?", pf:"Tu ne veux pas savoir. Vraiment." }
+  },
 
   { id:"le_prof", coupable:"teo", cachettes:["biblio", "tv"],
     porteurs:["ticket", "boite", "miettes"],
@@ -3325,7 +3319,9 @@ const SCENARIOS = [
     trouvaille:[[0, "Derrière les livres. Rangée par taille."],
                 [1, "Même en cachant, il classe."]],
     contradiction:"Vous savez tout de cette soirée. Sauf où vous étiez à dix-neuf heures cinquante.",
-    chute:"Le prof d'histoire a daté la scène mieux que nous. Il en avait besoin : il en faisait partie." },
+    chute:"Le prof d'histoire a daté la scène mieux que nous. Il en avait besoin : il en faisait partie." ,
+    anecdote:{ suspect:"teo", qTH:"Comment connaissez-vous l'heure à la minute ?", qPF:"Comment connaissez-vous l'heure à la minute ?", ok:"Je date les choses. C'est mon métier.", ko:"On date ce qu'on a vécu.", pf:"Tu m'as déjà entendu dater une soirée ?" }
+  },
 
   /* --- Risoto, et les chaînes --- */
   { id:"le_chat_seul", coupable:"chat", cachettes:["canape", "lit"],
@@ -3335,7 +3331,9 @@ const SCENARIOS = [
     trouvaille:[[0, "Poussée jusque là-dessous. Regarde les traces."],
                 [1, "Risoto. On doit parler."]],
     contradiction:"Vous n'avez pas de mains. C'est embêtant pour la boîte.",
-    chute:"Il a poussé la boîte du plan de travail au sol, puis du sol au dessous. Le reste s'est fait tout seul." },
+    chute:"Il a poussé la boîte du plan de travail au sol, puis du sol au dessous. Le reste s'est fait tout seul." ,
+    anecdote:{ suspect:"chat", qTH:"Risoto, cette boîte, c'était vous ?", qPF:"Risoto, cette boîte, c'était vous ?", ok:"Il fixe le meuble du bas.", ko:"Il ne dira rien de plus.", pf:"Il ronronne, ce qui n'est pas une réponse." }
+  },
 
   { id:"la_chaine", coupable:"charles", cachettes:["sac", "poubelle"],
     porteurs:["pattes", "sauce", "boite"],
@@ -3344,7 +3342,9 @@ const SCENARIOS = [
     trouvaille:[[0, "Dans un sac. Emballée à la hâte."],
                 [1, "Ramasser, ce n'est pas voler. Cacher, si."]],
     contradiction:"Vous avez ramassé après le chat. Pourquoi ne pas le dire ?",
-    chute:"Risoto a fait tomber la boîte. Charles a ramassé — et caché, parce qu'être là suffisait à le condamner." },
+    chute:"Risoto a fait tomber la boîte. Charles a ramassé — et caché, parce qu'être là suffisait à le condamner." ,
+    anecdote:{ suspect:"charles", qTH:"Vous avez ramassé après le chat ?", qPF:"Vous avez ramassé après le chat ?", ok:"Quelqu'un devait le faire.", ko:"Ramasser, non. Cacher, oui.", pf:"Ce n'est pas un aveu." }
+  },
 
   { id:"la_tarte", coupable:null, cachettes:["placards", "evier"],
     porteurs:["ticket", "chorizo", "assiette"],
@@ -3353,7 +3353,9 @@ const SCENARIOS = [
     trouvaille:[[0, "Dans le placard. À la place d'autre chose."],
                 [1, "Il y avait une tarte au citron ici. Plus maintenant."]],
     contradiction:"Personne n'a volé. Quelqu'un a troqué.",
-    chute:"Hortense est passée. Elle a laissé une tarte au citron et emporté l'idée. La pizza, elle, n'a jamais bougé." },
+    chute:"Hortense est passée. Elle a laissé une tarte au citron et emporté l'idée. La pizza, elle, n'a jamais bougé." ,
+    anecdote:{ suspect:"soeur", qTH:"Qu'est-ce qui a disparu du placard ?", qPF:"Qu'est-ce qui a disparu du placard ?", ok:"Une tarte au citron. Ma sœur adore ça.", ko:"Elle a donc échangé.", pf:"Elle passe, elle prend, elle repart." }
+  },
 ];
 
 const Affaire = {
@@ -3750,32 +3752,21 @@ const Enquete = {
     const s = SUSPECTS[is];
     const ins = this.actifIns();
     const pf = this.estPF(ins);
-    /* Deux inspecteurs, deux séries : Pierre-François est de la famille
-       et de la bande, on lui ménage la vérité ; devant Thibaut, un
-       inconnu, on se surveille moins. Les deux valent la peine, mais
-       seul Thibaut fait tomber une contradiction. */
-    const serie = pf ? s.diresPF : s.diresTH;
-    const compte = pf ? "vusPF" : "vus";
-    const tour = s[compte];
-    const d = serie[tour % serie.length];
-    s[compte]++;
+    const sujet = s.sujets[s.tour % s.sujets.length];
+    s.tour++;
+    if (pf) s.vusPF++; else s.vus++;
 
-    /* La question d'abord, la réponse ensuite. Pierre-François glisse sa
-       question de famille au premier tour, ce qui explique pourquoi il
-       n'obtient jamais rien. */
-    const banque = pf ? QUESTIONS.pf : QUESTIONS.th;
-    const lien = pf ? QUESTIONS_LIEN[s.id] : null;
-    const q = (lien && tour === 0) ? lien : banque[tour % banque.length];
-    Effets.parole({ heros:ins.heros }, q, 2.0);
+    /* Question puis réponse, sur le MÊME sujet. Avant, les deux listes
+       défilaient séparément : on demandait l'heure et on s'entendait
+       répondre qu'il y avait deux pizzas. */
+    Effets.parole({ heros:ins.heros }, pf ? sujet.qPF : sujet.qTH, 2.0);
     Sons.bip(pf ? 470 : 540, 0.08, "sine", 0.1);
-    /* La réponse sort de la bouche du témoin, pas de celle de
-       l'inspecteur : les faire parler tous par la même bulle mélangeait
-       qui disait quoi. */
-    this.dialogue([[{ temoin:is }, d]], 1.25);
+    const reponse = pf ? sujet.pf : (s.coupable ? sujet.ko : sujet.ok);
+    this.dialogue([[{ temoin:is }, reponse]], 1.25);
 
     /* Une remarque de fond au premier passage : ce qu'on voit, pas ce
        qu'on entend. Elle vaut pour les deux. */
-    if (s.vus + s.vusPF === 1) this.dialogue([[1 - this.actifIdx, s.fond]], 1.5);
+    if (s.vus + s.vusPF === 1) this.dialogue([[1 - this.actifIdx, s.fond]], 2.9);
 
     if (pf){
       if (!s.gene){
@@ -3791,7 +3782,7 @@ const Enquete = {
        contradiction saute aux yeux. Une seule fois. */
     if (this.indices >= 4 && s.id === Affaire.bonneReponse() && !s.coince){
       s.coince = true;
-      this.dialogue([[this.actifIdx, Affaire.contradiction()]], 1.6);
+      this.dialogue([[this.actifIdx, Affaire.contradiction()]], 2.9);
       this.poserBadge("suspect");
       Sons.reussite(6);
     }
@@ -5347,7 +5338,7 @@ globalThis.DTOUR = {
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS,
-  ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, QUESTIONS, Progres, Intro,
+  ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, SUJETS, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, HORTENSE_ECART, TARTE_DUREE,
   __dessiner:() => dessiner(),
