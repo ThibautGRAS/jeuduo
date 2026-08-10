@@ -639,6 +639,9 @@ if (D){
     "Pierre-François seul en réunit " + avecPFSeul);
   egal("les six indices sont réunis à deux", D.Enquete.indices, D.ENQ_OBJECTIF);
   egal("le dossier contient six cartes", D.Dossier.compte(), D.ENQ_OBJECTIF);
+  verifier("chaque carte dit quoi ET où",
+    D.Dossier.cartes.every(c => c.nom && c.ou && c.ou.length > 2),
+    D.Dossier.cartes.map(c => c.nom + "/" + (c.ou || "?")).join(" · "));
   D.Enquete.actifIdx = iPF;
   allerFouiller(D.Enquete.zones.findIndex(z => z.cachette));
   verifier("la pizza est retrouvée", !!D.Enquete.pizza);
@@ -694,44 +697,62 @@ if (D){
   /* la contradiction ne tombe qu'une fois, et sur la bonne personne */
   lancer2();
   D.Enquete.indices = 5;
-  D.Enquete.actifIdx = D.Heros.findIndex(h => h.sprite === "thibaut");
   const coupable = D.SUSPECTS.findIndex(s => s.id === D.Affaire.bonneReponse());
   if (coupable >= 0){
+    /* Pierre-François n'obtient jamais la contradiction : la sœur est sa
+       belle-sœur, Teo son ami. C'est le sens de la spécialité. */
+    D.Enquete.actifIdx = D.Heros.findIndex(h => h.sprite === "pierre");
+    D.SUSPECTS[coupable].vus = 9;
+    D.Enquete.interroger(coupable);
+    verifier("Pierre-François n'arrache pas la contradiction", !D.SUSPECTS[coupable].coince);
+    D.Enquete.actifIdx = D.Heros.findIndex(h => h.sprite === "thibaut");
     D.Enquete.fileDial = [];
     D.Enquete.interroger(coupable);
-    verifier("interroger le coupable révèle la contradiction", D.Enquete.fileDial.length === 1);
+    verifier("Thibaut, oui", D.SUSPECTS[coupable].coince && D.Enquete.fileDial.length >= 1);
     D.Enquete.fileDial = [];
     D.Enquete.interroger(coupable);
     verifier("elle ne tombe qu'une fois", D.Enquete.fileDial.length === 0);
   } else ok("scénario sans coupable : rien à contredire");
 
   titre("Les gens dans la pièce");
-  verifier("six têtes en banque", D.SUSPECTS_BANQUE.length === 6, D.SUSPECTS_BANQUE.length);
-  verifier("chacune a un innocent, un évasif et des absurdités",
-    D.SUSPECTS_BANQUE.every(s => s.innocent.length && s.evasif.length && s.absurde.length));
-  verifier("tous les discours font trois répliques",
-    D.SUSPECTS_BANQUE.every(s => s.innocent.concat(s.evasif).every(j => j.length === 3)));
-  verifier("chaque tête a son sprite",
-    D.SUSPECTS_BANQUE.every(s => /^susp_/.test(s.sprite)));
+  verifier("quatre habitants, dont le chat", D.SUSPECTS_BANQUE.length === 4, D.SUSPECTS_BANQUE.length);
+  verifier("chacun a une place fixe et une taille",
+    D.SUSPECTS_BANQUE.every(s => D.PLACES_FIXES[s.id] && D.PLACES_FIXES[s.id].taille > 0));
+  verifier("chacun a un rôle écrit", D.SUSPECTS_BANQUE.every(s => s.role && s.role.length > 12),
+    D.SUSPECTS_BANQUE.filter(s => !s.role || s.role.length <= 12).map(s => s.id).join(", "));
+  verifier("chacun parle différemment aux deux inspecteurs",
+    D.SUSPECTS_BANQUE.every(s =>
+      s.innocent.pf.length && s.innocent.th.length && s.evasif.pf.length && s.evasif.th.length),
+    "il faut deux séries par rôle");
+  verifier("aucune réplique n'est servie aux deux",
+    (() => {
+      for (const s of D.SUSPECTS_BANQUE){
+        const pfs = new Set(s.innocent.pf.concat(s.evasif.pf).flat());
+        for (const l of s.innocent.th.concat(s.evasif.th).flat()) if (pfs.has(l)) return false;
+      }
+      return true;
+    })(), "Pierre-François et Thibaut doivent entendre autre chose");
+  verifier("toutes les séries font trois répliques",
+    D.SUSPECTS_BANQUE.every(s =>
+      [].concat(s.innocent.pf, s.innocent.th, s.evasif.pf, s.evasif.th).every(j => j.length === 3)));
+  verifier("chacun a des remarques de fond",
+    D.SUSPECTS_BANQUE.every(s => s.fond.length >= 3));
+  verifier("les trois humains ont leur propre sprite",
+    new Set(D.SUSPECTS_BANQUE.map(s => s.sprite)).size === 4);
   (() => {
-    const dist = new Set(), roles = new Set();
-    let coupablePresent = true, chatPresent = true, places = true;
-    for (let n = 0; n < 300; n++){
+    const voix = new Set();
+    let coupablePresent = true, tousLa = true;
+    for (let n = 0; n < 200; n++){
       D.Jeu.demarrer(2); D.Intro.finir();
-      dist.add(D.SUSPECTS.map(s => s.id).sort().join(","));
-      roles.add(D.SUSPECTS.map(s => s.dires[0]).join("|"));
+      voix.add(D.SUSPECTS.map(s => s.diresPF[0] + "|" + s.diresTH[0]).join("//"));
+      if (D.SUSPECTS.length !== 4) tousLa = false;
       if (D.Affaire.bonneReponse() !== "personne" &&
           !D.SUSPECTS.some(s => s.id === D.Affaire.bonneReponse())) coupablePresent = false;
-      if (!D.SUSPECTS.some(s => s.id === "chat")) chatPresent = false;
-      const xs = D.SUSPECTS.map(s => s.x);
-      if (new Set(xs).size !== xs.length) places = false;
     }
-    verifier("la distribution change d'une partie à l'autre", dist.size >= 6, dist.size + " distributions");
-    verifier("et les discours aussi", roles.size >= 12, roles.size + " jeux de répliques");
-    verifier("le coupable est toujours présent", coupablePresent,
-      "on ne peut pas accuser quelqu'un qui n'est pas là");
-    verifier("le chat est toujours là", chatPresent);
-    verifier("personne ne se tient au même endroit", places);
+    verifier("les quatre sont toujours là", tousLa, "ce sont les habitants, pas une distribution");
+    verifier("mais ils ne disent pas la même chose d'une partie à l'autre",
+      voix.size >= 10, voix.size + " combinaisons de répliques");
+    verifier("le coupable est toujours interrogeable", coupablePresent);
   })();
 
   verifier("chaque suspect a un nom affichable, le chat compris",

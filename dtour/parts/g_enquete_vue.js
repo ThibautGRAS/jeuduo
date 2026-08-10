@@ -131,16 +131,18 @@ const EnqVue = {
       if (!img || !img.naturalWidth) continue;
       const px = this.ex(s.x);
       if (px < -140 || px > Camera.L + 140) continue;
-      /* Les suspects sont des bustes, pas des corps entiers : on les
-         cale sur la hauteur d'un buste assis, pas sur celle d'un
-         personnage debout. */
-      const h = H * (s.id === "chat" ? 0.19 : 0.36);
+      /* Chacun a sa taille et son ancrage : la sœur est debout, pieds
+         sur la ligne de sol ; les deux autres sont assis, calés sur leur
+         propre hauteur. Un seul chiffre pour tous les collait à côté du
+         meuble sur lequel ils sont censés être. */
+      const h = H * (s.taille || 0.30);
       const l = h * img.naturalWidth / img.naturalHeight;
-      const g3 = ctx.createRadialGradient(px, this.ey(s.y) + h * 0.46, 0, px, this.ey(s.y) + h * 0.46, h * 0.34);
-      g3.addColorStop(0, "rgba(24,14,6,.30)"); g3.addColorStop(1, "rgba(24,14,6,0)");
+      const bas = s.ancre === "sol" ? this.ey(ENQ_LIGNE) : this.ey(s.y) + h * 0.5;
+      const g3 = ctx.createRadialGradient(px, bas, 0, px, bas, h * 0.34);
+      g3.addColorStop(0, "rgba(24,14,6,.32)"); g3.addColorStop(1, "rgba(24,14,6,0)");
       ctx.fillStyle = g3;
-      ctx.beginPath(); ctx.ellipse(px, this.ey(s.y) + h * 0.46, h * 0.34, h * 0.07, 0, 0, 6.2832); ctx.fill();
-      ctx.drawImage(img, px - l / 2, this.ey(s.y) - h * 0.5, l, h);
+      ctx.beginPath(); ctx.ellipse(px, bas, h * 0.34, h * 0.06, 0, 0, 6.2832); ctx.fill();
+      ctx.drawImage(img, px - l / 2, bas - h, l, h);
 
     }
   },
@@ -155,9 +157,10 @@ const EnqVue = {
       if (px < -140 || px > Camera.L + 140) continue;
       const pres = Math.abs(Enquete.actifIns().x - s.x) < ENQ_PORTEE * 2.2;
       if (!pres && !s.vus) continue;
-      const h = H * (s.id === "chat" ? 0.19 : 0.36);
+      const h = H * (s.taille || 0.30);
+      const bas = s.ancre === "sol" ? this.ey(ENQ_LIGNE) : this.ey(s.y) + h * 0.5;
       const taille = Math.max(9, H * 0.034);
-      const py = this.ey(s.y) - h * 0.60;
+      const py = bas - h - H * 0.018;
       ctx.save();
       ctx.globalAlpha = pres ? 1 : 0.6;
       ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
@@ -355,6 +358,18 @@ const EnqVue = {
       const l = h * img.naturalWidth / img.naturalHeight;
       ctx.drawImage(img, L / 2 - l / 2, H * 0.30 - h / 2, l, h);
     }
+    /* Sous le badge INDICE +1 : quoi, et où. */
+    if (Enquete.badge === "indice" && Enquete.dernier){
+      const t2 = Math.max(11, H * 0.044);
+      ctx.font = "800 " + Math.round(t2) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      const w = ctx.measureText(Enquete.dernier).width;
+      const py = H * 0.30 + h * 0.72;
+      ctx.fillStyle = "rgba(10,16,30,.88)";
+      arrondi(L / 2 - w / 2 - 12, py - t2, w + 24, t2 * 2, t2); ctx.fill();
+      ctx.strokeStyle = "rgba(247,179,43,.6)"; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = "#F7B32B"; ctx.fillText(Enquete.dernier, L / 2, py);
+    }
     const mots = { esquive:"ESQUIVÉ !", splat:"SPLAT !", pizza:"PIZZA RETROUVÉE" };
     if (mots[Enquete.badge]){
       const taille = Math.max(14, H * 0.055);
@@ -400,17 +415,21 @@ const EnqVue = {
     for (const c of Dossier.cartes){
       const img = Images.table[c.sprite];
       ctx.fillStyle = "rgba(252,250,244,.95)";
-      arrondi(x, H * 0.28, cw, cw * 1.25, 8); ctx.fill();
+      arrondi(x, H * 0.28, cw, cw * 1.32, 8); ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,.3)"; ctx.lineWidth = 1.5; ctx.stroke();
       if (img && img.naturalWidth){
         const ih = cw * 0.62, il = ih * img.naturalWidth / img.naturalHeight;
         ctx.drawImage(img, x + cw / 2 - Math.min(il, cw * 0.8) / 2, H * 0.30,
                       Math.min(il, cw * 0.8), ih * Math.min(1, cw * 0.8 / il));
       }
-      const t2 = Math.max(8, cw * 0.11);
-      ctx.font = "700 " + Math.round(t2) + "px 'Baloo 2', system-ui, sans-serif";
+      const t2 = Math.max(8, cw * 0.105);
+      ctx.font = "800 " + Math.round(t2) + "px 'Baloo 2', system-ui, sans-serif";
       ctx.fillStyle = "#1A1420";
-      ctx.fillText(c.nom, x + cw / 2, H * 0.28 + cw * 1.06);
+      ctx.fillText(c.nom, x + cw / 2, H * 0.28 + cw * 1.00);
+      /* L'endroit compte autant que l'objet. */
+      ctx.font = "700 " + Math.round(t2 * 0.86) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.fillStyle = "#6B5F52";
+      ctx.fillText(c.ou || "", x + cw / 2, H * 0.28 + cw * 1.15);
       x += cw + 10;
     }
     if (!Dossier.cartes.length){

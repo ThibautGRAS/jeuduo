@@ -58,8 +58,11 @@ chaque pièce, une fois par partie. Et de loin en loin, quand on les
 laisse tranquilles, ils bavardent. Tout est cadencé par le chrono du
 jeu, jamais par `setTimeout`.
 
-**Dix affaires écrites**, tirées au sort au début de la partie : qui, où,
-et pourquoi changent à chaque fois, et avec eux la piste, la réplique de
+**Dix affaires écrites** qui se servent de ces liens : la pizza mise de
+côté pour Hortense, Charles qui efface sa visite, le prof d'histoire qui
+date la soirée à la minute parce qu'il en faisait partie, la chaîne
+Risoto-puis-Charles, ou le troc contre une tarte au citron. Qui, où et
+pourquoi changent à chaque fois, et avec eux la piste, la réplique de
 découverte, la contradiction et le dénouement. Aucun dénouement n'est
 répété. La suite le vérifie sur neuf cents tirages.
 
@@ -67,17 +70,27 @@ répété. La suite le vérifie sur neuf cents tirages.
 cette limite, on citait tout le monde jusqu'à tomber juste. Le nombre
 restant est écrit sur le bouton.
 
-**Les gens dans la pièce changent.** Six têtes en banque — le voisin du
-dessus, la colocataire, l'amie de passage, le copain du samedi, celui
-qui est toujours là, et Risoto. À chaque partie, trois humains et le
-chat, à des places différentes. Le coupable est toujours présent :
-accuser quelqu'un d'absent n'aurait aucun sens.
+**Trois habitants, à des places fixes**, et le chat. Ils ne sont pas
+interchangeables : chacun a un lien avec les inspecteurs, et ce lien
+change ce qu'on obtient de lui.
 
-**Et ils ne disent pas la même chose.** Chacun a deux jeux de
-déclarations quand il est innocent, deux autres quand c'est lui, et des
-réponses absurdes réservées à Pierre-François, qui ne sait pas parler aux
-gens. Le jeu est tiré au début de la partie : deux enquêtes sur le même
-coupable ne s'entendent pas pareil.
+| | |
+|---|---|
+| **TEOPEDO** — canapé | Ami de Pierre-François et d'Hortense. Prof d'histoire. Un passé qu'il ne raconte pas, et des gestes qui le racontent pour lui. |
+| **CHARLES** — table | L'amant de la colocataire. Personne n'est censé savoir qu'il était là : c'est son seul mobile, et il vaut toutes les pizzas du monde. |
+| **LA SŒUR D'HORTENSE** — couloir | Colocataire, sœur de celle qui lance des tartes, et belle-sœur de Pierre-François. |
+| **RISOTO** — au sol | Le chat. Il ne dira rien, mais il laisse des traces. |
+
+**Les deux inspecteurs n'entendent pas la même chose, et c'est le
+cœur du niveau.** Pierre-François est de la famille et de la bande : sa
+belle-sœur lui parle de Noël, Teo lui dit de s'asseoir. Devant Thibaut,
+un inconnu, on se surveille moins — et lui seul arrache la
+contradiction. Aucune réplique n'est servie aux deux ; un test le
+vérifie ligne par ligne.
+
+Chacun a en plus une **remarque de fond** que l'autre inspecteur
+formule : ce qu'on voit et non ce qu'on entend. « Elle a un rouleau de
+papier toilette dans la poche. Sans explication. »
 
 **Ils portent leur nom** dès qu'on les approche, et pour de bon dès qu'on
 leur a parlé — le chat compris. On ne peut pas accuser quelqu'un qu'on

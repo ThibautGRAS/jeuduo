@@ -151,116 +151,155 @@ const RIEN = {
 };
 
 
-/* ---------- les suspects ----------
-   Six têtes, dont cinq humains et un chat. Chacun a plusieurs jeux de
-   déclarations : un innocent, un évasif quand c'est lui, et des
-   réponses absurdes réservées à Pierre-François, qui ne sait pas parler
-   aux gens. On tire le jeu au début de la partie — deux enquêtes sur le
-   même coupable ne s'entendent donc pas pareil.
+/* ---------- les gens de l'appartement ----------
+   Trois habitués, à des places fixes, et le chat. Ils ne sont pas
+   interchangeables : chacun a un lien avec les deux inspecteurs, et ce
+   lien change ce qu'on obtient de lui.
 
-   Les places sont des ancrages dans l'appartement ; qui se tient où
-   change aussi d'une partie à l'autre. */
-const PLACES_SUSPECTS = [
-  { x:0.310, y:0.66 },   /* sur le canapé      */
-  { x:0.418, y:0.70 },   /* devant la télé     */
-  { x:0.612, y:0.62 },   /* à la table         */
-  { x:0.700, y:0.60 },   /* contre le plan     */
-  { x:0.878, y:0.62 },   /* dans le couloir    */
-];
+     LA SŒUR D'HORTENSE  colocataire. Sœur de celle qui lance des tartes,
+                         et belle-sœur de Pierre-François. Elle ne dira
+                         donc rien d'utile à Pierre-François.
+     CHARLES             son amant. Personne n'est censé savoir qu'il
+                         était là. C'est son seul mobile, et il vaut
+                         toutes les pizzas du monde.
+     TEOPEDO             ami de Pierre-François et d'Hortense. Prof
+                         d'histoire. Un passé qu'il ne raconte pas, et
+                         des gestes qui le racontent pour lui.
+     RISOTO              le chat. Il ne dira rien, mais il laisse des
+                         traces.
+
+   Les répliques dépendent de QUI interroge : Pierre-François est de la
+   famille et de la bande, on lui ménage la vérité ; Thibaut est un
+   inconnu, on se surveille moins devant lui. C'est ce qui fait que les
+   deux interrogatoires ne se valent pas. */
+const PLACES_FIXES = {
+  teo:     { x:0.272, y:0.70, ancre:"assis",  taille:0.30 },
+  charles: { x:0.606, y:0.66, ancre:"assis",  taille:0.26 },
+  soeur:   { x:0.876, y:0.92, ancre:"sol",    taille:0.54 },
+  chat:    { x:0.452, y:0.88, ancre:"assis",  taille:0.17 },
+};
 
 const SUSPECTS_BANQUE = [
-  { id:"gamer", nom:"LE VOISIN DU DESSUS", sprite:"susp_gamer",
-    innocent:[
-      ["J'étais sur un jeu en ligne.", "Toute la soirée.", "Demandez à mon équipe."],
-      ["Je n'ai pas bougé de ce canapé.", "Sauf pour les toilettes.", "Deux fois. Trois."],
-    ],
-    evasif:[
-      ["J'étais sur un jeu en ligne.", "Toute la soirée.", "Enfin... presque toute."],
-      ["Je n'ai rien mangé.", "Pas ici, en tout cas.", "On peut changer de sujet ?"],
-    ],
-    absurde:["Il propose une partie.", "Il me tend une manette.", "Il met le jeu en pause. Enfin."] },
+  { id:"teo", nom:"TEOPEDO", sprite:"pers_teo",
+    role:"Ami de Pierre-François. Professeur d'histoire.",
+    innocent:{
+      pf:[
+        ["Toi ici ? Assieds-toi.", "Je n'ai pas bougé de la soirée.", "Demande à la manette."],
+        ["Tu me connais.", "Je ne mange pas debout.", "Ni assis, d'ailleurs. J'oublie de manger."],
+      ],
+      th:[
+        ["Je jouais. En ligne.", "Vingt heures quatorze, dernière partie.", "Je note les horaires. Déformation."],
+        ["J'ai entendu la porte.", "Deux fois. À dix minutes d'écart.", "La deuxième était plus discrète."],
+      ],
+    },
+    evasif:{
+      pf:[
+        ["Tu ne vas pas me soupçonner, quand même.", "On se connaît depuis quinze ans.", "Change de sujet."],
+        ["J'étais là, oui.", "Comme toujours.", "Tu ne veux pas t'asseoir plutôt ?"],
+      ],
+      th:[
+        ["Le frigo ? Je l'ai ouvert, oui.", "Sans le toucher, en fait.", "C'est une manière de parler."],
+        ["J'ai des habitudes anciennes.", "On n'apprend pas à les perdre.", "Vous notez tout, vous."],
+      ],
+    },
+    fond:[
+      "Il récite la chronologie exacte de la soirée. À la minute.",
+      "Il connaît le nom du livreur. Et celui d'avant.",
+      "Il dit qu'un lieu se lit par couches. Comme une fouille.",
+    ] },
 
-  { id:"blonde", nom:"LA COLOCATAIRE", sprite:"susp_blonde",
-    innocent:[
-      ["Je rentrais du sport.", "La porte était déjà ouverte.", "Ça arrive souvent, ici."],
-      ["Je n'ai rien entendu.", "J'avais mes écouteurs.", "Vous voulez les voir ?"],
-    ],
-    evasif:[
-      ["Je n'ai rien entendu.", "J'avais mes écouteurs.", "La porte était fermée. Je crois."],
-      ["J'ai dîné tôt.", "Toute seule.", "Enfin, tôt, ça dépend de ce qu'on appelle tôt."],
-    ],
-    absurde:["Elle demande si c'est une caméra cachée.", "Elle propose du thé.", "Elle vérifie son téléphone."] },
+  { id:"charles", nom:"CHARLES", sprite:"pers_charles",
+    role:"Personne ne sait pourquoi il est là.",
+    innocent:{
+      pf:[
+        ["Je passais.", "Par hasard.", "Vous ne me connaissez pas, c'est normal."],
+        ["Je ne reste pas.", "J'attends quelqu'un.", "Enfin, non. Je ne l'attends pas."],
+      ],
+      th:[
+        ["Je suis arrivé vers vingt heures.", "La porte était ouverte.", "Je n'ai croisé personne."],
+        ["Je n'ai pas dîné ici.", "Je n'avais pas prévu de rester.", "Ne notez pas ça."],
+      ],
+    },
+    evasif:{
+      pf:[
+        ["Vous êtes de la famille, vous ?", "Ah. Alors rien.", "Vraiment rien."],
+        ["Je n'étais pas là.", "Enfin, pas longtemps.", "Ne demandez pas à qui je parlais."],
+      ],
+      th:[
+        ["Je n'y étais pas.", "Il n'y a aucune raison que j'y sois.", "Aucune, vous m'entendez."],
+        ["J'ai rangé ce qui traînait.", "Pour ne pas laisser de traces.", "De désordre. De désordre."],
+      ],
+    },
+    fond:[
+      "Il garde ses lunettes noires à l'intérieur.",
+      "Il regarde la porte du couloir toutes les dix secondes.",
+      "Il connaît l'appartement mieux qu'un visiteur.",
+    ] },
 
-  { id:"brune", nom:"L'AMIE DE PASSAGE", sprite:"susp_brune",
-    innocent:[
-      ["Je suis arrivée après.", "On m'a servi un verre.", "C'est tout ce que j'ai eu."],
-      ["Je ne connais personne ici.", "Je suis venue avec quelqu'un.", "Il est parti sans moi."],
-    ],
-    evasif:[
-      ["Je suis arrivée après.", "On m'a proposé du vin.", "Personne ne m'a parlé de pizza."],
-      ["Je n'ai pas touché à la cuisine.", "Ni au reste.", "Vous notez tout, là ?"],
-    ],
-    absurde:["Elle resservirait bien un verre.", "Elle demande qui est le grand chauve.", "Elle trinque toute seule."] },
-
-  { id:"casquette", nom:"LE COPAIN DU SAMEDI", sprite:"susp_casquette",
-    innocent:[
-      ["J'ai commandé, oui. Et alors ?", "Une pizza, c'est pas un crime.", "J'ai payé, en plus."],
-      ["J'ai mangé la mienne.", "La mienne. Pas la vôtre.", "Il y en avait deux, au départ."],
-    ],
-    evasif:[
-      ["J'ai commandé, oui. Et alors ?", "J'ai mangé la mienne.", "Enfin, une des deux."],
-      ["Je ne me souviens pas très bien.", "On a beaucoup parlé.", "Et beaucoup mangé."],
-    ],
-    absurde:["Il mâche.", "Il continue de mâcher.", "Il propose une part. D'où ?"] },
-
-  { id:"mug", nom:"CELUI QUI EST TOUJOURS LÀ", sprite:"susp_mug",
-    innocent:[
-      ["Je bois du thé, moi.", "Depuis dix-neuf heures.", "Le thé ne tache pas."],
-      ["J'ai vu passer quelqu'un.", "Vers la cuisine.", "Je n'ai pas regardé qui."],
-    ],
-    evasif:[
-      ["Je bois du thé, moi.", "Regardez mon mug.", "Ne regardez pas mon tee-shirt."],
-      ["Je n'ai fait que ranger.", "Quelqu'un devait le faire.", "Ce n'est pas un aveu."],
-    ],
-    absurde:["Il montre son mug.", "Il propose du thé.", "Il regarde ailleurs."] },
+  { id:"soeur", nom:"LA SŒUR D'HORTENSE", sprite:"pers_soeur",
+    role:"Colocataire. Belle-sœur de Pierre-François.",
+    innocent:{
+      pf:[
+        ["Salut, beau-frère.", "Tu ne vas pas m'interroger, si ?", "Passe dimanche, sinon."],
+        ["Tu diras à ta femme que j'ai appelé.", "Deux fois.", "La pizza, aucune idée."],
+      ],
+      th:[
+        ["J'étais dans ma chambre.", "La porte du couloir grince, je l'aurais entendue.", "Elle n'a pas grincé."],
+        ["Ma sœur est passée.", "Elle passe souvent, sans prévenir.", "Elle n'est jamais restée longtemps."],
+      ],
+    },
+    evasif:{
+      pf:[
+        ["Salut, beau-frère.", "On parle de ça à Noël ?", "Voilà. À Noël."],
+        ["Tu ne veux pas savoir.", "Vraiment.", "Pour toi comme pour moi."],
+      ],
+      th:[
+        ["J'ai ouvert à quelqu'un.", "Ce n'était pas le livreur.", "Ne me demandez pas qui."],
+        ["Je l'ai mise de côté.", "Pour quelqu'un.", "Ce n'est pas un vol si on la garde."],
+      ],
+    },
+    fond:[
+      "Elle a un rouleau de papier toilette dans la poche. Sans explication.",
+      "Elle jette un œil au couloir chaque fois qu'on parle de la chambre.",
+      "Elle dit « ma sœur » comme on dit « ce n'est pas moi ».",
+    ] },
 
   { id:"chat", nom:"RISOTO", sprite:"susp_chat",
-    innocent:[["...", "Se lèche la patte.", "Refuse de répondre aux questions."]],
-    evasif:[["...", "Détourne la tête.", "Refuse de répondre aux questions."]],
-    absurde:["Refuse de répondre aux questions.", "Ronronne. C'est tout.", "Se frotte contre sa jambe."] },
+    role:"Le chat. Il était là avant tout le monde.",
+    innocent:{
+      pf:[["Il ronronne.", "Il se lèche la patte.", "Il s'installe sur mes pieds."]],
+      th:[["Il ne bouge pas.", "Il détourne la tête.", "Aucune déclaration."]],
+    },
+    evasif:{
+      pf:[["Il ronronne trop fort.", "Il se lèche la patte. Longuement.", "Beaucoup trop longuement."]],
+      th:[["Il a du rouge sur le poitrail.", "Il recule d'un pas.", "Aucune déclaration. Évidemment."]],
+    },
+    fond:[
+      "Il se frotte contre la jambe. Ce n'est pas un aveu.",
+      "Il fixe le meuble du bas. Depuis un moment.",
+      "Il ronronne. C'est tout ce qu'on obtiendra.",
+    ] },
 ];
 
-/* Les suspects présents dans la partie en cours. Le coupable y est
-   toujours — accuser quelqu'un d'absent n'aurait aucun sens — plus deux
-   autres têtes et le chat, qui traîne toujours là. */
+/* Les quatre sont toujours là : ce sont les habitants, pas une
+   distribution. Ce qui change, c'est ce qu'ils racontent. */
 const SUSPECTS = [];
 
 function composerSuspects(){
   SUSPECTS.length = 0;
-  const chat = SUSPECTS_BANQUE.find(s => s.id === "chat");
-  const humains = SUSPECTS_BANQUE.filter(s => s.id !== "chat");
-  const retenus = [];
-  if (Affaire.scenario && Affaire.scenario.coupable && Affaire.scenario.coupable !== "chat"){
-    retenus.push(humains.find(s => s.id === Affaire.scenario.coupable));
-  }
-  const autres = melangerTableau(humains.filter(s => retenus.indexOf(s) < 0));
-  while (retenus.length < 3 && autres.length) retenus.push(autres.pop());
-  melangerTableau(retenus);
-  retenus.push(chat);
-
-  const places = melangerTableau(PLACES_SUSPECTS.slice());
-  retenus.forEach((s, i) => {
+  for (const s of SUSPECTS_BANQUE){
+    const p = PLACES_FIXES[s.id];
     const coupable = Affaire.bonneReponse() === s.id;
-    const jeux = coupable ? s.evasif : s.innocent;
-    const p = i === retenus.length - 1 ? { x:0.452, y:0.88 } : places[i];
+    const jeu = coupable ? s.evasif : s.innocent;
     SUSPECTS.push({
-      id:s.id, nom:s.nom, sprite:s.sprite,
-      x:p.x, y:p.y,
-      dires:piocher(jeux).slice(),
-      absurde:piocher(s.absurde),
-      vus:0, coince:false,
+      id:s.id, nom:s.nom, sprite:s.sprite, role:s.role,
+      x:p.x, y:p.y, ancre:p.ancre, taille:p.taille,
+      diresPF:piocher(jeu.pf).slice(),
+      diresTH:piocher(jeu.th).slice(),
+      fond:piocher(s.fond),
+      vus:0, vusPF:0, coince:false,
     });
-  });
+  }
   return SUSPECTS;
 }
 
@@ -271,75 +310,99 @@ function composerSuspects(){
    de la SOLUTION puis distribue ses indices : une enquête impossible ne
    peut donc pas sortir. */
 const SCENARIOS = [
-  { id:"voisin", coupable:"gamer", cachettes:["canape", "sac", "tv"],
-    porteurs:["ticket", "boite", "serviette"],
-    piste:[[0, "Quelqu'un est entré, a mangé, et est reparti."], [1, "Donc quelqu'un d'ici."]],
-    trouvaille:[[0, "Cachée sous le canapé. Mal."], [1, "On sait qui range mal."]],
-    contradiction:"Vous avez joué toute la soirée. Sans pause. Vraiment ?",
-    chute:"Il avait la clé, la faim, et une manette dans les mains." },
+  /* --- la sœur --- */
+  { id:"pour_hortense", coupable:"soeur", cachettes:["frigo", "placards"],
+    porteurs:["ticket", "assiette", "serviette"],
+    piste:[[0, "Elle n'a pas été volée. Elle a été mise de côté."],
+           [1, "Mise de côté pour qui ?"]],
+    trouvaille:[[0, "Au frigo. Emballée. Étiquetée, presque."],
+                [1, "On garde une pizza comme ça pour quelqu'un qu'on aime."]],
+    contradiction:"Vous l'avez rangée pour votre sœur. Elle repasse ce soir.",
+    chute:"Elle la gardait pour Hortense. Personne n'a rien volé, et personne n'a rien dit." },
 
-  { id:"coloc", coupable:"blonde", cachettes:["placards", "commode", "portant"],
-    porteurs:["ticket", "assiette", "fromage"],
-    piste:[[0, "Une assiette, une seule. Un repas solitaire."], [1, "Et discret."]],
-    trouvaille:[[0, "Rangée dans un placard. Derrière les bocaux."], [1, "Personne ne cache une pizza par hasard."]],
-    contradiction:"Vous n'avez rien entendu, mais vous avez dîné.",
-    chute:"Elle avait faim. Elle a été efficace." },
+  { id:"la_porte", coupable:"soeur", cachettes:["commode", "portant"],
+    porteurs:["ticket", "boite", "pattes"],
+    piste:[[0, "Quelqu'un est entré sans sonner."],
+           [1, "Donc quelqu'un lui a ouvert."]],
+    trouvaille:[[0, "Dans la commode. Sous du linge propre."],
+                [1, "Il a fallu vouloir la cacher."]],
+    contradiction:"Vous avez ouvert à quelqu'un. Ce n'était pas le livreur.",
+    chute:"Elle a ouvert la porte à quelqu'un qui n'aurait pas dû venir. La pizza a payé le silence." },
 
-  { id:"amie", coupable:"brune", cachettes:["sac", "manteaux", "chaussures"],
-    porteurs:["ticket", "boite", "part"],
-    piste:[[0, "La boîte a été ouverte près de l'entrée."], [1, "Quelqu'un qui n'est pas resté."]],
-    trouvaille:[[0, "Dans un sac. Prête à partir."], [1, "Elle comptait l'emporter."]],
-    contradiction:"Vous êtes arrivée après. Le ticket dit avant.",
-    chute:"Elle est arrivée avant tout le monde. Le ticket ne ment pas." },
+  /* --- Charles --- */
+  { id:"amant", coupable:"charles", cachettes:["manteaux", "sac"],
+    porteurs:["ticket", "serviette", "fromage"],
+    piste:[[0, "Il a mangé vite. Debout. Sans s'asseoir."],
+           [1, "Quelqu'un qui ne voulait pas être vu."]],
+    trouvaille:[[0, "Dans la poche d'un manteau. Encore chaude."],
+                [1, "Ce manteau n'est pas à lui."]],
+    contradiction:"Vous n'étiez pas là. Alors pourquoi votre manteau sent le chorizo ?",
+    chute:"Il n'était pas censé être là. Il a pris la pizza pour effacer sa visite. Il a effacé l'inverse." },
 
-  { id:"chat", coupable:"chat", cachettes:["lit", "canape", "commode"],
-    porteurs:["pattes", "boite", "miettes"],
-    piste:[[0, "Ce n'est pas une main qui a fait ça."], [1, "Ne me dis pas que c'est le chat."]],
-    trouvaille:[[0, "Poussée jusqu'ici. Regarde les traces."], [1, "Risoto, on doit parler."]],
-    contradiction:"Vous n'avez pas de mains. C'est embêtant.",
-    chute:"Il a poussé la boîte. Le reste s'est fait tout seul." },
+  { id:"effacer", coupable:"charles", cachettes:["poubelle"],
+    porteurs:["boite", "sauce", "assiette"],
+    piste:[[0, "Deux assiettes lavées. Une seule utilisée."],
+           [1, "Quelqu'un a fait le ménage de sa propre présence."]],
+    trouvaille:[[0, "À la poubelle. Entière, sous le sac."],
+                [1, "On ne jette pas une pizza. On jette une preuve."]],
+    contradiction:"Vous avez lavé deux assiettes. Vous dîniez seul ?",
+    chute:"Il a tout nettoyé pour qu'on ne sache pas qu'il était venu. Y compris le dîner." },
 
-  { id:"chat_complice", coupable:"chat", cachettes:["four", "frigo"],
-    porteurs:["pattes", "fromage", "ticket"],
-    piste:[[0, "Des traces jusqu'à la cuisine."], [1, "Il a eu de l'aide pour ouvrir, quand même."]],
-    trouvaille:[[0, "Dans le four. Éteint, heureusement."], [1, "Un chat n'ouvre pas un four."]],
-    contradiction:"Quelqu'un a ouvert pour vous. Mais c'est vous qui avez mangé.",
-    chute:"Il a fait le plus dur. Quelqu'un a ouvert la porte, et n'a rien dit." },
+  { id:"le_couloir", coupable:"charles", cachettes:["lit", "commode"],
+    porteurs:["ticket", "miettes", "part"],
+    piste:[[0, "Des miettes jusqu'au couloir."],
+           [1, "Personne ne mange une pizza dans une chambre."]],
+    trouvaille:[[0, "Sous le lit. Avec une part entamée."],
+                [1, "Il a été dérangé au milieu."]],
+    contradiction:"Vous surveillez ce couloir depuis vingt minutes. Pourquoi ?",
+    chute:"Il s'était réfugié dans la chambre avec la pizza. Quelqu'un a frappé. Il a tout laissé là." },
 
-  { id:"rangee", coupable:null, cachettes:["frigo", "placards"],
-    porteurs:["ticket", "boite", "assiette"],
-    piste:[[0, "Rien n'a été volé. Tout a été rangé."], [1, "C'est pire."]],
-    trouvaille:[[0, "Au frigo. Sous une assiette."], [1, "Elle n'a jamais quitté l'appartement."]],
-    contradiction:"Personne n'a rien pris. Mais quelqu'un a rangé.",
-    chute:"Personne ne l'a volée. Quelqu'un l'a rangée. C'est pire." },
-
-  { id:"oubliee", coupable:null, cachettes:["four", "evier"],
+  /* --- TeoPedo --- */
+  { id:"vieux_reflexe", coupable:"teo", cachettes:["frigo", "four"],
     porteurs:["ticket", "fromage", "serviette"],
-    piste:[[0, "Froide depuis une demi-heure."], [1, "Quelqu'un voulait la réchauffer."]],
-    trouvaille:[[0, "Dans le four. Jamais allumé."], [1, "Donc personne n'a volé. On a juste oublié."]],
-    contradiction:"Vous alliez la réchauffer. Vous avez oublié.",
-    chute:"Elle attendait dans un four éteint. Depuis le début." },
+    piste:[[0, "Aucune trace sur la poignée. Aucune."],
+           [1, "Ça s'apprend, ça ?"]],
+    trouvaille:[[0, "Au four. Éteint. Refermé proprement."],
+                [1, "Un amateur laisse la porte ouverte."]],
+    contradiction:"Vous avez ouvert le frigo sans le toucher. Où apprend-on ça ?",
+    chute:"Il a ouvert, pris, refermé, sans une marque. Un vieux réflexe, dit-il. Il n'a pas dit de quand." },
 
-  { id:"partagee", coupable:"gamer", cachettes:["basse", "tv", "poubelle"],
-    porteurs:["part", "miettes", "boite"],
-    piste:[[0, "Plusieurs parts, plusieurs mains."], [1, "Une pizza ne se partage pas toute seule."]],
-    trouvaille:[[0, "Ce qu'il en reste est là."], [1, "Il en reste une part. Une."]],
-    contradiction:"Vous n'étiez pas seul. Mais vous avez fini.",
-    chute:"Ils l'ont partagée. Il a pris la dernière part, et le silence avec." },
+  { id:"le_prof", coupable:"teo", cachettes:["biblio", "tv"],
+    porteurs:["ticket", "boite", "miettes"],
+    piste:[[0, "Il connaît l'heure de la livraison à la minute."],
+           [1, "Il connaît beaucoup de choses à la minute."]],
+    trouvaille:[[0, "Derrière les livres. Rangée par taille."],
+                [1, "Même en cachant, il classe."]],
+    contradiction:"Vous savez tout de cette soirée. Sauf où vous étiez à dix-neuf heures cinquante.",
+    chute:"Le prof d'histoire a daté la scène mieux que nous. Il en avait besoin : il en faisait partie." },
 
-  { id:"poubelle", coupable:"blonde", cachettes:["poubelle"],
-    porteurs:["boite", "serviette", "sauce"],
-    piste:[[0, "Quelqu'un a voulu faire disparaître les preuves."], [1, "En les mettant à la poubelle. Audacieux."]],
-    trouvaille:[[0, "À la poubelle. Entière."], [1, "Jeter une pizza entière. Quel monde."]],
-    contradiction:"On ne jette pas ce qu'on n'a pas touché.",
-    chute:"Elle l'a goûtée, détestée, et jetée. Sans le dire à personne." },
+  /* --- Risoto, et les chaînes --- */
+  { id:"le_chat_seul", coupable:"chat", cachettes:["canape", "lit"],
+    porteurs:["pattes", "boite", "chorizo"],
+    piste:[[0, "Ce n'est pas une main qui a fait ça."],
+           [1, "Ne me dis pas que c'est le chat."]],
+    trouvaille:[[0, "Poussée jusque là-dessous. Regarde les traces."],
+                [1, "Risoto. On doit parler."]],
+    contradiction:"Vous n'avez pas de mains. C'est embêtant pour la boîte.",
+    chute:"Il a poussé la boîte du plan de travail au sol, puis du sol au dessous. Le reste s'est fait tout seul." },
 
-  { id:"emportee", coupable:"brune", cachettes:["manteaux", "portant", "commode"],
-    porteurs:["ticket", "chorizo", "pattes"],
-    piste:[[0, "Des rondelles semées jusqu'à l'entrée."], [1, "Elle est partie avec."]],
-    trouvaille:[[0, "Dans une poche de manteau. Sérieusement."], [1, "Ce manteau ne s'en remettra pas."]],
-    contradiction:"Votre manteau sent le chorizo. Le mien, non.",
-    chute:"Elle l'a glissée dans son manteau. Elle comptait la manger dehors." },
+  { id:"la_chaine", coupable:"charles", cachettes:["sac", "poubelle"],
+    porteurs:["pattes", "sauce", "boite"],
+    piste:[[0, "Le chat a renversé. Quelqu'un a ramassé."],
+           [1, "Et n'a rien dit. C'est ça qui compte."]],
+    trouvaille:[[0, "Dans un sac. Emballée à la hâte."],
+                [1, "Ramasser, ce n'est pas voler. Cacher, si."]],
+    contradiction:"Vous avez ramassé après le chat. Pourquoi ne pas le dire ?",
+    chute:"Risoto a fait tomber la boîte. Charles a ramassé — et caché, parce qu'être là suffisait à le condamner." },
+
+  { id:"la_tarte", coupable:null, cachettes:["placards", "evier"],
+    porteurs:["ticket", "chorizo", "assiette"],
+    piste:[[0, "Quelqu'un est venu, a échangé quelque chose, et est reparti."],
+           [1, "Échangé ?"]],
+    trouvaille:[[0, "Dans le placard. À la place d'autre chose."],
+                [1, "Il y avait une tarte au citron ici. Plus maintenant."]],
+    contradiction:"Personne n'a volé. Quelqu'un a troqué.",
+    chute:"Hortense est passée. Elle a laissé une tarte au citron et emporté l'idée. La pizza, elle, n'a jamais bougé." },
 ];
 
 const Affaire = {
@@ -398,7 +461,13 @@ function melangerTableau(t){
 const Dossier = {
   cartes:[],
   raz(){ this.cartes = []; },
-  ajouter(ind){ if (!this.cartes.some(c => c.id === ind.id)) this.cartes.push(ind); },
+  /* Une carte garde l'indice ET l'endroit. « Sauce tomate » ne veut
+     rien dire sans « sur la table basse » : c'est le lieu qui fait la
+     déduction, pas l'objet. */
+  ajouter(ind, ou){
+    if (this.cartes.some(c => c.id === ind.id)) return;
+    this.cartes.push({ id:ind.id, nom:ind.nom, sprite:ind.sprite, ou:ou });
+  },
   compte(){ return this.cartes.length; },
 };
 
@@ -538,6 +607,7 @@ const Enquete = {
     this.pizza = null; this.esquiveOuverte = false;
     this.tarteRecue = false; this.tarteEsquivee = false;
     this.gele = 0; this.badge = null; this.badgeT = 0;
+    this.dernier = null;
     this.actifIdx = 0;
     this.fileDial = [];
     this.accusationsRestantes = ENQ_ACCUSATIONS;
@@ -685,9 +755,12 @@ const Enquete = {
       }
       z.fouillee = true; this.fouilles++;
       this.indices++;
-      Dossier.ajouter(ind);
+      Dossier.ajouter(ind, z.ref.nom);
       this.gele = 0.15;
       this.poserBadge("indice");
+      /* On annonce ce qu'on a trouvé et où : sans le lieu, le dossier
+         devient une liste d'objets sans enquête. */
+      this.dernier = ind.nom + " — " + z.ref.nom;
       Effets.parole({ heros:ins.heros }, (pf && !ind.social) ? ind.analyse : ind.brut, 2.6);
       const echo = ECHOS[ind.id];
       if (echo) this.dialogue([[1 - this.actifIdx, echo[pf ? 0 : 1]]], 1.4);
@@ -711,18 +784,34 @@ const Enquete = {
   interroger(is){
     const s = SUSPECTS[is];
     const ins = this.actifIns();
-    if (this.estPF(ins)){
-      Effets.parole({ heros:ins.heros }, s.absurde, 2.2);
-      this.dire("Thibaut poserait de meilleures questions.", 2.0);
+    const pf = this.estPF(ins);
+    /* Deux inspecteurs, deux séries : Pierre-François est de la famille
+       et de la bande, on lui ménage la vérité ; devant Thibaut, un
+       inconnu, on se surveille moins. Les deux valent la peine, mais
+       seul Thibaut fait tomber une contradiction. */
+    const serie = pf ? s.diresPF : s.diresTH;
+    const compte = pf ? "vusPF" : "vus";
+    const d = serie[s[compte] % serie.length];
+    s[compte]++;
+    Effets.parole({ heros:ins.heros }, d, 2.4);
+    Sons.bip(pf ? 470 : 540, 0.08, "sine", 0.1);
+
+    /* Une remarque de fond au premier passage : ce qu'on voit, pas ce
+       qu'on entend. Elle vaut pour les deux. */
+    if (s.vus + s.vusPF === 1) this.dialogue([[1 - this.actifIdx, s.fond]], 1.5);
+
+    if (pf){
+      if (!s.gene){
+        s.gene = true;
+        this.dire(s.id === "soeur" ? "C'est sa belle-sœur. Thibaut ferait mieux."
+                : s.id === "teo"   ? "C'est son ami. Thibaut ferait mieux."
+                : "Thibaut poserait de meilleures questions.", 2.4);
+      }
       return;
     }
-    const d = s.dires[s.vus % s.dires.length];
-    s.vus++;
-    Effets.parole({ heros:ins.heros }, d, 2.4);
-    Sons.bip(520, 0.08, "sine", 0.1);
-    /* Assez d'indices en poche, et la bonne personne en face : la
-       contradiction saute aux yeux. C'est la seule récompense concrète
-       de l'interrogatoire, et elle ne tombe qu'une fois. */
+
+    /* Assez d'indices en poche et la bonne personne en face : la
+       contradiction saute aux yeux. Une seule fois. */
     if (this.indices >= 4 && s.id === Affaire.bonneReponse() && !s.coince){
       s.coince = true;
       this.dialogue([[this.actifIdx, Affaire.contradiction()]], 1.6);
