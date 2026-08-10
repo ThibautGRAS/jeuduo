@@ -153,6 +153,20 @@ statiques) des clés serveur. Le dépôt est public : rien de sensible dedans.
 
 ---
 
+## 3bis. Palmarès sans serveur
+
+Chaque appareil garde les meilleurs scores connus **par nom de joueur**, et les
+deux adversaires échangent leurs tableaux à la fin de chaque match. Les records
+se propagent ainsi de proche en proche : jouer contre Kemal, qui a joué contre
+Léa, suffit à récupérer le score de Léa. Vérifié par simulation à trois
+appareils.
+
+Limites assumées : c'est **déclaratif**, donc ça vaut la bonne foi du cercle, et
+il n'y a pas de vérité globale — deux appareils peuvent diverger un temps. Pour
+un jeu entre proches, c'est le bon compromis : zéro infrastructure, zéro compte,
+zéro modération de noms. Tableau borné à 24 joueurs, soit environ 1,3 Ko
+transmis.
+
 ## 4. Mini-jeux à tester
 
 Quatre pistes retenues, à construire et éprouver une par une. Toutes réutilisent
