@@ -497,6 +497,25 @@ verifier("fin de série transmise à l'invité",
   verifier("plusieurs paliers avant le plafond", paliers >= 2, paliers + " paliers franchis");
 }
 
+/* ======================= 8undecies. ÉCRAN DE LANCEMENT ======================= */
+titre("8undecies. Écran de lancement");
+verifier("élément, styles et script présents",
+  /id="intro"/.test(html) && /#intro\{/.test(html) && /function ecranLancement\(/.test(script));
+verifier("la version vient de la constante, pas d'un texte figé",
+  /v\.textContent = "v" \+ VERSION/.test(script));
+verifier("attente des polices", /document\.fonts && document\.fonts\.ready/.test(script),
+  "évite le clignotement en police de repli");
+verifier("délai de secours", /setTimeout\(fermer, 3000\)/.test(script),
+  "l'écran ne peut jamais rester bloqué");
+verifier("on peut passer d'une touche", /el\.addEventListener\("click", fermer\)/.test(script));
+verifier("retrait du document après le fondu", /removeChild\(el\)/.test(script));
+{
+  const iVersion = script.indexOf('const VERSION =');
+  const iIntro = script.indexOf("function ecranLancement(");
+  verifier("script placé après la déclaration de VERSION", iVersion < iIntro,
+    "sinon zone morte temporelle");
+}
+
 /* ======================= 9. RÉFÉRENCES ======================= */
 titre("9. Toute fonction appelée est définie");
 {
