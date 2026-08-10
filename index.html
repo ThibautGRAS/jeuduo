@@ -539,7 +539,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v14.5 · 2026-08-09</div>
+  <div id="version">DUO v14.6 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -679,7 +679,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "14.5";
+const VERSION = "14.6";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -1193,7 +1193,7 @@ let monViceNom = null;             // ce que J'AI choisi (mémoire locale, jamai
 const vfx = { invVictime: -1, finInv: 0, brouVictime: -1, finBrou: 0, gravSens: 0, finGrav: 0 };
 
 /* ================= MICRO — trash-talk 2 s ================= */
-let micStream = null, micActif = false, connVoix = null, enTrainDEnregistrer = false;
+let micStream = null, micActif = false, micAutorise = false, connVoix = null, enTrainDEnregistrer = false;
 let codeRejoint = "";
 
 function mimeAudio(){
@@ -1202,12 +1202,21 @@ function mimeAudio(){
   if (MediaRecorder.isTypeSupported("audio/mp4")) return "audio/mp4";
   return "";
 }
+function relacherMicro(){
+  if (!micStream) return;
+  try{ micStream.getTracks().forEach(p => p.stop()); }catch(e){}
+  micStream = null;
+}
 async function basculerMicro(){
   reveillerAudio();
-  if (micActif){ micActif = false; majIcones(); return; }
-  if (micStream){ micActif = true; majIcones(); return; }
+  if (micActif){ micActif = false; relacherMicro(); majIcones(); return; }
+  if (micAutorise){ micActif = true; majIcones(); return; }
   try{
-    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const flux = await navigator.mediaDevices.getUserMedia({ audio: true });
+    /* Une capture ouverte bascule la sortie iOS sur l'écouteur d'oreille :
+       on relâche aussitôt et on ne rouvre que le temps des 2 s. */
+    flux.getTracks().forEach(p => p.stop());
+    micAutorise = true;
     micActif = true;
     annoncer("MICRO ACTIVÉ · 2 s APRÈS CHAQUE POINT", "#8AB4FF");
   } catch(e){
@@ -1227,12 +1236,14 @@ function majIcones(){
   if (bm){ bm.classList.toggle("actif", musiqueOn); bm.classList.toggle("eteint", !musiqueOn); }
   if (bt){ bt.classList.toggle("actif", micActif); bt.classList.toggle("eteint", !micActif); }
 }
-function enregistrerEtEnvoyer(){
-  if (!micActif || !micStream || enTrainDEnregistrer || modeSolo) return;
+async function enregistrerEtEnvoyer(){
+  if (!micActif || !micAutorise || enTrainDEnregistrer || modeSolo) return;
   if (!connVoix || !connVoix.open) return;
   const mt = mimeAudio();
   if (!mt) return;
   enTrainDEnregistrer = true;
+  try{ micStream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch(e){ enTrainDEnregistrer = false; return; }
   const elMic = document.getElementById("micEtat");
   elMic.classList.remove("cache");
   const rec = new MediaRecorder(micStream, { mimeType: mt });
@@ -1241,6 +1252,7 @@ function enregistrerEtEnvoyer(){
   rec.onstop = async () => {
     enTrainDEnregistrer = false;
     elMic.classList.add("cache");
+    relacherMicro();
     try{
       const blob = new Blob(morceaux, { type: mt });
       if (blob.size > 300 && blob.size < 250000 && connVoix && connVoix.open){
@@ -1257,13 +1269,32 @@ function recevoirFiable(m){
   if (m.t === "ph" && m.d){ photoAdverse = m.d; return; }
   if (m.t !== "vx"){ recevoir(m); return; }   /* contrôle : même traitement */
   if (!m.d) return;
+  jouerClip(m.d, m.mt || "audio/webm");
+  annoncer("🎙 " + (nomAdverse || "L'ADVERSAIRE") + " VOUS PARLE", "#8AB4FF");
+}
+/* iOS refuse de lire un <audio> créé hors geste utilisateur, et le refus est
+   silencieux. On passe par l'AudioContext, déjà débloqué au premier tap. */
+async function jouerClip(donnees, mt){
+  reveillerAudio();
+  const octets = donnees instanceof ArrayBuffer ? donnees.slice(0) : new Uint8Array(donnees).buffer;
+  if (ac){
+    try{
+      const tampon = await ac.decodeAudioData(octets);
+      const src = ac.createBufferSource();
+      src.buffer = tampon;
+      const g = ac.createGain();
+      g.gain.value = 1.6;              /* la voix passe sous la musique sinon */
+      src.connect(g); g.connect(gainMaitre);
+      src.start();
+      return;
+    } catch(e){}
+  }
+  /* Repli navigateurs sans decodeAudioData exploitable */
   try{
-    const blob = new Blob([m.d], { type: m.mt || "audio/webm" });
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(new Blob([donnees], { type: mt }));
     const a = new Audio(url);
     a.play().catch(() => {});
     a.onended = () => URL.revokeObjectURL(url);
-    annoncer("🎙 " + (nomAdverse || "L'ADVERSAIRE") + " VOUS PARLE", "#8AB4FF");
   } catch(e){}
 }
 
