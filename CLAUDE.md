@@ -42,6 +42,10 @@ Dans cet ordre, sans sauter d'étape :
 5. **Vérifier après coup** que le fichier déployé contient bien ce qu'on croit,
    en particulier le numéro de version affiché en bas du lobby.
 
+**Piège du tube.** `node tests/x.js | tail -3` renvoie le code de `tail`, pas
+celui du test : un `&&` qui suit ne verra jamais l'échec. Rediriger vers un
+fichier puis afficher, ou tester le code de retour explicitement.
+
 Incrémenter `VERSION` **et** le texte `DUO vX.Y` du lobby à chaque livraison :
 c'est le seul moyen pour l'utilisateur de savoir ce qu'il teste.
 
