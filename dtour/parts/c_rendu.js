@@ -604,6 +604,19 @@ function dessiner(){
 
   const voile = dessinerDecor();
 
+  /* la terrasse : posée avant la file, donc derrière elle */
+  for (const t of TERRASSE){
+    const img = Images.table[t.sprite];
+    if (!img || !img.naturalWidth) continue;
+    const h = H_PERSO * Camera.ech * t.taille;
+    const l = h * img.naturalWidth / img.naturalHeight;
+    const px = Camera.ecran(t.x);
+    if (px < -l || px > Camera.L + l) continue;
+    const yBas = Camera.sol - H_PERSO * Camera.ech * t.recul;
+    ombreAuSol(t.x, yBas, h, voile.ombre / 0.16);
+    ctx.drawImage(img, px - l / 2, yBas - h, l, h);
+  }
+
   /* la file, de droite à gauche : celui de devant passe par-dessus */
   for (let i = File.places.length - 1; i >= 0; i--){
     const c = File.places[i];

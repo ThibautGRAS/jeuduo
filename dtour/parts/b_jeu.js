@@ -163,6 +163,21 @@ const File = {
   },
 };
 
+/* ---------- la terrasse ----------
+   Charles et Teo sont déjà installés quand la file commence. Leurs
+   sprites les montrent assis : ils ne peuvent pas marcher, alors ils
+   regardent. `x` est en unités monde, `recul` les place derrière la
+   file, plus haut et plus petits. `recul` est mesuré sur le décor : une
+   assise de chaise de terrasse est à 20 unités au-dessus du trottoir, un
+   plateau de table à 24. Reculés davantage, ils flottaient.
+   Ils sont posés là où les tables sont peintes sur le décor ; quand la
+   file s'allonge, elle finit par passer devant eux, ce qui est
+   exactement ce que fait une file. */
+const TERRASSE = [
+  { sprite:"pers_teo",     x:498, taille:0.56, recul:0.20 },
+  { sprite:"pers_charles", x:592, taille:0.50, recul:0.24 },
+];
+
 /* ================= héros ================= */
 /* L'ordre du tableau est celui des COMMANDES : 0 = pastille verte à
    gauche, touche A ; 1 = pastille bleue à droite, touche L. Le prénom,

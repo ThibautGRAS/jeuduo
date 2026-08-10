@@ -63,10 +63,13 @@ chaque pièce, une fois par partie. Et de loin en loin, quand on les
 laisse tranquilles, ils bavardent. Tout est cadencé par le chrono du
 jeu, jamais par `setTimeout`.
 
-**Dix affaires écrites** qui se servent de ces liens : la pizza mise de
+**Onze affaires écrites** qui se servent de ces liens : la pizza mise de
 côté pour Hortense, Charles qui efface sa visite, le prof d'histoire qui
 date la soirée à la minute parce qu'il en faisait partie, la chaîne
-Risoto-puis-Charles, ou le troc contre une tarte au citron. Qui, où et
+Risoto-puis-Charles, le troc contre une tarte au citron, ou la vraie :
+nous étions sortis, elle a tout mangé, laissé des miettes et un **billet
+de cinq euros** pour qu'on en rachète une. « Personne ne paie pour un
+vol. » « Alors ce n'est pas un vol. C'est un remboursement. » Qui, où et
 pourquoi changent à chaque fois, et avec eux la piste, la réplique de
 découverte, la contradiction et le dénouement. Aucun dénouement n'est
 répété. La suite le vérifie sur neuf cents tirages.
@@ -85,6 +88,13 @@ change ce qu'on obtient de lui.
 | **CHARLES** — table | L'amant de la colocataire. Personne n'est censé savoir qu'il était là : c'est son seul mobile, et il vaut toutes les pizzas du monde. |
 | **LA SŒUR D'HORTENSE** — couloir | Colocataire, sœur de celle qui lance des tartes, et belle-sœur de Pierre-François. |
 | **RISOTO** — au sol | Le chat. Il ne dira rien, mais il laisse des traces. |
+
+Les trois sont aussi dans le **niveau 1** : la sœur fait la queue comme
+tout le monde — elle est debout et entière, donc elle marche — et les
+deux autres tiennent la terrasse du D'Tour. Leurs sprites les montrent
+assis : on ne peut pas les faire marcher, alors ils regardent. Quand la
+file s'allonge, elle finit par passer devant eux, ce qui est exactement
+ce que fait une file.
 
 Chacun **pose sur une ligne relevée sur le décor** : l'assise du canapé à
 80 %, le plateau de la table à 73 %, le sol du couloir à 90 %. Charles

@@ -667,7 +667,12 @@ if (D){
   for (let i = 0; i < 60 * 2; i++) D.Jeu.pas(1 / 60);
   verifier("la seconde arrive après, pas en même temps",
     D.Enquete.fileDial.length === 0, "il reste " + D.Enquete.fileDial.length + " réplique(s)");
-  verifier("dix affaires au moins", D.SCENARIOS.length >= 10, D.SCENARIOS.length + " scénarios");
+  verifier("onze affaires au moins", D.SCENARIOS.length >= 11, D.SCENARIOS.length + " scénarios");
+  verifier("celle du billet de cinq euros existe",
+    D.SCENARIOS.some(sc => sc.porteurs.indexOf("billet") >= 0),
+    "c'est l'affaire vraie : elle a tout mangé et laissé de quoi en racheter");
+  verifier("le billet est en banque d'indices",
+    D.INDICES.some(i => i.id === "billet" && /cinq euros/i.test(i.nom)));
   verifier("chaque affaire est complète",
     D.SCENARIOS.every(sc => sc.id && sc.cachettes.length && sc.porteurs.length === 3 &&
       sc.piste && sc.trouvaille && sc.contradiction && sc.chute));
@@ -717,6 +722,22 @@ if (D){
     egal("elle ne tombe qu'une fois",
       D.Enquete.fileDial.filter(r => typeof r.qui === "number").length, avantC);
   } else ok("scénario sans coupable : rien à contredire");
+
+  titre("Les trois dans les deux niveaux");
+  verifier("la sœur fait aussi la queue au D'Tour",
+    D.SPRITES_PNJ.indexOf("pers_soeur") >= 0,
+    "elle est debout et entière, donc elle peut marcher");
+  verifier("les deux assis tiennent la terrasse", D.TERRASSE.length === 2);
+  verifier("et ce sont bien Charles et Teo",
+    D.TERRASSE.map(t2 => t2.sprite).sort().join(",") === "pers_charles,pers_teo");
+  verifier("ils ne marchent pas dans la file",
+    !D.TERRASSE.some(t2 => D.SPRITES_PNJ.indexOf(t2.sprite) >= 0),
+    "leurs sprites les montrent assis : ils ne peuvent pas marcher");
+  verifier("ils sont posés sur un meuble, pas en l'air",
+    D.TERRASSE.every(t2 => t2.recul > 0.1 && t2.recul < 0.32),
+    D.TERRASSE.map(t2 => t2.sprite + ":" + t2.recul).join(" "));
+  verifier("et derrière la file, donc plus petits",
+    D.TERRASSE.every(t2 => t2.taille < 0.7));
 
   titre("Les gens dans la pièce");
   verifier("chacun pose sur une ligne mesurée sur le décor",

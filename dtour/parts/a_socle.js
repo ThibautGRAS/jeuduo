@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "3.5";
+const VERSION = "3.6";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -103,6 +103,11 @@ const TYPES = {
 
 const NB_PNJ = 16;
 const SPRITES_PNJ = Array.from({ length:NB_PNJ }, (_, i) => "pnj" + String(i + 1).padStart(2, "0"));
+/* La sœur d'Hortense fait aussi la queue au D'Tour : c'est le même
+   quartier. Elle est debout et entière, donc elle marche comme les
+   autres. Charles et Teo, eux, sont assis sur leurs sprites — on ne peut
+   pas les faire marcher, ils tiennent la terrasse. */
+SPRITES_PNJ.push("pers_soeur");
 const POSES_HEROS = ["idle","attente","marche","regarde","surpris","stress","tendue","victoire"];
 
 /* Ce que dit l'arrivant en tendant la main. Il est chaleureux, sûr de
@@ -418,7 +423,7 @@ const IMAGES_NIVEAU2 = [
   "enq_pf_marche", "enq_pf_fouille", "enq_pf_splat",
   "enq_th_marche", "enq_th_fouille", "enq_th_splat",
   "ind_miettes", "ind_chorizo", "ind_fromage", "ind_serviette",
-  "ind_sauce", "ind_assiette", "ind_ticket", "ind_pattes",
+  "ind_sauce", "ind_assiette", "ind_ticket", "ind_pattes", "ind_billet",
   "pizza_entiere", "pizza_entamee", "pizza_part", "pizza_boite_ouverte",
   "susp_chat", "pers_teo", "pers_charles", "pers_soeur",
   "badge_indice", "badge_suspect",

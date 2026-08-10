@@ -88,6 +88,9 @@ const INDICES = [
     analyse:"La boîte. Ouverte ici, pas à la cuisine.", brut:"La boîte ! Enfin, vide." },
   { id:"part",      sprite:"pizza_part",    nom:"Part abandonnée",
     analyse:"Une part entamée puis reposée. Quelqu'un a été dérangé.", brut:"Une part ! On peut la manger ?" },
+  { id:"billet",    sprite:"ind_billet",    nom:"Billet de cinq euros",
+    analyse:"Cinq euros. Posé bien à plat, pas tombé de poche.",
+    brut:"Cinq euros ! On rachète une pizza ?" },
   { id:"manette",   sprite:"ind_serviette", nom:"Manette grasse",
     analyse:"Une manette. Sale.", brut:"Des traces de doigts gras. Il a joué en mangeant.", social:true },
 ];
@@ -98,6 +101,7 @@ const INDICES = [
    travailler ensemble plutôt que de se relayer. */
 const ECHOS = {
   sauce:["Tiède ? Donc récent.", "Ne touche pas. Enfin, trop tard."],
+  billet:["Personne ne paie pour un vol.", "Alors ce n'est pas un vol. C'est un remboursement."],
   ticket_menu:["Tu connais le livreur ?", "Je connais surtout ses horaires."],
   manette:["Gras. Donc il mangeait.", "Et il jouait. Les deux."],
   chorizo:["Coupé à la main. Personne ne fait ça.", "Moi je l'aurais mangée entière."],
@@ -362,6 +366,15 @@ const SCENARIOS = [
                 [1, "Il a fallu vouloir la cacher."]],
     contradiction:"Vous avez ouvert à quelqu'un. Ce n'était pas le livreur.",
     chute:"Elle a ouvert la porte à quelqu'un qui n'aurait pas dû venir. La pizza a payé le silence." },
+
+  { id:"la_dette", coupable:"soeur", cachettes:["poubelle", "evier"],
+    porteurs:["billet", "miettes", "boite"],
+    piste:[[0, "Des miettes, et cinq euros posés à côté."],
+           [1, "Personne ne paie pour un vol."]],
+    trouvaille:[[0, "La boîte est là. Vide, pliée, rangée."],
+                [1, "Elle a même fait le tri."]],
+    contradiction:"Vous avez laissé cinq euros. On ne rembourse que ce qu'on a pris.",
+    chute:"Nous étions sortis. Elle a tout mangé, laissé des miettes et un billet de cinq euros pour qu'on en rachète une. C'est presque de la politesse." },
 
   /* --- Charles --- */
   { id:"amant", coupable:"charles", cachettes:["manteaux", "sac"],
