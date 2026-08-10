@@ -308,3 +308,4 @@ entre proches.
 | 14.4 | Rochers à partir de la manche 2, relance automatique à 14 s |
 | 14.5 | Lentille composée hors écran : elle ne disparaît plus après quelques secondes |
 | 14.6 | Clips vocaux lus par l'AudioContext, micro relâché entre deux points |
+| 14.7 | Écho du micro en solo : la chaîne de lecture se valide sans second appareil |
