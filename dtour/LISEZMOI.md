@@ -94,6 +94,19 @@ visage, des personnages trop grands, des bandes blanches sur les bords
 du décor, et des sprites éclairés en plein jour au milieu d'une rue de
 nuit. Une capture vaut mieux qu'une supposition.
 
+## Place à l'écran
+
+Le bandeau de commandes du bas est **mesuré**, pas supposé : sa hauteur
+dépend de `clamp()` et donc de l'écran. La ligne de sol du jeu se cale
+juste au-dessus, si bien que les héros ne se retrouvent jamais coupés
+aux genoux derrière les boutons. Sur un écran de moins de 420 px de
+haut — un iPhone couché, barre de Safari comprise — la ligne « SALUER »
+des boutons disparaît : c'est elle ou les jambes.
+
+L'écran titre se règle sur la HAUTEUR disponible et non sur la largeur.
+Réglé en largeur, le logo poussait le bouton JOUER et la légende hors du
+cadre dès que la barre du navigateur mangeait cent pixels.
+
 ## Comment c'est fait
 
 | Brief | Ici |

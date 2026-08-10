@@ -10,14 +10,19 @@ const Z_MIN = 0.72;
 const Camera = {
   x:X_PORTE - 14, z:1, zVise:1, ech:1, base:120, sol:0, L:1, H:1, dpr:1, secousse:0,
 
-  mesurer(L, H, dpr){
+  mesurer(L, H, dpr, basUI){
     this.L = L; this.H = H; this.dpr = dpr;
+    /* Hauteur réellement jouable : le bandeau de commandes mange le bas
+       de l'écran, et les héros s'y cachaient les jambes. On lui réserve
+       sa place au lieu de dessiner dessous. */
+    this.basUI = basUI != null ? basUI : borne(H * 0.13, 46, 74);
+    const hUtile = Math.max(120, H - this.basUI);
     /* Le jeu est en paysage : la hauteur commande, la largeur ne sert
        que de garde-fou sur les écrans très plats. Généreux à dessein —
        le décor est une image large, des personnages timides auraient
        l'air posés devant une carte postale. */
-    this.base = borne(Math.min(H * 0.46, L * 0.26), 96, 380);
-    this.sol = H * 0.845;
+    this.base = borne(Math.min(hUtile * 0.56, L * 0.26), 92, 380);
+    this.sol = H - this.basUI - H * 0.025;
     this.calculerVise();
     this.recentrer();
   },
@@ -114,7 +119,10 @@ function ajusterCanevas(){
   const L = cv.clientWidth || 640, H = cv.clientHeight || 360;
   const lp = Math.round(L * dpr), hp = Math.round(H * dpr);
   if (cv.width !== lp || cv.height !== hp){ cv.width = lp; cv.height = hp; }
-  Camera.mesurer(L, H, dpr);
+  /* On mesure le bandeau plutôt que de le supposer : sa hauteur dépend
+     de clamp() et donc de l'écran. */
+  const bas = (E.pupitre && E.pupitre.offsetHeight) || 0;
+  Camera.mesurer(L, H, dpr, bas > 8 ? bas + 10 : null);
 }
 
 /* Un personnage, ancré sur ses pieds. */

@@ -247,9 +247,9 @@ function jouerJusqua(D, condition, limite){
 
   /* 6. iPhone en paysage */
   {
-    const { D, canevas } = await preparer(844, 390);
+    const { D, canevas } = await preparer(844, 318);
     D.amorcer(); D.Jeu.demarrer();
-    D.Camera.mesurer(844, 390, 1);
+    D.Camera.mesurer(844, 318, 1);
     D.File.gonfler(7);
     D.Score.saluts = 24; D.Jeu.moment = 1; D.Jeu.fonduDe = 1; D.Jeu.fondu = 1;
     D.Camera.recaler();

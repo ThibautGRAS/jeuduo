@@ -90,26 +90,29 @@ kbd{
 /* ---------------- commandes ---------------- */
 #pupitre{
   position:absolute;left:0;right:0;bottom:0;z-index:20;display:flex;gap:10px;
-  padding:0 12px calc(12px + var(--bas));
+  padding:0 10px calc(8px + var(--bas));
   opacity:0;pointer-events:none;transition:opacity .28s ease;
 }
 #pupitre.on{opacity:1;pointer-events:auto}
 .cmd{
-  flex:1 1 0;min-width:0;height:clamp(58px,12vh,80px);
-  display:flex;align-items:center;gap:10px;padding:0 14px;
+  flex:1 1 0;min-width:0;height:clamp(40px,10vh,58px);
+  display:flex;align-items:center;gap:8px;padding:0 10px;
   border:1px solid var(--traitFort);border-radius:var(--r2);cursor:pointer;
   font-family:inherit;font-weight:800;color:#fff;
   backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);
   transition:transform .08s ease,filter .12s ease,box-shadow .12s ease;
-  box-shadow:0 6px 22px rgba(0,0,0,.30);
+  box-shadow:0 4px 16px rgba(0,0,0,.34);
 }
 .cmd img{
-  width:clamp(34px,6.6vh,44px);height:clamp(34px,6.6vh,44px);border-radius:50%;
+  width:clamp(24px,6vh,34px);height:clamp(24px,6vh,34px);border-radius:50%;
   flex:0 0 auto;border:1.5px solid rgba(255,255,255,.55);background:rgba(0,0,0,.2);
 }
 .cmd .txt{display:flex;flex-direction:column;gap:1px;min-width:0;text-align:left;flex:1 1 auto}
-.cmd .txt small{font-size:9px;font-weight:600;letter-spacing:.18em;opacity:.72;line-height:1}
-.cmd .txt span{font-size:clamp(14px,2.7vw,19px);line-height:1.1;
+.cmd .txt small{font-size:8px;font-weight:600;letter-spacing:.16em;opacity:.7;line-height:1}
+/* Sur un écran court — un iPhone couché, barre de Safari comprise — la
+   ligne de service disparaît : c'est elle ou les jambes des héros. */
+@media (max-height:420px){ .cmd .txt small{display:none} }
+.cmd .txt span{font-size:clamp(12px,2.2vw,17px);line-height:1.1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 .cmd kbd{color:rgba(255,255,255,.88);border-color:rgba(255,255,255,.4);background:rgba(0,0,0,.22)}
 #cmdT{background:linear-gradient(180deg,rgba(55,172,72,.94),rgba(38,132,53,.94))}
@@ -118,7 +121,7 @@ kbd{
    qui n'appartient à aucun des deux héros — on n'esquive pas « pour
    quelqu'un », on esquive tout court. */
 #cmdE{
-  flex:0 1 min(30%,190px);justify-content:center;
+  flex:0 1 min(26%,168px);justify-content:center;
   background:linear-gradient(180deg,rgba(247,179,43,.94),rgba(198,133,14,.94));
   color:#1A1305;
 }
@@ -133,23 +136,28 @@ kbd{
 /* ---------------- écran titre ---------------- */
 #titre{
   position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:clamp(12px,2.6vh,24px);
-  padding:24px;text-align:center;transition:opacity .35s ease;
+  align-items:center;justify-content:center;gap:clamp(8px,2.2vh,20px);
+  padding:clamp(10px,3vh,24px) 24px;text-align:center;transition:opacity .35s ease;
   background:linear-gradient(180deg,rgba(8,13,24,.44) 0%,rgba(8,13,24,.10) 38%,rgba(8,13,24,.80) 100%);
 }
 #titre.parti{opacity:0;pointer-events:none}
-#logo{width:min(400px,72vw);filter:drop-shadow(0 10px 26px rgba(0,0,0,.6))}
-#titre .sous{font-size:clamp(13px,2.4vw,17px);font-weight:600;color:#DCE4F4;
+/* Le logo se cale sur la HAUTEUR disponible : réglé en largeur, il
+   poussait le bouton JOUER et la légende hors de l'écran dès que la
+   barre du navigateur mangeait cent pixels. */
+#logo{width:auto;max-width:min(400px,72vw);max-height:30vh;
+  filter:drop-shadow(0 10px 26px rgba(0,0,0,.6))}
+#titre .sous{font-size:clamp(12px,2.2vw,16px);font-weight:600;color:#DCE4F4;
   text-shadow:0 2px 12px rgba(0,0,0,.95);max-width:32ch}
 .primaire{
   border:1px solid rgba(255,255,255,.24);border-radius:999px;cursor:pointer;
   font-family:inherit;font-weight:800;color:#131A0B;
-  font-size:clamp(16px,2.9vw,21px);letter-spacing:.05em;padding:.68em 2.1em;
+  font-size:clamp(15px,2.6vw,20px);letter-spacing:.05em;padding:.58em 1.9em;
   background:var(--ambre);transition:transform .08s ease,filter .12s ease;
 }
 .primaire:active{transform:translateY(2px);filter:brightness(1.06)}
-#legende{display:flex;gap:18px;align-items:center;flex-wrap:wrap;justify-content:center;
+#legende{display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center;
   font-size:11px;font-weight:600;color:#C6D1E6;text-shadow:0 1px 8px rgba(0,0,0,.9)}
+@media (max-height:400px){ #legende{font-size:10px;gap:10px} #titre .sous{display:none} }
 #legende span{display:inline-flex;align-items:center;gap:6px}
 #legende i{width:8px;height:8px;border-radius:2px;font-style:normal;display:inline-block}
 #legende .pt{background:var(--vert)}
@@ -324,7 +332,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">D'TOUR v1.2</div>
+  <div id="version">D'TOUR v1.3</div>
 
   <div id="pivot">
     <div class="tourne"></div>
@@ -360,7 +368,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "1.2";
+const VERSION = "1.3";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1331,14 +1339,19 @@ const Z_MIN = 0.72;
 const Camera = {
   x:X_PORTE - 14, z:1, zVise:1, ech:1, base:120, sol:0, L:1, H:1, dpr:1, secousse:0,
 
-  mesurer(L, H, dpr){
+  mesurer(L, H, dpr, basUI){
     this.L = L; this.H = H; this.dpr = dpr;
+    /* Hauteur réellement jouable : le bandeau de commandes mange le bas
+       de l'écran, et les héros s'y cachaient les jambes. On lui réserve
+       sa place au lieu de dessiner dessous. */
+    this.basUI = basUI != null ? basUI : borne(H * 0.13, 46, 74);
+    const hUtile = Math.max(120, H - this.basUI);
     /* Le jeu est en paysage : la hauteur commande, la largeur ne sert
        que de garde-fou sur les écrans très plats. Généreux à dessein —
        le décor est une image large, des personnages timides auraient
        l'air posés devant une carte postale. */
-    this.base = borne(Math.min(H * 0.46, L * 0.26), 96, 380);
-    this.sol = H * 0.845;
+    this.base = borne(Math.min(hUtile * 0.56, L * 0.26), 92, 380);
+    this.sol = H - this.basUI - H * 0.025;
     this.calculerVise();
     this.recentrer();
   },
@@ -1435,7 +1448,10 @@ function ajusterCanevas(){
   const L = cv.clientWidth || 640, H = cv.clientHeight || 360;
   const lp = Math.round(L * dpr), hp = Math.round(H * dpr);
   if (cv.width !== lp || cv.height !== hp){ cv.width = lp; cv.height = hp; }
-  Camera.mesurer(L, H, dpr);
+  /* On mesure le bandeau plutôt que de le supposer : sa hauteur dépend
+     de clamp() et donc de l'écran. */
+  const bas = (E.pupitre && E.pupitre.offsetHeight) || 0;
+  Camera.mesurer(L, H, dpr, bas > 8 ? bas + 10 : null);
 }
 
 /* Un personnage, ancré sur ses pieds. */
