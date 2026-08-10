@@ -207,7 +207,7 @@ verifier("aucun secret en dur", !/github_pat|ghp_[A-Za-z0-9]{20}/.test(html));
 verifier("la version du script et celle affichée concordent",
   (() => {
     const v = source.match(/const VERSION = "([\d.]+)"/);
-    const t = html.match(/D'TOUR v([\d.]+)/);
+    const t = html.match(/CALLAGHAN v([\d.]+)/);
     return v && t && v[1] === t[1];
   })(), "VERSION vs texte du pied de page");
 
@@ -785,7 +785,39 @@ if (D){
     !/id="niv2Cad"/.test(html) && !/\.niv\.verrouille/.test(html),
     "il reste une serrure dans le balisage ou la feuille de style");
 
-  /* ================= 4. simulation ================= */  /* ================= 4. simulation ================= */
+  /* ================= 4. simulation ================= */  /* ================= pause ================= */
+  titre("Pause");
+  D.Jeu.demarrer(1);
+  verifier("on peut mettre en pause en pleine partie", D.Pause.peut());
+  D.Pause.mettre();
+  verifier("la pause suspend la boucle", D.Pause.active && D.Boucle.pause);
+  const scoreGele = D.Score.points, viesGelees = D.Jeu.vies;
+  for (let i = 0; i < 60 * 8; i++) D.Jeu.pas(1 / 60);
+  void scoreGele; void viesGelees;
+  D.Pause.reprendre();
+  verifier("reprendre relance la boucle", !D.Pause.active && !D.Boucle.pause);
+
+  D.Jeu.demarrer(2); D.Intro.finir();
+  D.Pause.mettre();
+  verifier("elle marche aussi au niveau 2", D.Pause.active);
+  const restantGele = D.Enquete.restant;
+  for (let i = 0; i < 60 * 5; i++){ if (!D.Boucle.pause) D.Jeu.pas(1 / 60); }
+  presque("le chrono de l'enquête ne bouge pas", D.Enquete.restant, restantGele, 0.001);
+  D.Pause.quitter();
+  egal("quitter ramène au menu principal", D.Jeu.phase, "titre");
+  egal("et repasse au niveau 1", D.Jeu.niveau, 1);
+  verifier("la boucle est relancée", !D.Boucle.pause);
+
+  D.Jeu.demarrer(2); D.Intro.finir();
+  D.Pause.mettre();
+  D.Pause.recommencer();
+  egal("recommencer relance le même niveau", D.Jeu.niveau, 2);
+  verifier("et repart du début", D.Intro.actif || D.Enquete.restant > D.ENQ_DUREE - 1);
+
+  D.Jeu.retourTitre();
+  verifier("pas de pause hors partie", !D.Pause.peut());
+
+  /* ================= 4. simulation ================= */
   titre("Simulation de parties");
   let plantage = null, partiesFinies = 0, scoreMax = 0, fileMax = 0, salutsMax = 0;
   for (let partie = 0; partie < 12 && !plantage; partie++){

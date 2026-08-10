@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="D'TOUR">
+<meta name="apple-mobile-web-app-title" content="CALLAGHAN">
 <meta name="theme-color" content="#080D18">
-<meta name="description" content="La file du D'Tour — jeu d'arcade : saluez tout le monde devant le bar, avant que ça devienne gênant.">
-<title>La file du D'Tour</title>
+<meta name="description" content="Les enquêtes de Callaghan — deux niveaux : la file du D'Tour, puis l'enquête de la pizza.">
+<title>Les enquêtes de Callaghan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -151,8 +151,12 @@ kbd{
 /* Le logo se cale sur la HAUTEUR disponible : réglé en largeur, il
    poussait le bouton JOUER et la légende hors de l'écran dès que la
    barre du navigateur mangeait cent pixels. */
-#logo{width:auto;max-width:min(400px,72vw);max-height:30vh;
-  filter:drop-shadow(0 10px 26px rgba(0,0,0,.6))}
+#marque{
+  font-size:clamp(20px,4.6vw,42px);font-weight:800;line-height:1.02;letter-spacing:.05em;
+  text-shadow:0 6px 22px rgba(0,0,0,.75);
+}
+#marque em{display:block;font-style:normal;color:var(--ambre);letter-spacing:.10em}
+@media (max-height:380px){ #marque{font-size:clamp(18px,3.8vw,30px)} }
 #titre .sous{font-size:clamp(12px,2.2vw,16px);font-weight:600;color:#DCE4F4;
   text-shadow:0 2px 12px rgba(0,0,0,.95);max-width:32ch}
 .primaire{
@@ -183,9 +187,9 @@ kbd{
 }
 .niv:hover,.niv:focus-visible{border-color:var(--ambre);background:rgba(20,30,52,.72)}
 .niv:active{transform:translateY(2px)}
-.niv .num{
-  font-family:"JetBrains Mono",monospace;font-weight:700;font-size:clamp(18px,3.2vw,26px);
-  color:var(--ambre);flex:0 0 auto;line-height:1;
+.niv .vign{
+  height:clamp(26px,5.4vh,40px);width:auto;max-width:74px;flex:0 0 auto;
+  object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));
 }
 .niv .txt{display:flex;flex-direction:column;gap:2px;min-width:0}
 .niv .txt b{font-size:clamp(13px,2.2vw,17px);font-weight:800;line-height:1.15;
@@ -200,20 +204,23 @@ kbd{
    d'action devient ESQUIVER quand la tarte arrive. */
 #pupitre2{
   position:absolute;left:0;right:0;bottom:0;z-index:20;display:none;
-  align-items:flex-end;gap:8px;padding:0 10px calc(8px + var(--bas));
+  align-items:flex-end;justify-content:center;gap:6px;
+  padding:0 10px calc(7px + var(--bas));
 }
 #pupitre2.on{display:flex}
 .cmd2{
-  height:clamp(40px,10vh,54px);min-width:clamp(44px,9vh,58px);
-  display:flex;align-items:center;justify-content:center;padding:0 12px;
+  height:clamp(32px,7.6vh,44px);min-width:clamp(36px,7.4vh,48px);
+  display:flex;align-items:center;justify-content:center;padding:0 9px;
   border:1px solid rgba(255,255,255,.28);border-radius:999px;cursor:pointer;
-  font-family:inherit;font-weight:800;font-size:clamp(12px,2vw,16px);color:#fff;
-  background:rgba(14,22,40,.72);
+  font-family:inherit;font-weight:800;font-size:clamp(10px,1.6vw,13px);color:#fff;
+  letter-spacing:.02em;background:rgba(14,22,40,.66);
   backdrop-filter:blur(12px) saturate(1.3);-webkit-backdrop-filter:blur(12px) saturate(1.3);
   box-shadow:0 4px 16px rgba(0,0,0,.36);
   transition:transform .08s ease,filter .12s ease;
 }
-.cmd2.large{flex:1 1 0;min-width:0}
+/* INSPECTER reste le plus large, mais plafonné : il mangeait un
+   tiers du décor. */
+.cmd2.large{flex:0 1 auto;min-width:0;max-width:30vw;padding:0 16px}
 #c2A{background:linear-gradient(180deg,rgba(247,179,43,.94),rgba(198,133,14,.94));color:#1A1305}
 #c2A.esquive{animation:tartePrete .45s ease-in-out infinite}
 #c2C{background:linear-gradient(180deg,rgba(42,138,228,.9),rgba(28,98,170,.9))}
@@ -222,9 +229,9 @@ kbd{
    CHANGER sous 360 px de haut, comme je l'avais fait, revenait à
    supprimer la moitié du jeu sur le seul appareil qui compte. */
 #c2C{flex:0 0 auto;position:relative;gap:6px;padding:0 10px}
-#c2C img{width:clamp(20px,4.6vh,28px);height:clamp(20px,4.6vh,28px);border-radius:50%;
+#c2C img{width:clamp(17px,4vh,23px);height:clamp(17px,4vh,23px);border-radius:50%;
   border:1.5px solid rgba(255,255,255,.6);background:rgba(0,0,0,.25)}
-#c2Acc{flex:0 0 auto;position:relative;font-size:clamp(11px,1.8vw,14px);gap:5px}
+#c2Acc{flex:0 0 auto;position:relative;font-size:clamp(9px,1.5vw,12px);gap:4px}
 #c2AccN{
   min-width:16px;height:16px;border-radius:8px;background:rgba(0,0,0,.34);
   font-size:10px;font-weight:800;line-height:16px;text-align:center;padding:0 3px;
@@ -370,12 +377,12 @@ kbd{
     <img id="logo" alt="La file du D'Tour">
     <div id="niveaux">
       <button class="niv" data-niv="1">
-        <span class="num">01</span>
-        <span class="txt"><b>La file du D'Tour</b><i>Ils ne les connaissaient même pas.</i></span>
+        <img class="vign" id="vign1" alt="">
+        <span class="txt"><b>01 · La file du D'Tour</b><i>Ils ne les connaissaient même pas.</i></span>
       </button>
       <button class="niv" data-niv="2" id="niv2">
-        <span class="num">02</span>
-        <span class="txt"><b>L'affaire de la pizza au chorizo</b><i id="niv2Sst">Six indices, cinq minutes.</i></span>
+        <img class="vign" id="vign2" alt="">
+        <span class="txt"><b>02 · L'enquête de la pizza</b><i id="niv2Sst">Six indices, cinq minutes.</i></span>
       </button>
     </div>
     <div id="legende">
@@ -420,6 +427,7 @@ kbd{
     </button>
   </div>
 
+  <button id="pauseBtn" title="Pause">❚❚</button>
   <button id="pleinBtn" title="Plein écran">⛶</button>
   <button id="outilsBtn" title="Outils">⚙</button>
 
@@ -457,7 +465,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">D'TOUR v2.8</div>
+  <div id="version">CALLAGHAN v3.0</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -470,6 +478,16 @@ kbd{
 
   <div id="introNiv">
     <p id="introTxt"></p>
+  </div>
+
+  <div id="pause">
+    <h2>PAUSE</h2>
+    <p id="pauseNiv"></p>
+    <div class="choix">
+      <button class="primaire" id="pReprendre">REPRENDRE</button>
+      <button class="secondaire" id="pRecommencer">RECOMMENCER</button>
+      <button class="secondaire" id="pMenu">MENU PRINCIPAL</button>
+    </div>
   </div>
 
   <div id="pivot">
@@ -506,7 +524,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "2.8";
+const VERSION = "3.0";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -4148,7 +4166,7 @@ function dessinerParoleLibre(p, px, pyTete){
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -4284,12 +4302,64 @@ const Intro = {
   },
 };
 
+/* ---------- Pause ----------
+   Elle gèle le temps de jeu sans arrêter l'affichage : la scène reste
+   visible derrière, ce qui vaut mieux qu'un écran noir pour se
+   rappeler où on en était. `Boucle.pause` sert aussi au blocage
+   portrait, d'où le OU logique : deux raisons de suspendre, une seule
+   suspension. */
+const Pause = {
+  active:false,
+  NOMS:["", "01 · La file du D'Tour", "02 · L'enquête de la pizza"],
+
+  peut(){ return Jeu.phase === "jeu" && !Intro.actif; },
+  basculer(){ this.active ? this.reprendre() : this.mettre(); },
+  mettre(){
+    if (!this.peut()) return;
+    this.active = true;
+    if (E.pause) E.pause.classList.add("on");
+    if (E.pauseNiv) E.pauseNiv.textContent = this.NOMS[Jeu.niveau] || "";
+    Boucle.pause = true;
+    Sons.clic();
+    if (E.pReprendre) E.pReprendre.focus({ preventScroll:true });
+  },
+  reprendre(){
+    this.active = false;
+    if (E.pause) E.pause.classList.remove("on");
+    Interface.pensePivot();          /* le portrait peut avoir sa propre raison de bloquer */
+    if (!Boucle.pause) Boucle.reprendre();
+    Sons.clic();
+  },
+  quitter(){
+    this.active = false;
+    if (E.pause) E.pause.classList.remove("on");
+    Sons.arreterFondEnquete();
+    Jeu.retourTitre();
+    Interface.pensePivot();
+    if (!Boucle.pause) Boucle.reprendre();
+  },
+  recommencer(){
+    const n = Jeu.niveau;
+    this.active = false;
+    if (E.pause) E.pause.classList.remove("on");
+    Interface.pensePivot();
+    if (!Boucle.pause) Boucle.reprendre();
+    Jeu.demarrer(n);
+  },
+};
+
 const Interface = {
   finAffichee:false, dernierCombo:0,
 
   preparer(){
-    if (E.version) E.version.textContent = "D'TOUR v" + VERSION;
+    if (E.version) E.version.textContent = "CALLAGHAN v" + VERSION;
     if (E.logo && Images.table.logo) E.logo.src = Images.table.logo.src;
+    /* Chaque niveau porte sa vignette : l'enseigne du bar pour le
+       premier, la boîte à pizza pour le second. */
+    if (E.vign1 && Images.table.logo){ E.vign1.src = Images.table.logo.src; E.vign1.alt = "La file du D'Tour"; }
+    if (E.vign2 && Images.table.pizza_boite_ouverte){
+      E.vign2.src = Images.table.pizza_boite_ouverte.src; E.vign2.alt = "L'enquête de la pizza";
+    }
     /* Prénoms, portraits et libellés : tout se déduit du tableau Heros,
        dans l'ordre gauche puis droite. Les identifiants HTML gardent
        leurs vieilles lettres T et P, qui désignent désormais la place
@@ -4328,6 +4398,7 @@ const Interface = {
     if (E.pupitre) E.pupitre.classList.remove("on");
     if (E.outilsBtn) E.outilsBtn.classList.remove("on");
     if (E.pleinBtn) E.pleinBtn.classList.remove("on");
+    if (E.pauseBtn) E.pauseBtn.classList.remove("on");
   },
   entrerJeu(){
     this.finAffichee = false;
@@ -4341,6 +4412,7 @@ const Interface = {
     if (E.pupitre2) E.pupitre2.classList.toggle("on", Jeu.niveau === 2);
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
     if (E.pleinBtn) E.pleinBtn.classList.add("on");
+    if (E.pauseBtn) E.pauseBtn.classList.add("on");
     this.majVies(); this.majBandeau();
   },
   sortirJeu(){
@@ -4462,7 +4534,9 @@ const Interface = {
         ? "La file du D'Tour se joue en paysage : il faut voir la file entière."
         : "La file du D'Tour se joue dans une fenêtre plus large que haute.";
     }
-    if (bloque) Boucle.pause = true;
+    /* Deux raisons possibles de suspendre : l'écran debout et la pause
+       demandée. On ne relance que si aucune des deux ne tient. */
+    if (bloque || Pause.active) Boucle.pause = true;
     else if (Boucle.pause) Boucle.reprendre();
     return bloque;
   },
@@ -4534,6 +4608,8 @@ const Entrees = {
     globalThis.addEventListener("keydown", e => {
       if (Jeu.niveau !== 2 || Jeu.phase !== "jeu") return;
       const t = e.key.toLowerCase();
+      if (t === "escape"){ e.preventDefault(); Pause.basculer(); return; }
+      if (Pause.active) return;
       if (Intro.actif){ if (t === " " || t === "enter"){ e.preventDefault(); Intro.passer(); } return; }
       if (t === "arrowleft" || t === "q"){
         e.preventDefault();
@@ -4593,6 +4669,7 @@ const Entrees = {
       }
       if (t === "d"){ Debug.basculer(); return; }
       if (t === "f"){ e.preventDefault(); Ecran.basculer(); return; }
+      if (t === "escape" || t === "p"){ e.preventDefault(); Pause.basculer(); return; }
     }, { passive:false });
 
     /* Le plein écran ne s'obtient que dans un vrai geste utilisateur :
@@ -4609,6 +4686,10 @@ const Entrees = {
     });
     if (E.btnRejouer) E.btnRejouer.addEventListener("click", () => { Sons.clic(); Jeu.demarrer(); });
     if (E.pleinBtn) E.pleinBtn.addEventListener("click", () => { Sons.clic(); Ecran.basculer(); });
+    if (E.pauseBtn) E.pauseBtn.addEventListener("click", () => Pause.basculer());
+    if (E.pReprendre) E.pReprendre.addEventListener("click", () => Pause.reprendre());
+    if (E.pRecommencer) E.pRecommencer.addEventListener("click", () => Pause.recommencer());
+    if (E.pMenu) E.pMenu.addEventListener("click", () => Pause.quitter());
 
     /* Les quatre grandes touches du niveau 2. Marcher se tient : on
        reste appuyé, donc pointerdown/up et non click. */
@@ -4829,7 +4910,7 @@ globalThis.DTOUR = {
   REACT_DEBUT, REACT_PLANCHER, VIES,
   xPlace, borne, melange, chiffres, doux,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj,
-  mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface,
+  mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, SUSPECTS, INDICES, ZONES,
   ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, Progres, Intro,

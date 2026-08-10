@@ -3,7 +3,7 @@
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -139,12 +139,64 @@ const Intro = {
   },
 };
 
+/* ---------- Pause ----------
+   Elle gèle le temps de jeu sans arrêter l'affichage : la scène reste
+   visible derrière, ce qui vaut mieux qu'un écran noir pour se
+   rappeler où on en était. `Boucle.pause` sert aussi au blocage
+   portrait, d'où le OU logique : deux raisons de suspendre, une seule
+   suspension. */
+const Pause = {
+  active:false,
+  NOMS:["", "01 · La file du D'Tour", "02 · L'enquête de la pizza"],
+
+  peut(){ return Jeu.phase === "jeu" && !Intro.actif; },
+  basculer(){ this.active ? this.reprendre() : this.mettre(); },
+  mettre(){
+    if (!this.peut()) return;
+    this.active = true;
+    if (E.pause) E.pause.classList.add("on");
+    if (E.pauseNiv) E.pauseNiv.textContent = this.NOMS[Jeu.niveau] || "";
+    Boucle.pause = true;
+    Sons.clic();
+    if (E.pReprendre) E.pReprendre.focus({ preventScroll:true });
+  },
+  reprendre(){
+    this.active = false;
+    if (E.pause) E.pause.classList.remove("on");
+    Interface.pensePivot();          /* le portrait peut avoir sa propre raison de bloquer */
+    if (!Boucle.pause) Boucle.reprendre();
+    Sons.clic();
+  },
+  quitter(){
+    this.active = false;
+    if (E.pause) E.pause.classList.remove("on");
+    Sons.arreterFondEnquete();
+    Jeu.retourTitre();
+    Interface.pensePivot();
+    if (!Boucle.pause) Boucle.reprendre();
+  },
+  recommencer(){
+    const n = Jeu.niveau;
+    this.active = false;
+    if (E.pause) E.pause.classList.remove("on");
+    Interface.pensePivot();
+    if (!Boucle.pause) Boucle.reprendre();
+    Jeu.demarrer(n);
+  },
+};
+
 const Interface = {
   finAffichee:false, dernierCombo:0,
 
   preparer(){
-    if (E.version) E.version.textContent = "D'TOUR v" + VERSION;
+    if (E.version) E.version.textContent = "CALLAGHAN v" + VERSION;
     if (E.logo && Images.table.logo) E.logo.src = Images.table.logo.src;
+    /* Chaque niveau porte sa vignette : l'enseigne du bar pour le
+       premier, la boîte à pizza pour le second. */
+    if (E.vign1 && Images.table.logo){ E.vign1.src = Images.table.logo.src; E.vign1.alt = "La file du D'Tour"; }
+    if (E.vign2 && Images.table.pizza_boite_ouverte){
+      E.vign2.src = Images.table.pizza_boite_ouverte.src; E.vign2.alt = "L'enquête de la pizza";
+    }
     /* Prénoms, portraits et libellés : tout se déduit du tableau Heros,
        dans l'ordre gauche puis droite. Les identifiants HTML gardent
        leurs vieilles lettres T et P, qui désignent désormais la place
@@ -183,6 +235,7 @@ const Interface = {
     if (E.pupitre) E.pupitre.classList.remove("on");
     if (E.outilsBtn) E.outilsBtn.classList.remove("on");
     if (E.pleinBtn) E.pleinBtn.classList.remove("on");
+    if (E.pauseBtn) E.pauseBtn.classList.remove("on");
   },
   entrerJeu(){
     this.finAffichee = false;
@@ -196,6 +249,7 @@ const Interface = {
     if (E.pupitre2) E.pupitre2.classList.toggle("on", Jeu.niveau === 2);
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
     if (E.pleinBtn) E.pleinBtn.classList.add("on");
+    if (E.pauseBtn) E.pauseBtn.classList.add("on");
     this.majVies(); this.majBandeau();
   },
   sortirJeu(){
@@ -317,7 +371,9 @@ const Interface = {
         ? "La file du D'Tour se joue en paysage : il faut voir la file entière."
         : "La file du D'Tour se joue dans une fenêtre plus large que haute.";
     }
-    if (bloque) Boucle.pause = true;
+    /* Deux raisons possibles de suspendre : l'écran debout et la pause
+       demandée. On ne relance que si aucune des deux ne tient. */
+    if (bloque || Pause.active) Boucle.pause = true;
     else if (Boucle.pause) Boucle.reprendre();
     return bloque;
   },
@@ -389,6 +445,8 @@ const Entrees = {
     globalThis.addEventListener("keydown", e => {
       if (Jeu.niveau !== 2 || Jeu.phase !== "jeu") return;
       const t = e.key.toLowerCase();
+      if (t === "escape"){ e.preventDefault(); Pause.basculer(); return; }
+      if (Pause.active) return;
       if (Intro.actif){ if (t === " " || t === "enter"){ e.preventDefault(); Intro.passer(); } return; }
       if (t === "arrowleft" || t === "q"){
         e.preventDefault();
@@ -448,6 +506,7 @@ const Entrees = {
       }
       if (t === "d"){ Debug.basculer(); return; }
       if (t === "f"){ e.preventDefault(); Ecran.basculer(); return; }
+      if (t === "escape" || t === "p"){ e.preventDefault(); Pause.basculer(); return; }
     }, { passive:false });
 
     /* Le plein écran ne s'obtient que dans un vrai geste utilisateur :
@@ -464,6 +523,10 @@ const Entrees = {
     });
     if (E.btnRejouer) E.btnRejouer.addEventListener("click", () => { Sons.clic(); Jeu.demarrer(); });
     if (E.pleinBtn) E.pleinBtn.addEventListener("click", () => { Sons.clic(); Ecran.basculer(); });
+    if (E.pauseBtn) E.pauseBtn.addEventListener("click", () => Pause.basculer());
+    if (E.pReprendre) E.pReprendre.addEventListener("click", () => Pause.reprendre());
+    if (E.pRecommencer) E.pRecommencer.addEventListener("click", () => Pause.recommencer());
+    if (E.pMenu) E.pMenu.addEventListener("click", () => Pause.quitter());
 
     /* Les quatre grandes touches du niveau 2. Marcher se tient : on
        reste appuyé, donc pointerdown/up et non click. */
@@ -684,7 +747,7 @@ globalThis.DTOUR = {
   REACT_DEBUT, REACT_PLANCHER, VIES,
   xPlace, borne, melange, chiffres, doux,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj,
-  mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface,
+  mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, SUSPECTS, INDICES, ZONES,
   ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, Progres, Intro,

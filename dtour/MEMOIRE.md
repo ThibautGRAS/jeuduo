@@ -113,6 +113,12 @@ donc 0,62. Le reste — deux ombres, dont une courte au contact des pieds,
 et un voile chaud posé après les personnages — ne fait que finir le
 travail.
 
+### Deux raisons de suspendre, une seule suspension
+`Boucle.pause` sert au blocage portrait ET à la pause demandée. Le
+premier jet remettait `pause` à faux dès que l'écran redevenait
+paysage, ce qui reprenait la partie derrière l'écran de pause. On teste
+donc les deux causes avant de relancer.
+
 ### Monter la scène et lancer la partie sont deux choses
 Pour que les deux inspecteurs entrent à l'image pendant l'introduction,
 il faut qu'ils existent — mais surtout pas que le chrono tourne.

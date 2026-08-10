@@ -1,13 +1,15 @@
-# LA FILE DU D'TOUR
+# LES ENQUÊTES DE CALLAGHAN
 
 Deux niveaux, un seul fichier, jouables au doigt.
 
 | | |
 |---|---|
-| **01 — La file du D'Tour** | Saluez tout le monde devant le bar, avant que ça devienne gênant. |
-| **02 — L'affaire de la pizza au chorizo** | Fouillez l'appartement, trouvez trois traces, cent secondes. |
+| **01 · La file du D'Tour** | Saluez tout le monde devant le bar, avant que ça devienne gênant. |
+| **02 · L'enquête de la pizza** | Fouillez l'appartement, réunissez six indices, cinq minutes. |
 
-On choisit le niveau sur l'écran d'accueil.
+On choisit le niveau sur l'écran d'accueil, les deux sont toujours
+ouverts, et on peut mettre en pause à tout moment pour reprendre,
+recommencer, ou revenir au menu.
 
 **Adresse** : https://thibautgras.github.io/jeuduo/dtour/
 
@@ -21,7 +23,7 @@ les fichiers de `img/` portent les bons noms.
 
 > Ils ne les connaissaient même pas.
 
-## Niveau 2 — l'affaire de la pizza au chorizo
+## Niveau 2 — l'enquête de la pizza
 
 Les deux niveaux sont **toujours** jouables : on choisit celui qu'on
 veut sur l'écran d'accueil, sans rien avoir à débloquer. Le fait d'avoir
@@ -147,7 +149,8 @@ Pierre-François ne rentre pas dans le cadre.
 | | le gros bouton vert | le gros bouton bleu |
 
 `Espace` lance ou relance une partie. `S` coupe le son. `D` ouvre les
-outils.
+outils. `Échap` ou `P` met en pause — la scène reste visible derrière,
+ce qui vaut mieux qu'un écran noir pour se rappeler où on en était.
 
 ## Ce qu'il faut savoir avant d'y toucher
 
