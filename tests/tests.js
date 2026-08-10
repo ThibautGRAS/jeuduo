@@ -516,6 +516,36 @@ verifier("retrait du document après le fondu", /removeChild\(el\)/.test(script)
     "sinon zone morte temporelle");
 }
 
+/* ======================= 8duodecies. LISIBILITÉ MULTI-MODES ======================= */
+titre("8duodecies. Quatre modes : débordement, règles, coopératif");
+{
+  const css = (html.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || "";
+  verifier("les rangées de boutons passent à la ligne",
+    /\.rangSolo\{[^}]*flex-wrap:\s*wrap/.test(css),
+    "à quatre modes, le dernier sortait de l'écran");
+  const modes = [...html.matchAll(/data-mode="(\w+)"/g)].map(m => m[1]);
+  verifier("quatre modes déclarés", modes.length === 4, modes.join(", "));
+}
+{
+  const regles = [...html.matchAll(/data-modes="([^"]+)"><b class="[^"]*">([^<]+)</g)];
+  verifier("chaque règle porte ses modes", regles.length >= 15, regles.length + " règles étiquetées");
+  const pour = m => regles.filter(r => r[1] === "tous" || r[1].includes(m)).length;
+  for (const m of ["arcade", "classique", "gravite", "relais"])
+    verifier("règles filtrées en " + m, pour(m) > 5 && pour(m) <= regles.length,
+      pour(m) + " sur " + regles.length);
+  verifier("le coopératif masque les manches",
+    !regles.find(r => r[2] === "MANCHES" && r[1].includes("relais")));
+  verifier("le classique masque les orbes",
+    !regles.find(r => r[2] === "ORBES" && r[1].includes("classique")));
+  verifier("résumé propre à chaque mode", /const RESUME_MODE = \{/.test(script) &&
+    /relais:/.test(script.slice(script.indexOf("const RESUME_MODE"), script.indexOf("const RESUME_MODE") + 1400)));
+}
+verifier("en coopératif on joue AVEC, pas contre",
+  /cfgMode\(\)\.coop \? " & " : " vs "/.test(script) &&
+  /\$\("vsLogo"\)\.textContent = coop \? "&" : "VS"/.test(script));
+verifier("pas de format de manches en coopératif",
+  /cfgMode\(\)\.coop[\s\S]{0,80}COOPÉRATIF · RECORD/.test(script));
+
 /* ======================= 9. RÉFÉRENCES ======================= */
 titre("9. Toute fonction appelée est définie");
 {
