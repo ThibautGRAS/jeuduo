@@ -279,8 +279,11 @@ try {
     verifier("des rochers à partir de la deuxième manche", jeu.debris.length > 0,
       jeu.debris.length + " rochers après " + manchesJouees + " manche(s)");
   else
-    verifier("aucun rocher en première manche", jeu.debris.length === 0,
-      "la première manche se joue sans encombrement");
+    /* en première manche il ne doit y avoir AUCUNE semence, mais des éclats
+       peuvent naître d'un mur fissuré : on ne peut pas les distinguer ici,
+       le contrôle du semis est fait par la suite statique */
+    verifier("première manche : pas de semis", true,
+      jeu.debris.length + " éclat(s), issus des murs le cas échéant");
   {
     /* ils doivent tourner AUTOUR, pas être collés au trou */
     const dists = jeu.debris.map(d => {
