@@ -202,7 +202,11 @@ s'y attarde plus de 0,85 s est **avalée** et ressort par l'autre puits, plus
 rapide et dans la même direction : comme le puits d'un joueur est chez
 l'adversaire, la balle avalée revient dans son propre camp. Les éclats de mur ne tombent pas droit : ils sont **capturés en orbite**, leur
 vitesse tangentielle étant rappelée vers la valeur qui équilibre l'attraction, et
-leur composante radiale amortie. Puits calme, ils tournent indéfiniment ; puits
+leur composante radiale amortie. Ils sont en outre **emportés avec le trou** quand il se déplace, ce qui leur
+permet de suivre : ils ne décrochent qu'au-delà de seize pixels par image, soit
+un balayage du terrain en un tiers de seconde. Sept rochers sont semés au début
+de chaque manche, déjà lancés sur leur orbite. Puits calme, ils tournent
+indéfiniment ; puits
 agité, ceux qui ne suivent plus la rotation finissent au centre — mesuré : aucun
 avalé sous 60 px d'agitation, presque tous au-delà de 150 px.
 
