@@ -464,7 +464,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v11.2 · 2026-08-09</div>
+  <div id="version">DUO v11.3 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -595,7 +595,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "11.2";
+const VERSION = "11.3";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -4343,12 +4343,14 @@ function deformerFond(Y, t){
     /* on garde l'alignement même quand le puits frôle un bord */
     ctxLentille.drawImage(cv, ix0, iy0, ix1 - ix0, iy1 - iy0,
                               ix0 - sx, iy0 - sy, ix1 - ix0, iy1 - iy0);
-    const N = 9;
+    const N = 14;
     for (let i = N; i >= 1; i--){
       const r0 = R * (i - 1) / N, r1 = R * i / N;
-      const u = 1 - r1 / R;                     /* 0 au bord, 1 au centre */
-      const angle = 1.5 * u * u + t * 0.5 * u;  /* enroulement + rotation lente */
-      const echelle = 1 + 0.7 * u * u;          /* grossissement de lentille */
+      const u = 1 - r1 / R;                        /* 0 au bord, 1 au centre */
+      /* enroulement très marqué près du cœur : c'est lui qui dessine les
+         anneaux concentriques visibles à l'intérieur de la sphère */
+      const angle = 2.7 * Math.pow(u, 2.2) + t * 0.42 * u;
+      const echelle = 1 + 1.15 * u * u;
       ctx.save();
       ctx.beginPath();
       ctx.arc(cx, cy, r1, 0, Math.PI*2);
@@ -4363,61 +4365,50 @@ function deformerFond(Y, t){
   }
 }
 
-/* Trou noir : ombre centrale, anneau d'Einstein, et disque d'accrétion vu de
-   biais dont l'arrière se relève en arc AU-DESSUS et EN DESSOUS de l'ombre —
-   la lumière du fond du disque contourne l'astre et nous revient. Un côté est
-   nettement plus lumineux que l'autre : c'est l'effet Doppler, la matière qui
-   vient vers nous paraît plus brillante. */
+/* Trou noir. Pas de disque d'accrétion flamboyant : ici c'est le FOND lui-même,
+   enroulé par la lentille, qui fait tout le travail. La sphère s'assombrit vers
+   son cœur sans jamais devenir opaque — on continue d'y deviner les anneaux
+   concentriques du décor — et un simple liseré marque le bord. */
 function dessinerTrouNoir(x, y, coul, t){
-  const R = 16;                 /* ombre */
-  const Rd = 52;                /* bord externe du disque */
-  const aplat = 0.26;           /* inclinaison du disque */
-  const sens = Math.sin(t * 0.5) * 0.12;
-
+  const R = 58;                     /* rayon de la sphère */
   ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(sens);
 
-  /* dégradé Doppler : brillant à gauche, sourd à droite */
-  const dop = ctx.createLinearGradient(-Rd, 0, Rd, 0);
-  dop.addColorStop(0,    "rgba(255,255,255,.95)");
-  dop.addColorStop(0.28, rgba(coul, 0.9));
-  dop.addColorStop(0.62, rgba(coul, 0.42));
-  dop.addColorStop(1,    rgba(coul, 0.16));
+  /* extinction progressive : le fond enroulé reste perceptible au centre */
+  const g = ctx.createRadialGradient(x, y, 0, x, y, R);
+  g.addColorStop(0,    "rgba(2,3,8,.90)");
+  g.addColorStop(0.42, "rgba(3,4,11,.74)");
+  g.addColorStop(0.74, "rgba(4,6,14,.55)");
+  g.addColorStop(0.93, "rgba(5,7,16,.16)");
+  g.addColorStop(1,    "rgba(5,7,16,0)");
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI*2); ctx.fill();
 
-  const anneau = (rx, ry, ep, deb, fin, style, alpha) => {
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = style;
-    ctx.lineWidth = ep;
+  /* liseré : anneau d'Einstein, mince et irisé */
+  ctx.strokeStyle = rgba(coul, 0.42);
+  ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.arc(x, y, R*0.965, 0, Math.PI*2); ctx.stroke();
+  ctx.strokeStyle = "rgba(255,255,255,.5)";
+  ctx.lineWidth = 0.9;
+  ctx.beginPath(); ctx.arc(x, y, R*0.965, 0, Math.PI*2); ctx.stroke();
+
+  /* second anneau très ténu, plus loin : la lumière rasante */
+  ctx.strokeStyle = rgba(coul, 0.16);
+  ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.arc(x, y, R*1.1, 0, Math.PI*2); ctx.stroke();
+
+  /* arcs internes : le fond replié sur lui-même, tournant lentement */
+  ctx.save();
+  ctx.beginPath(); ctx.arc(x, y, R*0.92, 0, Math.PI*2); ctx.clip();
+  ctx.strokeStyle = rgba(coul, 0.13);
+  ctx.lineWidth = 1;
+  for (let i = 1; i <= 3; i++){
+    const rr = R * (0.30 + i * 0.20);
+    const dep = t * 0.3 * (i % 2 ? 1 : -1);
     ctx.beginPath();
-    ctx.ellipse(0, 0, rx, ry, 0, deb, fin);
+    ctx.arc(x, y, rr, dep, dep + Math.PI * 1.35);
     ctx.stroke();
-    ctx.globalAlpha = 1;
-  };
-
-  /* 1. moitié arrière du disque plat, derrière l'ombre */
-  anneau(Rd, Rd*aplat, 13, Math.PI, Math.PI*2, dop, 0.75);
-
-  /* 2. arcs relevés : le fond du disque contourne l'astre */
-  anneau(R*2.05, R*2.05, 7.5, Math.PI*1.06, Math.PI*1.94, dop, 0.9);
-  anneau(R*1.72, R*1.72, 5.5, Math.PI*0.08, Math.PI*0.92, dop, 0.62);
-
-  /* 3. ombre : rien n'en ressort. Son bord s'arrête AVANT l'anneau, sinon
-        le dégradé d'extinction ternissait celui-ci. */
-  const h = ctx.createRadialGradient(0, 0, 0, 0, 0, R*1.14);
-  h.addColorStop(0, "#000"); h.addColorStop(0.88, "#000");
-  h.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = h;
-  ctx.beginPath(); ctx.arc(0, 0, R*1.14, 0, Math.PI*2); ctx.fill();
-
-  /* 4. anneau d'Einstein, posé juste au-delà de l'ombre */
-  anneau(R*1.3, R*1.3, 2.6, 0, Math.PI*2, dop, 1);
-  anneau(R*1.3, R*1.3, 1, 0, Math.PI*2, "rgba(255,255,255,.9)", 0.75);
-
-  /* 5. moitié avant du disque, par-dessus l'ombre */
-  anneau(Rd, Rd*aplat, 13, 0, Math.PI, dop, 0.95);
-  anneau(Rd*0.72, Rd*aplat*0.72, 4.5, 0, Math.PI, "rgba(255,255,255,.45)", 0.28);
-
+  }
+  ctx.restore();
   ctx.restore();
 }
 
@@ -4428,16 +4419,16 @@ function dessinerPuits(Y, t){
     const coul = couleurJoueur(p.j);
     ctx.save();
     /* halo d'influence : on voit jusqu'où le puits agit */
-    const g = ctx.createRadialGradient(x, y, 4, x, y, PUITS_PORTEE * 0.55);
-    g.addColorStop(0, rgba(coul, 0.22));
-    g.addColorStop(0.45, rgba(coul, 0.07));
+    const g = ctx.createRadialGradient(x, y, 40, x, y, PUITS_PORTEE * 0.6);
+    g.addColorStop(0, rgba(coul, 0.13));
+    g.addColorStop(0.5, rgba(coul, 0.05));
     g.addColorStop(1, rgba(coul, 0));
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(x, y, PUITS_PORTEE * 0.55, 0, Math.PI*2); ctx.fill();
 
     ctx.restore();
     dessinerTrouNoir(x, y, coul, t);
-    bloomCercle(x, y, 78, coul, 0.55);
+    bloomCercle(x, y, 74, coul, 0.30);
   }
 }
 
