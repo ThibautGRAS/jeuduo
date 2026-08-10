@@ -3,7 +3,7 @@
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2Dos","c2DosN","c2Acc","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -179,6 +179,14 @@ const Interface = {
     if (E.c2ATxt) E.c2ATxt.textContent = esq ? "ESQUIVER !" : "INSPECTER";
     if (E.c2A) E.c2A.classList.toggle("esquive", !!esq);
     if (E.c2DosN) E.c2DosN.textContent = String(Dossier.compte());
+    /* Le bouton CHANGER porte le visage de CELUI QU'ON VA PRENDRE : on
+       sait d'un coup d'œil qui on a en main et qui on récupère. */
+    if (E.c2CImg && Enquete.inspecteurs.length === 2){
+      const autre = Heros[Enquete.autreIns().heros];
+      const face = Images.table["face_" + autre.sprite];
+      if (face && E.c2CImg.src !== face.src){ E.c2CImg.src = face.src; E.c2CImg.alt = autre.court; }
+    }
+    if (E.c2AccN) E.c2AccN.textContent = String(Enquete.accusationsRestantes);
     if (E.c2Acc){
       const pret = Enquete.peutConclure();
       E.c2Acc.classList.toggle("eteint", !pret);
@@ -637,7 +645,7 @@ globalThis.DTOUR = {
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface,
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, SUSPECTS, INDICES, ZONES,
-  ECHOS, PIECES, BAVARDAGES, PISTES, TROUVAILLE, CONTRADICTIONS, ENQ_TAILLE,
+  ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, HORTENSE_ECART, TARTE_DUREE,

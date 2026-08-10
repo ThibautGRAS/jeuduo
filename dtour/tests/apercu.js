@@ -303,6 +303,21 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "10_enquete_844");
   }
 
+  /* 12. face à un suspect, nom affiché */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(2); D.Intro.finir();
+    D.Enquete.actifIdx = D.Heros.findIndex(h => h.sprite === "thibaut");
+    D.Enquete.actifIns().x = D.SUSPECTS[0].x;
+    D.Enquete.autreIns().x = D.SUSPECTS[0].x - 0.05;
+    for (let i = 0; i < 30; i++) D.Jeu.pas(1 / 60);
+    D.Enquete.interroger(0);
+    for (let i = 0; i < 20; i++) D.Jeu.pas(1 / 60);
+    dessinerVia(D, canevas);
+    ecrire(canevas, "12_suspect_844");
+  }
+
   /* 11. la liste d'accusation */
   {
     const { D, canevas } = await preparer(844, 318);

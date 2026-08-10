@@ -86,7 +86,14 @@ const Effets = {
   /* Une réplique au-dessus de la tête. `cible` est soit { pnj }, soit
      { heros:i } : la bulle suit celui qui parle, elle ne reste pas
      plantée à l'endroit où il se tenait quand il a ouvert la bouche. */
-  parole(cible, txt, duree){ this.paroles.push({ cible, txt, t:0, duree:duree || 1.4 }); },
+  parole(cible, txt, duree){
+    /* Une bulle par personne : deux répliques du même bonhomme
+       s'écrivaient l'une sur l'autre et devenaient illisibles. */
+    this.paroles = this.paroles.filter(p =>
+      !(p.cible.pnj && p.cible.pnj === cible.pnj) &&
+      !(p.cible.heros !== undefined && p.cible.heros === cible.heros));
+    this.paroles.push({ cible, txt, t:0, duree:duree || 1.4 });
+  },
 
   /* L'étoile COMBO de la planche, avec le multiplicateur écrit dessous. */
   etoile(x, y, combo){ this.etoiles.push({ x, y, combo, t:0, duree:1.25 }); },

@@ -50,18 +50,38 @@ chaque pièce, une fois par partie. Et de loin en loin, quand on les
 laisse tranquilles, ils bavardent. Tout est cadencé par le chrono du
 jeu, jamais par `setTimeout`.
 
-**Les trois scénarios se voient enfin.** Au quatrième indice, les deux
+**Dix affaires écrites**, tirées au sort au début de la partie : qui, où,
+et pourquoi changent à chaque fois, et avec eux la piste, la réplique de
+découverte, la contradiction et le dénouement. Aucun dénouement n'est
+répété. La suite le vérifie sur neuf cents tirages.
+
+**Deux accusations, pas plus.** La seconde erreur perd l'affaire. Sans
+cette limite, on citait tout le monde jusqu'à tomber juste. Le nombre
+restant est écrit sur le bouton.
+
+**Les suspects portent leur nom** dès qu'on les approche, et pour de bon
+dès qu'on leur a parlé — le chat compris. On ne peut pas accuser
+quelqu'un qu'on ne sait pas nommer.
+
+**Les scénarios se voient enfin.** Au quatrième indice, les deux
 inspecteurs formulent la piste — « Rien n'a été volé. Tout a été
 rangé. » — et la découverte de la pizza a sa réplique propre. Surtout,
 interroger la bonne personne avec quatre indices en poche fait sauter
 une contradiction, une seule fois par partie : c'est ce qui donne un
 intérêt à l'interrogatoire au-delà de la réplique amusante.
 
-**Les deux ne servent pas à la même chose.** Pierre-François analyse :
-trois des dix indices ne se lisent qu'avec lui, et ils restent sur place
-tant que Thibaut les regarde sans comprendre. Thibaut interroge : les
-suspects ne répondent qu'à lui, Pierre-François n'obtient que des
-absurdités.
+**Les deux ne servent pas à la même chose, et il faut les deux.**
+Pierre-François lit les traces : certains indices ne se lisent qu'avec
+lui. Thibaut lit les gens : la manette grasse, le menu du livreur, les
+suspects — Pierre-François n'en tire rien. Chaque affaire contient au
+moins un indice de chaque sorte, garanti par le générateur : sans cette
+règle, un tirage sur trois se bouclait avec un seul inspecteur et le
+bouton CHANGER ne servait à rien.
+
+**Même les meubles muets se lisent à deux.** Les seize meubles ont deux
+répliques : Pierre-François décrit ce qu'il déduit — « Coussins
+déplacés. On s'est assis, puis relevé vite. » — Thibaut ce qu'il
+ressent — « Aucun suspect. Quelques chaussettes. »
 
 **Le fond sonore** n'est pas décoratif : c'est lui qui fait la
 différence entre « une image » et « un endroit ». La pendule est calée

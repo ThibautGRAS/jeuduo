@@ -113,6 +113,21 @@ donc 0,62. Le reste — deux ombres, dont une courte au contact des pieds,
 et un voile chaud posé après les personnages — ne fait que finir le
 travail.
 
+### Masquer un bouton, c'est supprimer une mécanique
+En ajoutant ACCUSER, j'ai caché CHANGER sous 360 px de haut « pour que
+ça tienne ». C'est-à-dire précisément sur l'iPhone couché, le seul
+appareil visé — et CHANGER commande la moitié du jeu, puisqu'un
+inspecteur seul ne peut pas réunir tous les indices. Quand la place
+manque, on raccourcit un libellé ou on passe en pastille ; on ne retire
+pas la commande. Un test refuse désormais toute règle qui masque `#c2C`.
+
+### Deux bulles au même endroit
+Deux répliques déclenchées en même temps s'écrivaient l'une sur l'autre.
+Une bulle par personne — la nouvelle chasse l'ancienne — et les bulles
+de deux inspecteurs proches s'empilent au lieu de se superposer. Même
+chose pour les plaques de nom, qui passaient derrière les personnages :
+elles se dessinent après.
+
 ### Aucun chemin tactile vers la fin de partie
 L'accusation n'était liée qu'à la touche `A`, et son mode d'emploi
 n'apparaissait qu'à l'intérieur du dossier. Sur téléphone, on pouvait

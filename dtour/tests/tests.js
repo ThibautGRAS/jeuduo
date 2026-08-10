@@ -506,25 +506,35 @@ if (D){
   /* --- le générateur ne peut pas sortir d'enquête impossible --- */
   titre("Générateur d'affaire");
   let genOk = true, scenarios = new Set(), detail = "";
-  for (let n = 0; n < 300; n++){
+  for (let n = 0; n < 900; n++){
     D.Affaire.generer();
-    scenarios.add(D.Affaire.scenario);
+    scenarios.add(D.Affaire.scenario.id);
     if (D.Affaire.reels.length !== D.ENQ_OBJECTIF){ genOk = false; detail = "indices " + D.Affaire.reels.length; break; }
     if (new Set(D.Affaire.reels).size !== D.ENQ_OBJECTIF){ genOk = false; detail = "doublon d'indice"; break; }
     const places = Object.keys(D.Affaire.plan);
     if (places.length !== D.ENQ_OBJECTIF){ genOk = false; detail = "places " + places.length; break; }
     if (places.indexOf(D.Affaire.cachette) >= 0){ genOk = false; detail = "un indice sur la cachette"; break; }
     if (!D.ZONES.some(z => z.id === D.Affaire.cachette)){ genOk = false; detail = "cachette inconnue"; break; }
-    if (D.Affaire.scenario !== "B" && !D.Affaire.coupable){ genOk = false; detail = "coupable manquant"; break; }
-    if (D.Affaire.scenario === "B" && D.Affaire.coupable){ genOk = false; detail = "scénario B avec coupable"; break; }
-    if (D.Affaire.reels.indexOf("ticket") < 0 || D.Affaire.reels.indexOf("boite") < 0){
-      genOk = false; detail = "les indices porteurs manquent"; break;
+    if (D.Affaire.scenario.coupable && !D.Affaire.coupable){ genOk = false; detail = "coupable manquant"; break; }
+    if (!D.Affaire.scenario.coupable && D.Affaire.coupable){ genOk = false; detail = "coupable en trop"; break; }
+    if (!D.Affaire.scenario.porteurs.every(p => D.Affaire.reels.indexOf(p) >= 0)){
+      genOk = false; detail = "un indice porteur manque"; break;
     }
   }
-  verifier("trois cents tirages sans enquête impossible", genOk, detail);
-  egal("les trois scénarios sortent", scenarios.size, 3);
-  verifier("chaque scénario a sa chute",
-    ["A", "B", "C"].every(sc => { D.Affaire.scenario = sc; if (sc !== "B") D.Affaire.coupable = D.SUSPECTS[0]; return !!D.Affaire.chute(); }));
+  verifier("neuf cents tirages sans enquête impossible", genOk, detail);
+  verifier("chaque affaire demande les deux inspecteurs",
+    (() => {
+      for (let n = 0; n < 400; n++){
+        D.Affaire.generer();
+        const t2 = id => D.INDICES.find(i => i.id === id) || {};
+        if (!D.Affaire.reels.some(id => t2(id).expert)) return false;
+        if (!D.Affaire.reels.some(id => t2(id).social)) return false;
+      }
+      return true;
+    })(), "un tirage se bouclait avec un seul inspecteur");
+  egal("les dix scénarios sortent", scenarios.size, D.SCENARIOS.length);
+  verifier("chaque affaire sait dire son dénouement",
+    D.SCENARIOS.every(sc => { D.Affaire.scenario = sc; return !!D.Affaire.chute() && !!D.Affaire.contradiction(); }));
 
   /* --- une partie menée jusqu'au bout --- */
   titre("Enquête complète");
@@ -578,12 +588,26 @@ if (D){
 
   /* partie gagnante : on ramasse tout, on trouve la pizza, on accuse */
   lancer2();
-  D.Enquete.actifIdx = D.Heros.findIndex(h => h.sprite === "pierre");
+  const iPF = D.Heros.findIndex(h => h.sprite === "pierre");
+  const iTH = D.Heros.findIndex(h => h.sprite === "thibaut");
+  /* Tout réunir demande les DEUX : Pierre-François lit les traces,
+     Thibaut lit les gens. Fouiller avec un seul ne suffit pas. */
+  D.Enquete.actifIdx = iPF;
   for (let i = 0; i < D.Enquete.zones.length; i++){
     if (D.Enquete.zones[i].indice) allerFouiller(i);
   }
-  egal("les six indices sont réunis", D.Enquete.indices, D.ENQ_OBJECTIF);
+  const avecPFSeul = D.Enquete.indices;
+  for (let i = 0; i < D.Enquete.zones.length; i++){
+    const z = D.Enquete.zones[i];
+    if (!z.indice || z.fouillee) continue;
+    D.Enquete.actifIdx = iTH;
+    allerFouiller(i);
+  }
+  verifier("un seul inspecteur ne suffit pas", avecPFSeul < D.ENQ_OBJECTIF,
+    "Pierre-François seul en réunit " + avecPFSeul);
+  egal("les six indices sont réunis à deux", D.Enquete.indices, D.ENQ_OBJECTIF);
   egal("le dossier contient six cartes", D.Dossier.compte(), D.ENQ_OBJECTIF);
+  D.Enquete.actifIdx = iPF;
   allerFouiller(D.Enquete.zones.findIndex(z => z.cachette));
   verifier("la pizza est retrouvée", !!D.Enquete.pizza);
   D.Enquete.ouvrirAccusation();
@@ -604,10 +628,29 @@ if (D){
   for (let i = 0; i < 60 * 2; i++) D.Jeu.pas(1 / 60);
   verifier("la seconde arrive après, pas en même temps",
     D.Enquete.fileDial.length === 0, "il reste " + D.Enquete.fileDial.length + " réplique(s)");
-  verifier("chaque scénario a sa piste et sa trouvaille",
-    ["A", "B", "C"].every(sc => D.PISTES[sc] && D.TROUVAILLE[sc] && D.CONTRADICTIONS[sc]));
+  verifier("dix affaires au moins", D.SCENARIOS.length >= 10, D.SCENARIOS.length + " scénarios");
+  verifier("chaque affaire est complète",
+    D.SCENARIOS.every(sc => sc.id && sc.cachettes.length && sc.porteurs.length === 3 &&
+      sc.piste && sc.trouvaille && sc.contradiction && sc.chute));
+  verifier("aucune affaire n'a le même dénouement",
+    new Set(D.SCENARIOS.map(sc => sc.chute)).size === D.SCENARIOS.length);
+  verifier("les coupables sont variés",
+    new Set(D.SCENARIOS.map(sc => sc.coupable)).size >= 4,
+    [...new Set(D.SCENARIOS.map(sc => sc.coupable))].join(", "));
+  verifier("chaque cachette citée existe",
+    D.SCENARIOS.every(sc => sc.cachettes.every(c => D.ZONES.some(z => z.id === c))));
+  verifier("chaque indice porteur existe",
+    D.SCENARIOS.every(sc => sc.porteurs.every(p => D.INDICES.some(i => i.id === p))));
   verifier("chaque indice a un écho de l'autre inspecteur",
-    D.INDICES.every(i => D.ECHOS[i.id] && D.ECHOS[i.id].length === 2));
+    D.INDICES.every(i => D.ECHOS[i.id] && D.ECHOS[i.id].length === 2),
+    D.INDICES.filter(i => !D.ECHOS[i.id]).map(i => i.id).join(", "));
+  verifier("chaque meuble se lit différemment selon l'inspecteur",
+    D.ZONES.every(z => D.RIEN[z.id] && D.RIEN[z.id].pf && D.RIEN[z.id].th &&
+      D.RIEN[z.id].pf !== D.RIEN[z.id].th),
+    D.ZONES.filter(z => !D.RIEN[z.id] || D.RIEN[z.id].pf === D.RIEN[z.id].th).map(z => z.id).join(", "));
+  verifier("les deux inspecteurs ont chacun leur spécialité",
+    D.INDICES.some(i => i.expert) && D.INDICES.some(i => i.social),
+    "sinon on joue tout le niveau avec le même");
   verifier("les quatre pièces ont leur réplique d'entrée",
     D.PIECES.length === 4 && D.PIECES.every(p => p.ligne && p.jusqua > 0));
   verifier("le bavardage va par paires", D.BAVARDAGES.length % 2 === 0);
@@ -625,6 +668,11 @@ if (D){
     D.Enquete.interroger(coupable);
     verifier("elle ne tombe qu'une fois", D.Enquete.fileDial.length === 0);
   } else ok("scénario sans coupable : rien à contredire");
+
+  verifier("chaque suspect a un nom affichable, le chat compris",
+    D.SUSPECTS.every(s => s.nom && s.nom.length > 2) &&
+    D.SUSPECTS.some(s => s.id === "chat" && s.nom === "RISOTO"));
+  verifier("deux accusations, pas plus", D.ENQ_ACCUSATIONS === 2);
 
   /* la taille des inspecteurs suit la hauteur sous plafond */
   verifier("un inspecteur mesure environ 70 % de la pièce",
@@ -662,6 +710,12 @@ if (D){
   D.Enquete.valider();
   egal("une mauvaise accusation ne termine pas la partie", D.Jeu.phase, "jeu");
   verifier("elle coûte vingt secondes", tAvant - D.Enquete.restant >= 19.5);
+  egal("il ne reste qu'une accusation", D.Enquete.accusationsRestantes, D.ENQ_ACCUSATIONS - 1);
+  D.Enquete.ouvrirAccusation();
+  D.Enquete.choixAcc = noms.indexOf(D.Affaire.bonneReponse()) === 0 ? 1 : 0;
+  D.Enquete.valider();
+  egal("la seconde erreur perd l'affaire", D.Jeu.phase, "fin");
+  verifier("et elle est bien perdue", D.Enquete.fini && !D.Enquete.fini.gagne);
 
   /* Hortense doit intervenir, une fois, au milieu */
   titre("Hortense au niveau 2");

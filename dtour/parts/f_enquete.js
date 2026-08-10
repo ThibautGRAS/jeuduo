@@ -31,6 +31,7 @@ const ENQ_LIGNE = 0.920;   /* la ligne de sol du salon, relevée sur le décor *
    une carte postale plutôt que debout dans le salon. */
 const ENQ_TAILLE = 0.62;
 const ENQ_FOUILLE = 0.75;
+const ENQ_ACCUSATIONS = 2;         /* on n'a droit qu'à deux noms */
 const ENQ_MAUVAISE = 20;            /* secondes perdues sur une accusation ratée */
 const ENQ_TARTE = 10;               /* secondes perdues sur une tarte reçue */
 const ENQ_ESQUIVE_PTS = 100;
@@ -83,6 +84,8 @@ const INDICES = [
     analyse:"La boîte. Ouverte ici, pas à la cuisine.", brut:"La boîte ! Enfin, vide." },
   { id:"part",      sprite:"pizza_part",    nom:"Part abandonnée",
     analyse:"Une part entamée puis reposée. Quelqu'un a été dérangé.", brut:"Une part ! On peut la manger ?" },
+  { id:"manette",   sprite:"ind_serviette", nom:"Manette grasse",
+    analyse:"Une manette. Sale.", brut:"Des traces de doigts gras. Il a joué en mangeant.", social:true },
 ];
 
 /* ---------- ce que l'autre en dit ----------
@@ -91,6 +94,8 @@ const INDICES = [
    travailler ensemble plutôt que de se relayer. */
 const ECHOS = {
   sauce:["Tiède ? Donc récent.", "Ne touche pas. Enfin, trop tard."],
+  ticket_menu:["Tu connais le livreur ?", "Je connais surtout ses horaires."],
+  manette:["Gras. Donc il mangeait.", "Et il jouait. Les deux."],
   chorizo:["Coupé à la main. Personne ne fait ça.", "Moi je l'aurais mangée entière."],
   miettes:["Vers la droite, tu es sûr ?", "Quelqu'un est parti par là."],
   fromage:["Trente minutes. On l'a raté de peu.", "On était là il y a trente minutes."],
@@ -119,48 +124,32 @@ const BAVARDAGES = [
   [0, "Note tout."], [1, "Je n'ai pas de carnet."],
 ];
 
-/* Ce que le scénario retenu laisse entendre, une fois qu'on a de quoi
-   raisonner. C'est la seule chose qui distingue les trois parties du
-   point de vue du joueur — sans elle, le générateur ne se voyait pas. */
-const PISTES = {
-  A:[[0, "Quelqu'un est entré, a mangé, et est reparti."], [1, "Donc quelqu'un d'ici."]],
-  B:[[0, "Rien n'a été volé. Tout a été rangé."], [1, "C'est pire."]],
-  C:[[0, "Ce n'est pas une main qui a fait ça."], [1, "Ne me dis pas que c'est le chat."]],
-};
-/* La contradiction : ce que Thibaut relève quand il interroge la bonne
-   personne avec assez d'indices en poche. C'est ce qui donne un intérêt
-   à l'interrogatoire, au-delà de la réplique amusante. */
-const CONTRADICTIONS = {
-  A:"Ça ne colle pas avec le ticket. Vous étiez là avant.",
-  B:"Personne n'a rien pris. Mais quelqu'un a rangé.",
-  C:"Vous n'avez pas de mains. C'est embêtant.",
-};
 
-const TROUVAILLE = {
-  A:[[0, "Elle était cachée. Mal."], [1, "On sait donc qui range mal."]],
-  B:[[0, "Elle n'a jamais quitté l'appartement."], [1, "Elle a juste changé de meuble."]],
-  C:[[0, "Poussée jusqu'ici. Regarde les traces."], [1, "Risoto, on doit parler."]],
-};
 
-/* ---------- ce qu'on trouve quand on ne trouve rien ---------- */
+/* ---------- ce qu'on trouve quand on ne trouve rien ----------
+   Deux lectures par meuble, jamais la même. Pierre-François décrit ce
+   qu'il déduit, Thibaut ce qu'il ressent. Fouiller deux fois le même
+   meuble avec l'autre inspecteur doit apprendre quelque chose, même
+   quand il n'y a rien à trouver. */
 const RIEN = {
-  chaussures:"Des chaussures. Rien dedans, heureusement.",
-  manteaux:"Trois manteaux. Deux poches percées.",
-  sac:"Des clés, un chargeur, du désespoir.",
-  biblio:"Beaucoup de livres. Aucun sur la pizza.",
-  canape:"Aucun suspect. Quelques chaussettes.",
-  basse:"Une télécommande. A probablement servi à changer de chaîne.",
-  tv:"Des câbles. Une enquête parallèle pourrait être ouverte.",
-  frigo:"Beaucoup de choses. Pas la pizza.",
-  four:"Étonnamment, quelqu'un a pensé à regarder ici.",
-  placards:"Des bocaux, rangés par ordre de péremption.",
-  evier:"Vaisselle propre. Suspect, dans cet appartement.",
-  table:"Un verre vide. Une enquête parallèle pourrait être ouverte.",
-  poubelle:"Pierre-François regrette immédiatement cette décision.",
-  commode:"Des tiroirs. Puis d'autres tiroirs.",
-  lit:"Aucun suspect. Quelques chaussettes.",
-  portant:"Des vêtements. Aucun ne sent le chorizo.",
+  chaussures:{ pf:"Pointure 43. Boueuses. Sorties récemment.", th:"Des chaussures. Rien dedans, heureusement." },
+  manteaux:  { pf:"Trois manteaux, une seule poche vidée.", th:"Il fait froid dehors. Je dis ça." },
+  sac:       { pf:"Un sac préparé à la hâte.", th:"Des clés, un chargeur, du désespoir." },
+  biblio:    { pf:"Rangée par taille. Quelqu'un de méthodique vit ici.", th:"Beaucoup de livres. Aucun sur la pizza." },
+  canape:    { pf:"Coussins déplacés. On s'est assis, puis relevé vite.", th:"Aucun suspect. Quelques chaussettes." },
+  basse:     { pf:"Un cercle humide. Un verre a séjourné ici.", th:"Une télécommande. A servi à changer de chaîne." },
+  tv:        { pf:"Éteinte, mais l'écran est tiède.", th:"Des câbles. Une enquête parallèle pourrait s'ouvrir." },
+  frigo:     { pf:"Il manque une place au milieu de l'étagère.", th:"Beaucoup de choses. Pas la pizza." },
+  four:      { pf:"Froid. Personne ne l'a allumé ce soir.", th:"Étonnamment, quelqu'un a pensé à regarder ici." },
+  table:     { pf:"Quatre chaises, une seule écartée.", th:"Un verre vide. Enquête parallèle." },
+  placards:  { pf:"Rangés par date de péremption. Ça se remarque.", th:"Des bocaux. Beaucoup de bocaux." },
+  evier:     { pf:"Vaisselle faite. Ce soir, et vite.", th:"Propre. Suspect, dans cet appartement." },
+  poubelle:  { pf:"Rien de gras. On n'a pas jeté de carton ici.", th:"Je regrette immédiatement cette décision." },
+  commode:   { pf:"Un tiroir refermé de travers.", th:"Des tiroirs. Puis d'autres tiroirs." },
+  portant:   { pf:"Un cintre vide au milieu. Quelqu'un s'est rhabillé.", th:"Aucun vêtement ne sent le chorizo." },
+  lit:       { pf:"Couverture tirée d'un seul côté.", th:"Aucun suspect. Quelques chaussettes." },
 };
+
 
 /* ---------- les suspects ---------- */
 const SUSPECTS = [
@@ -179,30 +168,111 @@ const SUSPECTS = [
 ];
 
 /* ---------- CaseGenerator -> Affaire ----------
-   Trois scénarios, tirés au début de la partie et figés jusqu'à la fin.
-   Le tirage part de la SOLUTION puis distribue ses indices : une
-   enquête impossible ne peut donc pas sortir. */
+   Dix affaires écrites, tirées au sort au début de la partie et figées
+   jusqu'à la fin. Chacune fixe son coupable, ses cachettes possibles,
+   les indices qui la portent, et ses quatre répliques. Le tirage part
+   de la SOLUTION puis distribue ses indices : une enquête impossible ne
+   peut donc pas sortir. */
+const SCENARIOS = [
+  { id:"voisin", coupable:"gamer", cachettes:["canape", "sac", "tv"],
+    porteurs:["ticket", "boite", "serviette"],
+    piste:[[0, "Quelqu'un est entré, a mangé, et est reparti."], [1, "Donc quelqu'un d'ici."]],
+    trouvaille:[[0, "Cachée sous le canapé. Mal."], [1, "On sait qui range mal."]],
+    contradiction:"Vous avez joué toute la soirée. Sans pause. Vraiment ?",
+    chute:"Il avait la clé, la faim, et une manette dans les mains." },
+
+  { id:"coloc", coupable:"blonde", cachettes:["placards", "commode", "portant"],
+    porteurs:["ticket", "assiette", "fromage"],
+    piste:[[0, "Une assiette, une seule. Un repas solitaire."], [1, "Et discret."]],
+    trouvaille:[[0, "Rangée dans un placard. Derrière les bocaux."], [1, "Personne ne cache une pizza par hasard."]],
+    contradiction:"Vous n'avez rien entendu, mais vous avez dîné.",
+    chute:"Elle avait faim. Elle a été efficace." },
+
+  { id:"amie", coupable:"brune", cachettes:["sac", "manteaux", "chaussures"],
+    porteurs:["ticket", "boite", "part"],
+    piste:[[0, "La boîte a été ouverte près de l'entrée."], [1, "Quelqu'un qui n'est pas resté."]],
+    trouvaille:[[0, "Dans un sac. Prête à partir."], [1, "Elle comptait l'emporter."]],
+    contradiction:"Vous êtes arrivée après. Le ticket dit avant.",
+    chute:"Elle est arrivée avant tout le monde. Le ticket ne ment pas." },
+
+  { id:"chat", coupable:"chat", cachettes:["lit", "canape", "commode"],
+    porteurs:["pattes", "boite", "miettes"],
+    piste:[[0, "Ce n'est pas une main qui a fait ça."], [1, "Ne me dis pas que c'est le chat."]],
+    trouvaille:[[0, "Poussée jusqu'ici. Regarde les traces."], [1, "Risoto, on doit parler."]],
+    contradiction:"Vous n'avez pas de mains. C'est embêtant.",
+    chute:"Il a poussé la boîte. Le reste s'est fait tout seul." },
+
+  { id:"chat_complice", coupable:"chat", cachettes:["four", "frigo"],
+    porteurs:["pattes", "fromage", "ticket"],
+    piste:[[0, "Des traces jusqu'à la cuisine."], [1, "Il a eu de l'aide pour ouvrir, quand même."]],
+    trouvaille:[[0, "Dans le four. Éteint, heureusement."], [1, "Un chat n'ouvre pas un four."]],
+    contradiction:"Quelqu'un a ouvert pour vous. Mais c'est vous qui avez mangé.",
+    chute:"Il a fait le plus dur. Quelqu'un a ouvert la porte, et n'a rien dit." },
+
+  { id:"rangee", coupable:null, cachettes:["frigo", "placards"],
+    porteurs:["ticket", "boite", "assiette"],
+    piste:[[0, "Rien n'a été volé. Tout a été rangé."], [1, "C'est pire."]],
+    trouvaille:[[0, "Au frigo. Sous une assiette."], [1, "Elle n'a jamais quitté l'appartement."]],
+    contradiction:"Personne n'a rien pris. Mais quelqu'un a rangé.",
+    chute:"Personne ne l'a volée. Quelqu'un l'a rangée. C'est pire." },
+
+  { id:"oubliee", coupable:null, cachettes:["four", "evier"],
+    porteurs:["ticket", "fromage", "serviette"],
+    piste:[[0, "Froide depuis une demi-heure."], [1, "Quelqu'un voulait la réchauffer."]],
+    trouvaille:[[0, "Dans le four. Jamais allumé."], [1, "Donc personne n'a volé. On a juste oublié."]],
+    contradiction:"Vous alliez la réchauffer. Vous avez oublié.",
+    chute:"Elle attendait dans un four éteint. Depuis le début." },
+
+  { id:"partagee", coupable:"gamer", cachettes:["basse", "tv", "poubelle"],
+    porteurs:["part", "miettes", "boite"],
+    piste:[[0, "Plusieurs parts, plusieurs mains."], [1, "Une pizza ne se partage pas toute seule."]],
+    trouvaille:[[0, "Ce qu'il en reste est là."], [1, "Il en reste une part. Une."]],
+    contradiction:"Vous n'étiez pas seul. Mais vous avez fini.",
+    chute:"Ils l'ont partagée. Il a pris la dernière part, et le silence avec." },
+
+  { id:"poubelle", coupable:"blonde", cachettes:["poubelle"],
+    porteurs:["boite", "serviette", "sauce"],
+    piste:[[0, "Quelqu'un a voulu faire disparaître les preuves."], [1, "En les mettant à la poubelle. Audacieux."]],
+    trouvaille:[[0, "À la poubelle. Entière."], [1, "Jeter une pizza entière. Quel monde."]],
+    contradiction:"On ne jette pas ce qu'on n'a pas touché.",
+    chute:"Elle l'a goûtée, détestée, et jetée. Sans le dire à personne." },
+
+  { id:"emportee", coupable:"brune", cachettes:["manteaux", "portant", "commode"],
+    porteurs:["ticket", "chorizo", "pattes"],
+    piste:[[0, "Des rondelles semées jusqu'à l'entrée."], [1, "Elle est partie avec."]],
+    trouvaille:[[0, "Dans une poche de manteau. Sérieusement."], [1, "Ce manteau ne s'en remettra pas."]],
+    contradiction:"Votre manteau sent le chorizo. Le mien, non.",
+    chute:"Elle l'a glissée dans son manteau. Elle comptait la manger dehors." },
+];
+
 const Affaire = {
-  scenario:"A", coupable:null, cachette:null, reels:[], plan:{}, hortenseFaite:false,
+  scenario:null, coupable:null, cachette:null, reels:[], plan:{}, hortenseFaite:false,
 
   generer(){
-    this.scenario = piocher(["A", "B", "C"]);
-    if (this.scenario === "C") this.coupable = SUSPECTS[3];
-    else if (this.scenario === "B") this.coupable = null;        /* personne : elle a été rangée */
-    else this.coupable = piocher(SUSPECTS.slice(0, 3));
+    this.scenario = piocher(SCENARIOS);
+    this.coupable = this.scenario.coupable
+      ? SUSPECTS.find(s => s.id === this.scenario.coupable) : null;
+    this.cachette = piocher(this.scenario.cachettes);
 
-    this.cachette = piocher(this.scenario === "B"
-      ? ["frigo", "four", "placards"]
-      : ["poubelle", "sac", "lit", "commode", "canape"]);
-
-    const obligatoires = ["ticket", "boite"];
-    if (this.scenario === "C") obligatoires.push("pattes");
-    else if (this.scenario === "B") obligatoires.push("assiette");
-    else obligatoires.push("serviette");
-
+    const obligatoires = this.scenario.porteurs.slice();
     const reste = INDICES.map(i => i.id).filter(id => obligatoires.indexOf(id) < 0);
     melangerTableau(reste);
     this.reels = obligatoires.concat(reste.slice(0, ENQ_OBJECTIF - obligatoires.length));
+
+    /* Toute affaire doit contenir au moins une trace que seul
+       Pierre-François sait lire, et au moins un détail que seul Thibaut
+       comprend. Sans cette garantie, un tirage sur trois se bouclait
+       avec un seul inspecteur et le bouton CHANGER ne servait à rien. */
+    const a = id => INDICES.find(i => i.id === id) || {};
+    for (const trait of ["expert", "social"]){
+      if (this.reels.some(id => a(id)[trait])) continue;
+      const candidat = reste.find(id => a(id)[trait] && this.reels.indexOf(id) < 0);
+      if (!candidat) continue;
+      const remplacable = this.reels.findIndex((id, k) =>
+        k >= obligatoires.length && !a(id).expert && !a(id).social);
+      const ou = remplacable >= 0 ? remplacable : this.reels.length - 1;
+      this.reels[ou] = candidat;
+    }
 
     const places = ZONES.map(z => z.id).filter(id => id !== this.cachette);
     melangerTableau(places);
@@ -214,10 +284,10 @@ const Affaire = {
 
   bonneReponse(){ return this.coupable ? this.coupable.id : "personne"; },
   titreSolution(){ return this.coupable ? this.coupable.nom : "PERSONNE"; },
-  chute(){
-    if (this.scenario === "B") return "Personne ne l'a volée. Quelqu'un l'a rangée. C'est pire.";
-    return this.coupable.aveu;
-  },
+  chute(){ return this.scenario.chute; },
+  piste(){ return this.scenario.piste; },
+  trouvaille(){ return this.scenario.trouvaille; },
+  contradiction(){ return this.scenario.contradiction; },
 };
 
 function melangerTableau(t){
@@ -371,6 +441,7 @@ const Enquete = {
     this.gele = 0; this.badge = null; this.badgeT = 0;
     this.actifIdx = 0;
     this.fileDial = [];
+    this.accusationsRestantes = ENQ_ACCUSATIONS;
     this.piecesVues = {};
     this.prochainBavardage = hasard(18, 30);
     this.pisteDite = false;
@@ -467,7 +538,7 @@ const Enquete = {
       this.gele = 0.15;
       this.poserBadge("pizza");
       Effets.parole({ heros:ins.heros }, "La voilà.", 2.0);
-      this.dialogue(TROUVAILLE[Affaire.scenario] || TROUVAILLE.A, 1.6);
+      this.dialogue(Affaire.trouvaille(), 1.6);
       this.dire("Il reste à désigner qui. Bouton ACCUSER.", 3.2);
       Sons.tarteEsquive(); Sons.palier();
       ins.cible = -1;
@@ -476,6 +547,17 @@ const Enquete = {
 
     if (z.indice){
       const ind = INDICES.find(i => i.id === z.indice);
+      /* Symétrique de l'expertise : certaines choses ne parlent qu'à
+         Thibaut, qui connaît les gens et les habitudes. Sans ça, on
+         jouait tout le niveau avec Pierre-François. */
+      if (ind.social && pf){
+        this.fausses++;
+        Effets.parole({ heros:ins.heros }, ind.analyse, 1.8);
+        this.dire("Thibaut connaît mieux la maison.", 2.0);
+        Sons.bip(190, 0.16, "sine", 0.14, 130);
+        ins.cible = -1;
+        return;
+      }
       if (ind.expert && !pf){
         /* Thibaut voit la chose sans la comprendre : l'indice reste à prendre */
         this.fausses++;
@@ -490,20 +572,21 @@ const Enquete = {
       Dossier.ajouter(ind);
       this.gele = 0.15;
       this.poserBadge("indice");
-      Effets.parole({ heros:ins.heros }, pf ? ind.analyse : ind.brut, 2.4);
+      Effets.parole({ heros:ins.heros }, (pf && !ind.social) ? ind.analyse : ind.brut, 2.6);
       const echo = ECHOS[ind.id];
-      if (echo) this.dialogue([[1 - this.actifIdx, echo[this.estPF(ins) ? 0 : 1]]], 1.4);
+      if (echo) this.dialogue([[1 - this.actifIdx, echo[pf ? 0 : 1]]], 1.4);
       Sons.reussite(Math.min(7, this.indices));
       this.secousse = 0.25;
       if (this.indices === 3) this.dire("Assez pour accuser. Mais où est la pizza ?", 2.8);
       else if (this.indices === 4 && !this.pisteDite){
         this.pisteDite = true;
-        this.dialogue(PISTES[Affaire.scenario] || PISTES.A, 3.0);
+        this.dialogue(Affaire.piste(), 3.0);
       }
     } else {
       z.fouillee = true; this.fouilles++;
       this.fausses++;
-      Effets.parole({ heros:ins.heros }, RIEN[z.ref.id] || "Rien.", 2.2);
+      const r = RIEN[z.ref.id];
+      Effets.parole({ heros:ins.heros }, r ? (pf ? r.pf : r.th) : "Rien.", 2.4);
       Sons.bip(190, 0.16, "sine", 0.14, 130);
     }
     ins.cible = -1;
@@ -526,7 +609,7 @@ const Enquete = {
        de l'interrogatoire, et elle ne tombe qu'une fois. */
     if (this.indices >= 4 && s.id === Affaire.bonneReponse() && !s.coince){
       s.coince = true;
-      this.dialogue([[this.actifIdx, CONTRADICTIONS[Affaire.scenario] || CONTRADICTIONS.A]], 1.6);
+      this.dialogue([[this.actifIdx, Affaire.contradiction()]], 1.6);
       this.poserBadge("suspect");
       Sons.reussite(6);
     }
@@ -578,10 +661,18 @@ const Enquete = {
     const rep = this.choixAcc < SUSPECTS.length ? SUSPECTS[this.choixAcc].id : "personne";
     this.accusation = false;
     if (rep !== Affaire.bonneReponse()){
-      this.dire("Ça ne tient pas.", 2.2);
+      this.accusationsRestantes--;
       this.poserBadge("suspect");
-      this.restant -= ENQ_MAUVAISE;
       Sons.erreur();
+      if (this.accusationsRestantes <= 0){
+        /* Deux noms, pas trois : sans cette limite, on finissait par
+           citer tout le monde jusqu'à tomber juste. */
+        this.dialogue([[0, "On s'est trompés deux fois."], [1, "On ne nous laissera pas recommencer."]], 0.3);
+        this.terminer(false);
+        return false;
+      }
+      this.dire("Ça ne tient pas. Une seule autre chance.", 2.6);
+      this.restant -= ENQ_MAUVAISE;
       return false;
     }
     if (!this.pizza){

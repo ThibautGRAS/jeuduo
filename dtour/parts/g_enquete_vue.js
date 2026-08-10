@@ -34,6 +34,7 @@ const EnqVue = {
     this.dessinerSuspects();
     this.dessinerZones();
     this.dessinerInspecteurs();
+    this.dessinerNoms();
     if (HortenseApp.visible()) this.dessinerHortense();
     if (E2.pizza) this.dessinerPizza();
 
@@ -49,11 +50,17 @@ const EnqVue = {
     ctx.fillRect(-trem, 0, L + Math.abs(trem) * 2, H);
     ctx.restore();
 
-    for (const p of Effets.paroles){
-      if (p.cible.heros === undefined) continue;
+    /* Deux inspecteurs côte à côte parlent parfois en même temps : on
+       empile les bulles au lieu de les superposer. */
+    const bulles = Effets.paroles.filter(p => p.cible.heros !== undefined && E2.inspecteurs[p.cible.heros]);
+    bulles.sort((a, b) => E2.inspecteurs[a.cible.heros].x - E2.inspecteurs[b.cible.heros].x);
+    let etage = 0, precX = -1e9;
+    for (const p of bulles){
       const ins = E2.inspecteurs[p.cible.heros];
-      if (!ins) continue;
-      dessinerParoleLibre(p, this.ex(ins.x) + trem, this.ey(ENQ_LIGNE) - H * ENQ_TAILLE);
+      const px = this.ex(ins.x) + trem;
+      if (Math.abs(px - precX) < Camera.L * 0.30) etage++; else etage = 0;
+      precX = px;
+      dessinerParoleLibre(p, px, this.ey(ENQ_LIGNE) - H * ENQ_TAILLE - etage * H * 0.115);
     }
 
     this.dessinerBandeau();
@@ -127,6 +134,39 @@ const EnqVue = {
       ctx.fillStyle = g3;
       ctx.beginPath(); ctx.ellipse(px, this.ey(s.y) + h * 0.46, h * 0.34, h * 0.07, 0, 0, 6.2832); ctx.fill();
       ctx.drawImage(img, px - l / 2, this.ey(s.y) - h * 0.5, l, h);
+
+    }
+  },
+
+  /* --------- les noms, par-dessus tout le monde ---------
+     Posés après les inspecteurs : glissés derrière eux, ils étaient
+     illisibles au moment précis où l'on parlait au suspect. */
+  dessinerNoms(){
+    const H = Camera.H;
+    for (const s of SUSPECTS){
+      const px = this.ex(s.x);
+      if (px < -140 || px > Camera.L + 140) continue;
+      const pres = Math.abs(Enquete.actifIns().x - s.x) < ENQ_PORTEE * 2.2;
+      if (!pres && !s.vus) continue;
+      const h = H * (s.id === "chat" ? 0.19 : 0.36);
+      const taille = Math.max(9, H * 0.034);
+      const py = this.ey(s.y) - h * 0.60;
+      ctx.save();
+      ctx.globalAlpha = pres ? 1 : 0.6;
+      ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      const w = ctx.measureText(s.nom).width;
+      ctx.fillStyle = s.coince ? "rgba(226,69,61,.94)" : "rgba(10,16,30,.86)";
+      arrondi(px - w / 2 - 9, py - taille * 0.86, w + 18, taille * 1.72, taille * 0.86); ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,.24)"; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = s.coince ? "#FFF3F2" : "#F1F5FF";
+      ctx.fillText(s.nom, px, py + taille * 0.06);
+      if (pres && !Enquete.estPF(Enquete.actifIns())){
+        ctx.font = "700 " + Math.round(taille * 0.8) + "px 'Baloo 2', system-ui, sans-serif";
+        ctx.fillStyle = "rgba(247,179,43,.95)";
+        ctx.fillText("INTERROGER", px, py - taille * 1.6);
+      }
+      ctx.restore();
     }
   },
 
