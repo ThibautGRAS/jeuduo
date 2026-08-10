@@ -311,7 +311,9 @@ verifier("réglages hors du flux 30 Hz",
   !/mj: modeJeu, mg: MANCHES_GAGNANTES, sa: sequenceArenes,/.test(script) && /case "cfg":/.test(script),
   "envoyés une fois sur le canal fiable");
 verifier("clavier pris en charge", /keydown/.test(script) && /function majClavier\(/.test(script));
-verifier("pause réservée au solo", /if \(!partieEnCours \|\| !modeSolo\) return;/.test(script));
+verifier("la pause fonctionne aussi en réseau",
+  /function appliquerPause\(actif, parMoi\)/.test(script),
+  "elle était réservée au solo jusqu'en v14.0");
 verifier("volume réglable et mémorisé", /curseurVolume/.test(html) && /duo_volume/.test(script));
 verifier("raquette adverse distinguée sans couleur", /if \(!estMienne\)/.test(script),
   "encoches sur la raquette d'en face");
@@ -624,6 +626,34 @@ verifier("taille du palmarès bornée", /PALMARES_MAX/.test(script) && nombre("P
   verifier("initialisation après les déclarations", iDecl < iInit,
     "troisième occurrence du piège de zone morte temporelle");
 }
+
+/* ======================= 8quindecies. PAUSE ET DÉPART ======================= */
+titre("8quindecies. Pause partagée et départ en cours de partie");
+verifier("bouton de pause dans la barre", /id="btnPause"/.test(html));
+verifier("bouton pour quitter", /id="btnQuitter"/.test(html) && /id="confirmation"/.test(html));
+verifier("la pause vaut aussi en réseau",
+  !/if \(!partieEnCours \|\| !modeSolo\) return;/.test(script) &&
+  /envoyerFiable\(\{ t: "pz"/.test(script) && /case "pz":/.test(script),
+  "elle était réservée au solo");
+verifier("les horodatages sont décalés à la reprise",
+  /function decalerTemps\(delta\)/.test(script),
+  "sinon décompte, bonus et arc expirent pendant la pause");
+{
+  const bloc = (script.match(/function decalerTemps\(delta\)\{[\s\S]*?\n\}/) || [""])[0];
+  for (const champ of ["finCompte", "relanceFin", "annonce.fin", "arcOrage.prochain",
+                       "tPuits", "tImpact"])
+    verifier("décalage de " + champ, bloc.includes(champ));
+  verifier("les sentinelles « jamais » sont épargnées", /> -1e8/.test(bloc),
+    "sinon l'immunité des blocs serait faussée");
+}
+verifier("l'adversaire est prévenu du départ",
+  /envoyerFiable\(\{ t: "qt" \}\)/.test(script) && /case "qt":/.test(script),
+  "plutôt que de le laisser attendre une déconnexion");
+verifier("confirmation avant de quitter", /function montrerConfirmation\(/.test(script) &&
+  /btnQuitterOui/.test(html) && /btnQuitterNon/.test(html));
+verifier("la scène reste peinte pendant la pause", /function dessinerPause\(/.test(script));
+verifier("on ne peut pas mettre en pause hors du jeu",
+  /phase === "fin" \|\| phase === "regles"/.test(script));
 
 /* ======================= 9. RÉFÉRENCES ======================= */
 titre("9. Toute fonction appelée est définie");
