@@ -398,25 +398,22 @@ verifier("lentille désactivée au cran minimal",
   /if \(qualite === "minimal"\) return;/.test(script), "passe coûteuse");
 verifier("alignement conservé au bord du terrain",
   /ix0 - sx, iy0 - sy/.test(script), "sinon l'image se décalerait près des bords");
-verifier("trou noir complet", /function dessinerTrouNoir\(/.test(script) &&
-  /disque d'accrétion/.test(script));
-verifier("disque d'accrétion en deux moitiés",
-  /anneau\(Rd, Rd\*aplat, 13, Math\.PI, Math\.PI\*2/.test(script) &&
-  /anneau\(Rd, Rd\*aplat, 13, 0, Math\.PI/.test(script),
-  "l'arrière passe derrière l'ombre, l'avant devant");
-verifier("arcs relevés par courbure de la lumière",
-  /anneau\(R\*2\.05[^)]*Math\.PI\*1\.06/.test(script) &&
-  /anneau\(R\*1\.72[^)]*Math\.PI\*0\.08/.test(script));
-verifier("effet Doppler sur le disque",
-  /const dop = ctx\.createLinearGradient\(-Rd, 0, Rd, 0\)/.test(script),
-  "la matière qui vient vers nous paraît plus brillante");
+verifier("trou noir dessiné", /function dessinerTrouNoir\(/.test(script));
+verifier("la sphère n'est jamais opaque",
+  /g\.addColorStop\(0,\s*"rgba\(2,3,8,\.90\)"\)/.test(script),
+  "on continue de deviner le fond enroulé à l'intérieur");
+verifier("liseré fin plutôt que disque d'accrétion",
+  !/createLinearGradient\(-Rd, 0, Rd, 0\)/.test(script) &&
+  /anneau d'Einstein, mince/.test(script),
+  "la référence ne montre aucun disque flamboyant");
+verifier("arcs internes du fond replié", /arcs internes/.test(script));
 {
-  /* l'ombre ne doit pas déborder sur l'anneau d'Einstein */
-  const mOmbre = script.match(/createRadialGradient\(0, 0, 0, 0, 0, R\*([\d.]+)\)/);
-  const mAnneau = script.match(/anneau\(R\*([\d.]+), R\*[\d.]+, 2\.6/);
-  verifier("l'ombre s'arrête avant l'anneau",
-    mOmbre && mAnneau && Number(mAnneau[1]) > Number(mOmbre[1]),
-    mOmbre && mAnneau ? "anneau à " + mAnneau[1] + "R, ombre jusqu'à " + mOmbre[1] + "R" : "");
+  /* l'enroulement doit être bien plus fort au cœur qu'au bord */
+  const m = script.match(/const angle = ([\d.]+) \* Math\.pow\(u, ([\d.]+)\)/);
+  const k = m ? Number(m[1]) : 0, e = m ? Number(m[2]) : 0;
+  const auBord = k * Math.pow(0.1, e), auCoeur = k * Math.pow(0.95, e);
+  verifier("enroulement concentré au centre", m && auCoeur / auBord > 40,
+    m ? "rapport centre/bord de " + Math.round(auCoeur/auBord) : "formule introuvable");
 }
 verifier("aucune donnée réseau supplémentaire",
   /x: etat\.raqBas/.test(script) && /x: etat\.raqHaut/.test(script),
