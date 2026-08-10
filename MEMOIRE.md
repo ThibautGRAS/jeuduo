@@ -175,9 +175,12 @@ l'arène : la glace ralentit, la lave accélère, les cristaux attirent. Chacun
 creuse dans le mur adverse, le premier qui perce gagne. Donne enfin un rôle
 central au travail fait sur les matières.
 
-**RELAIS** — coopératif : à deux, garder une seule balle en vie le plus
-longtemps possible, compteur commun qui accélère. Crée un record partagé plutôt
-qu'un vainqueur, et alimente les liens de défi. Le moins cher à construire.
+**RELAIS** — *construit en v12.0.* Coopératif : personne ne marque, la série
+s'arrête à la première balle perdue. La balle gagne 3,5 % de vitesse par renvoi
+et atteint son plafond en 27 échanges, avec un palier annoncé tous les dix. Le
+compteur remplace le score dans le bandeau, et le record est commun aux deux
+joueurs. La fin de série est transmise à l'invité, sans quoi seul l'hôte
+verrait l'écran final.
 
 **CIBLES** — on ne marque plus en passant la raquette adverse mais en touchant
 des cibles derrière elle. Bascule le jeu de la défense vers la visée, et rend le
