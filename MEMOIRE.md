@@ -160,9 +160,10 @@ le moteur et les six arènes existantes.
 
 **GRAVITÉ** — *construit en v11.0.* Le puits est projeté dans la moitié
 ADVERSE, à l'aplomb de sa propre raquette — et non devant soi, ce qui aurait
-facilité sa propre défense. Calibré à 1,0 de force sur 265 px : le point
-d'arrivée se déplace de 182 px selon la position du puits, soit 1,75 largeur
-de raquette. Le trou noir suit la référence fournie : pas de disque d'accrétion
+facilité sa propre défense. Calibré à 1,15 de force sur 268 px : le point
+d'arrivée se déplace de 219 px selon la position du puits, soit 2,1 largeurs
+de raquette. Le rayon VISIBLE (62 px) n'a rien à voir avec la portée physique :
+à 122 px le puits masquait le jeu. Le trou noir suit la référence fournie : pas de disque d'accrétion
 flamboyant, c'est le fond enroulé qui fait tout. Le décor est réellement
 déformé par une lentille : on prélève
 l'image autour du puits et on la repose en neuf anneaux de plus en plus tournés
