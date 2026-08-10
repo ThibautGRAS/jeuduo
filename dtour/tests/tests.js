@@ -61,7 +61,11 @@ titre("Ressources");
 const dossierImg = path.join(RACINE, "img");
 const presentes = fs.existsSync(dossierImg) ? fs.readdirSync(dossierImg) : [];
 const citees = new Set();
-for (const m of source.matchAll(/"(fond_[a-z]+|logo|face_[a-z]+|pnj\d\d|(?:thibaut|pierre)_[a-z]+)"/g)) citees.add(m[1]);
+for (const m of source.matchAll(/"(fond_[a-z]+|logo|face_[a-z_]+|fx_[a-z]+|pnj\d\d|(?:thibaut|pierre)_[a-z]+)"/g)) citees.add(m[1]);
+for (const m of source.matchAll(/Images\.table\.(fx_[a-z]+)/g)) citees.add(m[1]);
+for (const m of source.matchAll(/"(h_[a-zA-Z]+|tarte[0-9]|tarte_[a-z]+|debris_[a-z]+)"/g)) citees.add(m[1]);
+/* les quatre orientations de la tarte sont composées : "tarte" + n */
+for (let i = 0; i < 4; i++) citees.add("tarte" + i);
 /* les poses des héros sont construites par concaténation : on les recompose */
 for (const h of ["thibaut","pierre"]) for (const p of ["idle","attente","marche","regarde","surpris","stress","tendue","victoire"]) citees.add(h + "_" + p);
 for (let i = 1; i <= 16; i++) citees.add("pnj" + String(i).padStart(2, "0"));
@@ -418,14 +422,28 @@ if (D){
     (D.H_PERSO * D.Camera.ech).toFixed(0) + " px");
   verifier("la file déborde volontairement de l'écran", D.Camera.dernierePlaceVisible() < D.File.places.length - 1,
     "visible jusqu'à " + D.Camera.dernierePlaceVisible());
-  /* les deux formats de téléphone */
-  for (const [L, H, mini] of [[844, 390, 95], [390, 750, 95]]){
+  /* Le jeu est verrouillé en paysage : on ne teste donc que des formats
+     paysage, et on vérifie séparément que le portrait est refusé. */
+  for (const [L, H, mini] of [[844, 390, 95], [1024, 600, 120]]){
     D.Camera.mesurer(L, H, 3); D.Camera.recaler();
     verifier("cadrage tenu en " + L + "x" + H,
       dansEcran() && D.H_PERSO * D.Camera.ech > mini,
       "h=" + (D.H_PERSO * D.Camera.ech).toFixed(0) + " px, xT=" +
       D.Camera.ecran(D.xPlace(D.PLACE_T)).toFixed(0) + ", xS=" + D.Camera.ecran(D.xSalut(1)).toFixed(0));
   }
+
+  titre("Paysage imposé");
+  verifier("un iPhone couché est accepté", D.paysageOk(844, 390));
+  verifier("un écran carré est accepté", D.paysageOk(800, 780));
+  verifier("un iPhone debout est refusé", !D.paysageOk(390, 844));
+  verifier("une fenêtre étroite est refusée", !D.paysageOk(600, 900));
+  verifier("le plein écran est demandé au geste du joueur",
+    /btnJouer[\s\S]{0,220}Ecran\.demander\(\)/.test(code),
+    "requestFullscreen n'est accordé que dans un gestionnaire d'événement");
+  verifier("l'orientation est verrouillée quand l'appareil le permet",
+    /orientation[\s\S]{0,160}lock\("landscape"\)/.test(source));
+  verifier("l'échec du verrouillage n'arrête pas le jeu",
+    /lock\("landscape"\)[\s\S]{0,200}catch/.test(source));
 
   /* --- records --- */
   titre("Records");
@@ -463,7 +481,12 @@ if (D){
   verifier("aucune partie ne plante", !plantage, plantage && plantage.stack.split("\n").slice(0, 3).join("\n       "));
   verifier("les parties se terminent bien", partiesFinies >= 10, partiesFinies + "/12");
   verifier("la file grandit vraiment", fileMax >= 12, "file maximale observée " + fileMax);
-  verifier("on atteint le soir", salutsMax >= D.MOMENTS[1].seuil, "saluts max " + salutsMax);
+  /* Un joueur qui se trompe une fois sur quinze n'atteint pas toujours
+     le soir en douze parties : l'affirmer ici rendait la suite instable.
+     La preuve que le soir et la nuit sont atteignables est plus bas,
+     dans la partie jouée parfaitement. */
+  verifier("une partie ordinaire dure assez pour que ça monte", salutsMax >= 12,
+    "saluts max " + salutsMax);
   verifier("le score reste dans un ordre de grandeur lisible", scoreMax > 500 && scoreMax < 5e6, "score max " + scoreMax);
 
   /* une partie sans jamais répondre : elle doit se terminer vite */
@@ -480,12 +503,194 @@ if (D){
     D.Jeu.pas(1 / 60);
     const dem = D.Jeu.demandes[0];
     if (dem) D.Jeu.saluer(dem.cible);
+    /* un joueur parfait esquive aussi : il attend que la fenêtre
+       s'ouvre, puis appuie */
+    const tarte = D.Tartes.tarteImminente();
+    if (tarte && tarte.fenetreOuverte) D.Esquive.tenter();
     if (D.Jeu.phase !== "jeu") break;
+    void 0;
   }
   verifier("un jeu parfait ne perd aucune vie", D.Jeu.vies === D.VIES, "vies " + D.Jeu.vies);
   verifier("le combo monte au-delà de dix", D.Score.meilleurCombo > 10, "combo " + D.Score.meilleurCombo);
   verifier("on atteint la nuit", D.Score.saluts >= D.MOMENTS[2].seuil, "saluts " + D.Score.saluts);
 }
+
+  /* ================= Hortense et la tarte =================
+     Hortense n'arrive jamais avant la dixième seconde. Il faut donc
+     laisser tourner la partie pour l'atteindre — sans quoi les mains
+     tendues qu'on ignore auraient déjà terminé le jeu. */
+  const amenerA = secondes => {
+    D.Jeu.demarrer();
+    D.Camera.mesurer(1280, 720, 1); D.Camera.recaler();
+    D.Jeu.invincible = true;
+    for (let i = 0; i < 60 * secondes; i++) D.Jeu.pas(1 / 60);
+    D.Jeu.invincible = false;
+    D.Jeu.vies = D.VIES;
+    for (const p of D.Jeu.demandes) p.etat = D.ETAT.MALAISE;
+    D.Jeu.demandes.length = 0;
+    D.Tartes.raz();
+    D.Tartes.derniere = -999;
+  };
+
+  titre("Hortense");
+  D.Jeu.demarrer();
+  D.Camera.mesurer(1280, 720, 1); D.Camera.recaler();
+
+  egal("elle commence cachée", D.Hortense.etat, D.ETAT_H.CACHEE);
+  verifier("rien ne peut la faire venir dans les dix premières secondes",
+    !D.Tartes.peutApparaitre(), "temps " + D.Jeu.temps.toFixed(1));
+  D.Jeu.invincible = true;
+  let vueTot = false;
+  for (let i = 0; i < 60 * (D.HORTENSE_REPIT + 1); i++){
+    D.Jeu.pas(1 / 60);
+    if (D.Hortense.visible) vueTot = true;
+  }
+  D.Jeu.invincible = false;
+  /* Elle peut être en train d'arriver, déjà là, ou déjà repartie : les
+     trois valent, seul le silence total serait un échec. */
+  verifier("passé ce délai, elle peut arriver",
+    D.Tartes.peutApparaitre() || D.Hortense.visible || vueTot);
+
+  /* --- machine à états, du bord de l'écran jusqu'au lancer --- */
+  amenerA(12);
+  D.Jeu.invincible = true;
+  const h = D.Tartes.apparaitre(true);
+  verifier("elle apparaît sur demande", !!h && D.Hortense.visible);
+  egal("elle entre en scène", D.Hortense.etat, D.ETAT_H.ENTREE);
+  verifier("elle entre hors champ", D.Hortense.x < D.Camera.bordGauche() || D.Hortense.x > D.Camera.bordDroit());
+  verifier("elle vise un héros existant", D.Hortense.cible === 0 || D.Hortense.cible === 1);
+  D.Hortense.fausse = false;
+
+  const vus = new Set();
+  let garde = 0, tarte = null;
+  while (garde++ < 60 * 25){
+    D.Jeu.pas(1 / 60);
+    vus.add(D.Hortense.etat);
+    if (!tarte) tarte = D.Tartes.tarteEnVol();
+    if (D.Hortense.etat === D.ETAT_H.CACHEE && tarte) break;
+  }
+  verifier("elle passe par le guet", vus.has(D.ETAT_H.GUET));
+  verifier("elle passe par la préparation", vus.has(D.ETAT_H.PREPARE));
+  verifier("elle passe par le lancer", vus.has(D.ETAT_H.LANCE));
+  verifier("elle rit après avoir lancé", vus.has(D.ETAT_H.RIRE));
+  verifier("elle finit par sortir", vus.has(D.ETAT_H.SORTIE));
+  verifier("une tarte a bien été créée", !!tarte);
+
+  /* --- la tarte est un objet distinct d'Hortense --- */
+  titre("La tarte");
+  amenerA(12);
+  D.Jeu.invincible = true;
+  D.Tartes.apparaitre(true);
+  const t1 = D.Tartes.lancer(1);
+  verifier("la tarte existe indépendamment", t1 instanceof D.Tarte);
+  egal("elle vise le héros demandé", t1.cible, 1);
+  verifier("elle part de la main d'Hortense", Math.abs(t1.x0 - D.Hortense.main().x) < 1);
+  verifier("elle vise au-delà du héros, pour finir derrière lui",
+    Math.abs(t1.fin.x - D.xPlace(D.Heros[1].place)) > 40, "fin " + t1.fin.x.toFixed(0));
+  verifier("elle tourne pendant le vol", (() => {
+    const r0 = t1.rotation; t1.majorer(0.1); return Math.abs(t1.rotation - r0) > 0.1;
+  })());
+  verifier("sa trajectoire est courbe", (() => {
+    const a = t1.position(0), m = t1.position(0.5), b = t1.position(1);
+    return m.y < (a.y + b.y) / 2 - 10;
+  })());
+
+  /* --- durée de vol --- */
+  D.Difficulte.raz();
+  presque("temps de vol au départ", D.Tartes.dureeVol(), D.VOL_DEBUT, 1e-9);
+  let volPrec = D.Tartes.dureeVol(), volMonotone = true;
+  for (let i = 0; i < 400; i++){
+    D.Difficulte.compter();
+    const v = D.Tartes.dureeVol();
+    if (v > volPrec + 1e-9) volMonotone = false;
+    volPrec = v;
+  }
+  verifier("le temps de vol ne remonte jamais", volMonotone);
+  presque("il s'arrête au plancher", D.Tartes.dureeVol(), D.VOL_PLANCHER, 1e-9);
+  verifier("le plancher reste jouable", D.VOL_PLANCHER >= 0.6);
+
+  /* --- fenêtre d'esquive --- */
+  titre("Esquive");
+  amenerA(12);
+  D.Jeu.invincible = true;
+  D.Tartes.apparaitre(true);
+  const t2 = D.Tartes.lancer(0);
+  verifier("la fenêtre est fermée au départ", !t2.fenetreOuverte,
+    "reste " + t2.resteAvantImpact.toFixed(2) + " s");
+  egal("appuyer trop tôt ne fait rien", D.Esquive.tenter(), "tot");
+  verifier("et verrouille brièvement le bouton", D.Esquive.verrou > 0);
+  egal("marteler ne sert à rien", D.Esquive.tenter(), "verrou");
+  let ouvertures = 0;
+  while (t2.etat === D.ETAT_TARTE.VOL && ouvertures < 600){
+    D.Jeu.pas(1 / 60); ouvertures++;
+    if (t2.fenetreOuverte) break;
+  }
+  verifier("la fenêtre finit par s'ouvrir", t2.fenetreOuverte);
+  verifier("elle dure environ 450 ms", Math.abs(t2.resteAvantImpact - D.FENETRE_ESQUIVE) < 0.06,
+    "reste " + t2.resteAvantImpact.toFixed(3) + " s");
+  const ptsAvant = D.Score.points, viesAvant2 = D.Jeu.vies, comboAvant = D.Score.combo;
+  D.Esquive.verrou = 0;
+  egal("appuyer dans la fenêtre réussit", D.Esquive.tenter(), "ok");
+  egal("le héros se baisse", !!D.Heros[0].esquive, true);
+  egal("+100 points", D.Score.points - ptsAvant, 100);
+  egal("aucune vie perdue", D.Jeu.vies, viesAvant2);
+  egal("le combo des salutations est préservé", D.Score.combo, comboAvant);
+  egal("une esquive de plus au compteur", D.Score.esquives, 1);
+  verifier("la tarte poursuit sa route", t2.etat === D.ETAT_TARTE.ESQUIVEE);
+  verifier("elle ne peut plus toucher personne", !t2.collision);
+
+  /* --- impact --- */
+  titre("Impact");
+  amenerA(12);
+  D.Score.reussir(1); D.Score.reussir(1);
+  D.Tartes.apparaitre(true);
+  const t3b = D.Tartes.lancer(1);
+  const vies3 = D.Jeu.vies;
+  let n3 = 0;
+  while (t3b.etat !== D.ETAT_TARTE.IMPACT && n3++ < 600) D.Jeu.pas(1 / 60);
+  egal("sans esquive, la tarte arrive", t3b.etat, D.ETAT_TARTE.IMPACT);
+  egal("une vie est perdue", D.Jeu.vies, vies3 - 1);
+  egal("le combo casse", D.Score.combo, 0);
+  egal("une tarte reçue au compteur", D.Score.recues, 1);
+  verifier("le héros reste couvert de meringue", D.Heros[1].tarte > 1.2, D.Heros[1].tarte.toFixed(2));
+  verifier("la caméra a été secouée", D.Camera.secousse > 0);
+  verifier("l'image se fige un court instant", D.Jeu.gel > 0.05 && D.Jeu.gel <= 0.12,
+    (D.Jeu.gel * 1000).toFixed(0) + " ms");
+
+  /* --- la boîte de collision est petite et honnête --- */
+  titre("Collision");
+  const boite = D.Esquive.boite(0);
+  verifier("la boîte est plus étroite que le sprite", boite.demi * 2 < 0.42 * D.H_PERSO);
+  verifier("elle couvre la tête et le buste, pas les pieds", boite.basY < -0.2 * D.H_PERSO);
+  D.Heros[0].esquive = { t:0, duree:0.5 };
+  const baissee = D.Esquive.boite(0);
+  verifier("elle descend pendant l'esquive", baissee.haut > boite.haut);
+  D.Heros[0].esquive = null;
+
+  /* --- Hortense ne doit jamais devenir une routine --- */
+  titre("Rythme d'Hortense");
+  D.Jeu.demarrer();
+  D.Jeu.invincible = true;
+  let apparitions = 0, dernierTemps = -99, ecartMin = 1e9;
+  for (let i = 0; i < 60 * 300; i++){
+    const avant = D.Hortense.visible;
+    D.Jeu.pas(1 / 60);
+    if (D.Jeu.phase !== "jeu"){ D.Jeu.vies = 3; D.Jeu.phase = "jeu"; }
+    const t4 = D.Tartes.tarteEnVol();
+    if (t4 && t4.fenetreOuverte) D.Esquive.tenter();
+    const dem = D.Jeu.demandes[0];
+    if (dem && dem.attente > dem.tReaction * 0.5) D.Jeu.saluer(dem.cible);
+    if (!avant && D.Hortense.visible){
+      apparitions++;
+      ecartMin = Math.min(ecartMin, D.Jeu.temps - dernierTemps);
+      dernierTemps = D.Jeu.temps;
+    }
+  }
+  verifier("elle vient plusieurs fois en cinq minutes", apparitions >= 4, apparitions + " apparitions");
+  verifier("elle reste un événement, pas une mécanique", apparitions <= 18, apparitions + " apparitions");
+  verifier("deux attaques ne se collent jamais", ecartMin >= D.HORTENSE_REPOS - 0.1,
+    "écart minimal " + ecartMin.toFixed(1) + " s");
+  D.Jeu.invincible = false;
 
 /* ================= bilan ================= */
 console.log("\n" + "\u2500".repeat(46));

@@ -1,9 +1,12 @@
 
 /* ================= ScoreManager -> Score ================= */
 const Score = {
-  points:0, combo:0, meilleurCombo:0, saluts:0, fileMax:0,
+  points:0, combo:0, meilleurCombo:0, saluts:0, fileMax:0, esquives:0, recues:0,
 
-  raz(){ this.points = 0; this.combo = 0; this.meilleurCombo = 0; this.saluts = 0; this.fileMax = 0; },
+  raz(){
+    this.points = 0; this.combo = 0; this.meilleurCombo = 0; this.saluts = 0;
+    this.fileMax = 0; this.esquives = 0; this.recues = 0;
+  },
   multiplicateur(){ return Math.max(1, this.combo); },
   reussir(bonus){
     this.combo++;
@@ -171,6 +174,8 @@ function xSalut(h){ return xPlace(Heros[h].place) + RECUL_SALUT; }
 function razHeros(){
   for (const h of Heros){
     h.geste = null;         /* { type:"poignee"|"vide"|"victoire", t, duree } */
+    h.esquive = null;       /* { t, duree } pendant qu'il se baisse */
+    h.tarte = 0;            /* secondes de meringue restantes sur la figure */
     h.sueur = 0;
     h.tremble = 0;
     h.phase = Math.random() * 6.28;
@@ -306,6 +311,7 @@ const Foule = {
 /* ================= GameManager -> Jeu ================= */
 const Jeu = {
   phase:"chargement",     /* chargement | titre | jeu | fin */
+  gel:0,                  /* arrêt sur image très bref, au moment de l'impact */
   temps:0,                /* temps de jeu, en secondes ; n'avance pas hors partie */
   vies:VIES,
   invincible:false,
@@ -316,8 +322,8 @@ const Jeu = {
   moment:0, fonduDe:0, fondu:1,
 
   demarrer(){
-    Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros();
-    this.temps = 0; this.vies = VIES; this.ralenti = 1; this.demandes = [];
+    Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
+    this.temps = 0; this.gel = 0; this.vies = VIES; this.ralenti = 1; this.demandes = [];
     this.moment = 0; this.fonduDe = 0; this.fondu = 1; this.finChrono = 0;
     this.phase = "jeu";
 
@@ -336,11 +342,22 @@ const Jeu = {
 
   /* --------- boucle logique, pas fixe --------- */
   pas(dt){
+    /* L'arrêt sur image de l'impact : une centaine de millisecondes où
+       plus rien n'avance, sauf le décompte du gel lui-même. */
+    if (this.gel > 0){
+      this.gel -= dt;
+      Camera.majorer(dt);
+      return;
+    }
     if (this.phase === "jeu"){
       this.temps += dt;
       this.majMoment();
       Foule.majorer(dt);
-      if (this.temps >= this.prochaineArrivee && this.demandes.length < Difficulte.simultanees()){
+      /* On n'ouvre pas une main tendue pendant que la tarte arrive : les
+         deux gestes doivent rester humainement enchaînables. */
+      const tarteProche = (() => { const t = Tartes.tarteEnVol(); return !!t && t.resteAvantImpact < 0.75; })();
+      if (tarteProche) this.prochaineArrivee = Math.max(this.prochaineArrivee, this.temps + 0.4);
+      if (!tarteProche && this.temps >= this.prochaineArrivee && this.demandes.length < Difficulte.simultanees()){
         Foule.arriver();
         this.prochaineArrivee = this.temps + Difficulte.delaiArrivee();
       } else if (this.temps >= this.prochaineArrivee){
@@ -360,6 +377,7 @@ const Jeu = {
       h.tremble = Math.max(0, h.tremble - dt * 2.2);
       h.phase += dt * 1.6;
     }
+    Tartes.majorer(dt);
     Effets.majorer(dt);
     Camera.majorer(dt);
     const densite = borne(File.installees() / 26, 0, 1);
@@ -406,7 +424,7 @@ const Jeu = {
     if (pnj.revenant) Effets.texte(pnj.x, -1.28 * H_PERSO, "ENCORE ?!", "#7FC3F5", 0.9);
     Sons.poignee(); Sons.reussite(Math.min(7, Score.combo - 1));
     if (Score.combo > 1 && Score.combo % 5 === 0){
-      Effets.texte(X_SALUT, -1.5 * H_PERSO, "COMBO x" + Score.combo + " !", "#F7B32B", 1.2, 1.5);
+      Effets.etoile(X_SALUT, -1.55 * H_PERSO, Score.combo);
       Sons.palier();
     }
     Interface.majBandeau();
@@ -469,8 +487,8 @@ const Jeu = {
   retourTitre(){
     this.phase = "titre";
     this.ralenti = 1;
-    Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros();
-    this.temps = 0; this.moment = 0; this.fondu = 1; this.fonduDe = 0; this.demandes = [];
+    Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
+    this.temps = 0; this.gel = 0; this.moment = 0; this.fondu = 1; this.fonduDe = 0; this.demandes = [];
     File.gonfler(3);
     File.poserHeros(0, PLACE_T); File.poserHeros(1, PLACE_PF);
     while (File.places.length <= PLACE_PF) File.places.push({ vide:true });

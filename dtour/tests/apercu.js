@@ -111,9 +111,17 @@ function releverIci(D, nom, img){
       if (p[0] > 120 && p[0] >= p[1] && p[1] >= p[2] && note > 22 && note > mieux){ mieux = note; peau = [p[0], p[1], p[2]]; }
     }
   }
-  let manche = null;
-  for (const fx of [0.20, 0.80, 0.26, 0.74]){ const p = lire(fx, 0.40); if (p[3] > 210){ manche = [p[0], p[1], p[2]]; break; } }
-  if (!manche) manche = lire(0.5, 0.42).slice(0, 3);
+  const chair = p => p[0] > 120 && p[0] >= p[1] && p[1] >= p[2] && (p[0] - p[2]) > 30;
+  let manche = null, fonce = 1e9;
+  for (const fx of [0.50, 0.42, 0.58, 0.36, 0.64, 0.46, 0.54]){
+    for (const fy of [0.34, 0.40, 0.30]){
+      const p = lire(fx, fy);
+      if (p[3] < 210 || chair(p)) continue;
+      const somme = p[0] + p[1] + p[2];
+      if (somme < fonce){ fonce = somme; manche = [p[0], p[1], p[2]]; }
+    }
+  }
+  if (!manche) manche = lire(0.5, 0.36).slice(0, 3);
   const fiche = {
     peau:"rgb(" + peau.join(",") + ")",
     peauOmbre:"rgb(" + peau.map(v => Math.round(v * 0.82)).join(",") + ")",

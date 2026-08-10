@@ -4,11 +4,53 @@ const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
                     "vFile","vies","pupitre","cmdT","cmdP","visageT","visageP","fin","fScore","fCombo",
-                    "fSaluts","fFile","fRecord","btnRejouer","pivot","pivotOk","outilsBtn","debug",
-                    "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version"]){
+                    "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
+                    "cmdE","outilsBtn","debug",
+                    "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte"]){
     E[id] = document.getElementById(id);
   }
 }
+
+/* Le jeu se joue en paysage, plein écran. Ce n'est pas une préférence :
+   la file s'étire horizontalement, en portrait on n'en voit que trois
+   personnes et le geste par-dessus Pierre-François ne rentre pas dans
+   le cadre. On demande donc le plein écran au premier geste du joueur —
+   c'est le seul moment où le navigateur l'accorde — et on verrouille
+   l'orientation quand l'appareil le permet. Quand il ne le permet pas
+   (Safari sur iPhone n'expose ni l'un ni l'autre), on bloque l'écran
+   tant que le téléphone est debout. */
+function paysageOk(L, H){ return L >= H * 1.02; }
+
+const Ecran = {
+  estPlein(){
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  },
+  demander(){
+    const e = document.documentElement;
+    const f = e.requestFullscreen || e.webkitRequestFullscreen || e.msRequestFullscreen;
+    if (f){
+      try{
+        const p = f.call(e, { navigationUI:"hide" });
+        if (p && p.catch) p.catch(() => {});
+      }catch(err){ /* refusé : on continue sans */ }
+    }
+    this.verrouiller();
+  },
+  verrouiller(){
+    const o = globalThis.screen && globalThis.screen.orientation;
+    if (o && o.lock){
+      try{
+        const p = o.lock("landscape");
+        if (p && p.catch) p.catch(() => {});
+      }catch(err){ /* iOS ne sait pas faire : le blocage portrait prend le relais */ }
+    }
+  },
+  sortir(){
+    const f = document.exitFullscreen || document.webkitExitFullscreen;
+    if (f){ try{ const p = f.call(document); if (p && p.catch) p.catch(() => {}); }catch(err){} }
+  },
+  basculer(){ this.estPlein() ? this.sortir() : this.demander(); },
+};
 
 const Interface = {
   finAffichee:false, dernierCombo:0,
@@ -35,6 +77,7 @@ const Interface = {
     if (E.hud) E.hud.classList.remove("on");
     if (E.pupitre) E.pupitre.classList.remove("on");
     if (E.outilsBtn) E.outilsBtn.classList.remove("on");
+    if (E.pleinBtn) E.pleinBtn.classList.remove("on");
   },
   entrerJeu(){
     this.finAffichee = false;
@@ -43,13 +86,14 @@ const Interface = {
     if (E.hud) E.hud.classList.add("on");
     if (E.pupitre) E.pupitre.classList.add("on");
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
+    if (E.pleinBtn) E.pleinBtn.classList.add("on");
     this.majVies(); this.majBandeau();
   },
   sortirJeu(){ if (E.pupitre) E.pupitre.classList.remove("on"); },
 
   majBandeau(){
     if (E.vScore) E.vScore.textContent = chiffres(Score.points);
-    if (E.vCombo) E.vCombo.textContent = "x" + Score.multiplicateur();
+    if (E.vCombo) E.vCombo.textContent = "\u00D7" + Score.multiplicateur();
     if (E.vFile) E.vFile.textContent = chiffres(File.installees());
     if (E.cCombo && Score.combo > this.dernierCombo && Score.combo > 1){
       E.cCombo.classList.remove("chaud");
@@ -64,7 +108,7 @@ const Interface = {
     for (let i = 0; i < b.length; i++) b[i].classList.toggle("perdue", i >= Jeu.vies);
   },
   flashCommande(h){
-    const b = h === 0 ? E.cmdT : E.cmdP;
+    const b = h === 0 ? E.cmdT : (h === 1 ? E.cmdP : E.cmdE);
     if (!b) return;
     b.classList.add("pressee");
     setTimeout(() => b.classList.remove("pressee"), 90);
@@ -75,18 +119,32 @@ const Interface = {
                                 saluts:Score.saluts, file:Score.fileMax });
     const r = lireRecords();
     if (E.fScore) E.fScore.textContent = chiffres(Score.points);
-    if (E.fCombo) E.fCombo.textContent = "x" + Score.meilleurCombo;
+    if (E.fCombo) E.fCombo.textContent = "\u00D7" + Score.meilleurCombo;
     if (E.fSaluts) E.fSaluts.textContent = chiffres(Score.saluts);
     if (E.fFile) E.fFile.textContent = chiffres(Score.fileMax);
+    if (E.fEsquives) E.fEsquives.textContent = chiffres(Score.esquives);
+    if (E.fRecues) E.fRecues.textContent = chiffres(Score.recues);
     if (E.fRecord) E.fRecord.textContent = neuf ? "NOUVEAU RECORD" : ("RECORD " + chiffres(r.score || 0));
     if (E.fin) E.fin.classList.add("on");
     if (E.btnRejouer) E.btnRejouer.focus({ preventScroll:true });
   },
+  /* Bloque tant qu'on n'est pas en paysage, et met le jeu en pause :
+     laisser tourner derrière ferait perdre des vies sans que personne
+     ne voie rien. */
   pensePivot(){
-    if (!E.pivot) return;
-    const portrait = globalThis.innerHeight > globalThis.innerWidth * 1.15;
-    const petit = Math.min(globalThis.innerWidth, globalThis.innerHeight) < 520;
-    E.pivot.style.display = (portrait && petit && !this.pivotVu) ? "flex" : "none";
+    const L = globalThis.innerWidth || 1, H = globalThis.innerHeight || 1;
+    const bloque = !paysageOk(L, H);
+    if (E.pivot) E.pivot.classList.toggle("on", bloque);
+    if (bloque && E.pivotTitre && E.pivotTexte){
+      const doigt = globalThis.matchMedia && globalThis.matchMedia("(pointer:coarse)").matches;
+      E.pivotTitre.textContent = doigt ? "Tourne ton téléphone" : "Élargis la fenêtre";
+      E.pivotTexte.textContent = doigt
+        ? "La file du D'Tour se joue en paysage : il faut voir la file entière."
+        : "La file du D'Tour se joue dans une fenêtre plus large que haute.";
+    }
+    if (bloque) Boucle.pause = true;
+    else if (Boucle.pause) Boucle.reprendre();
+    return bloque;
   },
 };
 
@@ -103,14 +161,31 @@ const Entrees = {
       Jeu.saluer(h);
     };
 
+    /* La troisième commande. Elle ne salue personne : elle fait plonger
+       le héros que vise Hortense. */
+    const esquiver = ev => {
+      if (ev){ ev.preventDefault(); ev.stopPropagation(); }
+      Sons.reveiller();
+      if (Jeu.phase === "titre"){ Jeu.demarrer(); return; }
+      Interface.flashCommande(2);
+      Esquive.tenter();
+    };
+    Entrees.esquiver = esquiver;
+
     if (E.cmdT) E.cmdT.addEventListener("pointerdown", e => presser(0, e));
     if (E.cmdP) E.cmdP.addEventListener("pointerdown", e => presser(1, e));
-    for (const b of [E.cmdT, E.cmdP]) if (b) b.addEventListener("click", e => e.preventDefault());
+    if (E.cmdE) E.cmdE.addEventListener("pointerdown", e => esquiver(e));
+    for (const b of [E.cmdT, E.cmdP, E.cmdE]) if (b) b.addEventListener("click", e => e.preventDefault());
 
-    /* moitié gauche / moitié droite de l'écran */
+    /* Trois zones sur le canevas, dans l'ordre où les personnages sont
+       à l'écran : Thibaut à gauche, l'esquive au milieu sous le pouce,
+       Pierre-François à droite. Le pouce n'a jamais à traverser. */
     if (E.cv) E.cv.addEventListener("pointerdown", e => {
       if (Jeu.phase !== "jeu") return;
-      presser(e.clientX < globalThis.innerWidth / 2 ? 0 : 1, e);
+      const f = e.clientX / Math.max(1, globalThis.innerWidth);
+      if (f < 0.36) presser(0, e);
+      else if (f > 0.64) presser(1, e);
+      else esquiver(e);
     });
 
     globalThis.addEventListener("keydown", e => {
@@ -118,19 +193,40 @@ const Entrees = {
       const t = e.key.toLowerCase();
       if (t === "a" || t === "q" || t === "arrowleft"){ presser(0, e); return; }
       if (t === "l" || t === "p" || t === "m" || t === "arrowright"){ presser(1, e); return; }
-      if (t === " " || t === "enter"){
+      /* ESPACE esquive pendant la partie ; il ne relance que hors jeu,
+         sinon on relancerait la partie en cherchant à sauver sa peau. */
+      if (t === " "){
         e.preventDefault();
-        if (Jeu.phase === "titre") Jeu.demarrer();
-        else if (Jeu.phase === "fin" && Interface.finAffichee) Jeu.demarrer();
+        if (Jeu.phase === "jeu") esquiver(e);
+        else if (Jeu.phase === "titre" || (Jeu.phase === "fin" && Interface.finAffichee)) Jeu.demarrer();
+        return;
+      }
+      if (t === "enter"){
+        e.preventDefault();
+        if (Jeu.phase === "titre" || (Jeu.phase === "fin" && Interface.finAffichee)) Jeu.demarrer();
         return;
       }
       if (t === "s"){ Sons.reveiller(); Sons.basculer(); return; }
+      if (t === "o"){ Debug.basculer(); return; }
+      if (Debug.autorise && Debug.ouvert){
+        if (t === "h"){ Debug.agir("hortense"); return; }
+        if (t === "t"){ Debug.agir("tarte"); return; }
+        if (t === "1"){ Debug.agir("cibleP"); return; }
+        if (t === "2"){ Debug.agir("cibleT"); return; }
+        if (t === "d"){ Debug.agir("simEsquive"); return; }
+        if (t === "i"){ Debug.agir("simImpact"); return; }
+      }
       if (t === "d"){ Debug.basculer(); return; }
+      if (t === "f"){ e.preventDefault(); Ecran.basculer(); return; }
     }, { passive:false });
 
-    if (E.btnJouer) E.btnJouer.addEventListener("click", () => { Sons.reveiller(); Sons.clic(); Jeu.demarrer(); });
+    /* Le plein écran ne s'obtient que dans un vrai geste utilisateur :
+       c'est ici, et nulle part ailleurs, qu'il faut le demander. */
+    if (E.btnJouer) E.btnJouer.addEventListener("click", () => {
+      Sons.reveiller(); Sons.clic(); Ecran.demander(); Jeu.demarrer();
+    });
     if (E.btnRejouer) E.btnRejouer.addEventListener("click", () => { Sons.clic(); Jeu.demarrer(); });
-    if (E.pivotOk) E.pivotOk.addEventListener("click", () => { Interface.pivotVu = true; Interface.pensePivot(); });
+    if (E.pleinBtn) E.pleinBtn.addEventListener("click", () => { Sons.clic(); Ecran.basculer(); });
     if (E.outilsBtn) E.outilsBtn.addEventListener("click", () => Debug.basculer());
 
     globalThis.addEventListener("resize", () => { ajusterCanevas(); Interface.pensePivot(); });
@@ -198,6 +294,24 @@ const Debug = {
         Score.saluts = Math.max(Score.saluts, MOMENTS[i].seuil);
         break;
       }
+      case "hortense": Tartes.apparaitre(true); break;
+      case "tarte": {
+        if (!Hortense.visible) Tartes.apparaitre(true);
+        Hortense.etat = ETAT_H.PREPARE; Hortense.chrono = 0.05;
+        if (this.cible != null) Hortense.cible = this.cible;
+        break;
+      }
+      case "simEsquive": {
+        const t = Tartes.tarteEnVol();
+        if (t) Tartes.reussirEsquive(t);
+        break;
+      }
+      case "simImpact": {
+        const t = Tartes.tarteEnVol();
+        if (t) Tartes.impact(t);
+        else { Tartes.apparaitre(true); Hortense.etat = ETAT_H.PREPARE; Hortense.chrono = 0.05; }
+        break;
+      }
       case "invincible":
         Jeu.invincible = !Jeu.invincible;
         bouton.classList.toggle("actif", Jeu.invincible);
@@ -220,7 +334,17 @@ const Debug = {
       "file     " + File.installees() + " / " + File.places.length + "\n" +
       "zoom     " + Camera.z.toFixed(2) + "  base " + Math.round(Camera.base) + "\n" +
       "pnj      " + Foule.tous.length + "\n" +
-      "moment   " + MOMENTS[Jeu.moment].nom + " (" + Jeu.fondu.toFixed(2) + ")";
+      "moment   " + MOMENTS[Jeu.moment].nom + " (" + Jeu.fondu.toFixed(2) + ")\n" +
+      "hortense " + Hortense.etat + (Hortense.fausse ? " (fausse)" : "") + "\n" +
+      "  cible  " + (Hortense.cible === 0 ? "THIBAUT" : Hortense.cible === 1 ? "PIERRE-F." : "-") + "\n" +
+      "  vol    " + Tartes.dureeVol().toFixed(2) + " s\n" +
+      (() => {
+        const t = Tartes.tarteEnVol();
+        if (!t) return "  tarte  -\n";
+        return "  tarte  " + (t.avancement * 100).toFixed(0) + " %  reste " +
+               t.resteAvantImpact.toFixed(2) + " s" + (t.fenetreOuverte ? "  [ESQUIVE]" : "") + "\n";
+      })() +
+      "esquives " + Score.esquives + "  reçues " + Score.recues;
   },
 };
 
@@ -286,7 +410,9 @@ globalThis.DTOUR = {
   REACT_DEBUT, REACT_PLANCHER, VIES,
   xPlace, borne, melange, chiffres, doux,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj,
-  mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT,
+  mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface,
+  Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
+  FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, TARTE_DUREE,
   __dessiner:() => dessiner(),
   __ajuster:() => ajusterCanevas(),
 };

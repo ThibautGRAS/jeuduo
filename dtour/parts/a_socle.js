@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "1.1";
+const VERSION = "1.2";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -222,6 +222,20 @@ const Sons = {
   fin(){ [392, 349, 294, 233].forEach((f, i) => setTimeout(() => this.bip(f, 0.4, "triangle", 0.24), i * 190)); },
   clic(){ this.bip(660, 0.04, "square", 0.12); },
 
+  /* --- Hortense et la tarte ---
+     Les sept crochets demandés existent tous ; ils sont synthétisés,
+     comme le reste du jeu. Si de vrais sons arrivent un jour, il
+     suffira de remplacer le corps de ces fonctions. */
+  hortenseEntre(){ this.bip(330, 0.10, "triangle", 0.16, 520); this.souffle(0.16, 0.10, 700, 1.4); },
+  hortensePrepare(){ this.bip(180, 0.34, "sawtooth", 0.13, 320); },
+  tarteLancee(){ this.souffle(0.14, 0.22, 1500, 0.9); this.bip(760, 0.07, "square", 0.12, 420); },
+  tarteVol(){ this.souffle(0.05, 0.05, 2400, 1.8); },
+  tarteEsquive(){ this.bip(1046, 0.09, "triangle", 0.22); this.bip(1568, 0.07, "sine", 0.13); this.souffle(0.10, 0.10, 2600, 1.2); },
+  tarteImpact(){ this.souffle(0.30, 0.36, 260, 0.6); this.bip(96, 0.26, "sine", 0.28, 52); },
+  tarteEcrasee(){ this.souffle(0.16, 0.16, 340, 0.9); },
+  tarteTropTot(){ this.bip(150, 0.07, "square", 0.07); },
+  hortenseRit(){ [523, 466, 523, 440].forEach((f, i) => setTimeout(() => this.bip(f, 0.09, "triangle", 0.14), i * 95)); },
+
   /* ---------- musique ----------
      Une petite boucle de bistrot, entièrement synthétisée : contrebasse
      qui marche, deux accords soufflés à contretemps, un balai sur la
@@ -298,8 +312,21 @@ const Sons = {
 /* ================= chargement des images ================= */
 const Images = { pret:false, table:{}, teintes:{} };
 
+/* Effets repris tels quels de la planche : la poignée de main dans sa
+   bulle, l'étoile COMBO, les gouttes de sueur, le point d'interrogation.
+   Les redessiner au canevas aurait donné un trait étranger au reste. */
+const EFFETS = ["fx_poignee","fx_combo","fx_goutte","fx_question"];
+
+/* Hortense et sa tarte au citron meringuée : deux jeux d'images bien
+   séparés. La tarte n'appartient JAMAIS au sprite d'Hortense — elle
+   n'existe qu'à partir du lancer, comme un projectile à part entière. */
+const SPRITES_HORTENSE = ["h_debout","h_marche","h_sournoise","h_arme","h_lance",
+                          "h_courtA","h_courtB","h_pointe","h_parasol","h_chaise"];
+const SPRITES_TARTE = ["tarte0","tarte1","tarte2","tarte3","tarte_boom","tarte_ecrasee",
+                       "debris_meringue","debris_citron","debris_part"];
+
 function listeImages(){
-  const l = ["logo","face_thibaut","face_pierre"];
+  const l = ["logo","face_thibaut","face_pierre"].concat(EFFETS, SPRITES_HORTENSE, SPRITES_TARTE);
   for (const m of MOMENTS) l.push(m.fond);
   for (const h of ["thibaut","pierre"]) for (const p of POSES_HEROS) l.push(h + "_" + p);
   for (const s of SPRITES_PNJ) l.push(s);
@@ -335,13 +362,21 @@ function releverTeintes(nom, img){
         }
       }
     }
-    /* manche : le flanc du torse, à mi-hauteur du buste */
-    let manche = null;
-    for (const fx of [0.20, 0.80, 0.26, 0.74]){
-      const p = lire(fx, 0.40);
-      if (p[3] > 210){ manche = [p[0], p[1], p[2]]; break; }
+    /* Manche : on sonde la POITRINE, pas le flanc. Le flanc tombe une
+       fois sur deux à côté du corps ou sur une main, et le bras peint
+       se retrouvait couleur chair sur toute sa longueur. On écarte
+       explicitement les teintes de peau. */
+    const chair = p => p[0] > 120 && p[0] >= p[1] && p[1] >= p[2] && (p[0] - p[2]) > 30;
+    let manche = null, fonce = 1e9;
+    for (const fx of [0.50, 0.42, 0.58, 0.36, 0.64, 0.46, 0.54]){
+      for (const fy of [0.34, 0.40, 0.30]){
+        const p = lire(fx, fy);
+        if (p[3] < 210 || chair(p)) continue;
+        const somme = p[0] + p[1] + p[2];
+        if (somme < fonce){ fonce = somme; manche = [p[0], p[1], p[2]]; }
+      }
     }
-    if (!manche) manche = lire(0.5, 0.42).slice(0, 3);
+    if (!manche) manche = lire(0.5, 0.36).slice(0, 3);
     const fiche = {
       peau: "rgb(" + peau.join(",") + ")",
       peauOmbre: "rgb(" + peau.map(v => Math.round(v * 0.82)).join(",") + ")",

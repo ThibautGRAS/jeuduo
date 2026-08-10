@@ -6,19 +6,18 @@
    héros et le point de salut — et rien d'autre n'a le droit de la
    réduire. La file qui s'allonge se lit au compteur, au voile du bord
    droit et aux gens qui débordent, pas en rapetissant tout le monde. */
-const Z_MIN = 0.85;
+const Z_MIN = 0.72;
 const Camera = {
-  x:X_PORTE - 14, z:1, zVise:1, ech:1, base:120, sol:0, L:1, H:1, dpr:1,
+  x:X_PORTE - 14, z:1, zVise:1, ech:1, base:120, sol:0, L:1, H:1, dpr:1, secousse:0,
 
   mesurer(L, H, dpr){
     this.L = L; this.H = H; this.dpr = dpr;
-    /* La largeur pèse autant que la hauteur : sur un iPhone debout,
-       c'est elle qui contraint, et sans ce terme les personnages
-       tombaient à 82 px perdus en bas de l'écran. */
-    this.base = borne(Math.min(H * 0.34, L * 0.30), 88, 280);
-    /* On remonte la ligne de sol en portrait : sinon la file se range
-       derrière les deux gros boutons du bas. */
-    this.sol = H * melange(0.79, 0.845, borne((L / H - 0.6) / 0.9, 0, 1));
+    /* Le jeu est en paysage : la hauteur commande, la largeur ne sert
+       que de garde-fou sur les écrans très plats. Généreux à dessein —
+       le décor est une image large, des personnages timides auraient
+       l'air posés devant une carte postale. */
+    this.base = borne(Math.min(H * 0.46, L * 0.26), 96, 380);
+    this.sol = H * 0.845;
     this.calculerVise();
     this.recentrer();
   },
@@ -42,7 +41,9 @@ const Camera = {
     this.ech = (this.base / H_PERSO) * this.z;
     this.recentrer();
   },
+  secouer(f){ this.secousse = Math.max(this.secousse, f); },
   majorer(dt){
+    this.secousse = Math.max(0, this.secousse - dt * 3.4);
     this.calculerVise();
     this.z = melange(this.z, this.zVise, Math.min(1, dt * 2.6));
     this.ech = (this.base / H_PERSO) * this.z;
@@ -57,9 +58,12 @@ const Camera = {
 
 /* ================= effets ================= */
 const Effets = {
-  textes:[], eclats:[], gouttesL:[], alertes:[], bulles:[],
+  textes:[], eclats:[], gouttesL:[], alertes:[], bulles:[], etoiles:[],
 
-  raz(){ this.textes = []; this.eclats = []; this.gouttesL = []; this.alertes = []; this.bulles = []; },
+  raz(){ this.textes = []; this.eclats = []; this.gouttesL = []; this.alertes = []; this.bulles = []; this.etoiles = []; },
+
+  /* L'étoile COMBO de la planche, avec le multiplicateur écrit dessous. */
+  etoile(x, y, combo){ this.etoiles.push({ x, y, combo, t:0, duree:1.25 }); },
 
   texte(x, y, txt, couleur, taille, duree){
     this.textes.push({ x, y, txt, couleur, taille:taille || 1, t:0, duree:duree || 1.05 });
@@ -89,6 +93,8 @@ const Effets = {
     this.eclats = this.eclats.filter(e => e.t < e.duree);
     for (const g of this.gouttesL){ g.t += dt; g.x += g.vx * dt; g.y += g.vy * dt; g.vy += 190 * dt; }
     this.gouttesL = this.gouttesL.filter(g => g.t < g.duree);
+    for (const e of this.etoiles) e.t += dt;
+    this.etoiles = this.etoiles.filter(e => e.t < e.duree);
     for (const b of this.bulles) b.t += dt;
     this.bulles = this.bulles.filter(b => b.t < b.duree && b.pnj.etat === ETAT.MALAISE);
     this.alertes = this.alertes.filter(a => a.pnj.etat === ETAT.DEMANDE);
@@ -146,7 +152,7 @@ function ombreAuSol(xMonde, yBase, hauteur, force){
    devant le visage de Pierre-François. */
 function dessinerBras(pnj, xMonde, yBase, hauteur, cible, ext){
   const t = pnj.teinte;
-  const ep = { x:Camera.ecran(xMonde) - hauteur * 0.04, y:yBase - hauteur * EPAULE };
+  const ep = { x:Camera.ecran(xMonde) - hauteur * 0.13, y:yBase - hauteur * EPAULE };
   const but = { x:Camera.ecran(cible.x), y:Camera.sol + cible.y * Camera.ech };
   const fin = { x:melange(ep.x, but.x, ext), y:melange(ep.y, but.y, ext) };
 
@@ -156,17 +162,17 @@ function dessinerBras(pnj, xMonde, yBase, hauteur, cible, ext){
      plutôt que devant son visage. */
   const portee = Math.hypot(fin.x - ep.x, fin.y - ep.y);
   const coude = {
-    x:melange(ep.x, fin.x, 0.52),
-    y:melange(ep.y, fin.y, 0.52) + portee * 0.14 + hauteur * 0.02,
+    x:melange(ep.x, fin.x, 0.44),
+    y:melange(ep.y, fin.y, 0.44) + portee * 0.12 + hauteur * 0.015,
   };
 
-  const trait = hauteur * 0.042;
-  const cerne = trait + hauteur * 0.020;
+  const trait = hauteur * 0.034;
+  const cerne = trait + hauteur * 0.017;
   ctx.save();
   ctx.lineCap = "round"; ctx.lineJoin = "round";
 
   /* raccord d'épaule : sans lui, le bras avait l'air posé à côté du corps */
-  ctx.beginPath(); ctx.arc(ep.x, ep.y, hauteur * 0.040, 0, 6.2832);
+  ctx.beginPath(); ctx.arc(ep.x, ep.y, hauteur * 0.032, 0, 6.2832);
   ctx.fillStyle = t.manche; ctx.fill();
   ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1, hauteur * 0.016); ctx.stroke();
 
@@ -190,7 +196,7 @@ function dessinerBras(pnj, xMonde, yBase, hauteur, cible, ext){
   /* la main : une ellipse couchée le long du bras. En cercle, elle
      donnait une sucette au bout d'un bâton. */
   const ang = Math.atan2(fin.y - coude.y, fin.x - coude.x);
-  const rx = hauteur * 0.062, ry = hauteur * 0.045;
+  const rx = hauteur * 0.050, ry = hauteur * 0.037;
   ctx.beginPath(); ctx.ellipse(fin.x, fin.y, rx, ry, ang, 0, 6.2832);
   ctx.fillStyle = t.peau; ctx.fill();
   ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1, hauteur * 0.015); ctx.stroke();
@@ -212,53 +218,60 @@ function dessinerAlerte(a){
   const h = Heros[pnj.cible];
   const hauteur = H_PERSO * Camera.ech;
   const px = Camera.ecran(xPlace(h.place));
-  const py = Camera.sol - hauteur * 1.26;
-  const r = Math.max(13, hauteur * 0.15);
+  const py = Camera.sol - hauteur * 1.22;
+  const r = Math.max(15, hauteur * 0.17);
   const reste = borne(pnj.chrono / Math.max(0.001, pnj.tReaction), 0, 1);
-  const bat = 1 + 0.09 * Math.sin(a.t * 15);
+  const bat = 1 + 0.07 * Math.sin(a.t * 14);
 
   ctx.save();
   ctx.translate(px, py);
   ctx.scale(bat, bat);
 
-  /* pastille */
+  /* pastille de la couleur du bouton : le repère et la commande à
+     presser sont du même vert ou du même bleu, on n'a pas à traduire */
   ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.2832);
-  ctx.fillStyle = "rgba(11,18,38,.92)"; ctx.fill();
-  ctx.lineWidth = Math.max(2, r * 0.13); ctx.strokeStyle = h.couleur; ctx.stroke();
-
-  /* anneau de décompte */
+  ctx.fillStyle = h.couleur; ctx.fill();
   ctx.beginPath();
-  ctx.arc(0, 0, r * 1.34, -Math.PI / 2, -Math.PI / 2 + 6.2832 * reste);
-  ctx.strokeStyle = reste < 0.34 ? "#E2453D" : "#F7B32B";
-  ctx.lineWidth = Math.max(2.5, r * 0.20); ctx.lineCap = "butt"; ctx.stroke();
+  ctx.moveTo(-r * 0.30, r * 0.84); ctx.lineTo(r * 0.30, r * 0.84); ctx.lineTo(0, r * 1.52);
+  ctx.closePath(); ctx.fillStyle = h.couleur; ctx.fill();
 
-  /* le point d'exclamation */
-  ctx.fillStyle = "#FFFFFF";
-  ctx.font = "800 " + Math.round(r * 1.5) + "px 'Baloo 2', system-ui, sans-serif";
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillText("!", 0, r * 0.06);
+  /* la poignée de main de la planche, posée dedans */
+  const img = Images.table.fx_poignee;
+  if (img && img.naturalWidth){
+    const l = r * 1.55, hh = l * img.naturalHeight / img.naturalWidth;
+    ctx.drawImage(img, -l / 2, -hh * 0.56, l, hh);
+  } else {
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "800 " + Math.round(r * 1.4) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("!", 0, 0);
+  }
 
-  /* petite pointe vers la tête */
+  /* anneau de décompte : blanc tant qu'il reste du temps, rouge à la fin */
   ctx.beginPath();
-  ctx.moveTo(-r * 0.28, r * 0.86); ctx.lineTo(r * 0.28, r * 0.86); ctx.lineTo(0, r * 1.5);
-  ctx.closePath(); ctx.fillStyle = "rgba(11,18,38,.92)"; ctx.fill();
+  ctx.arc(0, 0, r * 1.26, -Math.PI / 2, -Math.PI / 2 + 6.2832 * reste);
+  ctx.strokeStyle = reste < 0.34 ? "#E2453D" : "rgba(255,255,255,.92)";
+  ctx.lineWidth = Math.max(2.5, r * 0.16); ctx.lineCap = "butt"; ctx.stroke();
   ctx.restore();
 }
 
 function dessinerBulle(b){
   const hauteur = H_PERSO * Camera.ech * DEVANT_Z;
   const px = Camera.ecran(b.pnj.x);
-  const py = Camera.sol + DEVANT_Y * H_PERSO * Camera.ech - hauteur * 1.04;
-  const r = Math.max(11, hauteur * 0.13);
+  const py = Camera.sol + DEVANT_Y * H_PERSO * Camera.ech - hauteur * 1.10;
+  const r = Math.max(12, hauteur * 0.15);
   ctx.save();
   ctx.globalAlpha = borne(1 - b.t / b.duree * 0.7, 0, 1);
-  ctx.beginPath(); ctx.arc(px, py, r, 0, 6.2832);
-  ctx.fillStyle = "rgba(255,255,255,.94)"; ctx.fill();
-  ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1.6, r * 0.11); ctx.stroke();
-  ctx.fillStyle = "#23181A";
-  ctx.font = "800 " + Math.round(r * 1.3) + "px 'Baloo 2', system-ui, sans-serif";
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillText(b.txt, px, py + r * 0.06);
+  const img = Images.table.fx_question;
+  if (img && img.naturalWidth){
+    const hh = r * 2, l = hh * img.naturalWidth / img.naturalHeight;
+    ctx.drawImage(img, px - l / 2, py - hh / 2, l, hh);
+  } else {
+    ctx.fillStyle = "#F1F5FF";
+    ctx.font = "800 " + Math.round(r * 1.8) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(b.txt, px, py);
+  }
   ctx.restore();
 }
 
@@ -381,6 +394,8 @@ function arrondi(x, y, l, h, r){
 /* --- un héros --- */
 function poseHeros(i){
   const h = Heros[i];
+  if (h.tarte > 0) return "surpris";
+  if (h.esquive) return "surpris";
   if (Jeu.phase === "fin") return i === 0 ? "surpris" : "stress";
   if (h.geste) return h.geste.type === "victoire" ? "victoire" : "tendue";
   if (h.sueur > 0.7) return "stress";
@@ -398,13 +413,25 @@ function dessinerHeros(i, voile){
   const trem = h.tremble > 0 ? Math.sin(h.tremble * 42) * hauteur * 0.012 : 0;
   const x = xPlace(h.place);
 
-  ombreAuSol(x, Camera.sol, hauteur, voile.ombre / 0.16);
-  dessinerPerso(nom, x + trem / Camera.ech, Camera.sol + bob, hauteur, !tourne, 0, 1);
+  /* L'esquive : il plonge vers l'avant et se penche. Court, franc,
+     lisible même du coin de l'œil — c'est tout ce qu'on demande à une
+     animation qui dure un demi-tour de seconde. */
+  let baisse = 0, incline = 0;
+  if (h.esquive){
+    const t = borne(h.esquive.t / h.esquive.duree, 0, 1);
+    const cloche = Math.sin(Math.PI * Math.min(1, t * 1.25));
+    baisse = cloche * hauteur * 0.30;
+    incline = cloche * 0.34 * (i === 0 ? -1 : 1);
+  }
 
-  /* gouttes de sueur permanentes tant que le malaise dure */
+  ombreAuSol(x, Camera.sol, hauteur, voile.ombre / 0.16);
+  dessinerPerso(nom, x + trem / Camera.ech, Camera.sol + bob + baisse, hauteur, !tourne, incline, 1);
+
+  /* La meringue reçue en pleine figure, deux secondes durant. */
+  if (h.tarte > 0) dessinerMeringue(i, x, Camera.sol + bob + baisse, hauteur, incline);
+
   if (h.sueur > 0.25 && Math.random() < 0.05) Effets.gouttes(x, -0.9 * H_PERSO, 1);
 
-  /* liseré de couleur sous le héros visé : redondance utile avec l'alerte */
   if (Jeu.demandes.some(p => p.cible === i)){
     const px = Camera.ecran(x);
     ctx.save();
@@ -413,6 +440,39 @@ function dessinerHeros(i, voile){
     ctx.beginPath(); ctx.ellipse(px, Camera.sol + hauteur * 0.02, hauteur * 0.19, hauteur * 0.055, 0, 0, 6.2832);
     ctx.stroke(); ctx.restore();
   }
+}
+
+/* Ce qui reste sur la figure après l'impact. Thibaut porte des lunettes
+   et n'a pas de cheveux : la meringue lui tombe sur le crâne et une
+   rondelle de citron se colle à ses verres. Pierre-François la prend
+   en travers de la casquette. */
+function dessinerMeringue(i, xMonde, yBase, hauteur, incline){
+  const h = Heros[i];
+  const reste = borne(h.tarte / TARTE_DUREE, 0, 1);
+  const px = Camera.ecran(xMonde);
+  ctx.save();
+  ctx.translate(px, yBase);
+  if (incline) ctx.rotate(incline);
+  ctx.globalAlpha = borne(reste * 3, 0, 1);
+
+  const tete = -hauteur * 0.86;
+  const mer = Images.table.debris_meringue;
+  if (mer && mer.naturalWidth){
+    const l = hauteur * 0.42, hh = l * mer.naturalHeight / mer.naturalWidth;
+    ctx.drawImage(mer, -l * 0.52, tete - hh * 0.30, l, hh);
+    ctx.drawImage(mer, -l * 0.02, tete - hh * 0.02, l * 0.7, hh * 0.7);
+  }
+  const cit = Images.table.debris_citron;
+  if (cit && cit.naturalWidth){
+    const l = hauteur * 0.30, hh = l * cit.naturalHeight / cit.naturalWidth;
+    ctx.drawImage(cit, -l * (i === 0 ? 0.58 : 0.10), tete + hauteur * 0.06, l, hh);
+  }
+  /* une coulée qui descend le long du buste */
+  ctx.fillStyle = "rgba(250,214,86,.75)";
+  ctx.beginPath();
+  ctx.ellipse(hauteur * 0.02, tete + hauteur * 0.20, hauteur * 0.08, hauteur * 0.16, 0, 0, 6.2832);
+  ctx.fill();
+  ctx.restore();
 }
 
 /* --- un PNJ --- */
@@ -439,6 +499,10 @@ function dessiner(){
   const dpr = Math.min(2, globalThis.devicePixelRatio || 1);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, Camera.L, Camera.H);
+  if (Camera.secousse > 0.01){
+    const f = Camera.secousse * Camera.base * 0.06;
+    ctx.translate(Math.sin(Jeu.temps * 90) * f, Math.cos(Jeu.temps * 71) * f * 0.7);
+  }
   ctx.imageSmoothingEnabled = true;
   if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
 
@@ -456,8 +520,10 @@ function dessiner(){
   const devant = Foule.tous.filter(p => !(p.arrive && p.etat === ETAT.ATTENTE)).sort((a, b) => b.x - a.x);
   for (const p of devant) dessinerPnj(p, voile);
 
+  dessinerHortense(voile);
   dessinerDebordement();
   poserVoile(voile);
+  dessinerTartes();
 
   /* effets */
   for (const b of Effets.bulles) dessinerBulle(b);
@@ -483,6 +549,26 @@ function dessiner(){
     ctx.fill();
   }
   ctx.globalAlpha = 1;
+
+  for (const e of Effets.etoiles){
+    const img = Images.table.fx_combo;
+    const t = e.t / e.duree;
+    const px = Camera.ecran(e.x), py = Camera.sol + e.y * Camera.ech - t * 22;
+    const l = Math.max(90, Camera.base * 0.95) * (1 + (1 - Math.min(1, t * 6)) * 0.4);
+    ctx.save();
+    ctx.globalAlpha = borne(1 - Math.pow(t, 3), 0, 1);
+    if (img && img.naturalWidth){
+      const hh = l * img.naturalHeight / img.naturalWidth;
+      ctx.drawImage(img, px - l / 2, py - hh / 2, l, hh);
+    }
+    const tc = Math.max(13, l * 0.19);
+    ctx.font = "800 " + Math.round(tc) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.lineWidth = Math.max(3, tc * 0.26); ctx.strokeStyle = "rgba(12,10,18,.9)";
+    ctx.strokeText("\u00D7" + e.combo, px, py + l * 0.30);
+    ctx.fillStyle = "#F7B32B"; ctx.fillText("\u00D7" + e.combo, px, py + l * 0.30);
+    ctx.restore();
+  }
 
   for (const e of Effets.textes){
     const t = e.t / e.duree;

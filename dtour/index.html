@@ -6,227 +6,233 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="D'TOUR">
-<meta name="theme-color" content="#0B1226">
+<meta name="theme-color" content="#080D18">
 <meta name="description" content="La file du D'Tour — jeu d'arcade : saluez tout le monde devant le bar, avant que ça devienne gênant.">
 <title>La file du D'Tour</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 /* ------------------------------------------------------------------
-   Direction artistique : celle de la planche fournie. Bandeau bleu
-   nuit très sombre, lettrage arrondi, ambre pour le combo, vert pour
-   Thibaut, bleu pour Pierre-François. Rien n'est inventé ici : les
-   teintes sont relevées sur la planche.
-   Les chiffres sont en chasse fixe pour que le score ne tressaute pas
-   quand il change de valeur.
+   Interface : verre sombre, traits d'un pixel, aucun relief en trompe-
+   l'œil. Les seules couleurs saturées portent une information — vert
+   Thibaut, bleu Pierre-François, ambre pour le combo — et reprennent
+   celles de la planche, pour que le bouton et le repère posé sur la
+   tête du héros se répondent.
+   Les chiffres sont en chasse fixe : sans ça le score tressaute à
+   chaque changement de valeur.
 ------------------------------------------------------------------ */
 :root{
-  --encre:#0B1226; --encre2:#16203A; --trait:rgba(150,180,235,.20);
-  --craie:#F2F6FF; --sourd:#93A4C4;
-  --ambre:#F7B32B; --ambreF:#C9860E;
-  --vert:#2E9E3F;  --vertF:#186427;
-  --bleu:#1F79D2;  --bleuF:#12507F;
-  --rouge:#E2453D; --ciel:#7FC3F5;
-  --marge:env(safe-area-inset-bottom,0px);
+  --fond:#080D18;
+  --verre:rgba(10,16,30,.62);
+  --verreH:rgba(14,22,40,.88);
+  --trait:rgba(255,255,255,.10);
+  --traitFort:rgba(255,255,255,.18);
+  --craie:#F1F5FF;
+  --sourd:#8496B6;
+  --ambre:#F7B32B;
+  --vert:#37AC48;
+  --bleu:#2A8AE4;
+  --rouge:#E2453D;
+  --r1:12px; --r2:18px;
+  --bas:env(safe-area-inset-bottom,0px);
+  --haut:env(safe-area-inset-top,0px);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 body{
-  background:#070B16;color:var(--craie);
-  font-family:"Baloo 2",system-ui,-apple-system,sans-serif;
-  font-weight:700;touch-action:none;user-select:none;-webkit-user-select:none;
+  background:var(--fond);color:var(--craie);
+  font-family:"Baloo 2",system-ui,-apple-system,sans-serif;font-weight:700;
+  touch-action:none;user-select:none;-webkit-user-select:none;
+  -webkit-font-smoothing:antialiased;
 }
 canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
-
-.chiffre{font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:700;
-  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-
 #cadre{position:fixed;inset:0;overflow:hidden}
 
-/* ---------------- écran de lancement ----------------
-   Il ne sert qu'à masquer la seconde où les polices et les images ne
-   sont pas encore là. Il annonce sa propre progression. */
-#intro{
-  position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:18px;background:#070B16;
-  transition:opacity .3s ease;
+.chiffre{font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:700;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.verre{
+  background:var(--verre);border:1px solid var(--trait);border-radius:var(--r1);
+  backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);
 }
-#intro.parti{opacity:0;pointer-events:none}
-#intro .marque{font-size:clamp(26px,6vw,44px);font-weight:800;letter-spacing:.06em;
-  color:var(--craie);text-align:center;line-height:1.05}
-#intro .marque em{display:block;font-style:normal;color:var(--ambre)}
-#intro .jauge{width:min(180px,44vw);height:3px;border-radius:3px;background:rgba(150,180,235,.16);overflow:hidden}
-#intro .jauge span{display:block;height:100%;width:0%;background:var(--ambre);transition:width .18s linear}
-#intro .bas{position:absolute;bottom:calc(18px + var(--marge));font-size:11px;letter-spacing:.22em;
-  color:var(--sourd);font-family:"JetBrains Mono",monospace}
+kbd{
+  font-family:"JetBrains Mono",monospace;font-weight:500;font-size:10px;
+  border:1px solid var(--traitFort);border-radius:5px;padding:2px 6px;
+  color:var(--sourd);background:rgba(255,255,255,.05);line-height:1;
+}
+:focus-visible{outline:2px solid var(--ambre);outline-offset:3px}
+
+/* ---------------- bandeau ---------------- */
+#hud{
+  position:absolute;left:0;right:0;top:0;z-index:20;display:flex;
+  align-items:flex-start;justify-content:space-between;gap:8px;
+  padding:calc(10px + var(--haut)) 12px 0;
+  pointer-events:none;opacity:0;transition:opacity .28s ease;
+}
+#hud.on{opacity:1}
+#jauges{display:flex;align-items:stretch;padding:2px}
+#jauges .bloc{display:flex;flex-direction:column;gap:1px;padding:6px 14px;position:relative}
+#jauges .bloc + .bloc::before{
+  content:"";position:absolute;left:0;top:18%;bottom:18%;width:1px;background:var(--trait);
+}
+#jauges .lib{font-size:9px;font-weight:600;letter-spacing:.18em;color:var(--sourd);line-height:1}
+#jauges .val{font-size:clamp(16px,3.2vw,23px);line-height:1.08;display:block}
+#cCombo .lib{color:rgba(247,179,43,.82)}
+#vCombo{color:var(--ambre)}
+#cCombo.chaud .val{animation:cogne .42s cubic-bezier(.2,1.4,.4,1)}
+@keyframes cogne{0%{transform:scale(1)}35%{transform:scale(1.18)}100%{transform:scale(1)}}
+
+#vies{display:flex;gap:5px;align-items:center;padding:11px 12px}
+#vies b{width:9px;height:9px;border-radius:3px;background:var(--rouge);
+  transition:background .25s ease,transform .25s ease,opacity .25s ease}
+#vies b.perdue{background:var(--craie);opacity:.16;transform:scale(.7)}
+
+/* ---------------- commandes ---------------- */
+#pupitre{
+  position:absolute;left:0;right:0;bottom:0;z-index:20;display:flex;gap:10px;
+  padding:0 12px calc(12px + var(--bas));
+  opacity:0;pointer-events:none;transition:opacity .28s ease;
+}
+#pupitre.on{opacity:1;pointer-events:auto}
+.cmd{
+  flex:1 1 0;min-width:0;height:clamp(58px,12vh,80px);
+  display:flex;align-items:center;gap:10px;padding:0 14px;
+  border:1px solid var(--traitFort);border-radius:var(--r2);cursor:pointer;
+  font-family:inherit;font-weight:800;color:#fff;
+  backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);
+  transition:transform .08s ease,filter .12s ease,box-shadow .12s ease;
+  box-shadow:0 6px 22px rgba(0,0,0,.30);
+}
+.cmd img{
+  width:clamp(34px,6.6vh,44px);height:clamp(34px,6.6vh,44px);border-radius:50%;
+  flex:0 0 auto;border:1.5px solid rgba(255,255,255,.55);background:rgba(0,0,0,.2);
+}
+.cmd .txt{display:flex;flex-direction:column;gap:1px;min-width:0;text-align:left;flex:1 1 auto}
+.cmd .txt small{font-size:9px;font-weight:600;letter-spacing:.18em;opacity:.72;line-height:1}
+.cmd .txt span{font-size:clamp(14px,2.7vw,19px);line-height:1.1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.cmd kbd{color:rgba(255,255,255,.88);border-color:rgba(255,255,255,.4);background:rgba(0,0,0,.22)}
+#cmdT{background:linear-gradient(180deg,rgba(55,172,72,.94),rgba(38,132,53,.94))}
+#cmdP{background:linear-gradient(180deg,rgba(42,138,228,.94),rgba(28,98,170,.94));flex-direction:row-reverse}
+/* La commande du milieu : plus étroite, sous le pouce, et d'une couleur
+   qui n'appartient à aucun des deux héros — on n'esquive pas « pour
+   quelqu'un », on esquive tout court. */
+#cmdE{
+  flex:0 1 min(30%,190px);justify-content:center;
+  background:linear-gradient(180deg,rgba(247,179,43,.94),rgba(198,133,14,.94));
+  color:#1A1305;
+}
+#cmdE .txt{text-align:center;flex:0 1 auto}
+#cmdE .txt small{opacity:.62}
+#cmdE kbd{color:rgba(26,19,5,.82);border-color:rgba(26,19,5,.32);background:rgba(255,255,255,.22)}
+#cmdE.alerte{animation:tartePrete .5s ease-in-out infinite}
+@keyframes tartePrete{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3)}}
+#cmdP .txt{text-align:right}
+.cmd:active,.cmd.pressee{transform:translateY(2px);filter:brightness(1.14);box-shadow:0 2px 10px rgba(0,0,0,.3)}
 
 /* ---------------- écran titre ---------------- */
 #titre{
   position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:clamp(10px,2.4vh,22px);
-  padding:16px;text-align:center;
-  background:radial-gradient(120% 90% at 50% 30%,rgba(7,11,22,.10),rgba(7,11,22,.72));
-  transition:opacity .35s ease;
+  align-items:center;justify-content:center;gap:clamp(12px,2.6vh,24px);
+  padding:24px;text-align:center;transition:opacity .35s ease;
+  background:linear-gradient(180deg,rgba(8,13,24,.44) 0%,rgba(8,13,24,.10) 38%,rgba(8,13,24,.80) 100%);
 }
 #titre.parti{opacity:0;pointer-events:none}
-#titre .panneau{
-  display:flex;flex-direction:column;align-items:center;gap:clamp(9px,1.9vh,17px);
-  width:min(460px,92vw);padding:clamp(16px,3vh,26px) clamp(14px,3vw,26px);
-  background:linear-gradient(180deg,rgba(13,20,42,.93),rgba(8,12,26,.96));
-  border:2px solid rgba(150,180,235,.22);border-radius:22px;
-  box-shadow:0 18px 50px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.07);
+#logo{width:min(400px,72vw);filter:drop-shadow(0 10px 26px rgba(0,0,0,.6))}
+#titre .sous{font-size:clamp(13px,2.4vw,17px);font-weight:600;color:#DCE4F4;
+  text-shadow:0 2px 12px rgba(0,0,0,.95);max-width:32ch}
+.primaire{
+  border:1px solid rgba(255,255,255,.24);border-radius:999px;cursor:pointer;
+  font-family:inherit;font-weight:800;color:#131A0B;
+  font-size:clamp(16px,2.9vw,21px);letter-spacing:.05em;padding:.68em 2.1em;
+  background:var(--ambre);transition:transform .08s ease,filter .12s ease;
 }
-#titre .panneau::before{
-  content:"";width:52px;height:3px;border-radius:3px;background:var(--ambre);opacity:.85;
-}
-#titre img{width:min(340px,68vw);filter:drop-shadow(0 6px 16px rgba(0,0,0,.6))}
-#titre .sous{font-size:clamp(13px,2.6vw,18px);font-weight:600;color:#DCE4F5;font-style:italic}
-#titre .consigne{font-size:clamp(11px,2.1vw,14px);font-weight:600;color:var(--sourd)}
-#titre .qui{display:flex;gap:10px;width:100%}
-.fiche{
-  flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:3px;
-  padding:8px 6px;border-radius:13px;border:2px solid;background:rgba(255,255,255,.04);
-}
-.fiche img{width:clamp(30px,7vw,40px);height:clamp(30px,7vw,40px);border-radius:50%;
-  border:2px solid rgba(255,255,255,.8)}
-.fiche b{font-size:clamp(12px,2.4vw,15px);letter-spacing:.04em}
-.fiche i{font-style:normal;font-size:10px;letter-spacing:.12em;color:var(--sourd)}
-.fiche.vert{border-color:rgba(55,172,72,.65)}
-.fiche.vert b{color:#61D178}
-.fiche.bleu{border-color:rgba(42,138,228,.65)}
-.fiche.bleu b{color:#7FC3F5}
-#titre .record{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.18em;
-  color:rgba(147,164,196,.75);min-height:12px}
+.primaire:active{transform:translateY(2px);filter:brightness(1.06)}
+#legende{display:flex;gap:18px;align-items:center;flex-wrap:wrap;justify-content:center;
+  font-size:11px;font-weight:600;color:#C6D1E6;text-shadow:0 1px 8px rgba(0,0,0,.9)}
+#legende span{display:inline-flex;align-items:center;gap:6px}
+#legende i{width:8px;height:8px;border-radius:2px;font-style:normal;display:inline-block}
+#legende .pt{background:var(--vert)}
+#legende .pp{background:var(--bleu)}
+#legende .pe{background:var(--ambre)}
 
-.gros{
-  border:none;cursor:pointer;font-family:inherit;font-weight:800;color:#fff;
-  font-size:clamp(18px,3.4vw,26px);letter-spacing:.04em;
-  padding:.62em 1.8em;border-radius:999px;
-  background:linear-gradient(180deg,#3CB44E,#238437);
-  box-shadow:0 4px 0 var(--vertF),0 10px 24px rgba(0,0,0,.45);
-  transition:transform .08s ease,box-shadow .08s ease;
-}
-.gros:active{transform:translateY(3px);box-shadow:0 1px 0 var(--vertF),0 5px 14px rgba(0,0,0,.4)}
-.gros:focus-visible{outline:3px solid var(--ambre);outline-offset:3px}
-
-/* ---------------- bandeau de jeu ---------------- */
-#hud{
-  position:absolute;left:0;right:0;top:0;z-index:20;
-  display:flex;gap:8px;align-items:flex-start;justify-content:space-between;
-  padding:calc(8px + env(safe-area-inset-top,0px)) 10px 0;
-  pointer-events:none;opacity:0;transition:opacity .25s ease;
-}
-#hud.on{opacity:1}
-.barre{
-  display:flex;align-items:stretch;gap:5px;padding:5px;
-  background:var(--encre);border:2px solid rgba(150,180,235,.22);border-radius:14px;
-  box-shadow:0 6px 18px rgba(0,0,0,.45);
-}
-.cell{display:flex;align-items:center;gap:7px;padding:3px 10px;border-radius:9px;
-  border:1.5px solid var(--trait);min-width:0}
-.cell .lib{font-size:9px;letter-spacing:.16em;color:var(--sourd);line-height:1}
-.cell .val{font-size:clamp(15px,3.1vw,21px);line-height:1.05}
-.cell i{font-style:normal;font-size:clamp(15px,3vw,20px);line-height:1}
-#cCombo{border-color:rgba(247,179,43,.5)}
-#cCombo .lib{color:var(--ambre)}
-#vCombo{color:var(--ambre)}
-#cCombo.chaud{animation:pulseCombo .5s ease-out}
-@keyframes pulseCombo{0%{transform:scale(1)}40%{transform:scale(1.13)}100%{transform:scale(1)}}
-#vies{display:flex;gap:5px;align-items:center;padding:7px 10px}
-#vies b{width:13px;height:13px;border-radius:50%;background:var(--rouge);
-  box-shadow:inset 0 -2px 0 rgba(0,0,0,.28);transition:background .2s,transform .2s}
-#vies b.perdue{background:rgba(255,255,255,.14);transform:scale(.72)}
-
-/* ---------------- deux commandes ---------------- */
-#pupitre{
-  position:absolute;left:0;right:0;bottom:0;z-index:20;
-  display:flex;gap:10px;padding:10px 10px calc(10px + var(--marge));
-  opacity:0;transition:opacity .25s ease;pointer-events:none;
-}
-#pupitre.on{opacity:1;pointer-events:auto}
-.cmd{
-  flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;gap:9px;
-  border:3px solid rgba(255,255,255,.92);border-radius:16px;cursor:pointer;
-  font-family:inherit;font-weight:800;color:#fff;padding:9px 6px;
-  height:clamp(56px,13vh,86px);
-  text-shadow:0 2px 4px rgba(0,0,0,.45);
-  transition:transform .07s ease,box-shadow .07s ease,filter .12s ease;
-}
-.cmd img{width:clamp(30px,7vh,46px);height:clamp(30px,7vh,46px);border-radius:50%;
-  border:2px solid rgba(255,255,255,.85);flex:0 0 auto}
-.cmd .txt{display:flex;flex-direction:column;line-height:1.02;align-items:flex-start;min-width:0}
-.cmd .txt small{font-size:clamp(9px,1.7vw,11px);letter-spacing:.16em;opacity:.85;font-weight:600}
-.cmd .txt span{font-size:clamp(13px,2.7vw,20px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.cmd .touche{font-family:"JetBrains Mono",monospace;font-size:11px;
-  border:1.5px solid rgba(255,255,255,.6);border-radius:6px;padding:1px 5px;opacity:.9}
-#cmdT{background:linear-gradient(180deg,#37AC48,#1F7B31);box-shadow:0 5px 0 var(--vertF),0 10px 20px rgba(0,0,0,.4)}
-#cmdP{background:linear-gradient(180deg,#2A8AE4,#175FA6);box-shadow:0 5px 0 var(--bleuF),0 10px 20px rgba(0,0,0,.4)}
-#cmdT:active,#cmdT.pressee{transform:translateY(4px);box-shadow:0 1px 0 var(--vertF)}
-#cmdP:active,#cmdP.pressee{transform:translateY(4px);box-shadow:0 1px 0 var(--bleuF)}
-.cmd:focus-visible{outline:3px solid var(--ambre);outline-offset:3px}
-
-/* ---------------- écran de fin ---------------- */
+/* ---------------- fin de partie ---------------- */
 #fin{
   position:absolute;inset:0;z-index:45;display:none;flex-direction:column;
-  align-items:center;justify-content:center;gap:clamp(8px,2vh,16px);padding:18px;
-  background:rgba(7,11,22,.74);text-align:center;
+  align-items:center;justify-content:center;gap:clamp(12px,2.4vh,20px);padding:24px;
+  background:rgba(8,13,24,.72);text-align:center;
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
 }
-#fin.on{display:flex;animation:fondu .5s ease both}
-@keyframes fondu{from{opacity:0}to{opacity:1}}
-#fin h2{font-size:clamp(20px,4.6vw,36px);font-weight:800;letter-spacing:.02em;line-height:1.1;
-  text-shadow:0 3px 14px rgba(0,0,0,.8)}
-#fin h2 em{font-style:normal;color:var(--ambre)}
-#releve{
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;
-  width:min(440px,94vw);background:var(--encre);border:2px solid rgba(150,180,235,.22);
-  border-radius:16px;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.5);
-}
-#releve div{border:1.5px solid var(--trait);border-radius:10px;padding:7px 9px;text-align:left}
-#releve .lib{font-size:9px;letter-spacing:.14em;color:var(--sourd);line-height:1.3}
-#releve .val{font-size:clamp(17px,3.6vw,25px);line-height:1.1}
-#releve .record{color:var(--ambre);font-size:10px;letter-spacing:.1em}
+#fin.on{display:flex;animation:apparait .45s ease both}
+@keyframes apparait{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#fin h2{font-size:clamp(19px,4vw,32px);font-weight:800;line-height:1.12}
+#fin h2 em{font-style:normal;display:block;color:var(--ambre)}
+#releve{display:grid;grid-template-columns:1fr 1fr;width:min(420px,92vw);overflow:hidden}
+#releve div{padding:12px 16px;text-align:left;position:relative}
+#releve div:nth-child(odd)::after{content:"";position:absolute;right:0;top:16%;bottom:16%;width:1px;background:var(--trait)}
+#releve div:nth-child(-n+4)::before{content:"";position:absolute;left:12px;right:12px;bottom:0;height:1px;background:var(--trait)}
+#releve .lib{font-size:9px;font-weight:600;letter-spacing:.16em;color:var(--sourd);line-height:1.4}
+#releve .val{font-size:clamp(18px,3.6vw,26px);line-height:1.15}
+#fRecord{font-size:10px;letter-spacing:.12em;color:var(--ambre);font-weight:600}
 
-/* ---------------- pense-bête paysage ---------------- */
+/* ---------------- accessoires ---------------- */
 #pivot{
-  position:absolute;inset:auto 10px calc(10px + var(--marge)) 10px;z-index:55;
-  background:rgba(11,18,38,.9);border:2px solid var(--trait);border-radius:12px;
-  padding:8px 12px;font-size:12px;font-weight:600;color:var(--craie);
-  display:none;align-items:center;justify-content:space-between;gap:10px;
+  position:fixed;inset:0;z-index:80;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;padding:32px;text-align:center;
+  background:var(--fond);
 }
-#pivot button{background:none;border:none;color:var(--ambre);font-family:inherit;
-  font-weight:800;font-size:12px;cursor:pointer;padding:4px 6px}
-
-/* ---------------- réglages / debug ---------------- */
-#outilsBtn{
-  position:absolute;z-index:25;right:10px;bottom:calc(clamp(56px,13vh,86px) + 22px + var(--marge));
-  width:34px;height:34px;border-radius:50%;border:2px solid var(--trait);
-  background:rgba(11,18,38,.82);color:var(--sourd);font-family:inherit;font-weight:800;
-  cursor:pointer;display:none;font-size:15px;line-height:1
+#pivot.on{display:flex}
+#pivot .tourne{
+  width:74px;height:46px;border:3px solid var(--craie);border-radius:9px;
+  animation:bascule 2.4s ease-in-out infinite;
 }
+@keyframes bascule{
+  0%,18%{transform:rotate(90deg)}
+  42%,100%{transform:rotate(0deg)}
+}
+#pivot h2{font-size:clamp(19px,5vw,26px);font-weight:800;line-height:1.2}
+#pivot p{font-size:13px;font-weight:600;color:var(--sourd);max-width:26ch;line-height:1.5}
+@media (prefers-reduced-motion:reduce){#pivot .tourne{animation:none;transform:rotate(0)}}
 #outilsBtn.on{display:block}
+#version{
+  position:absolute;left:14px;bottom:calc(clamp(58px,12vh,80px) + 26px + var(--bas));z-index:15;
+  font-family:"JetBrains Mono",monospace;font-weight:500;font-size:9px;letter-spacing:.2em;
+  color:rgba(132,150,182,.42);pointer-events:none;
+}
 #debug{
-  position:absolute;z-index:50;right:8px;top:56px;width:min(238px,80vw);display:none;
-  background:rgba(8,13,28,.95);border:2px solid var(--trait);border-radius:12px;padding:10px;
-  font-size:11px;font-weight:600;max-height:70svh;overflow:auto;
+  position:absolute;z-index:50;right:12px;top:calc(94px + var(--haut));width:min(240px,80vw);display:none;
+  padding:12px;font-size:11px;font-weight:600;max-height:64svh;overflow:auto;
+  background:var(--verreH);border:1px solid var(--trait);border-radius:var(--r1);
 }
 #debug.on{display:block}
-#debug h3{font-size:10px;letter-spacing:.18em;color:var(--ambre);margin-bottom:7px}
-#debug .rangee{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
-#debug button{flex:1 1 auto;background:var(--encre2);border:1px solid var(--trait);color:var(--craie);
-  border-radius:7px;padding:5px 6px;font-family:inherit;font-weight:700;font-size:11px;cursor:pointer}
-#debug button.actif{background:var(--ambre);color:#20180A;border-color:var(--ambre)}
-#debug label{display:flex;align-items:center;gap:6px;color:var(--sourd);margin-bottom:6px}
-#debug input[type=range]{flex:1;accent-color:var(--ambre)}
-#debug .lecture{font-family:"JetBrains Mono",monospace;color:var(--sourd);
-  font-size:10px;line-height:1.55;white-space:pre-wrap;border-top:1px solid var(--trait);padding-top:6px}
+#debug h3{font-size:9px;letter-spacing:.2em;color:var(--ambre);margin-bottom:9px}
+#debug .rangee{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px}
+#debug button{flex:1 1 auto;background:rgba(255,255,255,.06);border:1px solid var(--trait);
+  color:var(--craie);border-radius:7px;padding:5px 7px;font-family:inherit;font-weight:700;
+  font-size:11px;cursor:pointer}
+#debug button.actif{background:var(--ambre);color:#171208;border-color:var(--ambre)}
+#debug label{display:flex;align-items:center;gap:7px;color:var(--sourd);margin:8px 0}
+#debug input[type=range]{flex:1;accent-color:var(--ambre);min-width:0}
+#debug .lecture{font-family:"JetBrains Mono",monospace;font-weight:500;color:var(--sourd);
+  font-size:10px;line-height:1.6;white-space:pre-wrap;border-top:1px solid var(--trait);
+  padding-top:8px;margin-top:4px}
 
-#version{position:absolute;left:10px;bottom:calc(clamp(56px,13vh,86px) + 24px + var(--marge));
-  z-index:15;font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.18em;
-  color:rgba(147,164,196,.45);pointer-events:none}
+/* ---------------- lancement ---------------- */
+#intro{
+  position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:20px;background:var(--fond);
+  transition:opacity .32s ease;
+}
+#intro.parti{opacity:0;pointer-events:none}
+#intro .marque{font-size:clamp(24px,5.4vw,40px);font-weight:800;letter-spacing:.04em;line-height:1.06}
+#intro .marque em{display:block;font-style:normal;color:var(--ambre)}
+#intro .jauge{width:min(160px,42vw);height:2px;background:rgba(255,255,255,.12);overflow:hidden;border-radius:2px}
+#intro .jauge span{display:block;height:100%;width:0;background:var(--ambre);transition:width .2s linear}
+#intro .bas{position:absolute;bottom:calc(20px + var(--bas));font-family:"JetBrains Mono",monospace;
+  font-weight:500;font-size:10px;letter-spacing:.24em;color:rgba(132,150,182,.55)}
 
 @media (prefers-reduced-motion:reduce){
-  #cCombo.chaud{animation:none}
+  #cCombo.chaud .val{animation:none}
   #fin.on{animation:none}
 }
 </style>
@@ -237,49 +243,51 @@ canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
   <canvas id="cv"></canvas>
 
   <div id="hud">
-    <div class="barre">
-      <div class="cell"><i>★</i><div><div class="lib">SCORE</div><div class="val chiffre" id="vScore">0</div></div></div>
-      <div class="cell" id="cCombo"><div><div class="lib">COMBO</div><div class="val chiffre" id="vCombo">x1</div></div></div>
-      <div class="cell"><div><div class="lib">FILE</div><div class="val chiffre" id="vFile">4</div></div><i>👥</i></div>
+    <div id="jauges" class="verre">
+      <div class="bloc"><span class="lib">SCORE</span><span class="val chiffre" id="vScore">0</span></div>
+      <div class="bloc" id="cCombo"><span class="lib">COMBO</span><span class="val chiffre" id="vCombo">×1</span></div>
+      <div class="bloc"><span class="lib">FILE</span><span class="val chiffre" id="vFile">4</span></div>
     </div>
-    <div class="barre"><div id="vies"><b></b><b></b><b></b></div></div>
+    <div id="vies" class="verre"><b></b><b></b><b></b></div>
   </div>
 
   <div id="titre">
-    <div class="panneau">
-      <img id="logo" alt="La file du D'Tour">
-      <p class="sous">Ils ne les connaissaient même pas.</p>
-      <button class="gros" id="btnJouer">JOUER</button>
-      <p class="consigne">Quelqu'un vous tend la main. Répondez avec le bon.</p>
-      <div class="qui">
-        <span class="fiche vert"><img id="miniT" alt=""><b>THIBAUT</b><i>gauche · A</i></span>
-        <span class="fiche bleu"><img id="miniP" alt=""><b>PF</b><i>droite · L</i></span>
-      </div>
-      <p class="record" id="tRecord"></p>
+    <img id="logo" alt="La file du D'Tour">
+    <p class="sous">Ils ne les connaissaient même pas.</p>
+    <button class="primaire" id="btnJouer">JOUER</button>
+    <div id="legende">
+      <span><i class="pt"></i>Thibaut <kbd>A</kbd><kbd>←</kbd></span>
+      <span><i class="pp"></i>Pierre-François <kbd>L</kbd><kbd>→</kbd></span>
+      <span><i class="pe"></i>Esquiver <kbd>ESPACE</kbd></span>
     </div>
   </div>
 
   <div id="fin">
     <h2>TROP DE GENS<em>À SALUER.</em></h2>
-    <div id="releve">
-      <div><div class="lib">SCORE</div><div class="val chiffre" id="fScore">0</div><div class="record" id="fRecord"></div></div>
-      <div><div class="lib">MEILLEUR COMBO</div><div class="val chiffre" id="fCombo">x0</div></div>
-      <div><div class="lib">PERSONNES SALUÉES</div><div class="val chiffre" id="fSaluts">0</div></div>
-      <div><div class="lib">FILE LA PLUS LONGUE</div><div class="val chiffre" id="fFile">0</div></div>
+    <div id="releve" class="verre">
+      <div><span class="lib">SCORE</span><div class="val chiffre" id="fScore">0</div><div id="fRecord"></div></div>
+      <div><span class="lib">MEILLEUR COMBO</span><div class="val chiffre" id="fCombo">×0</div></div>
+      <div><span class="lib">PERSONNES SALUÉES</span><div class="val chiffre" id="fSaluts">0</div></div>
+      <div><span class="lib">FILE LA PLUS LONGUE</span><div class="val chiffre" id="fFile">0</div></div>
+      <div><span class="lib">TARTES ESQUIVÉES</span><div class="val chiffre" id="fEsquives">0</div></div>
+      <div><span class="lib">TARTES REÇUES</span><div class="val chiffre" id="fRecues">0</div></div>
     </div>
-    <button class="gros" id="btnRejouer">REJOUER</button>
+    <button class="primaire" id="btnRejouer">REJOUER</button>
   </div>
 
   <div id="pupitre">
     <button class="cmd" id="cmdT" aria-label="Saluer Thibaut">
-      <img id="visageT" alt=""><span class="txt"><small>SALUER</small><span>THIBAUT</span></span><span class="touche">A</span>
+      <img id="visageT" alt=""><span class="txt"><small>SALUER</small><span>Thibaut</span></span><kbd>A</kbd>
+    </button>
+    <button class="cmd" id="cmdE" aria-label="Esquiver la tarte">
+      <span class="txt"><small>TARTE</small><span>Esquiver</span></span><kbd>ESPACE</kbd>
     </button>
     <button class="cmd" id="cmdP" aria-label="Saluer Pierre-François">
-      <span class="touche">L</span><span class="txt"><small>SALUER</small><span>PF</span></span><img id="visageP" alt="">
+      <img id="visageP" alt=""><span class="txt"><small>SALUER</small><span>Pierre-François</span></span><kbd>L</kbd>
     </button>
   </div>
 
-  <div id="pivot"><span>Le jeu respire mieux en paysage.</span><button id="pivotOk">D'accord</button></div>
+  <button id="pleinBtn" title="Plein écran">⛶</button>
   <button id="outilsBtn" title="Outils">⚙</button>
 
   <div id="debug">
@@ -302,13 +310,27 @@ canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
     <label>Vitesse <input type="range" id="dVitesse" min="20" max="300" value="100"><span id="dVitesseV" class="chiffre">1.00</span></label>
     <label>Réaction <input type="range" id="dReaction" min="40" max="250" value="200"><span id="dReactionV" class="chiffre">2.00</span></label>
     <div class="rangee">
+      <button data-act="hortense">Hortense (H)</button>
+      <button data-act="tarte">Tarte (T)</button>
+    </div>
+    <div class="rangee">
+      <button data-act="simEsquive">Esquive (D)</button>
+      <button data-act="simImpact">Impact (I)</button>
+    </div>
+    <div class="rangee">
       <button data-act="invincible">Invincible</button>
       <button data-act="lent">Ralenti</button>
     </div>
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">D'TOUR v1.1</div>
+  <div id="version">D'TOUR v1.2</div>
+
+  <div id="pivot">
+    <div class="tourne"></div>
+    <h2 id="pivotTitre">Tourne ton téléphone</h2>
+    <p id="pivotTexte">La file du D'Tour se joue en paysage : il faut voir la file entière.</p>
+  </div>
 
   <div id="intro">
     <div class="marque">LA FILE<em>DU D'TOUR</em></div>
@@ -338,7 +360,7 @@ canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "1.1";
+const VERSION = "1.2";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -542,6 +564,20 @@ const Sons = {
   fin(){ [392, 349, 294, 233].forEach((f, i) => setTimeout(() => this.bip(f, 0.4, "triangle", 0.24), i * 190)); },
   clic(){ this.bip(660, 0.04, "square", 0.12); },
 
+  /* --- Hortense et la tarte ---
+     Les sept crochets demandés existent tous ; ils sont synthétisés,
+     comme le reste du jeu. Si de vrais sons arrivent un jour, il
+     suffira de remplacer le corps de ces fonctions. */
+  hortenseEntre(){ this.bip(330, 0.10, "triangle", 0.16, 520); this.souffle(0.16, 0.10, 700, 1.4); },
+  hortensePrepare(){ this.bip(180, 0.34, "sawtooth", 0.13, 320); },
+  tarteLancee(){ this.souffle(0.14, 0.22, 1500, 0.9); this.bip(760, 0.07, "square", 0.12, 420); },
+  tarteVol(){ this.souffle(0.05, 0.05, 2400, 1.8); },
+  tarteEsquive(){ this.bip(1046, 0.09, "triangle", 0.22); this.bip(1568, 0.07, "sine", 0.13); this.souffle(0.10, 0.10, 2600, 1.2); },
+  tarteImpact(){ this.souffle(0.30, 0.36, 260, 0.6); this.bip(96, 0.26, "sine", 0.28, 52); },
+  tarteEcrasee(){ this.souffle(0.16, 0.16, 340, 0.9); },
+  tarteTropTot(){ this.bip(150, 0.07, "square", 0.07); },
+  hortenseRit(){ [523, 466, 523, 440].forEach((f, i) => setTimeout(() => this.bip(f, 0.09, "triangle", 0.14), i * 95)); },
+
   /* ---------- musique ----------
      Une petite boucle de bistrot, entièrement synthétisée : contrebasse
      qui marche, deux accords soufflés à contretemps, un balai sur la
@@ -618,8 +654,21 @@ const Sons = {
 /* ================= chargement des images ================= */
 const Images = { pret:false, table:{}, teintes:{} };
 
+/* Effets repris tels quels de la planche : la poignée de main dans sa
+   bulle, l'étoile COMBO, les gouttes de sueur, le point d'interrogation.
+   Les redessiner au canevas aurait donné un trait étranger au reste. */
+const EFFETS = ["fx_poignee","fx_combo","fx_goutte","fx_question"];
+
+/* Hortense et sa tarte au citron meringuée : deux jeux d'images bien
+   séparés. La tarte n'appartient JAMAIS au sprite d'Hortense — elle
+   n'existe qu'à partir du lancer, comme un projectile à part entière. */
+const SPRITES_HORTENSE = ["h_debout","h_marche","h_sournoise","h_arme","h_lance",
+                          "h_courtA","h_courtB","h_pointe","h_parasol","h_chaise"];
+const SPRITES_TARTE = ["tarte0","tarte1","tarte2","tarte3","tarte_boom","tarte_ecrasee",
+                       "debris_meringue","debris_citron","debris_part"];
+
 function listeImages(){
-  const l = ["logo","face_thibaut","face_pierre"];
+  const l = ["logo","face_thibaut","face_pierre"].concat(EFFETS, SPRITES_HORTENSE, SPRITES_TARTE);
   for (const m of MOMENTS) l.push(m.fond);
   for (const h of ["thibaut","pierre"]) for (const p of POSES_HEROS) l.push(h + "_" + p);
   for (const s of SPRITES_PNJ) l.push(s);
@@ -655,13 +704,21 @@ function releverTeintes(nom, img){
         }
       }
     }
-    /* manche : le flanc du torse, à mi-hauteur du buste */
-    let manche = null;
-    for (const fx of [0.20, 0.80, 0.26, 0.74]){
-      const p = lire(fx, 0.40);
-      if (p[3] > 210){ manche = [p[0], p[1], p[2]]; break; }
+    /* Manche : on sonde la POITRINE, pas le flanc. Le flanc tombe une
+       fois sur deux à côté du corps ou sur une main, et le bras peint
+       se retrouvait couleur chair sur toute sa longueur. On écarte
+       explicitement les teintes de peau. */
+    const chair = p => p[0] > 120 && p[0] >= p[1] && p[1] >= p[2] && (p[0] - p[2]) > 30;
+    let manche = null, fonce = 1e9;
+    for (const fx of [0.50, 0.42, 0.58, 0.36, 0.64, 0.46, 0.54]){
+      for (const fy of [0.34, 0.40, 0.30]){
+        const p = lire(fx, fy);
+        if (p[3] < 210 || chair(p)) continue;
+        const somme = p[0] + p[1] + p[2];
+        if (somme < fonce){ fonce = somme; manche = [p[0], p[1], p[2]]; }
+      }
     }
-    if (!manche) manche = lire(0.5, 0.42).slice(0, 3);
+    if (!manche) manche = lire(0.5, 0.36).slice(0, 3);
     const fiche = {
       peau: "rgb(" + peau.join(",") + ")",
       peauOmbre: "rgb(" + peau.map(v => Math.round(v * 0.82)).join(",") + ")",
@@ -767,9 +824,12 @@ const Difficulte = {
 
 /* ================= ScoreManager -> Score ================= */
 const Score = {
-  points:0, combo:0, meilleurCombo:0, saluts:0, fileMax:0,
+  points:0, combo:0, meilleurCombo:0, saluts:0, fileMax:0, esquives:0, recues:0,
 
-  raz(){ this.points = 0; this.combo = 0; this.meilleurCombo = 0; this.saluts = 0; this.fileMax = 0; },
+  raz(){
+    this.points = 0; this.combo = 0; this.meilleurCombo = 0; this.saluts = 0;
+    this.fileMax = 0; this.esquives = 0; this.recues = 0;
+  },
   multiplicateur(){ return Math.max(1, this.combo); },
   reussir(bonus){
     this.combo++;
@@ -937,6 +997,8 @@ function xSalut(h){ return xPlace(Heros[h].place) + RECUL_SALUT; }
 function razHeros(){
   for (const h of Heros){
     h.geste = null;         /* { type:"poignee"|"vide"|"victoire", t, duree } */
+    h.esquive = null;       /* { t, duree } pendant qu'il se baisse */
+    h.tarte = 0;            /* secondes de meringue restantes sur la figure */
     h.sueur = 0;
     h.tremble = 0;
     h.phase = Math.random() * 6.28;
@@ -1072,6 +1134,7 @@ const Foule = {
 /* ================= GameManager -> Jeu ================= */
 const Jeu = {
   phase:"chargement",     /* chargement | titre | jeu | fin */
+  gel:0,                  /* arrêt sur image très bref, au moment de l'impact */
   temps:0,                /* temps de jeu, en secondes ; n'avance pas hors partie */
   vies:VIES,
   invincible:false,
@@ -1082,8 +1145,8 @@ const Jeu = {
   moment:0, fonduDe:0, fondu:1,
 
   demarrer(){
-    Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros();
-    this.temps = 0; this.vies = VIES; this.ralenti = 1; this.demandes = [];
+    Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
+    this.temps = 0; this.gel = 0; this.vies = VIES; this.ralenti = 1; this.demandes = [];
     this.moment = 0; this.fonduDe = 0; this.fondu = 1; this.finChrono = 0;
     this.phase = "jeu";
 
@@ -1102,11 +1165,22 @@ const Jeu = {
 
   /* --------- boucle logique, pas fixe --------- */
   pas(dt){
+    /* L'arrêt sur image de l'impact : une centaine de millisecondes où
+       plus rien n'avance, sauf le décompte du gel lui-même. */
+    if (this.gel > 0){
+      this.gel -= dt;
+      Camera.majorer(dt);
+      return;
+    }
     if (this.phase === "jeu"){
       this.temps += dt;
       this.majMoment();
       Foule.majorer(dt);
-      if (this.temps >= this.prochaineArrivee && this.demandes.length < Difficulte.simultanees()){
+      /* On n'ouvre pas une main tendue pendant que la tarte arrive : les
+         deux gestes doivent rester humainement enchaînables. */
+      const tarteProche = (() => { const t = Tartes.tarteEnVol(); return !!t && t.resteAvantImpact < 0.75; })();
+      if (tarteProche) this.prochaineArrivee = Math.max(this.prochaineArrivee, this.temps + 0.4);
+      if (!tarteProche && this.temps >= this.prochaineArrivee && this.demandes.length < Difficulte.simultanees()){
         Foule.arriver();
         this.prochaineArrivee = this.temps + Difficulte.delaiArrivee();
       } else if (this.temps >= this.prochaineArrivee){
@@ -1126,6 +1200,7 @@ const Jeu = {
       h.tremble = Math.max(0, h.tremble - dt * 2.2);
       h.phase += dt * 1.6;
     }
+    Tartes.majorer(dt);
     Effets.majorer(dt);
     Camera.majorer(dt);
     const densite = borne(File.installees() / 26, 0, 1);
@@ -1172,7 +1247,7 @@ const Jeu = {
     if (pnj.revenant) Effets.texte(pnj.x, -1.28 * H_PERSO, "ENCORE ?!", "#7FC3F5", 0.9);
     Sons.poignee(); Sons.reussite(Math.min(7, Score.combo - 1));
     if (Score.combo > 1 && Score.combo % 5 === 0){
-      Effets.texte(X_SALUT, -1.5 * H_PERSO, "COMBO x" + Score.combo + " !", "#F7B32B", 1.2, 1.5);
+      Effets.etoile(X_SALUT, -1.55 * H_PERSO, Score.combo);
       Sons.palier();
     }
     Interface.majBandeau();
@@ -1235,8 +1310,8 @@ const Jeu = {
   retourTitre(){
     this.phase = "titre";
     this.ralenti = 1;
-    Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros();
-    this.temps = 0; this.moment = 0; this.fondu = 1; this.fonduDe = 0; this.demandes = [];
+    Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
+    this.temps = 0; this.gel = 0; this.moment = 0; this.fondu = 1; this.fonduDe = 0; this.demandes = [];
     File.gonfler(3);
     File.poserHeros(0, PLACE_T); File.poserHeros(1, PLACE_PF);
     while (File.places.length <= PLACE_PF) File.places.push({ vide:true });
@@ -1252,19 +1327,18 @@ const Jeu = {
    héros et le point de salut — et rien d'autre n'a le droit de la
    réduire. La file qui s'allonge se lit au compteur, au voile du bord
    droit et aux gens qui débordent, pas en rapetissant tout le monde. */
-const Z_MIN = 0.85;
+const Z_MIN = 0.72;
 const Camera = {
-  x:X_PORTE - 14, z:1, zVise:1, ech:1, base:120, sol:0, L:1, H:1, dpr:1,
+  x:X_PORTE - 14, z:1, zVise:1, ech:1, base:120, sol:0, L:1, H:1, dpr:1, secousse:0,
 
   mesurer(L, H, dpr){
     this.L = L; this.H = H; this.dpr = dpr;
-    /* La largeur pèse autant que la hauteur : sur un iPhone debout,
-       c'est elle qui contraint, et sans ce terme les personnages
-       tombaient à 82 px perdus en bas de l'écran. */
-    this.base = borne(Math.min(H * 0.34, L * 0.30), 88, 280);
-    /* On remonte la ligne de sol en portrait : sinon la file se range
-       derrière les deux gros boutons du bas. */
-    this.sol = H * melange(0.79, 0.845, borne((L / H - 0.6) / 0.9, 0, 1));
+    /* Le jeu est en paysage : la hauteur commande, la largeur ne sert
+       que de garde-fou sur les écrans très plats. Généreux à dessein —
+       le décor est une image large, des personnages timides auraient
+       l'air posés devant une carte postale. */
+    this.base = borne(Math.min(H * 0.46, L * 0.26), 96, 380);
+    this.sol = H * 0.845;
     this.calculerVise();
     this.recentrer();
   },
@@ -1288,7 +1362,9 @@ const Camera = {
     this.ech = (this.base / H_PERSO) * this.z;
     this.recentrer();
   },
+  secouer(f){ this.secousse = Math.max(this.secousse, f); },
   majorer(dt){
+    this.secousse = Math.max(0, this.secousse - dt * 3.4);
     this.calculerVise();
     this.z = melange(this.z, this.zVise, Math.min(1, dt * 2.6));
     this.ech = (this.base / H_PERSO) * this.z;
@@ -1303,9 +1379,12 @@ const Camera = {
 
 /* ================= effets ================= */
 const Effets = {
-  textes:[], eclats:[], gouttesL:[], alertes:[], bulles:[],
+  textes:[], eclats:[], gouttesL:[], alertes:[], bulles:[], etoiles:[],
 
-  raz(){ this.textes = []; this.eclats = []; this.gouttesL = []; this.alertes = []; this.bulles = []; },
+  raz(){ this.textes = []; this.eclats = []; this.gouttesL = []; this.alertes = []; this.bulles = []; this.etoiles = []; },
+
+  /* L'étoile COMBO de la planche, avec le multiplicateur écrit dessous. */
+  etoile(x, y, combo){ this.etoiles.push({ x, y, combo, t:0, duree:1.25 }); },
 
   texte(x, y, txt, couleur, taille, duree){
     this.textes.push({ x, y, txt, couleur, taille:taille || 1, t:0, duree:duree || 1.05 });
@@ -1335,6 +1414,8 @@ const Effets = {
     this.eclats = this.eclats.filter(e => e.t < e.duree);
     for (const g of this.gouttesL){ g.t += dt; g.x += g.vx * dt; g.y += g.vy * dt; g.vy += 190 * dt; }
     this.gouttesL = this.gouttesL.filter(g => g.t < g.duree);
+    for (const e of this.etoiles) e.t += dt;
+    this.etoiles = this.etoiles.filter(e => e.t < e.duree);
     for (const b of this.bulles) b.t += dt;
     this.bulles = this.bulles.filter(b => b.t < b.duree && b.pnj.etat === ETAT.MALAISE);
     this.alertes = this.alertes.filter(a => a.pnj.etat === ETAT.DEMANDE);
@@ -1392,7 +1473,7 @@ function ombreAuSol(xMonde, yBase, hauteur, force){
    devant le visage de Pierre-François. */
 function dessinerBras(pnj, xMonde, yBase, hauteur, cible, ext){
   const t = pnj.teinte;
-  const ep = { x:Camera.ecran(xMonde) - hauteur * 0.04, y:yBase - hauteur * EPAULE };
+  const ep = { x:Camera.ecran(xMonde) - hauteur * 0.13, y:yBase - hauteur * EPAULE };
   const but = { x:Camera.ecran(cible.x), y:Camera.sol + cible.y * Camera.ech };
   const fin = { x:melange(ep.x, but.x, ext), y:melange(ep.y, but.y, ext) };
 
@@ -1402,17 +1483,17 @@ function dessinerBras(pnj, xMonde, yBase, hauteur, cible, ext){
      plutôt que devant son visage. */
   const portee = Math.hypot(fin.x - ep.x, fin.y - ep.y);
   const coude = {
-    x:melange(ep.x, fin.x, 0.52),
-    y:melange(ep.y, fin.y, 0.52) + portee * 0.14 + hauteur * 0.02,
+    x:melange(ep.x, fin.x, 0.44),
+    y:melange(ep.y, fin.y, 0.44) + portee * 0.12 + hauteur * 0.015,
   };
 
-  const trait = hauteur * 0.042;
-  const cerne = trait + hauteur * 0.020;
+  const trait = hauteur * 0.034;
+  const cerne = trait + hauteur * 0.017;
   ctx.save();
   ctx.lineCap = "round"; ctx.lineJoin = "round";
 
   /* raccord d'épaule : sans lui, le bras avait l'air posé à côté du corps */
-  ctx.beginPath(); ctx.arc(ep.x, ep.y, hauteur * 0.040, 0, 6.2832);
+  ctx.beginPath(); ctx.arc(ep.x, ep.y, hauteur * 0.032, 0, 6.2832);
   ctx.fillStyle = t.manche; ctx.fill();
   ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1, hauteur * 0.016); ctx.stroke();
 
@@ -1436,7 +1517,7 @@ function dessinerBras(pnj, xMonde, yBase, hauteur, cible, ext){
   /* la main : une ellipse couchée le long du bras. En cercle, elle
      donnait une sucette au bout d'un bâton. */
   const ang = Math.atan2(fin.y - coude.y, fin.x - coude.x);
-  const rx = hauteur * 0.062, ry = hauteur * 0.045;
+  const rx = hauteur * 0.050, ry = hauteur * 0.037;
   ctx.beginPath(); ctx.ellipse(fin.x, fin.y, rx, ry, ang, 0, 6.2832);
   ctx.fillStyle = t.peau; ctx.fill();
   ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1, hauteur * 0.015); ctx.stroke();
@@ -1458,53 +1539,60 @@ function dessinerAlerte(a){
   const h = Heros[pnj.cible];
   const hauteur = H_PERSO * Camera.ech;
   const px = Camera.ecran(xPlace(h.place));
-  const py = Camera.sol - hauteur * 1.26;
-  const r = Math.max(13, hauteur * 0.15);
+  const py = Camera.sol - hauteur * 1.22;
+  const r = Math.max(15, hauteur * 0.17);
   const reste = borne(pnj.chrono / Math.max(0.001, pnj.tReaction), 0, 1);
-  const bat = 1 + 0.09 * Math.sin(a.t * 15);
+  const bat = 1 + 0.07 * Math.sin(a.t * 14);
 
   ctx.save();
   ctx.translate(px, py);
   ctx.scale(bat, bat);
 
-  /* pastille */
+  /* pastille de la couleur du bouton : le repère et la commande à
+     presser sont du même vert ou du même bleu, on n'a pas à traduire */
   ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.2832);
-  ctx.fillStyle = "rgba(11,18,38,.92)"; ctx.fill();
-  ctx.lineWidth = Math.max(2, r * 0.13); ctx.strokeStyle = h.couleur; ctx.stroke();
-
-  /* anneau de décompte */
+  ctx.fillStyle = h.couleur; ctx.fill();
   ctx.beginPath();
-  ctx.arc(0, 0, r * 1.34, -Math.PI / 2, -Math.PI / 2 + 6.2832 * reste);
-  ctx.strokeStyle = reste < 0.34 ? "#E2453D" : "#F7B32B";
-  ctx.lineWidth = Math.max(2.5, r * 0.20); ctx.lineCap = "butt"; ctx.stroke();
+  ctx.moveTo(-r * 0.30, r * 0.84); ctx.lineTo(r * 0.30, r * 0.84); ctx.lineTo(0, r * 1.52);
+  ctx.closePath(); ctx.fillStyle = h.couleur; ctx.fill();
 
-  /* le point d'exclamation */
-  ctx.fillStyle = "#FFFFFF";
-  ctx.font = "800 " + Math.round(r * 1.5) + "px 'Baloo 2', system-ui, sans-serif";
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillText("!", 0, r * 0.06);
+  /* la poignée de main de la planche, posée dedans */
+  const img = Images.table.fx_poignee;
+  if (img && img.naturalWidth){
+    const l = r * 1.55, hh = l * img.naturalHeight / img.naturalWidth;
+    ctx.drawImage(img, -l / 2, -hh * 0.56, l, hh);
+  } else {
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "800 " + Math.round(r * 1.4) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("!", 0, 0);
+  }
 
-  /* petite pointe vers la tête */
+  /* anneau de décompte : blanc tant qu'il reste du temps, rouge à la fin */
   ctx.beginPath();
-  ctx.moveTo(-r * 0.28, r * 0.86); ctx.lineTo(r * 0.28, r * 0.86); ctx.lineTo(0, r * 1.5);
-  ctx.closePath(); ctx.fillStyle = "rgba(11,18,38,.92)"; ctx.fill();
+  ctx.arc(0, 0, r * 1.26, -Math.PI / 2, -Math.PI / 2 + 6.2832 * reste);
+  ctx.strokeStyle = reste < 0.34 ? "#E2453D" : "rgba(255,255,255,.92)";
+  ctx.lineWidth = Math.max(2.5, r * 0.16); ctx.lineCap = "butt"; ctx.stroke();
   ctx.restore();
 }
 
 function dessinerBulle(b){
   const hauteur = H_PERSO * Camera.ech * DEVANT_Z;
   const px = Camera.ecran(b.pnj.x);
-  const py = Camera.sol + DEVANT_Y * H_PERSO * Camera.ech - hauteur * 1.04;
-  const r = Math.max(11, hauteur * 0.13);
+  const py = Camera.sol + DEVANT_Y * H_PERSO * Camera.ech - hauteur * 1.10;
+  const r = Math.max(12, hauteur * 0.15);
   ctx.save();
   ctx.globalAlpha = borne(1 - b.t / b.duree * 0.7, 0, 1);
-  ctx.beginPath(); ctx.arc(px, py, r, 0, 6.2832);
-  ctx.fillStyle = "rgba(255,255,255,.94)"; ctx.fill();
-  ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1.6, r * 0.11); ctx.stroke();
-  ctx.fillStyle = "#23181A";
-  ctx.font = "800 " + Math.round(r * 1.3) + "px 'Baloo 2', system-ui, sans-serif";
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillText(b.txt, px, py + r * 0.06);
+  const img = Images.table.fx_question;
+  if (img && img.naturalWidth){
+    const hh = r * 2, l = hh * img.naturalWidth / img.naturalHeight;
+    ctx.drawImage(img, px - l / 2, py - hh / 2, l, hh);
+  } else {
+    ctx.fillStyle = "#F1F5FF";
+    ctx.font = "800 " + Math.round(r * 1.8) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(b.txt, px, py);
+  }
   ctx.restore();
 }
 
@@ -1627,6 +1715,8 @@ function arrondi(x, y, l, h, r){
 /* --- un héros --- */
 function poseHeros(i){
   const h = Heros[i];
+  if (h.tarte > 0) return "surpris";
+  if (h.esquive) return "surpris";
   if (Jeu.phase === "fin") return i === 0 ? "surpris" : "stress";
   if (h.geste) return h.geste.type === "victoire" ? "victoire" : "tendue";
   if (h.sueur > 0.7) return "stress";
@@ -1644,13 +1734,25 @@ function dessinerHeros(i, voile){
   const trem = h.tremble > 0 ? Math.sin(h.tremble * 42) * hauteur * 0.012 : 0;
   const x = xPlace(h.place);
 
-  ombreAuSol(x, Camera.sol, hauteur, voile.ombre / 0.16);
-  dessinerPerso(nom, x + trem / Camera.ech, Camera.sol + bob, hauteur, !tourne, 0, 1);
+  /* L'esquive : il plonge vers l'avant et se penche. Court, franc,
+     lisible même du coin de l'œil — c'est tout ce qu'on demande à une
+     animation qui dure un demi-tour de seconde. */
+  let baisse = 0, incline = 0;
+  if (h.esquive){
+    const t = borne(h.esquive.t / h.esquive.duree, 0, 1);
+    const cloche = Math.sin(Math.PI * Math.min(1, t * 1.25));
+    baisse = cloche * hauteur * 0.30;
+    incline = cloche * 0.34 * (i === 0 ? -1 : 1);
+  }
 
-  /* gouttes de sueur permanentes tant que le malaise dure */
+  ombreAuSol(x, Camera.sol, hauteur, voile.ombre / 0.16);
+  dessinerPerso(nom, x + trem / Camera.ech, Camera.sol + bob + baisse, hauteur, !tourne, incline, 1);
+
+  /* La meringue reçue en pleine figure, deux secondes durant. */
+  if (h.tarte > 0) dessinerMeringue(i, x, Camera.sol + bob + baisse, hauteur, incline);
+
   if (h.sueur > 0.25 && Math.random() < 0.05) Effets.gouttes(x, -0.9 * H_PERSO, 1);
 
-  /* liseré de couleur sous le héros visé : redondance utile avec l'alerte */
   if (Jeu.demandes.some(p => p.cible === i)){
     const px = Camera.ecran(x);
     ctx.save();
@@ -1659,6 +1761,39 @@ function dessinerHeros(i, voile){
     ctx.beginPath(); ctx.ellipse(px, Camera.sol + hauteur * 0.02, hauteur * 0.19, hauteur * 0.055, 0, 0, 6.2832);
     ctx.stroke(); ctx.restore();
   }
+}
+
+/* Ce qui reste sur la figure après l'impact. Thibaut porte des lunettes
+   et n'a pas de cheveux : la meringue lui tombe sur le crâne et une
+   rondelle de citron se colle à ses verres. Pierre-François la prend
+   en travers de la casquette. */
+function dessinerMeringue(i, xMonde, yBase, hauteur, incline){
+  const h = Heros[i];
+  const reste = borne(h.tarte / TARTE_DUREE, 0, 1);
+  const px = Camera.ecran(xMonde);
+  ctx.save();
+  ctx.translate(px, yBase);
+  if (incline) ctx.rotate(incline);
+  ctx.globalAlpha = borne(reste * 3, 0, 1);
+
+  const tete = -hauteur * 0.86;
+  const mer = Images.table.debris_meringue;
+  if (mer && mer.naturalWidth){
+    const l = hauteur * 0.42, hh = l * mer.naturalHeight / mer.naturalWidth;
+    ctx.drawImage(mer, -l * 0.52, tete - hh * 0.30, l, hh);
+    ctx.drawImage(mer, -l * 0.02, tete - hh * 0.02, l * 0.7, hh * 0.7);
+  }
+  const cit = Images.table.debris_citron;
+  if (cit && cit.naturalWidth){
+    const l = hauteur * 0.30, hh = l * cit.naturalHeight / cit.naturalWidth;
+    ctx.drawImage(cit, -l * (i === 0 ? 0.58 : 0.10), tete + hauteur * 0.06, l, hh);
+  }
+  /* une coulée qui descend le long du buste */
+  ctx.fillStyle = "rgba(250,214,86,.75)";
+  ctx.beginPath();
+  ctx.ellipse(hauteur * 0.02, tete + hauteur * 0.20, hauteur * 0.08, hauteur * 0.16, 0, 0, 6.2832);
+  ctx.fill();
+  ctx.restore();
 }
 
 /* --- un PNJ --- */
@@ -1685,6 +1820,10 @@ function dessiner(){
   const dpr = Math.min(2, globalThis.devicePixelRatio || 1);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, Camera.L, Camera.H);
+  if (Camera.secousse > 0.01){
+    const f = Camera.secousse * Camera.base * 0.06;
+    ctx.translate(Math.sin(Jeu.temps * 90) * f, Math.cos(Jeu.temps * 71) * f * 0.7);
+  }
   ctx.imageSmoothingEnabled = true;
   if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
 
@@ -1702,8 +1841,10 @@ function dessiner(){
   const devant = Foule.tous.filter(p => !(p.arrive && p.etat === ETAT.ATTENTE)).sort((a, b) => b.x - a.x);
   for (const p of devant) dessinerPnj(p, voile);
 
+  dessinerHortense(voile);
   dessinerDebordement();
   poserVoile(voile);
+  dessinerTartes();
 
   /* effets */
   for (const b of Effets.bulles) dessinerBulle(b);
@@ -1730,6 +1871,26 @@ function dessiner(){
   }
   ctx.globalAlpha = 1;
 
+  for (const e of Effets.etoiles){
+    const img = Images.table.fx_combo;
+    const t = e.t / e.duree;
+    const px = Camera.ecran(e.x), py = Camera.sol + e.y * Camera.ech - t * 22;
+    const l = Math.max(90, Camera.base * 0.95) * (1 + (1 - Math.min(1, t * 6)) * 0.4);
+    ctx.save();
+    ctx.globalAlpha = borne(1 - Math.pow(t, 3), 0, 1);
+    if (img && img.naturalWidth){
+      const hh = l * img.naturalHeight / img.naturalWidth;
+      ctx.drawImage(img, px - l / 2, py - hh / 2, l, hh);
+    }
+    const tc = Math.max(13, l * 0.19);
+    ctx.font = "800 " + Math.round(tc) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.lineWidth = Math.max(3, tc * 0.26); ctx.strokeStyle = "rgba(12,10,18,.9)";
+    ctx.strokeText("\u00D7" + e.combo, px, py + l * 0.30);
+    ctx.fillStyle = "#F7B32B"; ctx.fillText("\u00D7" + e.combo, px, py + l * 0.30);
+    ctx.restore();
+  }
+
   for (const e of Effets.textes){
     const t = e.t / e.duree;
     const px = Camera.ecran(e.x), py = Camera.sol + e.y * Camera.ech - t * 34;
@@ -1749,16 +1910,586 @@ function dessiner(){
   }
 }
 
+/* ==================================================================
+   HORTENSE ET LA TARTE AU CITRON
+   ------------------------------------------------------------------
+   Événement greffé sur la partie, jamais bloquant : la file continue
+   d'avancer, les mains continuent de se tendre. Hortense arrive par un
+   bord, observe, arme son bras, lance, et repart en riant.
+
+   Trois systèmes séparés, comme demandé :
+     HortenseManager -> Hortense (le chef d'orchestre, ici `Tartes`)
+     Hortense        -> `Hortense`
+     PieProjectile   -> `Tarte`
+     DodgeManager    -> `Esquive`
+   Le GameManager (`Jeu`) ne fait que les appeler.
+================================================================== */
+
+/* ---------- rythme ---------- */
+const HORTENSE_REPIT = 10;              /* jamais pendant les dix premières secondes */
+const HORTENSE_ECART = [20, 40];        /* intervalle entre deux apparitions */
+const HORTENSE_REPOS = 11;              /* jamais deux attaques plus rapprochées */
+const P_FAUSSE_ALERTE = 0.10;
+const P_DOUBLE_TARTE = 0.05;            /* et seulement après 90 s */
+const DOUBLE_APRES = 90;
+
+/* Temps de vol : long au début, court à la fin, jamais sous 0,60 s. */
+const VOL_DEBUT = 1.20, VOL_PLANCHER = 0.60, VOL_TAUX = 0.982;
+const FENETRE_ESQUIVE = 0.45;           /* la fenêtre utile, juste avant l'impact */
+const VERROU_TROP_TOT = 0.25;           /* appuyer trop tôt bloque brièvement : pas de martèlement */
+const TARTE_DUREE = 2.0;                /* combien de temps on reste couvert de meringue */
+
+/* Hortense a sa propre profondeur : devant la file ET devant les
+   arrivants, plus bas et plus grande. On ne peut pas la confondre avec
+   quelqu'un qui fait la queue. */
+const HORTENSE_Y = 0.46, HORTENSE_Z = 1.30;
+
+const ETAT_H = {
+  CACHEE:"CACHEE", ENTREE:"ENTREE", GUET:"GUET", PREPARE:"PREPARE",
+  LANCE:"LANCE", RIRE:"RIRE", SORTIE:"SORTIE", REPOS:"REPOS",
+};
+const ETAT_TARTE = { DEPART:"DEPART", VOL:"VOL", ESQUIVEE:"ESQUIVEE", IMPACT:"IMPACT", FINIE:"FINIE" };
+
+/* Durées des poses, en secondes. */
+const DUREE_GUET = 0.85, DUREE_PREPARE = 0.70, DUREE_LANCE = 0.22, DUREE_RIRE = 0.80;
+
+/* ---------- la tarte ---------- */
+class Tarte {
+  constructor(depart, cible, duree){
+    this.x = depart.x; this.y = depart.y;
+    this.x0 = depart.x; this.y0 = depart.y;
+    this.cible = cible;                 /* indice du héros visé */
+    this.but = Tartes.pointVise(cible);
+    /* elle vise un point AU-DELÀ du héros : si celui-ci se baisse, la
+       tarte poursuit sa route et va s'écraser derrière lui */
+    const d = Math.sign(this.but.x - this.x0) || 1;
+    this.fin = { x:this.but.x + d * 78, y:this.but.y + 26 };
+    /* La tarte vise AU-DELÀ du héros : elle le croise donc avant la fin
+       de sa course. Compter la fenêtre d'esquive sur la durée totale
+       l'ouvrait après le choc — le joueur voyait le repère s'allumer
+       une fois la meringue reçue. On repère l'instant du croisement. */
+    this.tImpact = Math.abs(this.but.x - this.x0) / Math.max(1e-6, Math.abs(this.fin.x - this.x0));
+    this.duree = duree;
+    this.avancement = 0;
+    /* Elle est en vol dès qu'elle quitte la main : garder un état
+       DEPART d'une image faisait qu'une esquive tentée au tout premier
+       instant ne trouvait aucune tarte et ne répondait rien. */
+    this.etat = ETAT_TARTE.VOL;
+    this.rotation = 0;
+    this.vitesseRot = (d > 0 ? 1 : -1) * hasard(7, 10);
+    this.collision = true;
+    this.chrono = 0;
+    this.arc = -hasard(30, 46);         /* la cloche du tir */
+  }
+
+  /* Reste-t-il assez peu de temps pour que l'esquive compte ? */
+  get resteAvantImpact(){ return Math.max(0, (this.tImpact - this.avancement) * this.duree); }
+  get fenetreOuverte(){ return this.etat === ETAT_TARTE.VOL && this.resteAvantImpact <= FENETRE_ESQUIVE; }
+
+  position(t){
+    const x = melange(this.x0, this.fin.x, t);
+    const y = melange(this.y0, this.fin.y, t) + this.arc * Math.sin(Math.PI * t);
+    return { x, y };
+  }
+
+  majorer(dt){
+    if (this.etat === ETAT_TARTE.FINIE) return;
+    if (this.etat === ETAT_TARTE.IMPACT){
+      this.chrono -= dt;
+      if (this.chrono <= 0) this.etat = ETAT_TARTE.FINIE;
+      return;
+    }
+    if (this.etat === ETAT_TARTE.DEPART) this.etat = ETAT_TARTE.VOL;
+
+    this.avancement = Math.min(1.25, this.avancement + dt / this.duree);
+    const p = this.position(this.avancement);
+    this.x = p.x; this.y = p.y;
+    this.rotation += this.vitesseRot * dt;
+
+    if (this.etat === ETAT_TARTE.VOL && this.collision && Esquive.touche(this)){
+      Tartes.impact(this);
+      return;
+    }
+    /* passé le héros, elle finit par s'écraser au sol */
+    if (this.avancement >= 1){
+      if (this.etat === ETAT_TARTE.ESQUIVEE || !this.collision) Tartes.ecraser(this);
+      else Tartes.impact(this);
+    }
+  }
+}
+
+/* ---------- DodgeManager -> Esquive ---------- */
+const Esquive = {
+  verrou:0,
+
+  raz(){ this.verrou = 0; },
+  majorer(dt){ this.verrou = Math.max(0, this.verrou - dt); },
+
+  /* Boîte de collision du héros : le torse et la tête, pas la totalité
+     du sprite. Une tarte qui frôle les chaussures ne doit pas compter.
+     Pendant l'esquive, elle descend avec lui. */
+  boite(h){
+    const H = Heros[h];
+    const bas = H.esquive ? 0.42 : 0;
+    return {
+      x:xPlace(H.place), demi:0.17 * H_PERSO,
+      haut:(-0.96 + bas) * H_PERSO, basY:(-0.34 + bas) * H_PERSO,
+    };
+  },
+
+  touche(tarte){
+    const b = this.boite(tarte.cible);
+    if (Heros[tarte.cible].esquive) return false;
+    return Math.abs(tarte.x - b.x) < b.demi && tarte.y > b.haut && tarte.y < b.basY;
+  },
+
+  /* Appelé quand le joueur presse ESQUIVER. */
+  tenter(){
+    if (Jeu.phase !== "jeu") return "rien";
+    if (this.verrou > 0) return "verrou";
+    const t = Tartes.tarteImminente();
+    if (!t) return "rien";
+    if (!t.fenetreOuverte){
+      /* beaucoup trop tôt : aucune action, et on se verrouille un
+         instant pour que marteler le bouton ne serve à rien */
+      this.verrou = VERROU_TROP_TOT;
+      Sons.tarteTropTot();
+      return "tot";
+    }
+    return Tartes.reussirEsquive(t) ? "ok" : "rien";
+  },
+};
+
+/* ---------- Hortense ---------- */
+const Hortense = {
+  etat:ETAT_H.CACHEE, x:0, vise:0, cote:1, chrono:0, cible:-1,
+  fausse:false, cachette:null, doubleReste:0, phase:0,
+
+  raz(){
+    this.etat = ETAT_H.CACHEE; this.x = 0; this.chrono = 0; this.cible = -1;
+    this.fausse = false; this.cachette = null; this.doubleReste = 0; this.phase = 0;
+  },
+
+  get visible(){ return this.etat !== ETAT_H.CACHEE && this.etat !== ETAT_H.REPOS; },
+
+  /* Le sprite dépend de l'état ; c'est tout ce que le rendu a besoin de savoir. */
+  get sprite(){
+    if (this.cachette) return this.cachette;
+    switch (this.etat){
+      case ETAT_H.ENTREE: return this.phase % 2 < 1 ? "h_courtA" : "h_courtB";
+      case ETAT_H.GUET: return "h_sournoise";
+      case ETAT_H.PREPARE: return "h_arme";
+      case ETAT_H.LANCE: return "h_lance";
+      case ETAT_H.RIRE: return "h_lance";
+      case ETAT_H.SORTIE: return "h_courtB";
+      default: return "h_debout";
+    }
+  },
+  /* Elle regarde toujours vers les héros. */
+  get versGauche(){ return this.cote > 0; },
+
+  /* Position monde de sa main au moment du lancer. */
+  main(){
+    const h = H_PERSO * HORTENSE_Z;
+    return { x:this.x + (this.cote > 0 ? -1 : 1) * 0.20 * h, y:-0.92 * h + HORTENSE_Y * H_PERSO };
+  },
+};
+
+/* ---------- HortenseManager -> Tartes ---------- */
+const Tartes = {
+  tartes:[], debris:[], prochaine:0, derniere:-999,
+
+  raz(){
+    this.tartes = []; this.debris = []; this.derniere = -999;
+    this.prochaine = HORTENSE_REPIT + hasard(2, 8);
+    Hortense.raz(); Esquive.raz();
+  },
+
+  dureeVol(){
+    return Math.max(VOL_PLANCHER, VOL_DEBUT * Math.pow(VOL_TAUX, Difficulte.saluts));
+  },
+
+  /* Point que la tarte cherche à atteindre : la tête et le buste. */
+  pointVise(h){ return { x:xPlace(Heros[h].place), y:-0.66 * H_PERSO }; },
+
+  tarteEnVol(){ return this.tartes.find(t => t.etat === ETAT_TARTE.VOL) || null; },
+
+  /* La plus PRESSANTE, pas la première de la liste. Avec deux tartes en
+     l'air, viser la première venue faisait répondre « trop tôt » alors
+     que l'autre arrivait dans la fenêtre — et le verrou qui suit
+     empêchait de l'esquiver. La double attaque était imperdable dans le
+     mauvais sens du terme. */
+  tarteImminente(){
+    let choix = null;
+    for (const t of this.tartes){
+      if (t.etat !== ETAT_TARTE.VOL) continue;
+      if (!choix || t.resteAvantImpact < choix.resteAvantImpact) choix = t;
+    }
+    return choix;
+  },
+
+  /* --------- apparition --------- */
+  peutApparaitre(){
+    if (Jeu.phase !== "jeu") return false;
+    if (Jeu.temps < HORTENSE_REPIT) return false;
+    if (Jeu.temps - this.derniere < HORTENSE_REPOS) return false;
+    if (Hortense.visible || this.tartes.length) return false;
+    /* jamais par-dessus une main déjà tendue qui va expirer : on ne
+       veut pas demander deux gestes dans la même demi-seconde */
+    for (const p of Jeu.demandes) if (p.chrono < 0.9) return false;
+    return true;
+  },
+
+  apparaitre(force){
+    if (!force && !this.peutApparaitre()) return null;
+    Hortense.raz();
+    Hortense.cote = Math.random() < 0.5 ? 1 : -1;   /* 1 : elle vient de la droite */
+    Hortense.etat = ETAT_H.ENTREE;
+    Hortense.fausse = !force && Math.random() < P_FAUSSE_ALERTE;
+    Hortense.cible = Math.random() < 0.5 ? 0 : 1;
+    Hortense.cachette = null;
+
+    const marge = 0.7 * H_PERSO;
+    if (Hortense.cote > 0){
+      Hortense.x = Camera.bordDroit() + marge;
+      Hortense.vise = Math.max(xSalut(1) + 0.7 * PAS, Camera.bordDroit() - 1.5 * H_PERSO);
+    } else {
+      Hortense.x = Camera.bordGauche() - marge;
+      Hortense.vise = xPlace(PLACE_T) - 1.5 * H_PERSO;
+    }
+    /* une fois de temps en temps, elle se poste derrière un meuble */
+    if (Math.random() < 0.28) Hortense.cachette = Math.random() < 0.5 ? "h_parasol" : "h_chaise";
+
+    this.derniere = Jeu.temps;
+    Effets.texte(Hortense.x, -1.5 * H_PERSO, "OH NON, HORTENSE", "#F7B32B", 0.95, 1.3);
+    Sons.hortenseEntre();
+    return Hortense;
+  },
+
+  /* --------- lancer --------- */
+  lancer(cibleForce){
+    const cible = cibleForce !== undefined ? cibleForce : Hortense.cible;
+    Hortense.cible = cible;
+    const t = new Tarte(Hortense.main(), cible, this.dureeVol());
+    this.tartes.push(t);
+    Sons.tarteLancee();
+    return t;
+  },
+
+  reussirEsquive(t){
+    if (t.etat !== ETAT_TARTE.VOL) return false;
+    t.etat = ETAT_TARTE.ESQUIVEE;
+    t.collision = false;
+    /* Les DEUX se baissent. Il n'y a qu'un bouton d'esquive ; exiger
+       deux appuis distincts quand Hortense lance deux tartes rendait la
+       double attaque impossible à passer sans le savoir d'avance. */
+    for (const h of Heros) h.esquive = { t:0, duree:0.55 };
+    Score.esquives++;
+    Score.points += 100;
+    const p = this.pointVise(t.cible);
+    Effets.texte(p.x, p.y - 34, "ESQUIVÉ !", "#8FE39B", 1.15, 1.0);
+    Effets.texte(p.x, p.y - 62, "+100", "#F7B32B", 0.85, 1.0);
+    Sons.tarteEsquive();
+    Interface.majBandeau();
+    return true;
+  },
+
+  impact(t){
+    t.etat = ETAT_TARTE.IMPACT;
+    t.chrono = 0.5;
+    t.collision = false;
+    const h = Heros[t.cible];
+    h.tarte = TARTE_DUREE;
+    h.sueur = 1.6;
+    h.esquive = null;
+    Score.recues++;
+    Score.casser();
+    Camera.secouer(1);
+    Jeu.gel = 0.10;                       /* l'arrêt sur image de l'impact */
+    this.eclabousser(t.x, t.y, 16);
+    Effets.texte(t.x, t.y - 26, "SPLAT !", "#E2453D", 1.25, 1.1);
+    Sons.tarteImpact();
+    Jeu.perdreVie();
+    Interface.majBandeau();
+  },
+
+  /* Elle finit par terre, derrière le héros. */
+  ecraser(t){
+    t.etat = ETAT_TARTE.IMPACT;
+    t.chrono = 0.45;
+    t.auSol = true;
+    this.eclabousser(t.x, Math.min(-4, t.y), 9);
+    Sons.tarteEcrasee();
+  },
+
+  eclabousser(x, y, n){
+    for (let i = 0; i < n; i++){
+      const a = hasard(-Math.PI * 0.95, -0.05), v = hasard(40, 145);
+      this.debris.push({
+        x, y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, t:0, duree:hasard(0.6, 1.15),
+        rot:hasard(0, 6.28), vrot:hasard(-7, 7),
+        img:piocher(["debris_meringue","debris_citron","debris_part"]),
+        taille:hasard(0.16, 0.30),
+      });
+    }
+  },
+
+  /* --------- boucle --------- */
+  majorer(dt){
+    Esquive.majorer(dt);
+
+    /* les héros : esquive en cours et meringue sur la figure */
+    for (const h of Heros){
+      if (h.esquive){ h.esquive.t += dt; if (h.esquive.t >= h.esquive.duree) h.esquive = null; }
+      if (h.tarte > 0) h.tarte = Math.max(0, h.tarte - dt);
+    }
+
+    for (const t of this.tartes) t.majorer(dt);
+    this.tartes = this.tartes.filter(t => t.etat !== ETAT_TARTE.FINIE);
+
+    for (const d of this.debris){
+      d.t += dt; d.x += d.vx * dt; d.y += d.vy * dt; d.vy += 340 * dt; d.rot += d.vrot * dt;
+      if (d.y > 0){ d.y = 0; d.vy *= -0.28; d.vx *= 0.55; }
+    }
+    this.debris = this.debris.filter(d => d.t < d.duree);
+
+    if (Jeu.phase !== "jeu") return;
+
+    /* apparition spontanée */
+    if (!Hortense.visible && Jeu.temps >= this.prochaine){
+      if (this.apparaitre()) this.prochaine = Jeu.temps + hasard(HORTENSE_ECART[0], HORTENSE_ECART[1]);
+      else this.prochaine = Jeu.temps + 1.2;      /* le moment est mal choisi, on repasse plus tard */
+    }
+
+    this.majorerHortense(dt);
+  },
+
+  majorerHortense(dt){
+    const H = Hortense;
+    H.phase += dt * 6;
+    const vit = VIT_MARCHE * 1.7;
+
+    switch (H.etat){
+      case ETAT_H.ENTREE: {
+        const reste = H.vise - H.x;
+        H.x += Math.sign(reste) * Math.min(Math.abs(reste), vit * dt);
+        if (Math.abs(H.vise - H.x) < 1){
+          H.etat = ETAT_H.GUET; H.chrono = DUREE_GUET;
+        }
+        break;
+      }
+      case ETAT_H.GUET:
+        H.chrono -= dt;
+        if (H.chrono <= 0){
+          if (H.fausse){ H.etat = ETAT_H.SORTIE; Effets.texte(H.x, -1.35 * H_PERSO, "…bon.", "#93A4C4", 0.85); }
+          else { H.etat = ETAT_H.PREPARE; H.chrono = DUREE_PREPARE; Sons.hortensePrepare(); }
+        }
+        break;
+      case ETAT_H.PREPARE:
+        H.chrono -= dt;
+        if (H.chrono <= 0){ H.etat = ETAT_H.LANCE; H.chrono = DUREE_LANCE; this.lancer(); }
+        break;
+      case ETAT_H.LANCE:
+        H.chrono -= dt;
+        if (H.chrono <= 0){ H.etat = ETAT_H.RIRE; H.chrono = DUREE_RIRE; Sons.hortenseRit(); }
+        break;
+      case ETAT_H.RIRE:
+        H.chrono -= dt;
+        if (H.chrono <= 0){
+          /* la double attaque : rare, tard dans la partie, et toujours
+             annoncée par le même temps de préparation */
+          if (H.doubleReste === 0 && Jeu.temps > DOUBLE_APRES && Math.random() < P_DOUBLE_TARTE){
+            H.doubleReste = 1;
+            H.cible = 1 - H.cible;
+            H.etat = ETAT_H.PREPARE; H.chrono = DUREE_PREPARE * 1.15;
+            Effets.texte(H.x, -1.42 * H_PERSO, "ENCORE UNE !", "#F7B32B", 1.0, 1.1);
+            Sons.hortensePrepare();
+          } else {
+            H.doubleReste = 0;
+            H.etat = ETAT_H.SORTIE;
+          }
+        }
+        break;
+      case ETAT_H.SORTIE: {
+        const sortie = H.cote > 0 ? Camera.bordDroit() + H_PERSO : Camera.bordGauche() - H_PERSO;
+        H.x += Math.sign(sortie - H.x) * vit * 1.25 * dt;
+        H.cachette = null;
+        if (Math.abs(sortie - H.x) < 6){ H.etat = ETAT_H.CACHEE; }
+        break;
+      }
+    }
+  },
+};
+
+/* ================= rendu d'Hortense et de la tarte ================= */
+
+function dessinerHortense(voile){
+  if (!Hortense.visible) return;
+  const hauteur = H_PERSO * Camera.ech * HORTENSE_Z;
+  const yBase = Camera.sol + HORTENSE_Y * H_PERSO * Camera.ech;
+  const H = Hortense;
+
+  /* Elle avance en trottinant : un balancement plus marqué que celui
+     des gens de la file, elle n'est pas là pour attendre. */
+  const court = H.etat === ETAT_H.ENTREE || H.etat === ETAT_H.SORTIE;
+  const bob = court ? Math.abs(Math.sin(H.phase)) * hauteur * 0.035
+                    : Math.sin(H.phase * 0.5) * hauteur * 0.006;
+  let incline = 0;
+  if (H.etat === ETAT_H.PREPARE) incline = 0.06 * (H.cote > 0 ? 1 : -1) * Math.sin(H.chrono * 9);
+  if (H.etat === ETAT_H.LANCE) incline = -0.10 * (H.cote > 0 ? 1 : -1);
+
+  ombreAuSol(H.x, yBase, hauteur, voile.ombre / 0.16);
+  dessinerPerso(H.sprite, H.x, yBase - bob, hauteur, H.versGauche, incline, 1);
+
+  /* Pendant qu'elle vise, un fil discret relie son regard au héros
+     ciblé : on doit pouvoir deviner qui va prendre, sans qu'un panneau
+     l'écrive. */
+  if (H.etat === ETAT_H.PREPARE && H.cible >= 0){
+    const dep = Camera.ecran(H.x), arr = Camera.ecran(xPlace(Heros[H.cible].place));
+    const y = yBase - hauteur * 0.80;
+    const yc = Camera.sol - H_PERSO * Camera.ech * 0.80;
+    ctx.save();
+    ctx.globalAlpha = 0.14 + 0.10 * Math.sin(Jeu.temps * 12);
+    ctx.strokeStyle = Heros[H.cible].couleur;
+    ctx.lineWidth = Math.max(1.5, hauteur * 0.014);
+    ctx.setLineDash([hauteur * 0.05, hauteur * 0.055]);
+    ctx.beginPath(); ctx.moveTo(dep, y); ctx.lineTo(arr, yc); ctx.stroke();
+    ctx.restore();
+    ctx.setLineDash([]);
+  }
+}
+
+function dessinerTartes(){
+  const ech = Camera.ech;
+
+  for (const t of Tartes.tartes){
+    const px = Camera.ecran(t.x), py = Camera.sol + t.y * ech;
+
+    if (t.etat === ETAT_TARTE.IMPACT){
+      const img = Images.table[t.auSol ? "tarte_ecrasee" : "tarte_boom"];
+      if (img && img.naturalWidth){
+        const av = 1 - borne(t.chrono / 0.5, 0, 1);
+        const l = H_PERSO * ech * (t.auSol ? 0.85 : 1.5) * (0.7 + av * 0.5);
+        const hh = l * img.naturalHeight / img.naturalWidth;
+        ctx.save();
+        ctx.globalAlpha = borne(1.25 - av, 0, 1);
+        ctx.drawImage(img, px - l / 2, py - hh * (t.auSol ? 0.72 : 0.5), l, hh);
+        ctx.restore();
+      }
+      continue;
+    }
+
+    /* Quatre orientations de la planche, enchaînées : ça suffit à faire
+       tourner la tarte sans la déformer par une rotation lissée. */
+    const n = ((Math.floor(t.rotation / (Math.PI / 2)) % 4) + 4) % 4;
+    const img = Images.table["tarte" + n];
+    if (!img || !img.naturalWidth) continue;
+    const l = H_PERSO * ech * 0.62, hh = l * img.naturalHeight / img.naturalWidth;
+
+    /* une traîne courte, pour qu'on la suive des yeux */
+    ctx.save();
+    for (let k = 3; k >= 1; k--){
+      const p = t.position(Math.max(0, t.avancement - k * 0.045));
+      ctx.globalAlpha = 0.10 * (4 - k);
+      ctx.drawImage(img, Camera.ecran(p.x) - l / 2, Camera.sol + p.y * ech - hh / 2, l, hh);
+    }
+    ctx.globalAlpha = 1;
+    ctx.drawImage(img, px - l / 2, py - hh / 2, l, hh);
+    ctx.restore();
+  }
+
+  for (const d of Tartes.debris){
+    const img = Images.table[d.img];
+    if (!img || !img.naturalWidth) continue;
+    const l = H_PERSO * ech * d.taille, hh = l * img.naturalHeight / img.naturalWidth;
+    ctx.save();
+    ctx.globalAlpha = borne(1 - Math.pow(d.t / d.duree, 2.5), 0, 1);
+    ctx.translate(Camera.ecran(d.x), Camera.sol + d.y * ech);
+    ctx.rotate(d.rot);
+    ctx.drawImage(img, -l / 2, -hh / 2, l, hh);
+    ctx.restore();
+  }
+
+  if (Debug.ouvert) dessinerDebugTarte();
+}
+
+/* Tracé de contrôle : boîte de collision, trajectoire, fenêtre d'esquive. */
+function dessinerDebugTarte(){
+  ctx.save();
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i < Heros.length; i++){
+    const b = Esquive.boite(i);
+    ctx.strokeStyle = Heros[i].esquive ? "#8FE39B" : "#E2453D";
+    const x0 = Camera.ecran(b.x - b.demi), x1 = Camera.ecran(b.x + b.demi);
+    const y0 = Camera.sol + b.haut * Camera.ech, y1 = Camera.sol + b.basY * Camera.ech;
+    ctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+  }
+  for (const t of Tartes.tartes){
+    if (t.etat === ETAT_TARTE.IMPACT) continue;
+    ctx.strokeStyle = t.fenetreOuverte ? "#F7B32B" : "rgba(255,255,255,.45)";
+    ctx.beginPath();
+    for (let k = 0; k <= 24; k++){
+      const p = t.position(k / 24);
+      const px = Camera.ecran(p.x), py = Camera.sol + p.y * Camera.ech;
+      k ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 /* ================= UIManager -> Interface ================= */
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
                     "vFile","vies","pupitre","cmdT","cmdP","visageT","visageP","fin","fScore","fCombo",
-                    "fSaluts","fFile","fRecord","btnRejouer","pivot","pivotOk","outilsBtn","debug",
-                    "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version"]){
+                    "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
+                    "cmdE","outilsBtn","debug",
+                    "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte"]){
     E[id] = document.getElementById(id);
   }
 }
+
+/* Le jeu se joue en paysage, plein écran. Ce n'est pas une préférence :
+   la file s'étire horizontalement, en portrait on n'en voit que trois
+   personnes et le geste par-dessus Pierre-François ne rentre pas dans
+   le cadre. On demande donc le plein écran au premier geste du joueur —
+   c'est le seul moment où le navigateur l'accorde — et on verrouille
+   l'orientation quand l'appareil le permet. Quand il ne le permet pas
+   (Safari sur iPhone n'expose ni l'un ni l'autre), on bloque l'écran
+   tant que le téléphone est debout. */
+function paysageOk(L, H){ return L >= H * 1.02; }
+
+const Ecran = {
+  estPlein(){
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  },
+  demander(){
+    const e = document.documentElement;
+    const f = e.requestFullscreen || e.webkitRequestFullscreen || e.msRequestFullscreen;
+    if (f){
+      try{
+        const p = f.call(e, { navigationUI:"hide" });
+        if (p && p.catch) p.catch(() => {});
+      }catch(err){ /* refusé : on continue sans */ }
+    }
+    this.verrouiller();
+  },
+  verrouiller(){
+    const o = globalThis.screen && globalThis.screen.orientation;
+    if (o && o.lock){
+      try{
+        const p = o.lock("landscape");
+        if (p && p.catch) p.catch(() => {});
+      }catch(err){ /* iOS ne sait pas faire : le blocage portrait prend le relais */ }
+    }
+  },
+  sortir(){
+    const f = document.exitFullscreen || document.webkitExitFullscreen;
+    if (f){ try{ const p = f.call(document); if (p && p.catch) p.catch(() => {}); }catch(err){} }
+  },
+  basculer(){ this.estPlein() ? this.sortir() : this.demander(); },
+};
 
 const Interface = {
   finAffichee:false, dernierCombo:0,
@@ -1785,6 +2516,7 @@ const Interface = {
     if (E.hud) E.hud.classList.remove("on");
     if (E.pupitre) E.pupitre.classList.remove("on");
     if (E.outilsBtn) E.outilsBtn.classList.remove("on");
+    if (E.pleinBtn) E.pleinBtn.classList.remove("on");
   },
   entrerJeu(){
     this.finAffichee = false;
@@ -1793,13 +2525,14 @@ const Interface = {
     if (E.hud) E.hud.classList.add("on");
     if (E.pupitre) E.pupitre.classList.add("on");
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
+    if (E.pleinBtn) E.pleinBtn.classList.add("on");
     this.majVies(); this.majBandeau();
   },
   sortirJeu(){ if (E.pupitre) E.pupitre.classList.remove("on"); },
 
   majBandeau(){
     if (E.vScore) E.vScore.textContent = chiffres(Score.points);
-    if (E.vCombo) E.vCombo.textContent = "x" + Score.multiplicateur();
+    if (E.vCombo) E.vCombo.textContent = "\u00D7" + Score.multiplicateur();
     if (E.vFile) E.vFile.textContent = chiffres(File.installees());
     if (E.cCombo && Score.combo > this.dernierCombo && Score.combo > 1){
       E.cCombo.classList.remove("chaud");
@@ -1814,7 +2547,7 @@ const Interface = {
     for (let i = 0; i < b.length; i++) b[i].classList.toggle("perdue", i >= Jeu.vies);
   },
   flashCommande(h){
-    const b = h === 0 ? E.cmdT : E.cmdP;
+    const b = h === 0 ? E.cmdT : (h === 1 ? E.cmdP : E.cmdE);
     if (!b) return;
     b.classList.add("pressee");
     setTimeout(() => b.classList.remove("pressee"), 90);
@@ -1825,18 +2558,32 @@ const Interface = {
                                 saluts:Score.saluts, file:Score.fileMax });
     const r = lireRecords();
     if (E.fScore) E.fScore.textContent = chiffres(Score.points);
-    if (E.fCombo) E.fCombo.textContent = "x" + Score.meilleurCombo;
+    if (E.fCombo) E.fCombo.textContent = "\u00D7" + Score.meilleurCombo;
     if (E.fSaluts) E.fSaluts.textContent = chiffres(Score.saluts);
     if (E.fFile) E.fFile.textContent = chiffres(Score.fileMax);
+    if (E.fEsquives) E.fEsquives.textContent = chiffres(Score.esquives);
+    if (E.fRecues) E.fRecues.textContent = chiffres(Score.recues);
     if (E.fRecord) E.fRecord.textContent = neuf ? "NOUVEAU RECORD" : ("RECORD " + chiffres(r.score || 0));
     if (E.fin) E.fin.classList.add("on");
     if (E.btnRejouer) E.btnRejouer.focus({ preventScroll:true });
   },
+  /* Bloque tant qu'on n'est pas en paysage, et met le jeu en pause :
+     laisser tourner derrière ferait perdre des vies sans que personne
+     ne voie rien. */
   pensePivot(){
-    if (!E.pivot) return;
-    const portrait = globalThis.innerHeight > globalThis.innerWidth * 1.15;
-    const petit = Math.min(globalThis.innerWidth, globalThis.innerHeight) < 520;
-    E.pivot.style.display = (portrait && petit && !this.pivotVu) ? "flex" : "none";
+    const L = globalThis.innerWidth || 1, H = globalThis.innerHeight || 1;
+    const bloque = !paysageOk(L, H);
+    if (E.pivot) E.pivot.classList.toggle("on", bloque);
+    if (bloque && E.pivotTitre && E.pivotTexte){
+      const doigt = globalThis.matchMedia && globalThis.matchMedia("(pointer:coarse)").matches;
+      E.pivotTitre.textContent = doigt ? "Tourne ton téléphone" : "Élargis la fenêtre";
+      E.pivotTexte.textContent = doigt
+        ? "La file du D'Tour se joue en paysage : il faut voir la file entière."
+        : "La file du D'Tour se joue dans une fenêtre plus large que haute.";
+    }
+    if (bloque) Boucle.pause = true;
+    else if (Boucle.pause) Boucle.reprendre();
+    return bloque;
   },
 };
 
@@ -1853,14 +2600,31 @@ const Entrees = {
       Jeu.saluer(h);
     };
 
+    /* La troisième commande. Elle ne salue personne : elle fait plonger
+       le héros que vise Hortense. */
+    const esquiver = ev => {
+      if (ev){ ev.preventDefault(); ev.stopPropagation(); }
+      Sons.reveiller();
+      if (Jeu.phase === "titre"){ Jeu.demarrer(); return; }
+      Interface.flashCommande(2);
+      Esquive.tenter();
+    };
+    Entrees.esquiver = esquiver;
+
     if (E.cmdT) E.cmdT.addEventListener("pointerdown", e => presser(0, e));
     if (E.cmdP) E.cmdP.addEventListener("pointerdown", e => presser(1, e));
-    for (const b of [E.cmdT, E.cmdP]) if (b) b.addEventListener("click", e => e.preventDefault());
+    if (E.cmdE) E.cmdE.addEventListener("pointerdown", e => esquiver(e));
+    for (const b of [E.cmdT, E.cmdP, E.cmdE]) if (b) b.addEventListener("click", e => e.preventDefault());
 
-    /* moitié gauche / moitié droite de l'écran */
+    /* Trois zones sur le canevas, dans l'ordre où les personnages sont
+       à l'écran : Thibaut à gauche, l'esquive au milieu sous le pouce,
+       Pierre-François à droite. Le pouce n'a jamais à traverser. */
     if (E.cv) E.cv.addEventListener("pointerdown", e => {
       if (Jeu.phase !== "jeu") return;
-      presser(e.clientX < globalThis.innerWidth / 2 ? 0 : 1, e);
+      const f = e.clientX / Math.max(1, globalThis.innerWidth);
+      if (f < 0.36) presser(0, e);
+      else if (f > 0.64) presser(1, e);
+      else esquiver(e);
     });
 
     globalThis.addEventListener("keydown", e => {
@@ -1868,19 +2632,40 @@ const Entrees = {
       const t = e.key.toLowerCase();
       if (t === "a" || t === "q" || t === "arrowleft"){ presser(0, e); return; }
       if (t === "l" || t === "p" || t === "m" || t === "arrowright"){ presser(1, e); return; }
-      if (t === " " || t === "enter"){
+      /* ESPACE esquive pendant la partie ; il ne relance que hors jeu,
+         sinon on relancerait la partie en cherchant à sauver sa peau. */
+      if (t === " "){
         e.preventDefault();
-        if (Jeu.phase === "titre") Jeu.demarrer();
-        else if (Jeu.phase === "fin" && Interface.finAffichee) Jeu.demarrer();
+        if (Jeu.phase === "jeu") esquiver(e);
+        else if (Jeu.phase === "titre" || (Jeu.phase === "fin" && Interface.finAffichee)) Jeu.demarrer();
+        return;
+      }
+      if (t === "enter"){
+        e.preventDefault();
+        if (Jeu.phase === "titre" || (Jeu.phase === "fin" && Interface.finAffichee)) Jeu.demarrer();
         return;
       }
       if (t === "s"){ Sons.reveiller(); Sons.basculer(); return; }
+      if (t === "o"){ Debug.basculer(); return; }
+      if (Debug.autorise && Debug.ouvert){
+        if (t === "h"){ Debug.agir("hortense"); return; }
+        if (t === "t"){ Debug.agir("tarte"); return; }
+        if (t === "1"){ Debug.agir("cibleP"); return; }
+        if (t === "2"){ Debug.agir("cibleT"); return; }
+        if (t === "d"){ Debug.agir("simEsquive"); return; }
+        if (t === "i"){ Debug.agir("simImpact"); return; }
+      }
       if (t === "d"){ Debug.basculer(); return; }
+      if (t === "f"){ e.preventDefault(); Ecran.basculer(); return; }
     }, { passive:false });
 
-    if (E.btnJouer) E.btnJouer.addEventListener("click", () => { Sons.reveiller(); Sons.clic(); Jeu.demarrer(); });
+    /* Le plein écran ne s'obtient que dans un vrai geste utilisateur :
+       c'est ici, et nulle part ailleurs, qu'il faut le demander. */
+    if (E.btnJouer) E.btnJouer.addEventListener("click", () => {
+      Sons.reveiller(); Sons.clic(); Ecran.demander(); Jeu.demarrer();
+    });
     if (E.btnRejouer) E.btnRejouer.addEventListener("click", () => { Sons.clic(); Jeu.demarrer(); });
-    if (E.pivotOk) E.pivotOk.addEventListener("click", () => { Interface.pivotVu = true; Interface.pensePivot(); });
+    if (E.pleinBtn) E.pleinBtn.addEventListener("click", () => { Sons.clic(); Ecran.basculer(); });
     if (E.outilsBtn) E.outilsBtn.addEventListener("click", () => Debug.basculer());
 
     globalThis.addEventListener("resize", () => { ajusterCanevas(); Interface.pensePivot(); });
@@ -1948,6 +2733,24 @@ const Debug = {
         Score.saluts = Math.max(Score.saluts, MOMENTS[i].seuil);
         break;
       }
+      case "hortense": Tartes.apparaitre(true); break;
+      case "tarte": {
+        if (!Hortense.visible) Tartes.apparaitre(true);
+        Hortense.etat = ETAT_H.PREPARE; Hortense.chrono = 0.05;
+        if (this.cible != null) Hortense.cible = this.cible;
+        break;
+      }
+      case "simEsquive": {
+        const t = Tartes.tarteEnVol();
+        if (t) Tartes.reussirEsquive(t);
+        break;
+      }
+      case "simImpact": {
+        const t = Tartes.tarteEnVol();
+        if (t) Tartes.impact(t);
+        else { Tartes.apparaitre(true); Hortense.etat = ETAT_H.PREPARE; Hortense.chrono = 0.05; }
+        break;
+      }
       case "invincible":
         Jeu.invincible = !Jeu.invincible;
         bouton.classList.toggle("actif", Jeu.invincible);
@@ -1970,7 +2773,17 @@ const Debug = {
       "file     " + File.installees() + " / " + File.places.length + "\n" +
       "zoom     " + Camera.z.toFixed(2) + "  base " + Math.round(Camera.base) + "\n" +
       "pnj      " + Foule.tous.length + "\n" +
-      "moment   " + MOMENTS[Jeu.moment].nom + " (" + Jeu.fondu.toFixed(2) + ")";
+      "moment   " + MOMENTS[Jeu.moment].nom + " (" + Jeu.fondu.toFixed(2) + ")\n" +
+      "hortense " + Hortense.etat + (Hortense.fausse ? " (fausse)" : "") + "\n" +
+      "  cible  " + (Hortense.cible === 0 ? "THIBAUT" : Hortense.cible === 1 ? "PIERRE-F." : "-") + "\n" +
+      "  vol    " + Tartes.dureeVol().toFixed(2) + " s\n" +
+      (() => {
+        const t = Tartes.tarteEnVol();
+        if (!t) return "  tarte  -\n";
+        return "  tarte  " + (t.avancement * 100).toFixed(0) + " %  reste " +
+               t.resteAvantImpact.toFixed(2) + " s" + (t.fenetreOuverte ? "  [ESQUIVE]" : "") + "\n";
+      })() +
+      "esquives " + Score.esquives + "  reçues " + Score.recues;
   },
 };
 
@@ -2036,7 +2849,9 @@ globalThis.DTOUR = {
   REACT_DEBUT, REACT_PLANCHER, VIES,
   xPlace, borne, melange, chiffres, doux,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj,
-  mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT,
+  mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface,
+  Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
+  FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, TARTE_DUREE,
   __dessiner:() => dessiner(),
   __ajuster:() => ajusterCanevas(),
 };

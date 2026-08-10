@@ -14,6 +14,21 @@ les fichiers de `img/` portent les bons noms.
 
 > Ils ne les connaissaient même pas.
 
+## Format
+
+Le jeu est **verrouillé en paysage** et demande le **plein écran** au
+premier appui sur JOUER — c'est le seul moment où un navigateur
+l'accorde. Quand l'appareil expose l'API d'orientation, elle est
+verrouillée ; quand il ne l'expose pas (Safari sur iPhone), un écran
+bloquant prend le relais tant que le téléphone est debout, et la partie
+est mise en pause derrière.
+
+Ce n'est pas une préférence : la file s'étire horizontalement. En
+portrait on n'en voit que trois personnes, et le bras tendu par-dessus
+Pierre-François ne rentre pas dans le cadre.
+
+`F` bascule le plein écran, le bouton ⛶ aussi.
+
 ## Commandes
 
 | | Thibaut | PF |
@@ -201,6 +216,9 @@ séparés par détection des creux d'occupation, vérifiée à l'œil.
 
 - Pas de tableau des scores partagé : le record est local à l'appareil.
 - Pas de manifeste PWA propre au jeu.
-- Le portrait est jouable mais à l'étroit ; un pense-bête suggère le
-  paysage, et se referme si on insiste.
+- Le portrait est refusé, pas dégradé : mieux vaut un écran clair qu'un
+  jeu injouable.
+- Sur iPhone, Safari n'expose ni `requestFullscreen` ni le verrouillage
+  d'orientation. Ajouter le jeu à l'écran d'accueil donne le plein écran
+  réel ; sinon la barre du navigateur reste.
 - La musique n'a pas de réglage de volume séparé : `S` coupe tout.
