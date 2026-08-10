@@ -411,6 +411,16 @@ verifier("liseré fin plutôt que disque d'accrétion",
   !/createLinearGradient\(-Rd, 0, Rd, 0\)/.test(script) &&
   /anneau d'Einstein, mince/.test(script),
   "la référence ne montre aucun disque flamboyant");
+{
+  /* le décor doit être ASPIRÉ, pas grossi : facteur inférieur à 1 */
+  const m = script.match(/const echelle = 1 - ([\d.]+) \* u \* u/);
+  verifier("le décor est aspiré vers le trou, pas grossi", !!m,
+    m ? "facteur " + (1 - Number(m[1])).toFixed(2) + " au cœur" : "grossissement encore actif");
+}
+verifier("creusement progressif au-delà de la sphère",
+  /const creux = ctx\.createRadialGradient\(x, y, R \* 0\.8, x, y, PUITS_R_VISU\)/.test(script),
+  "sinon le trou ressemble à une pastille posée sur le décor");
+verifier("lèvre de l'entonnoir", /lèvre de l'entonnoir/.test(script));
 verifier("aucun tracé décoratif ajouté dans la sphère",
   !/arcs internes/.test(script),
   "ils accentuaient l'aspect de rouage mécanique");
@@ -451,8 +461,8 @@ verifier("aucune donnée réseau supplémentaire",
   };
   const g = tir(140), d = tir(400);
   const amplitude = (g !== null && d !== null) ? Math.abs(d - g) : 0;
-  verifier("le puits déplace l'arrivée d'une à deux raquettes",
-    amplitude > 120 && amplitude < 260,
+  verifier("le puits déplace l'arrivée de deux raquettes environ",
+    amplitude > 160 && amplitude < 280,
     Math.round(amplitude) + " px, soit " + (amplitude/104).toFixed(2) + " largeur de raquette");
   /* la balle ne doit jamais rester prisonnière du puits */
   let perdues = 0;
