@@ -318,3 +318,4 @@ entre proches.
 | 14.6 | Clips vocaux lus par l'AudioContext, micro relâché entre deux points |
 | 14.7 | Écho du micro en solo : la chaîne de lecture se valide sans second appareil |
 | 14.8 | Voix de l'IA : elle dit la vanne, moqueuse en gagnant, rageuse en perdant |
+| 14.9 | L'IA parle aussi en fin de manche, musique écartée le temps de la phrase |
