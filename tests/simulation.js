@@ -71,7 +71,9 @@ function element(id){
     },
     addEventListener(t, f){ (this.ecouteurs[t] = this.ecouteurs[t] || []).push(f); },
     removeEventListener(){},
-    appendChild(c){ this.children.push(c); return c; },
+    appendChild(c){ this.children.push(c); c.parentNode = this; return c; },
+    parentNode: null,
+    removeChild(c){ const i = this.children.indexOf(c); if (i >= 0) this.children.splice(i, 1); return c; },
     querySelector(){ return element("q"); },
     querySelectorAll(){ return []; },
     getBoundingClientRect(){ return { left: 0, top: 0, width: 540, height: 720 }; },
@@ -189,6 +191,21 @@ function avancer(ms){
     if (++gardeFou > 200000) throw new Error("boucle de tâches emballée");
   }
 }
+
+console.log("\n1bis. Écran de lancement");
+try {
+  const intro = obtenir("intro");
+  verifier("la version s'affiche à l'écran de lancement",
+    obtenir("introVersion").textContent === "v" + jeu.VERSION,
+    obtenir("introVersion").textContent);
+  verifier("l'écran est visible au départ", !intro.classList.contains("parti"));
+  /* la voie normale passe par une promesse, que ce harnais synchrone ne peut
+     pas laisser se résoudre ; on éprouve donc le garde-fou, qui est justement
+     ce qui doit être infaillible : l écran ne doit jamais rester bloqué. */
+  avancer(3200);
+  verifier("l écran ne peut jamais rester bloqué", intro.classList.contains("parti"),
+    "délai de secours déclenché");
+} catch (e){ verifier("écran de lancement", false, e.message); }
 
 console.log("\n2. Lancement d'un match solo");
 try {
