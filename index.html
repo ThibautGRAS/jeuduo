@@ -539,7 +539,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v14.1 · 2026-08-09</div>
+  <div id="version">DUO v14.2 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -564,7 +564,7 @@ canvas{
           <span class="regle" data-modes="tous"><b class="c">MODES</b> — <b>Arcade</b> : orbes, blocs, vices et matières d'arène. <b>Classique</b> : duel pur, sans aucun de ces éléments — mais vous gardez le décor et la musique de l'arène de votre choix.<br></span>
           <span class="regle" data-modes="gravite"><b class="v">GRAVITÉ</b> — Chacun projette un puits d'attraction dans la moitié adverse, à l'aplomb de sa propre raquette. Bouger sert donc à défendre <i>et</i> à dévier la balle de l'autre : à vous de choisir ce qui prime.<br>
         <b class="v">TROU DE VER</b> — Une balle qui frôle vraiment le cœur d'un puits, ou qui s'y attarde longuement, est <b>avalée</b> : elle ressort par l'autre puits, plus rapide et en gardant sa direction. Comme votre puits est chez l'adversaire, la balle avalée revient dans <i>votre</i> camp — à manier avec prudence.<br>
-        <b class="o">ORBITES</b> — Les rochers arrachés aux murs sont capturés par les puits et se mettent à tourner autour. Tant que vous bougez peu, ils tournent indéfiniment ; agitez votre raquette et certains ne suivront plus la rotation : ils tomberont au centre et seront pulvérisés.<br></span>
+        <b class="o">ORBITES</b> — Quelques rochers gravitent autour des puits dès le début de la manche, rejoints par ceux que vos smashs arrachent aux murs. Ils sont <b>emportés avec le trou</b> quand vous vous déplacez : il faut vraiment balayer le terrain d'un geste vif pour qu'ils décrochent et tombent au centre.<br></span>
           <span class="regle" data-modes="relais"><b class="o">RELAIS</b> — Le mode coopératif : personne ne marque, vous gardez une seule balle en vie à deux. Elle accélère à chaque renvoi et franchit un palier tous les dix échanges. Le record est commun.<br></span>
           <span class="regle" data-modes="arcade classique gravite"><b class="c">MANCHES</b> — 5 points gagnent une manche ; le nombre de manches gagnantes se règle au menu. À 4-4 : <b class="f">MORT SUBITE</b>, le terrain rétrécit et les orbes disparaissent.<br></span>
           <span class="regle" data-modes="tous"><b class="c">LIFT</b> — Fouettez la raquette à l'impact : la balle part courbée, bien plus rapide, et si le geste est franc elle <b>décolle et survole les blocs</b> (halo doré, ombre qui s'écarte).<br></span>
@@ -680,7 +680,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "14.1";
+const VERSION = "14.2";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -755,6 +755,32 @@ const ORBITE_AMORTI = 0.10;        /* freine les plongées radiales */
    quarantaine de pixels. Une poussée vers l'extérieur en deçà de ce rayon les
    stabilise à bonne distance, où on les voit tourner. */
 const ORBITE_MIN = 75, ORBITE_POUSSEE = 1.2;
+/* Entraînement : le rocher est emporté avec le trou qui se déplace, d'autant
+   plus qu'il en est proche. Il garde donc son orbite tant que le mouvement
+   reste raisonnable ; il ne décroche qu'au-delà de seize pixels par image,
+   soit un balayage du terrain en un tiers de seconde. Mesuré par simulation. */
+const ORBITE_ENTRAINEMENT = 0.9;
+const puitsPrec = [LARG/2, LARG/2];
+/* Le mode gravité sème quelques rochers dès le début : sans eux, les puits
+   n'auraient rien à faire tourner tant qu'aucun mur n'a été fissuré. */
+const DEBRIS_DEPART = 7;
+function semerDebris(){
+  if (!cfgMode().puits) return;
+  const p = puitsActifs();
+  for (let i = 0; i < DEBRIS_DEPART; i++){
+    const cible = p[i % Math.max(1, p.length)];
+    const a = Math.random() * Math.PI * 2;
+    const r = ORBITE_MIN + 20 + Math.random() * 70;
+    debris.push({
+      x: Math.max(murG_() + 20, Math.min(murD_() - 20, (cible ? cible.x : LARG/2) + Math.cos(a)*r)),
+      y: Math.max(HAUT*0.20, Math.min(HAUT*0.80, (cible ? cible.y : HAUT/2) + Math.sin(a)*r)),
+      vx: -Math.sin(a) * 1.5, vy: Math.cos(a) * 1.5,     /* déjà lancés sur leur orbite */
+      r: DEBRIS_R_MIN + Math.random()*(DEBRIS_R_MAX - DEBRIS_R_MIN),
+      rot: Math.random()*6.28, vr: (Math.random()-0.5)*0.1,
+      naissance: 0, ne: true, ecorne: 0, tImpact: -1e9,
+    });
+  }
+}
 const cvLentille = document.createElement("canvas");
 cvLentille.width = PUITS_R_VISU * 2; cvLentille.height = PUITS_R_VISU * 2;
 const ctxLentille = cvLentille.getContext("2d");
@@ -2948,7 +2974,9 @@ function physique(){
     /* Les rochers sont bien plus sensibles que la balle : ils sont légers,
        et finissent immanquablement dans le trou. */
     let avale = false;
-    for (const p of puitsActifs()){
+    const listeP = puitsActifs();
+    for (let ip = 0; ip < listeP.length; ip++){
+      const p = listeP[ip];
       const dx = p.x - d.x, dy = p.y - d.y, d2 = dx*dx + dy*dy;
       if (d2 < DEBRIS_GOULOT * DEBRIS_GOULOT){ avale = true; break; }
       if (d2 > 25 && d2 < PUITS_PORTEE * PUITS_PORTEE){
@@ -2958,6 +2986,8 @@ function physique(){
         const u = 1 - dd / PUITS_PORTEE;
         const f = PUITS_FORCE * DEBRIS_ATTIRANCE * u * u;
         d.vx += rx * f; d.vy += ry * f;
+        /* emporté avec le trou : c'est ce qui lui permet de suivre */
+        d.x += (p.x - puitsPrec[ip]) * ORBITE_ENTRAINEMENT * Math.sqrt(u);
         if (dd < ORBITE_MIN){
           const g = ORBITE_POUSSEE * (1 - dd / ORBITE_MIN);
           d.vx -= rx * g; d.vy -= ry * g;
@@ -2981,6 +3011,11 @@ function physique(){
     if (d.x > murD_() - d.r){ d.x = murD_() - d.r; d.vx = -Math.abs(d.vx); }
     if (d.y < HAUT*0.18 + d.r){ d.y = HAUT*0.18 + d.r; d.vy = Math.abs(d.vy); }
     if (d.y > HAUT*0.82 - d.r){ d.y = HAUT*0.82 - d.r; d.vy = -Math.abs(d.vy); }
+  }
+
+  {
+    const lp = puitsActifs();
+    for (let i = 0; i < lp.length; i++) puitsPrec[i] = lp[i].x;
   }
 
   const aMarquer = [];
@@ -3419,6 +3454,7 @@ function demarrerMatch(){
   construireObstacles();
   precharger();
   debris = []; fissures = [[], []];
+  semerDebris();
   phase = "vs";
   masquerPanneaux();
   afficherVersus();
@@ -3462,6 +3498,7 @@ function mancheSuivante(){
   construireObstacles();
   precharger();
   debris = []; fissures = [[], []];
+  semerDebris();          /* après la remise à zéro, sinon on efface la semence */
   effets.finBas = effets.finHaut = effets.finFantome = effets.finBouleFeu = 0;
   majScore(false);
   masquerPanneaux();
