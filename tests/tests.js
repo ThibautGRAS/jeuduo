@@ -571,6 +571,33 @@ verifier("temps de repos entre deux traversées", /PUITS_REPOS/.test(script));
   verifier("la vitesse de sortie reste plafonnée", true, "bornée à " + V);
 }
 
+/* ======================= 8quaterdecies. LISIBILITÉ ET PALMARÈS ======================= */
+titre("8quaterdecies. Records lisibles, carte adaptée, palmarès");
+verifier("libellés explicites", /const LIBELLES = \{/.test(script) &&
+  /PLUS LONG ÉCHANGE/.test(script) && /renvois d'affilée/.test(script),
+  "« ÉCHANGE 12 » ne disait pas ce qu'il mesurait");
+verifier("tableau de fin explicite", /RENVOIS D'AFFILÉE/.test(script) && /RETARD COMBLÉ/.test(script));
+verifier("carte adaptée au coopératif",
+  /if \(cfgMode\(\)\.coop\)\{[\s\S]{0,300}ÉCHANGES TENUS À DEUX/.test(script),
+  "elle affichait un 0 — 0 dénué de sens");
+verifier("esperluette sur la carte en coopératif",
+  /cfgMode\(\)\.coop \? "&" : "VS"/.test(script));
+verifier("palmarès sans serveur", /function lirePalmares\(/.test(script) &&
+  !/fetch\([^)]*palmar/i.test(script));
+verifier("propagation de proche en proche",
+  /function absorberPalmares\(/.test(script) && /p: lirePalmares\(\)/.test(script),
+  "les records voyagent avec les joueurs");
+verifier("on ne garde que le meilleur",
+  /Math\.max\(a\[cle\] \|\| 0, records\[cle\] \|\| 0\)/.test(script));
+verifier("taille du palmarès bornée", /PALMARES_MAX/.test(script) && nombre("PALMARES_MAX") <= 40,
+  nombre("PALMARES_MAX") + " joueurs au maximum");
+{
+  const iDecl = script.indexOf("const PALMARES_MAX");
+  const iInit = script.indexOf("(function afficherRecords(){");
+  verifier("initialisation après les déclarations", iDecl < iInit,
+    "troisième occurrence du piège de zone morte temporelle");
+}
+
 /* ======================= 9. RÉFÉRENCES ======================= */
 titre("9. Toute fonction appelée est définie");
 {
