@@ -539,7 +539,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v14.8 · 2026-08-09</div>
+  <div id="version">DUO v14.9 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -679,7 +679,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "14.8";
+const VERSION = "14.9";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -1428,15 +1428,20 @@ function parlerIA(texte, humeur, essai){
   if (!voixPretes) chargerVoix();
   const h = HUMEURS[humeur] || HUMEURS.moqueur;
   try{
+    attenuerMusique(false);   /* cancel() ne déclenche pas onend partout */
     S.cancel();
     const u = new SpeechSynthesisUtterance(texte);
     if (voixFR) u.voice = voixFR;
     u.lang = "fr-FR";
     u.rate = h.rate;
     u.pitch = h.pitch;
-    u.volume = Math.min(1, volume * 2.6);
+    /* plancher à 0,6 : la vanne doit rester intelligible même curseur bas */
+    u.volume = Math.min(1, Math.max(0.6, volume * 3));
+    u.onstart = () => attenuerMusique(true);
+    u.onend = () => attenuerMusique(false);
+    u.onerror = () => attenuerMusique(false);
     S.speak(u);
-  } catch(e){}
+  } catch(e){ attenuerMusique(false); }
 }
 let volume = 0.32;
 (function initVolume(){
@@ -1623,6 +1628,15 @@ function couperMusiqueBref(){
   gainMusique.gain.setValueAtTime(gainMusique.gain.value, t0);
   gainMusique.gain.linearRampToValueAtTime(0.0001, t0 + 0.05);
   gainMusique.gain.linearRampToValueAtTime(1, t0 + 1.05);
+}
+/* Atténuation tenue, le temps d'une phrase : le coup bref ci-dessus remonte
+   tout seul en une seconde, trop court pour couvrir une énonciation. */
+function attenuerMusique(actif){
+  if (!ac || !gainMusique || !musiqueOn) return;
+  const t0 = ac.currentTime;
+  gainMusique.gain.cancelScheduledValues(t0);
+  gainMusique.gain.setValueAtTime(gainMusique.gain.value, t0);
+  gainMusique.gain.linearRampToValueAtTime(actif ? 0.10 : 1, t0 + 0.25);
 }
 function demarrerMusique(){
   initAudio();
@@ -3577,7 +3591,12 @@ function afficherRecap(){
   $("recapManchesMoi").textContent = "●".repeat(manches[moi]) + "○".repeat(MANCHES_GAGNANTES - manches[moi]);
   $("recapManchesAdv").textContent = "●".repeat(manches[adv]) + "○".repeat(MANCHES_GAGNANTES - manches[adv]);
   const pool = poolSarcasmes(recapArene, perdantNom);
-  $("recapSarcasme").textContent = habiller(pool[sarcasmeIdx % pool.length], gagnantNom, perdantNom, sarcasmeIdx);
+  const vanneManche = habiller(pool[sarcasmeIdx % pool.length], gagnantNom, perdantNom, sarcasmeIdx);
+  $("recapSarcasme").textContent = vanneManche;
+  /* 600 ms de retard : sonManche() occupe les 330 premières */
+  if (modeSolo) setTimeout(() => {
+    if (phase === "recap") parlerIA(vanneManche, recapGagnant === moi ? "rageur" : "moqueur");
+  }, 600);
   $("recapDuels").textContent = texteDuels();
   $("recap").classList.remove("cache");
 }
