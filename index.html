@@ -157,7 +157,10 @@ input:focus{outline:none;border-color:var(--moi)}
   border:1px solid rgba(251,191,36,.4);
   font-family:"JetBrains Mono",monospace;font-size:12px;line-height:1.6;color:var(--or);
 }
-#records{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.14em;color:rgba(251,191,36,.6);text-align:center}
+#records{
+  font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.1em;line-height:1.9;
+  color:rgba(251,191,36,.6);text-align:center;white-space:pre-line;
+}
 #version{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.22em;color:rgba(124,138,165,.55);margin-top:2px}
 @supports (height:100svh){ #lobby{ max-height:100svh; } }
 .aideMode{font-family:"JetBrains Mono",monospace;font-size:10.5px;line-height:1.5;color:var(--sourd)}
@@ -169,6 +172,13 @@ input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none;appearance:none;width:20px;height:20px;margin-top:-7.5px;
   border-radius:50%;background:var(--moi);box-shadow:0 2px 10px rgba(34,211,238,.5);
 }
+#palmaresListe{display:flex;flex-direction:column;gap:12px}
+.palmCat{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;color:var(--sourd);margin-bottom:4px}
+.palmRang{display:flex;align-items:baseline;gap:8px;font-size:13px;line-height:1.8}
+.palmRang .pos{font-family:"JetBrains Mono",monospace;font-size:10px;color:rgba(124,138,165,.7);width:16px}
+.palmRang .nom{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.palmRang .val{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--or)}
+.palmRang.moi .nom{color:var(--moi);font-weight:700}
 .grilleArenes{display:flex;flex-wrap:wrap;gap:6px}
 .grilleArenes button{width:auto;flex:1 1 30%;min-width:88px;padding:9px 6px;font-size:12.5px;letter-spacing:.02em}
 button.choisi{
@@ -358,11 +368,11 @@ canvas{
 #voileRelance{color:var(--sourd);cursor:pointer}
 #voileRelance b{color:var(--moi)}
 #voileRecords{
-  display:grid;grid-template-columns:auto 1fr 1fr;gap:3px 12px;
+  display:grid;grid-template-columns:auto 1fr 1fr;gap:3px 10px;
   font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.08em;
   color:var(--sourd);margin-top:2px;
 }
-#voileRecords .t{color:rgba(234,240,255,.55);text-align:left}
+#voileRecords .t{color:rgba(234,240,255,.55);text-align:left;font-size:9.5px}
 #voileRecords .m{color:var(--moi);text-align:center;font-weight:700}
 #voileRecords .a{color:var(--adv);text-align:center;font-weight:700}
 #voileRecords .gagne{text-shadow:0 0 10px currentColor}
@@ -508,10 +518,16 @@ canvas{
     <div id="diagRes" class="cache"></div>
   </div>
 
+  <div class="carte" id="cartePalmares" style="display:none">
+    <h2>PALMARÈS DU CERCLE</h2>
+    <div id="palmaresListe"></div>
+    <div class="aideMode">Les records circulent d'un joueur à l'autre à la fin de chaque match. Aucun serveur : c'est votre cercle qui se souvient.</div>
+  </div>
+
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v12.3 · 2026-08-09</div>
+  <div id="version">DUO v13.0 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -640,7 +656,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "12.3";
+const VERSION = "13.0";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -1508,10 +1524,37 @@ function majReglages(){
   $("aideMode").textContent = AIDE_MODE[modeJeu];
 }
 /* arrivée par un lien d'invitation */
-(function afficherRecords(){
-  const e = document.getElementById("records");
-  if (e) e.textContent = texteRecords();
-})();
+function afficherPalmares(){
+  const zone = document.getElementById("palmaresListe");
+  const carte = document.getElementById("cartePalmares");
+  if (!zone || !carte) return;
+  zone.innerHTML = "";
+  let rempli = false;
+  for (const cle of ["echange", "serie", "relais", "remontee"]){
+    const rangs = classement(cle);
+    if (rangs.length < 1) continue;
+    rempli = true;
+    const bloc = document.createElement("div");
+    const titre = document.createElement("div");
+    titre.className = "palmCat";
+    titre.textContent = LIBELLES[cle].court;
+    bloc.appendChild(titre);
+    rangs.forEach((r, i) => {
+      const l = document.createElement("div");
+      l.className = "palmRang" + (r.nom === monNom.toUpperCase() ? " moi" : "");
+      const p = document.createElement("span"); p.className = "pos"; p.textContent = (i+1) + ".";
+      const n = document.createElement("span"); n.className = "nom"; n.textContent = r.nom;
+      const v = document.createElement("span"); v.className = "val";
+      v.textContent = LIBELLES[cle].unite(r.v);
+      l.appendChild(p); l.appendChild(n); l.appendChild(v);
+      bloc.appendChild(l);
+    });
+    zone.appendChild(bloc);
+  }
+  carte.style.display = rempli ? "" : "none";
+}
+
+
 
 (function initInvitation(){
   let code = "";
@@ -1693,30 +1736,40 @@ async function construireCarte(){
   portrait(imgB, L - 120 - cote, "#F471B5", nomAdv, (nomAdv[0] || "?"));
 
   g.fillStyle = "rgba(234,240,255,.75)";
-  g.font = "italic 700 76px 'Space Grotesk', sans-serif";
-  g.fillText("VS", L/2, yP + cote/2 + 26);
+  g.font = (cfgMode().coop ? "700 82px " : "italic 700 76px ") + "'Space Grotesk', sans-serif";
+  g.fillText(cfgMode().coop ? "&" : "VS", L/2, yP + cote/2 + 26);
 
-  /* score */
-  g.font = "700 150px 'Space Grotesk', sans-serif";
-  g.fillStyle = "#22D3EE"; g.textAlign = "right";
-  g.fillText(String(manches[moi]), L/2 - 44, 640);
-  g.fillStyle = "rgba(234,240,255,.35)"; g.textAlign = "center";
-  g.fillText("—", L/2, 640);
-  g.fillStyle = "#F471B5"; g.textAlign = "left";
-  g.fillText(String(manches[adv]), L/2 + 44, 640);
-
+  /* résultat : un score en duel, un compteur commun en coopératif */
   g.textAlign = "center";
-  g.fillStyle = jAiGagne ? "#FBBF24" : "rgba(234,240,255,.5)";
-  g.font = "700 40px 'JetBrains Mono', monospace";
-  g.fillText(jAiGagne ? "VICTOIRE DE " + monNom.slice(0,12) : "VICTOIRE DE " + nomAdv.slice(0,12), L/2, 712);
+  if (cfgMode().coop){
+    g.font = "700 168px 'Space Grotesk', sans-serif";
+    g.fillStyle = "#FBBF24";
+    g.fillText(String(rebondsEchange), L/2, 648);
+    g.fillStyle = "rgba(234,240,255,.7)";
+    g.font = "700 34px 'JetBrains Mono', monospace";
+    g.fillText("ÉCHANGES TENUS À DEUX", L/2, 712);
+  } else {
+    g.font = "700 150px 'Space Grotesk', sans-serif";
+    g.fillStyle = "#22D3EE"; g.textAlign = "right";
+    g.fillText(String(manches[moi]), L/2 - 44, 640);
+    g.fillStyle = "rgba(234,240,255,.35)"; g.textAlign = "center";
+    g.fillText("—", L/2, 640);
+    g.fillStyle = "#F471B5"; g.textAlign = "left";
+    g.fillText(String(manches[adv]), L/2 + 44, 640);
+    g.textAlign = "center";
+    g.fillStyle = jAiGagne ? "#FBBF24" : "rgba(234,240,255,.5)";
+    g.font = "700 40px 'JetBrains Mono', monospace";
+    g.fillText("VICTOIRE DE " + (jAiGagne ? monNom : nomAdv).slice(0,12), L/2, 712);
+  }
 
   /* faits marquants */
   const r = lireRecords();
-  const lignes = [
-    "MEILLEUR ÉCHANGE : " + recordEnCours.echange + " RENVOIS",
-    "MEILLEURE SÉRIE : " + recordEnCours.serie + " POINTS",
-  ];
-  const td = texteDuels();
+  const lignes = cfgMode().coop
+    ? ["VOTRE RECORD COMMUN : " + (r.relais || rebondsEchange) + " ÉCHANGES",
+       "MODE COOPÉRATIF — PERSONNE NE MARQUE"]
+    : ["PLUS LONG ÉCHANGE : " + recordEnCours.echange + " RENVOIS D'AFFILÉE",
+       "MEILLEURE SÉRIE : " + recordEnCours.serie + " POINTS DE SUITE"];
+  const td = cfgMode().coop ? "" : texteDuels();
   if (td) lignes.push(td);
   g.font = "400 27px 'JetBrains Mono', monospace";
   g.fillStyle = "rgba(234,240,255,.6)";
@@ -1780,7 +1833,8 @@ function majRecordsVoile(){
   cellule("", "t");
   cellule(monNom, "m");
   cellule(nomAdverse || "ADVERSAIRE", "a");
-  for (const [libelle, cle] of [["ÉCHANGE", "echange"], ["SÉRIE", "serie"], ["REMONTÉE", "remontee"]]){
+  for (const [libelle, cle] of [["RENVOIS D'AFFILÉE", "echange"], ["POINTS DE SUITE", "serie"],
+                                ["RETARD COMBLÉ", "remontee"]]){
     const a = moi[cle] || 0, b = adv[cle] || 0;
     cellule(libelle, "t");
     cellule(String(a), "m" + (a > b ? " gagne" : ""));
@@ -1789,11 +1843,72 @@ function majRecordsVoile(){
   el.classList.remove("cache");
 }
 
+/* Un record n'a d'intérêt que si l'on comprend ce qu'il mesure. */
+const LIBELLES = {
+  echange:  { court: "PLUS LONG ÉCHANGE", unite: n => n + " renvois d'affilée" },
+  serie:    { court: "MEILLEURE SÉRIE",   unite: n => n + " points de suite" },
+  remontee: { court: "PLUS BELLE REMONTÉE", unite: n => n + " points de retard comblés" },
+  relais:   { court: "RECORD EN RELAIS",  unite: n => n + " échanges tenus à deux" },
+};
+/* ================= PALMARÈS =================
+   Aucun serveur : chaque appareil garde les meilleurs scores connus par nom de
+   joueur, et les deux adversaires échangent leurs tableaux à la fin d'un match.
+   Les records se propagent donc de proche en proche à travers le cercle : si
+   tu joues contre Kemal qui a joué contre Léa, tu récupères le score de Léa.
+   C'est déclaratif, donc ça vaut ce que vaut la bonne foi du cercle — ce qui
+   convient parfaitement à un jeu entre proches. */
+const PALMARES_MAX = 24;
+function lirePalmares(){
+  try{ return JSON.parse(localStorage.getItem("duo_palmares")) || {}; }catch(e){ return {}; }
+}
+function ecrirePalmares(p){
+  /* on ne garde que les meilleurs, pour ne pas gonfler indéfiniment */
+  const noms = Object.keys(p);
+  if (noms.length > PALMARES_MAX){
+    noms.sort((a, b) => valeurTotale(p[b]) - valeurTotale(p[a]));
+    const garde = {};
+    for (const n of noms.slice(0, PALMARES_MAX)) garde[n] = p[n];
+    p = garde;
+  }
+  try{ localStorage.setItem("duo_palmares", JSON.stringify(p)); }catch(e){}
+}
+function valeurTotale(r){
+  return (r.echange || 0) + (r.serie || 0) * 3 + (r.remontee || 0) * 2 + (r.relais || 0);
+}
+function fusionnerPalmares(nom, records){
+  const n = (nom || "").trim().slice(0, 14).toUpperCase();
+  if (!n || !records) return;
+  const p = lirePalmares();
+  const a = p[n] || {};
+  for (const cle of ["echange", "serie", "remontee", "relais"])
+    a[cle] = Math.max(a[cle] || 0, records[cle] || 0);
+  a.maj = Date.now();
+  p[n] = a;
+  ecrirePalmares(p);
+}
+function absorberPalmares(recu){
+  if (!recu || typeof recu !== "object") return;
+  for (const nom of Object.keys(recu).slice(0, PALMARES_MAX * 2))
+    fusionnerPalmares(nom, recu[nom]);
+}
+/* on s'inscrit soi-même, pour figurer dans son propre classement */
+function inscrireMesRecords(){ fusionnerPalmares(monNom, lireRecords()); }
+
+function classement(cle){
+  const p = lirePalmares();
+  return Object.keys(p)
+    .filter(n => (p[n][cle] || 0) > 0)
+    .sort((a, b) => (p[b][cle] || 0) - (p[a][cle] || 0))
+    .slice(0, 5)
+    .map(n => ({ nom: n, v: p[n][cle] }));
+}
+
 function texteRecords(){
   const r = lireRecords();
-  if (!r.echange && !r.serie && !r.remontee) return "";
-  return "RECORDS · ÉCHANGE " + r.echange + " · SÉRIE " + r.serie +
-         (r.remontee ? " · REMONTÉE " + r.remontee : "");
+  const lignes = [];
+  for (const cle of ["echange", "serie", "remontee", "relais"])
+    if (r[cle]) lignes.push(LIBELLES[cle].court + " · " + LIBELLES[cle].unite(r[cle]));
+  return lignes.join("\n");
 }
 
 /* Le panneau ne montre que ce qui concerne le mode choisi : afficher les orbes
@@ -2396,7 +2511,12 @@ function recevoir(m){
       break;
     case "rec":
       recordsAdverse = m.r || null;
+      /* on enregistre l'adversaire, puis on absorbe tout ce qu'il connaît :
+         c'est ainsi que les records voyagent sans serveur */
+      fusionnerPalmares(m.n || nomAdverse, m.r);
+      absorberPalmares(m.p);
       majRecordsVoile();
+      afficherPalmares();
       break;
     case "ver":
       /* Sans ce contrôle, un adversaire resté sur une version en cache pouvait
@@ -3361,7 +3481,9 @@ function afficherFin(){
     ? "drop-shadow(0 0 26px rgba(251,191,36,.6))"
     : "drop-shadow(0 0 20px rgba(124,138,165,.4))";
   if (!modeSolo){
-    envoyerFiable({ t: "rec", r: lireRecords() });
+    inscrireMesRecords();
+    envoyerFiable({ t: "rec", r: lireRecords(), n: monNom, p: lirePalmares() });
+    afficherPalmares();
     majRecordsVoile();
   } else {
     const rec = texteRecords();
@@ -4994,6 +5116,16 @@ function mesurerPuissance(){
     });
   }
   appliquerQualite();
+})();
+
+/* Placé en fin de script comme les autres initialisations : il lit PALMARES_MAX
+   et LIBELLES, déclarés plus bas dans le fichier. Troisième occurrence de ce
+   piège — voir MEMOIRE.md, section « zone morte temporelle ». */
+(function afficherRecords(){
+  const e = document.getElementById("records");
+  if (e) e.textContent = texteRecords();
+  inscrireMesRecords();
+  afficherPalmares();
 })();
 
 /* Écran de lancement — placé en fin de script : il lit VERSION, déclarée plus
