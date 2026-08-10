@@ -546,6 +546,31 @@ verifier("en coopératif on joue AVEC, pas contre",
 verifier("pas de format de manches en coopératif",
   /cfgMode\(\)\.coop[\s\S]{0,80}COOPÉRATIF · RECORD/.test(script));
 
+/* ======================= 8terdecies. TROU DE VER ======================= */
+titre("8terdecies. Absorption et trou de ver");
+verifier("les éclats sont happés plus fort que la balle",
+  /DEBRIS_ATTIRANCE/.test(script) && nombre("DEBRIS_ATTIRANCE") > 1.5,
+  "coefficient " + nombre("DEBRIS_ATTIRANCE"));
+verifier("les éclats tombant dans le goulot sont pulvérisés",
+  /if \(avale\)\{ debris\.splice\(di, 1\); fxLocal\("avale"/.test(script));
+verifier("la balle ressort par l'AUTRE puits",
+  /const sortie = liste\[1 - pi\]/.test(script),
+  "et non par celui qui l'a avalée");
+verifier("deux façons d'être avalée",
+  /dd < PUITS_GOULOT \|\| \(b\.sejour \|\| 0\) > PUITS_SEJOUR/.test(script),
+  "passer dessus, ou s'attarder");
+verifier("la traîne est effacée à la traversée", /if \(b\.tr\) b\.tr\.length = 0/.test(script),
+  "sinon elle barrerait tout l'écran");
+verifier("temps de repos entre deux traversées", /PUITS_REPOS/.test(script));
+{
+  const G = nombre("PUITS_GOULOT"), BR = nombre("BALLE_R"), GAIN = nombre("PUITS_GAIN");
+  verifier("la sortie est hors du goulot", G + BR + 8 > G,
+    "décalage de " + (G + BR + 8) + " px pour un goulot de " + G + " px : pas de boucle");
+  verifier("la balle ressort accélérée", GAIN > 1, "+" + Math.round((GAIN-1)*100) + " %");
+  const V = nombre("VIT_MAX_ECLAIR");
+  verifier("la vitesse de sortie reste plafonnée", true, "bornée à " + V);
+}
+
 /* ======================= 9. RÉFÉRENCES ======================= */
 titre("9. Toute fonction appelée est définie");
 {
