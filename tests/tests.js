@@ -393,11 +393,16 @@ verifier("aucun orbe ni bloc en gravité",
   /gravite:\s*\{ bonus: false,\s*obstacles: false,\s*vices: false/.test(script));
 verifier("puits dessinés", /function dessinerPuits\(/.test(script));
 verifier("lentille gravitationnelle sur le décor",
-  /function deformerFond\(/.test(script) && /ctx\.clip\("evenodd"\)/.test(script) &&
+  /function deformerFond\(/.test(script) && /clip\("evenodd"\)/.test(script) &&
   /drawImage\(cvLentille/.test(script),
   "le fond est prélevé puis reposé en anneaux tournés");
-verifier("lentille désactivée au cran minimal",
-  /if \(qualite === "minimal"\) return;/.test(script), "passe coûteuse");
+verifier("la lentille n'est jamais coupée",
+  !/if \(qualite === "minimal"\) return;/.test(script) &&
+  /qualite === "max" \? 12 : \(qualite === "normal" \? 9 : 6\)/.test(script),
+  "elle disparaissait au bout de quelques secondes quand le repli l'atteignait");
+verifier("les anneaux sont assemblés hors du terrain",
+  /ctxLentille2\.clip\("evenodd"\)/.test(script) && /ctx\.drawImage\(cvLentille2, sx, sy, D, D\)/.test(script),
+  "36 découpes sur 540x880 devenaient 24 sur 124x124, soit 43 fois moins de surface");
 verifier("alignement conservé au bord du terrain",
   /ix0 - sx, iy0 - sy/.test(script), "sinon l'image se décalerait près des bords");
 verifier("trou noir dessiné", /function dessinerTrouNoir\(/.test(script));
