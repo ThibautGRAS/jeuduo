@@ -399,6 +399,11 @@ verifier("lentille désactivée au cran minimal",
 verifier("alignement conservé au bord du terrain",
   /ix0 - sx, iy0 - sy/.test(script), "sinon l'image se décalerait près des bords");
 verifier("trou noir dessiné", /function dessinerTrouNoir\(/.test(script));
+{
+  const rv = nombre("PUITS_R_VISU"), LG = nombre("LARG");
+  verifier("le puits n'envahit pas le terrain", 2*rv / LG < 0.3,
+    Math.round(200*rv/LG) + " % de la largeur, contre 45 % auparavant");
+}
 verifier("la sphère n'est jamais opaque",
   /g\.addColorStop\(0,\s*"rgba\(2,3,8,\.90\)"\)/.test(script),
   "on continue de deviner le fond enroulé à l'intérieur");
@@ -406,7 +411,9 @@ verifier("liseré fin plutôt que disque d'accrétion",
   !/createLinearGradient\(-Rd, 0, Rd, 0\)/.test(script) &&
   /anneau d'Einstein, mince/.test(script),
   "la référence ne montre aucun disque flamboyant");
-verifier("arcs internes du fond replié", /arcs internes/.test(script));
+verifier("aucun tracé décoratif ajouté dans la sphère",
+  !/arcs internes/.test(script),
+  "ils accentuaient l'aspect de rouage mécanique");
 {
   /* l'enroulement doit être bien plus fort au cœur qu'au bord */
   const m = script.match(/const angle = ([\d.]+) \* Math\.pow\(u, ([\d.]+)\)/);
