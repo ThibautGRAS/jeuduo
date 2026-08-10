@@ -787,6 +787,14 @@ titre("11. Cohérence de MEMOIRE.md avec le code");
       nbArenes + " arènes dans le code");
     verifier("aucun secret dans la mémoire",
       !/github_pat_|apiKey=|[A-Za-z0-9_-]{40,}/.test(memoire));
+
+    /* Le tableau des versions avait dérivé de la 10 à la 14.5 sans que rien
+       ne le signale : la livraison cite désormais sa propre ligne. */
+    const versionCode = (script.match(/const VERSION\s*=\s*"([\d.]+)"/) || [])[1] || "";
+    const tableau = memoire.slice(memoire.indexOf("## 5. Repères de version"));
+    verifier("mémoire à jour : la version livrée figure au tableau",
+      versionCode !== "" && tableau.includes(versionCode),
+      "code = " + versionCode + ", tableau des versions muet à son sujet");
   }
   let consignes = "";
   try{ consignes = fs.readFileSync(path.join(__dirname, "..", "CLAUDE.md"), "utf8"); }catch(e){}
