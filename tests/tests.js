@@ -562,6 +562,16 @@ verifier("pas de format de manches en coopératif",
 
 /* ======================= 8terdecies. TROU DE VER ======================= */
 titre("8terdecies. Absorption et trou de ver");
+{
+  const om = nombre("ORBITE_MIN");
+  verifier("les rochers orbitent à distance du trou", om >= 60,
+    "plancher à " + om + " px, contre un rayon visible de sphère de 33 px");
+  verifier("poussée vers l'extérieur sous le plancher", /ORBITE_POUSSEE \* \(1 - dd \/ ORBITE_MIN\)/.test(script));
+  verifier("attraction adoucie", nombre("DEBRIS_ATTIRANCE") < 2.2,
+    "coefficient " + nombre("DEBRIS_ATTIRANCE") + ", contre 2,6 auparavant");
+  verifier("relance moins pressante", nombre("RELANCE_DELAI") >= 12000,
+    Math.round(nombre("RELANCE_DELAI")/1000) + " s, contre 6 auparavant");
+}
 verifier("les éclats se mettent en orbite",
   /const vOrb = Math\.sqrt\(f \* dd\)/.test(script) && /ORBITE_GAIN/.test(script),
   "vitesse tangentielle rappelée vers la valeur orbitale");
@@ -629,7 +639,17 @@ verifier("taille du palmarès bornée", /PALMARES_MAX/.test(script) && nombre("P
 
 /* ======================= 8quindecies. PAUSE ET DÉPART ======================= */
 titre("8quindecies. Pause partagée et départ en cours de partie");
-verifier("bouton de pause dans la barre", /id="btnPause"/.test(html));
+{
+  const css = (html.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || "";
+  verifier("bouton de pause dans la barre", /id="btnPause"/.test(html));
+  verifier("icône dessinée en CSS plutôt qu'en caractère",
+    /\.barresPause\{/.test(css) && /border-left:4px solid currentColor/.test(css),
+    "le caractère de pause ne s'affiche pas partout de la même façon");
+  verifier("le bouton n'est jamais éteint en jeu",
+    !/bp\.classList\.toggle\("eteint"/.test(script),
+    "il devenait invisible avant le début de partie");
+  verifier("l'icône bascule en lecture à la reprise", /bp\.classList\.toggle\("reprise", enPause\)/.test(script));
+}
 verifier("bouton pour quitter", /id="btnQuitter"/.test(html) && /id="confirmation"/.test(html));
 verifier("la pause vaut aussi en réseau",
   !/if \(!partieEnCours \|\| !modeSolo\) return;/.test(script) &&
