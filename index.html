@@ -539,7 +539,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v14.6 · 2026-08-09</div>
+  <div id="version">DUO v14.7 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -577,7 +577,7 @@ canvas{
           <span class="regle" data-modes="arcade classique gravite"><b class="f">BALLE EN FEU</b> — 8 rebonds sans point : la balle s'enflamme à vitesse maximale.<br></span>
           <span class="regle" data-modes="tous"><b class="o">DÉCOR</b> — À partir de la manche 2, des blocs de la ligne médiane se détachent et dérivent au centre du terrain.<br></span>
           <span class="regle" data-modes="arcade classique gravite"><b class="f">DÉGÂTS</b> — Les frappes surpuissantes fissurent les murs : les rebonds y deviennent imprévisibles et des débris sont projetés sur le terrain jusqu'à la fin de la manche.<br></span>
-          <span class="regle" data-modes="tous"><b class="c">MICRO</b> — Icône 🎙 en bas à droite : une fois activée, votre micro s'ouvre 2 secondes après <i>chaque point</i> pour glisser un mot à l'adversaire. Icône ♪ en bas à gauche : musique.<br></span>
+          <span class="regle" data-modes="tous"><b class="c">MICRO</b> — Icône 🎙 en bas à droite : une fois activée, votre micro s'ouvre 2 secondes après <i>chaque point</i> pour glisser un mot à l'adversaire. En solo, votre voix vous est rejouée : de quoi vérifier le son sans second appareil. Icône ♪ en bas à gauche : musique.<br></span>
           <span class="regle" data-modes="arcade"><b class="v">VICES</b> — Le gagnant d'une manche choisit un vice <i>secret</i> : inversion, brouillard ou gravité. Il se déclenche tout seul, une seule fois, à un moment imprévisible d'une manche suivante — et frappe l'adversaire sans prévenir.</span>
         </div>
       <button id="btnLu">LU — JE SUIS PRÊT</button>
@@ -679,7 +679,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "14.6";
+const VERSION = "14.7";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -1237,8 +1237,8 @@ function majIcones(){
   if (bt){ bt.classList.toggle("actif", micActif); bt.classList.toggle("eteint", !micActif); }
 }
 async function enregistrerEtEnvoyer(){
-  if (!micActif || !micAutorise || enTrainDEnregistrer || modeSolo) return;
-  if (!connVoix || !connVoix.open) return;
+  if (!micActif || !micAutorise || enTrainDEnregistrer) return;
+  if (!modeSolo && (!connVoix || !connVoix.open)) return;
   const mt = mimeAudio();
   if (!mt) return;
   enTrainDEnregistrer = true;
@@ -1255,10 +1255,19 @@ async function enregistrerEtEnvoyer(){
     relacherMicro();
     try{
       const blob = new Blob(morceaux, { type: mt });
-      if (blob.size > 300 && blob.size < 250000 && connVoix && connVoix.open){
-        const buf = await blob.arrayBuffer();
-        connVoix.send({ t: "vx", mt: mt, d: buf });
+      if (blob.size <= 300 || blob.size >= 250000) return;
+      const buf = await blob.arrayBuffer();
+      if (modeSolo){
+        /* Écho local : emprunte exactement la chaîne de lecture des clips reçus
+           en réseau. Sert à valider le rendu sans second appareil.
+           Court délai pour laisser iOS rebasculer sur le haut-parleur. */
+        setTimeout(() => {
+          jouerClip(buf, mt);
+          annoncer("🎙 ÉCHO · VOUS DEVRIEZ VOUS ENTENDRE", "#8AB4FF");
+        }, 200);
+        return;
       }
+      if (connVoix && connVoix.open) connVoix.send({ t: "vx", mt: mt, d: buf });
     } catch(e){}
   };
   rec.start();
