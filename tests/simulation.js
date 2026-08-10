@@ -102,7 +102,7 @@ const doc = {
     let liste = [];
     if (sel === ".btnSolo") liste = ["facile", "moyen", "difficile"].map(n => {
       const e = element("solo:" + n); e.dataset.niveau = n; return e; });
-    else if (sel === ".btnMode") liste = ["arcade", "classique", "gravite"].map(n => {
+    else if (sel === ".btnMode") liste = ["arcade", "classique", "gravite", "relais"].map(n => {
       const e = element("mode:" + n); e.dataset.mode = n; return e; });
     else if (sel === ".btnManches") liste = ["2", "3", "5"].map(n => {
       const e = element("manches:" + n); e.dataset.n = n; return e; });
@@ -256,6 +256,22 @@ try {
   verifier("le jeu progresse en gravité", s2[0] + s2[1] + m2[0] + m2[1] > 0,
     "score " + s2.join("-") + " | manches " + m2.join("-"));
 } catch (e){ verifier("le mode gravité démarre", false, e.message); }
+
+console.log("\n5bis. Mode relais");
+try {
+  obtenir("btnMenu").declencher("click");
+  avancer(300);
+  doc.querySelectorAll(".btnMode")[3].declencher("click");   /* relais */
+  doc.querySelectorAll(".btnSolo")[0].declencher("click");   /* facile */
+  obtenir("btnLu").declencher("click");
+  avancer(300);
+  let boum = null;
+  try { for (let i = 0; i < 30; i++) avancer(1000); } catch (e){ boum = e; }
+  verifier("le mode relais tourne sans exception", !boum, boum ? boum.message : "30 s simulées");
+  verifier("aucun score en coopératif", jeu.etat.score[0] === 0 && jeu.etat.score[1] === 0,
+    "score " + jeu.etat.score.join("-"));
+  verifier("aucune manche en coopératif", jeu.manches[0] === 0 && jeu.manches[1] === 0);
+} catch (e){ verifier("le mode relais démarre", false, e.message); }
 
 console.log("\n6. Robustesse : deux minutes de plus");
 try {
