@@ -560,6 +560,21 @@ verifier("pas de format de manches en coopératif",
 
 /* ======================= 8terdecies. TROU DE VER ======================= */
 titre("8terdecies. Absorption et trou de ver");
+verifier("les éclats se mettent en orbite",
+  /const vOrb = Math\.sqrt\(f \* dd\)/.test(script) && /ORBITE_GAIN/.test(script),
+  "vitesse tangentielle rappelée vers la valeur orbitale");
+verifier("la composante radiale est amortie", /ORBITE_AMORTI/.test(script),
+  "sinon le rocher plonge ou rebondit au lieu de tourner");
+{
+  const gb = nombre("PUITS_GOULOT"), gd = nombre("DEBRIS_GOULOT");
+  verifier("le rocher tombe plus facilement que la balle", gd > gb,
+    "goulot " + gd + " px contre " + gb + " px");
+  verifier("la balle doit vraiment frôler le cœur", gb <= 16,
+    gb + " px, contre 27 auparavant : surface d'entrée divisée par " +
+    (Math.pow(27/gb, 2)).toFixed(1));
+  verifier("le séjour exigé est plus long", nombre("PUITS_SEJOUR") >= 1400,
+    nombre("PUITS_SEJOUR") + " ms dans un rayon de " + nombre("PUITS_ZONE") + " px");
+}
 verifier("les éclats sont happés plus fort que la balle",
   /DEBRIS_ATTIRANCE/.test(script) && nombre("DEBRIS_ATTIRANCE") > 1.5,
   "coefficient " + nombre("DEBRIS_ATTIRANCE"));
