@@ -539,7 +539,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v14.4 · 2026-08-09</div>
+  <div id="version">DUO v14.5 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -679,7 +679,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "14.4";
+const VERSION = "14.5";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -786,6 +786,14 @@ function semerDebris(){
 const cvLentille = document.createElement("canvas");
 cvLentille.width = PUITS_R_VISU * 2; cvLentille.height = PUITS_R_VISU * 2;
 const ctxLentille = cvLentille.getContext("2d");
+/* Second tampon : les anneaux sont assemblés ici, sur 124 x 124 pixels, puis
+   reposés sur le terrain en UNE seule opération. Auparavant chaque anneau était
+   découpé directement sur le canevas de 540 x 880, soit trente-six découpes par
+   image — assez pour faire chuter la fluidité et déclencher le repli, ce qui
+   faisait disparaître l'effet au bout de quelques secondes. */
+const cvLentille2 = document.createElement("canvas");
+cvLentille2.width = PUITS_R_VISU * 2; cvLentille2.height = PUITS_R_VISU * 2;
+const ctxLentille2 = cvLentille2.getContext("2d");
 /* Positions de référence, côté hôte : c'est sa physique qui fait autorité. */
 function puitsActifs(){
   if (!cfgMode().puits) return [];
@@ -4878,8 +4886,10 @@ function assombrir(hex, k){
    centre. L'image du fond s'enroule donc réellement autour du trou, au lieu
    d'être simplement recouverte par un effet peint. */
 function deformerFond(Y, t){
-  if (qualite === "minimal") return;          /* passe coûteuse : cran le plus bas exclu */
   const R = PUITS_R_VISU, D = R * 2;
+  /* La lentille n'est plus jamais coupée : c'est la signature du mode. Seul son
+     nombre d'anneaux s'allège selon le cran de rendu. */
+  const N = qualite === "max" ? 12 : (qualite === "normal" ? 9 : 6);
   for (const p of puitsAffiches()){
     const cx = p.x, cy = Y(p.y);
     const sx = cx - R, sy = cy - R;
@@ -4890,29 +4900,34 @@ function deformerFond(Y, t){
     /* on garde l'alignement même quand le puits frôle un bord */
     ctxLentille.drawImage(cv, ix0, iy0, ix1 - ix0, iy1 - iy0,
                               ix0 - sx, iy0 - sy, ix1 - ix0, iy1 - iy0);
-    const N = 18;   /* plus d'anneaux : les frontières se voient moins */
+
+    /* assemblage des anneaux dans le petit tampon */
+    ctxLentille2.clearRect(0, 0, D, D);
     for (let i = N; i >= 1; i--){
-      /* chevauchement d'un pixel : sans lui, chaque frontière d'anneau
-         laissait une couture nette, d'où l'aspect de rouage cranté */
       const r0 = Math.max(0, R * (i - 1) / N - 1.5), r1 = R * i / N;
       const u = 1 - r1 / R;                        /* 0 au bord, 1 au centre */
-      /* Retour au GROSSISSEMENT : comprimer le décor rendait la déformation
-         invisible, puisque les détails rétrécissaient au lieu de s'étirer.
-         C'est aussi ce que fait une vraie lentille gravitationnelle. La
-         sensation d'entonnoir vient du creusement lumineux, pas de l'échelle. */
+      /* GROSSISSEMENT : comprimer rendait la déformation invisible, puisque les
+         détails rétrécissaient au lieu de s'étirer. C'est aussi ce que fait une
+         vraie lentille gravitationnelle. */
       const angle = 1.30 * Math.pow(u, 2.1) + t * 0.32 * u;
       const echelle = 1 + 0.55 * u * u;
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(cx, cy, r1, 0, Math.PI*2);
-      ctx.arc(cx, cy, r0, 0, Math.PI*2, true);
-      ctx.clip("evenodd");
-      ctx.translate(cx, cy);
-      ctx.rotate(angle);
-      ctx.scale(echelle, echelle);
-      ctx.drawImage(cvLentille, -R, -R, D, D);
-      ctx.restore();
+      ctxLentille2.save();
+      ctxLentille2.beginPath();
+      ctxLentille2.arc(R, R, r1, 0, Math.PI*2);
+      ctxLentille2.arc(R, R, r0, 0, Math.PI*2, true);
+      ctxLentille2.clip("evenodd");
+      ctxLentille2.translate(R, R);
+      ctxLentille2.rotate(angle);
+      ctxLentille2.scale(echelle, echelle);
+      ctxLentille2.drawImage(cvLentille, -R, -R, D, D);
+      ctxLentille2.restore();
     }
+
+    /* une seule pose sur le terrain */
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2); ctx.clip();
+    ctx.drawImage(cvLentille2, sx, sy, D, D);
+    ctx.restore();
   }
 }
 
