@@ -303,6 +303,19 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "10_enquete_844");
   }
 
+  /* 11. la liste d'accusation */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(2); D.Intro.finir();
+    D.Enquete.indices = 5;
+    D.Enquete.pizza = { t:1, zone:0 };
+    D.Enquete.ouvrirAccusation();
+    D.Jeu.pas(1 / 60);
+    dessinerVia(D, canevas);
+    ecrire(canevas, "11_accusation_844");
+  }
+
   /* 8. le malaise : main qui se retire, sueur */
   {
     const { D, canevas } = await preparer(1280, 720);

@@ -59,10 +59,22 @@ pendant le dossier ni pendant l'accusation. Elle lance sa tarte, on a
 450 ms pour se baisser, et en repartant elle laisse tomber une rondelle
 de chorizo — le doute est permis, la réponse non.
 
-La pizza ne se montre nulle part avant d'avoir trois indices et d'avoir
-ouvert la bonne cachette. Trouver la pizza ne suffit pas : il faut
-encore désigner qui. Une mauvaise accusation coûte vingt secondes et ne
+**Comment on gagne**, dans l'ordre :
+
+1. fouiller les meubles jusqu'à **trois indices** au moins ;
+2. ouvrir la **bonne cachette** — la pizza ne se montre nulle part
+   avant, et pas non plus avant ces trois indices ;
+3. appuyer sur **ACCUSER** et désigner qui.
+
+Le bouton ACCUSER est présent dès la première seconde mais éteint ; il
+s'allume à trois indices et clignote quand plus rien ne manque. La liste
+des suspects se touche directement : un premier toucher choisit, un
+second accuse. Une mauvaise accusation coûte vingt secondes et ne
 termine pas la partie.
+
+Ces conditions sont écrites à l'écran — en haut de la liste et au bas du
+dossier — parce que la première version les gardait pour elle et qu'on
+pouvait réunir six indices sans voir comment conclure.
 
 ## Format
 

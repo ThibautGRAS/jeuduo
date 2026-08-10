@@ -104,6 +104,15 @@ héros se fait en échangeant deux lignes.
 file à zéro flottait au-dessus de l'enquête, qui dessine le sien sur le
 canevas.
 
+### Aucun chemin tactile vers la fin de partie
+L'accusation n'était liée qu'à la touche `A`, et son mode d'emploi
+n'apparaissait qu'à l'intérieur du dossier. Sur téléphone, on pouvait
+réunir les six indices sans **aucun** moyen de conclure. La règle qui
+s'en dégage : toute action qui termine une partie doit avoir un bouton
+visible en permanence, éteint tant qu'elle est indisponible, et qui dit
+ce qui manque. Une commande au clavier n'est jamais un chemin, c'est un
+raccourci.
+
 ### `setTimeout` pour une échéance de jeu
 La conclusion de l'enquête était programmée par `setTimeout`. Une
 échéance en temps absolu continue de courir pendant une pause — c'est le

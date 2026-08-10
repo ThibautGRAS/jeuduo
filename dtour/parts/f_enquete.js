@@ -384,6 +384,7 @@ const Enquete = {
       this.gele = 0.15;
       this.poserBadge("pizza");
       Effets.parole({ heros:ins.heros }, "La voilà.", 2.0);
+      this.dire("Il reste à désigner qui. Bouton ACCUSER.", 3.2);
       Sons.tarteEsquive(); Sons.palier();
       ins.cible = -1;
       return;
@@ -408,7 +409,8 @@ const Enquete = {
       Effets.parole({ heros:ins.heros }, pf ? ind.analyse : ind.brut, 2.4);
       Sons.reussite(Math.min(7, this.indices));
       this.secousse = 0.25;
-      if (this.indices === 4) this.dire("On commence à avoir quelque chose.", 2.4);
+      if (this.indices === 3) this.dire("Assez pour accuser. Mais où est la pizza ?", 2.8);
+      else if (this.indices === 4) this.dire("On commence à avoir quelque chose.", 2.4);
     } else {
       z.fouillee = true; this.fouilles++;
       this.fausses++;
@@ -439,10 +441,32 @@ const Enquete = {
     if (this.dossierOuvert) this.accusation = false;
     Sons.clic();
   },
+  /* Ce qu'il manque pour conclure, en clair. Le joueur ne doit pas
+     avoir à deviner qu'il faut AUSSI avoir retrouvé la pizza. */
+  peutConclure(){ return this.indices >= 3; },
+  cePquiManque(){
+    if (this.indices < 3) return "Il faut au moins trois indices.";
+    if (!this.pizza) return "Il faut encore retrouver la pizza.";
+    return null;
+  },
+
   ouvrirAccusation(){
     if (!this.actif) return;
-    if (this.indices < 3){ this.dire("Trois indices, au minimum.", 1.8); return; }
+    if (this.indices < 3){ this.dire("Trois indices, au minimum.", 2.0); return; }
     this.accusation = true; this.dossierOuvert = false; this.choixAcc = 0;
+    Sons.clic();
+  },
+  /* Toucher directement une ligne de la liste : sur un téléphone,
+     naviguer avec deux flèches pour valider avec une troisième touche
+     n'a aucun sens. */
+  viserAccusation(fy){
+    if (!this.accusation) return;
+    const n = SUSPECTS.length + 1;
+    const y0 = 0.30, pas = 0.10;
+    const i = Math.round((fy - y0) / pas);
+    if (i < 0 || i >= n) return;
+    if (i === this.choixAcc){ this.valider(); return; }
+    this.choixAcc = i;
     Sons.clic();
   },
   deplacerAccusation(d){

@@ -595,6 +595,29 @@ if (D){
   verifier("et l'affaire est gagnée", D.Enquete.fini && D.Enquete.fini.gagne);
   verifier("le score récompense le temps restant", D.Score.points > 0, "score " + D.Score.points);
 
+  /* on doit pouvoir conclure au doigt, sans clavier */
+  titre("Conclure sans clavier");
+  lancer2();
+  verifier("le bouton d'accusation est éteint au départ", !D.Enquete.peutConclure());
+  egal("et il dit pourquoi", D.Enquete.cePquiManque(), "Il faut au moins trois indices.");
+  D.Enquete.indices = 3;
+  verifier("trois indices l'allument", D.Enquete.peutConclure());
+  egal("mais la pizza manque encore", D.Enquete.cePquiManque(), "Il faut encore retrouver la pizza.");
+  D.Enquete.pizza = { t:0, zone:0 };
+  egal("plus rien ne manque", D.Enquete.cePquiManque(), null);
+  D.Enquete.ouvrirAccusation();
+  verifier("la liste s'ouvre", D.Enquete.accusation);
+  /* toucher une ligne la choisit, la toucher deux fois valide */
+  const yLigne = i => 0.30 + i * 0.10;
+  D.Enquete.viserAccusation(yLigne(2));
+  egal("un toucher choisit la ligne visée", D.Enquete.choixAcc, 2);
+  D.Enquete.viserAccusation(yLigne(0));
+  egal("un autre toucher change de ligne", D.Enquete.choixAcc, 0);
+  const bonne = D.SUSPECTS.map(s => s.id).concat(["personne"]).indexOf(D.Affaire.bonneReponse());
+  D.Enquete.viserAccusation(yLigne(bonne));
+  D.Enquete.viserAccusation(yLigne(bonne));
+  egal("le second toucher accuse", D.Jeu.phase, "fin");
+
   /* mauvaise accusation : pénalité, pas de fin de partie */
   lancer2();
   D.Enquete.indices = 4;

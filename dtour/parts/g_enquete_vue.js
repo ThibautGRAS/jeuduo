@@ -350,7 +350,11 @@ const EnqVue = {
     }
     ctx.font = "700 " + Math.round(taille * 0.6) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillStyle = "#8496B6";
-    ctx.fillText("D pour refermer · A pour accuser", L / 2, H * 0.86);
+    const manque2 = Enquete.cePquiManque();
+    ctx.fillStyle = manque2 ? "#8496B6" : "#8FD79B";
+    ctx.fillText(manque2 || "Tout y est : ACCUSER.", L / 2, H * 0.80);
+    ctx.fillStyle = "#8496B6";
+    ctx.fillText("Touchez l'écran pour refermer", L / 2, H * 0.88);
     ctx.restore();
   },
 
@@ -363,7 +367,11 @@ const EnqVue = {
     ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillStyle = "#F7B32B";
-    ctx.fillText("QUI A PRIS LA PIZZA ?", L / 2, H * 0.14);
+    ctx.fillText("QUI A PRIS LA PIZZA ?", L / 2, H * 0.12);
+    const manque = Enquete.cePquiManque();
+    ctx.font = "700 " + Math.round(taille * 0.52) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillStyle = manque ? "#E2453D" : "#8FD79B";
+    ctx.fillText(manque || "Pizza retrouvée. Vous pouvez conclure.", L / 2, H * 0.20);
 
     const noms = SUSPECTS.map(s => s.nom).concat(["PERSONNE"]);
     const hl = H * 0.10;
@@ -380,7 +388,7 @@ const EnqVue = {
     }
     ctx.font = "700 " + Math.round(taille * 0.55) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillStyle = "#8496B6";
-    ctx.fillText("← → pour choisir · E pour accuser", L / 2, H * 0.90);
+    ctx.fillText("Touchez un nom pour l'accuser · ← → puis E au clavier", L / 2, H * 0.92);
     ctx.restore();
   },
 };

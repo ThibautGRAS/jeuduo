@@ -217,7 +217,18 @@ kbd{
 #c2A{background:linear-gradient(180deg,rgba(247,179,43,.94),rgba(198,133,14,.94));color:#1A1305}
 #c2A.esquive{animation:tartePrete .45s ease-in-out infinite}
 #c2C{background:linear-gradient(180deg,rgba(42,138,228,.9),rgba(28,98,170,.9))}
-#c2Dos{flex:0 0 auto}
+#c2Dos{flex:0 0 auto;position:relative}
+#c2DosN{
+  position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;border-radius:9px;
+  background:var(--ambre);color:#1A1305;font-size:10px;font-weight:800;line-height:17px;
+  text-align:center;padding:0 3px;
+}
+/* Tant qu'on n'a pas de quoi conclure, le bouton reste là mais éteint :
+   le joueur voit dès la première seconde par où passera la fin. */
+#c2Acc{background:linear-gradient(180deg,rgba(226,69,61,.92),rgba(160,40,34,.92))}
+#c2Acc.eteint{opacity:.38;filter:grayscale(.6)}
+#c2Acc.prete{animation:tartePrete .9s ease-in-out infinite}
+@media (max-height:360px){ #c2C{display:none} }
 .cmd2:active,.cmd2.pressee{transform:translateY(2px);filter:brightness(1.15)}
 
 /* ---------------- introduction du niveau 2 ---------------- */
@@ -428,14 +439,15 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">D'TOUR v2.3</div>
+  <div id="version">D'TOUR v2.4</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
     <button class="cmd2" id="c2D" aria-label="Aller à droite">▶</button>
     <button class="cmd2 large" id="c2A"><span id="c2ATxt">INSPECTER</span></button>
     <button class="cmd2 large" id="c2C">CHANGER</button>
-    <button class="cmd2" id="c2Dos" aria-label="Dossier d'enquête">🗂</button>
+    <button class="cmd2 large" id="c2Acc">ACCUSER</button>
+    <button class="cmd2" id="c2Dos" aria-label="Dossier d'enquête">🗂<b id="c2DosN">0</b></button>
   </div>
 
   <div id="introNiv">
@@ -476,7 +488,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "2.3";
+const VERSION = "2.4";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -3178,6 +3190,7 @@ const Enquete = {
       this.gele = 0.15;
       this.poserBadge("pizza");
       Effets.parole({ heros:ins.heros }, "La voilà.", 2.0);
+      this.dire("Il reste à désigner qui. Bouton ACCUSER.", 3.2);
       Sons.tarteEsquive(); Sons.palier();
       ins.cible = -1;
       return;
@@ -3202,7 +3215,8 @@ const Enquete = {
       Effets.parole({ heros:ins.heros }, pf ? ind.analyse : ind.brut, 2.4);
       Sons.reussite(Math.min(7, this.indices));
       this.secousse = 0.25;
-      if (this.indices === 4) this.dire("On commence à avoir quelque chose.", 2.4);
+      if (this.indices === 3) this.dire("Assez pour accuser. Mais où est la pizza ?", 2.8);
+      else if (this.indices === 4) this.dire("On commence à avoir quelque chose.", 2.4);
     } else {
       z.fouillee = true; this.fouilles++;
       this.fausses++;
@@ -3233,10 +3247,32 @@ const Enquete = {
     if (this.dossierOuvert) this.accusation = false;
     Sons.clic();
   },
+  /* Ce qu'il manque pour conclure, en clair. Le joueur ne doit pas
+     avoir à deviner qu'il faut AUSSI avoir retrouvé la pizza. */
+  peutConclure(){ return this.indices >= 3; },
+  cePquiManque(){
+    if (this.indices < 3) return "Il faut au moins trois indices.";
+    if (!this.pizza) return "Il faut encore retrouver la pizza.";
+    return null;
+  },
+
   ouvrirAccusation(){
     if (!this.actif) return;
-    if (this.indices < 3){ this.dire("Trois indices, au minimum.", 1.8); return; }
+    if (this.indices < 3){ this.dire("Trois indices, au minimum.", 2.0); return; }
     this.accusation = true; this.dossierOuvert = false; this.choixAcc = 0;
+    Sons.clic();
+  },
+  /* Toucher directement une ligne de la liste : sur un téléphone,
+     naviguer avec deux flèches pour valider avec une troisième touche
+     n'a aucun sens. */
+  viserAccusation(fy){
+    if (!this.accusation) return;
+    const n = SUSPECTS.length + 1;
+    const y0 = 0.30, pas = 0.10;
+    const i = Math.round((fy - y0) / pas);
+    if (i < 0 || i >= n) return;
+    if (i === this.choixAcc){ this.valider(); return; }
+    this.choixAcc = i;
     Sons.clic();
   },
   deplacerAccusation(d){
@@ -3700,7 +3736,11 @@ const EnqVue = {
     }
     ctx.font = "700 " + Math.round(taille * 0.6) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillStyle = "#8496B6";
-    ctx.fillText("D pour refermer · A pour accuser", L / 2, H * 0.86);
+    const manque2 = Enquete.cePquiManque();
+    ctx.fillStyle = manque2 ? "#8496B6" : "#8FD79B";
+    ctx.fillText(manque2 || "Tout y est : ACCUSER.", L / 2, H * 0.80);
+    ctx.fillStyle = "#8496B6";
+    ctx.fillText("Touchez l'écran pour refermer", L / 2, H * 0.88);
     ctx.restore();
   },
 
@@ -3713,7 +3753,11 @@ const EnqVue = {
     ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillStyle = "#F7B32B";
-    ctx.fillText("QUI A PRIS LA PIZZA ?", L / 2, H * 0.14);
+    ctx.fillText("QUI A PRIS LA PIZZA ?", L / 2, H * 0.12);
+    const manque = Enquete.cePquiManque();
+    ctx.font = "700 " + Math.round(taille * 0.52) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillStyle = manque ? "#E2453D" : "#8FD79B";
+    ctx.fillText(manque || "Pizza retrouvée. Vous pouvez conclure.", L / 2, H * 0.20);
 
     const noms = SUSPECTS.map(s => s.nom).concat(["PERSONNE"]);
     const hl = H * 0.10;
@@ -3730,7 +3774,7 @@ const EnqVue = {
     }
     ctx.font = "700 " + Math.round(taille * 0.55) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillStyle = "#8496B6";
-    ctx.fillText("← → pour choisir · E pour accuser", L / 2, H * 0.90);
+    ctx.fillText("Touchez un nom pour l'accuser · ← → puis E au clavier", L / 2, H * 0.92);
     ctx.restore();
   },
 };
@@ -3769,7 +3813,7 @@ function dessinerParoleLibre(p, px, pyTete){
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2Dos","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2Dos","c2DosN","c2Acc","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -3843,6 +3887,7 @@ const INTRO_NIV2 = [
   { t:1.3, txt:"Pierre-François sort sa loupe." },
   { t:1.0, txt:"Thibaut le rejoint." },
   { t:1.4, txt:"NIVEAU 2\n<em>L'AFFAIRE DE LA PIZZA AU CHORIZO</em>" },
+  { t:2.2, txt:"<em>Fouillez. Retrouvez la pizza.\nPuis désignez qui.</em>" },
 ];
 const Intro = {
   actif:false, etape:0, chrono:0,
@@ -3939,10 +3984,18 @@ const Interface = {
   /* Le bouton d'action dit ce qu'il fait, et change quand la tarte
      arrive : c'est la seule façon d'apprendre l'esquive sans notice. */
   majAction(){
-    if (!E.c2ATxt || Jeu.niveau !== 2) return;
+    if (Jeu.niveau !== 2) return;
     const esq = Enquete.esquiveOuverte;
-    E.c2ATxt.textContent = esq ? "ESQUIVER !" : (Enquete.accusation ? "ACCUSER" : "INSPECTER");
+    if (E.c2ATxt) E.c2ATxt.textContent = esq ? "ESQUIVER !" : "INSPECTER";
     if (E.c2A) E.c2A.classList.toggle("esquive", !!esq);
+    if (E.c2DosN) E.c2DosN.textContent = String(Dossier.compte());
+    if (E.c2Acc){
+      const pret = Enquete.peutConclure();
+      E.c2Acc.classList.toggle("eteint", !pret);
+      /* Il clignote seulement quand il ne manque vraiment plus rien. */
+      E.c2Acc.classList.toggle("prete", pret && !Enquete.cePquiManque() && !Enquete.accusation);
+      E.c2Acc.textContent = Enquete.accusation ? "RETOUR" : "ACCUSER";
+    }
   },
 
   majBandeau(){
@@ -4079,7 +4132,12 @@ const Entrees = {
         Sons.reveiller();
         if (Intro.actif){ Intro.passer(); return; }
         if (Enquete.dossierOuvert){ Enquete.basculerDossier(); return; }
-        if (Enquete.accusation){ Enquete.valider(); return; }
+        if (Enquete.accusation){
+          const r2 = E.cv.getBoundingClientRect
+            ? E.cv.getBoundingClientRect() : { left:0, top:0 };
+          Enquete.viserAccusation((e.clientY - r2.top) / Camera.H);
+          return;
+        }
         return;
         const r = E.cv.getBoundingClientRect ? E.cv.getBoundingClientRect() : { left:0, top:0, width:Camera.L, height:Camera.H };
         const img = Images.table.appart;
@@ -4199,7 +4257,11 @@ const Entrees = {
     });
     if (E.c2C) E.c2C.addEventListener("pointerdown", ev => { ev.preventDefault(); Enquete.changer(); });
     if (E.c2Dos) E.c2Dos.addEventListener("pointerdown", ev => { ev.preventDefault(); Enquete.basculerDossier(); });
-    for (const b of [E.c2G, E.c2D, E.c2A, E.c2C, E.c2Dos]) if (b) b.addEventListener("click", ev => ev.preventDefault());
+    if (E.c2Acc) E.c2Acc.addEventListener("pointerdown", ev => {
+      ev.preventDefault(); Sons.reveiller();
+      if (Enquete.accusation) Enquete.accusation = false; else Enquete.ouvrirAccusation();
+    });
+    for (const b of [E.c2G, E.c2D, E.c2A, E.c2C, E.c2Dos, E.c2Acc]) if (b) b.addEventListener("click", ev => ev.preventDefault());
     if (E.outilsBtn) E.outilsBtn.addEventListener("click", () => Debug.basculer());
 
     globalThis.addEventListener("resize", () => { ajusterCanevas(); Interface.pensePivot(); });

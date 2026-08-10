@@ -3,7 +3,7 @@
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2Dos","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2Dos","c2DosN","c2Acc","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -77,6 +77,7 @@ const INTRO_NIV2 = [
   { t:1.3, txt:"Pierre-François sort sa loupe." },
   { t:1.0, txt:"Thibaut le rejoint." },
   { t:1.4, txt:"NIVEAU 2\n<em>L'AFFAIRE DE LA PIZZA AU CHORIZO</em>" },
+  { t:2.2, txt:"<em>Fouillez. Retrouvez la pizza.\nPuis désignez qui.</em>" },
 ];
 const Intro = {
   actif:false, etape:0, chrono:0,
@@ -173,10 +174,18 @@ const Interface = {
   /* Le bouton d'action dit ce qu'il fait, et change quand la tarte
      arrive : c'est la seule façon d'apprendre l'esquive sans notice. */
   majAction(){
-    if (!E.c2ATxt || Jeu.niveau !== 2) return;
+    if (Jeu.niveau !== 2) return;
     const esq = Enquete.esquiveOuverte;
-    E.c2ATxt.textContent = esq ? "ESQUIVER !" : (Enquete.accusation ? "ACCUSER" : "INSPECTER");
+    if (E.c2ATxt) E.c2ATxt.textContent = esq ? "ESQUIVER !" : "INSPECTER";
     if (E.c2A) E.c2A.classList.toggle("esquive", !!esq);
+    if (E.c2DosN) E.c2DosN.textContent = String(Dossier.compte());
+    if (E.c2Acc){
+      const pret = Enquete.peutConclure();
+      E.c2Acc.classList.toggle("eteint", !pret);
+      /* Il clignote seulement quand il ne manque vraiment plus rien. */
+      E.c2Acc.classList.toggle("prete", pret && !Enquete.cePquiManque() && !Enquete.accusation);
+      E.c2Acc.textContent = Enquete.accusation ? "RETOUR" : "ACCUSER";
+    }
   },
 
   majBandeau(){
@@ -313,7 +322,12 @@ const Entrees = {
         Sons.reveiller();
         if (Intro.actif){ Intro.passer(); return; }
         if (Enquete.dossierOuvert){ Enquete.basculerDossier(); return; }
-        if (Enquete.accusation){ Enquete.valider(); return; }
+        if (Enquete.accusation){
+          const r2 = E.cv.getBoundingClientRect
+            ? E.cv.getBoundingClientRect() : { left:0, top:0 };
+          Enquete.viserAccusation((e.clientY - r2.top) / Camera.H);
+          return;
+        }
         return;
         const r = E.cv.getBoundingClientRect ? E.cv.getBoundingClientRect() : { left:0, top:0, width:Camera.L, height:Camera.H };
         const img = Images.table.appart;
@@ -433,7 +447,11 @@ const Entrees = {
     });
     if (E.c2C) E.c2C.addEventListener("pointerdown", ev => { ev.preventDefault(); Enquete.changer(); });
     if (E.c2Dos) E.c2Dos.addEventListener("pointerdown", ev => { ev.preventDefault(); Enquete.basculerDossier(); });
-    for (const b of [E.c2G, E.c2D, E.c2A, E.c2C, E.c2Dos]) if (b) b.addEventListener("click", ev => ev.preventDefault());
+    if (E.c2Acc) E.c2Acc.addEventListener("pointerdown", ev => {
+      ev.preventDefault(); Sons.reveiller();
+      if (Enquete.accusation) Enquete.accusation = false; else Enquete.ouvrirAccusation();
+    });
+    for (const b of [E.c2G, E.c2D, E.c2A, E.c2C, E.c2Dos, E.c2Acc]) if (b) b.addEventListener("click", ev => ev.preventDefault());
     if (E.outilsBtn) E.outilsBtn.addEventListener("click", () => Debug.basculer());
 
     globalThis.addEventListener("resize", () => { ajusterCanevas(); Interface.pensePivot(); });
