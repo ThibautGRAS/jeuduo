@@ -737,7 +737,7 @@ titre("9. Toute fonction appelée est définie");
     "Math","JSON","Object","Array","String","Number","Boolean","Date","Promise","Set","Map",
     "parseInt","parseFloat","isFinite","isNaN","setTimeout","setInterval","clearTimeout",
     "clearInterval","requestAnimationFrame","fetch","Peer","Image","Audio","Blob","URL",
-    "MediaRecorder","AudioContext","RTCPeerConnection","AbortSignal","Uint8ClampedArray",
+    "MediaRecorder","AudioContext","SpeechSynthesisUtterance","RTCPeerConnection","AbortSignal","Uint8ClampedArray",
     "console","localStorage","navigator","document","window","performance","location","eval",
     "async","await","of","in","do","else","try","delete","void","instanceof",
     "URLSearchParams","encodeURIComponent","decodeURIComponent","structuredClone",
