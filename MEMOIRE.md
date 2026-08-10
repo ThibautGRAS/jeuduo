@@ -133,6 +133,14 @@ La traînée était plafonnée à 12 points à l'empilement alors que le mode li
 demandait 20 : la traîne longue était inatteignable. Vérifier qu'un plafond est
 bien au-dessus de la plus grande valeur demandée.
 
+### L'invité ne connaît pas son propre état
+Symétrique du piège précédent, et tout aussi coûteux : `etat.raqHaut` est
+renseigné chez l'hôte quand il reçoit la raquette de l'invité, mais **l'invité
+ne se le renvoie jamais à lui-même**. Tout affichage qui lit cet état montrait
+donc, chez l'invité, une valeur figée à sa position initiale — le puits de
+gravité en v13.0. Pour l'affichage, chacun doit partir de sa propre position
+locale et de la position lissée reçue pour l'autre.
+
 ### La physique ne tourne que chez l'hôte
 Tout ce qui est calculé dans `physique()` ou `frapper()` est **invisible pour
 l'invité**. Les records d'échange et de série ne progressaient donc jamais chez
