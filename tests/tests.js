@@ -473,6 +473,30 @@ verifier("aucune donnée réseau supplémentaire",
   verifier("aucune balle prisonnière du puits", perdues === 0, "1200 trajectoires simulées");
 }
 
+/* ======================= 8decies. MODE RELAIS ======================= */
+titre("8decies. Mode relais (coopératif)");
+verifier("quatrième mode déclaré", /relais:\s*\{[^}]*coop: true/.test(script) && /data-mode="relais"/.test(html));
+verifier("personne ne marque en coopératif",
+  /if \(cfgMode\(\)\.coop && aMarquer\.length\)/.test(script) && /finirRelais\(\)/.test(script));
+verifier("aucune manche décomptée",
+  /if \(aMarquer\.length && !cfgMode\(\)\.coop\)/.test(script));
+verifier("compteur commun à la place du score",
+  /if \(cfgMode\(\)\.coop\)\{[\s\S]{0,200}rebondsEchange/.test(script));
+verifier("record commun mémorisé", /function ecrireRecordRelais\(/.test(script) && /r\.relais/.test(script));
+verifier("fin de série transmise à l'invité",
+  /envoyerFx\("relaisFin"/.test(script) && /k === "relaisFin" && !estHote/.test(script),
+  "sinon seul l'hôte verrait l'écran de fin");
+{
+  /* la série doit toujours finir par tomber : vérifions que la vitesse plafonne */
+  const acc = nombre("RELAIS_ACCEL"), vmax = nombre("VIT_MAX_ECLAIR"), vinit = nombre("VIT_INIT");
+  let v = vinit, n = 0;
+  while (v < vmax - 0.01 && n < 500){ v = Math.min(v * acc, vmax); n++; }
+  verifier("la balle atteint son plafond en une série jouable", n > 15 && n < 60,
+    n + " renvois pour passer de " + vinit + " à " + vmax);
+  const paliers = Math.floor(n / nombre("RELAIS_PALIER"));
+  verifier("plusieurs paliers avant le plafond", paliers >= 2, paliers + " paliers franchis");
+}
+
 /* ======================= 9. RÉFÉRENCES ======================= */
 titre("9. Toute fonction appelée est définie");
 {
