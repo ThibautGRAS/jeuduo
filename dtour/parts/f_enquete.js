@@ -585,6 +585,71 @@ const SCENARIOS = [
       ok:"Aucun. Je ne bois pas en semaine.", ko:"Le D'Tour. Puis l'autre. Je crois.",
       pf:"Vous avez une drôle de mémoire des lieux." } },
 
+  { id:"le_siphon", tags:["plomberie", "salon"], coupable:"teo",
+    cachettes:["placards", "commode"],
+    porteurs:["ticket", "sauce", "assiette"],
+    piste:[[0, "Des outils sortis, un joint neuf, et les mains propres."],
+           [1, "Quelqu'un a travaillé, puis s'est lavé les mains. Avant ou après ?"]],
+    trouvaille:[[0, "{Ou}. Posée là le temps de finir le chantier."],
+                [1, "Et le chantier a duré."]],
+    contradiction:"Vous avez démonté le siphon. On ne fait pas ça les mains vides.",
+    chute:"Il a voulu réparer l'évier pendant que les autres mangeaient. Il a posé la pizza pour avoir les mains libres, a fini le joint, et a mangé sans réfléchir. Le siphon, lui, tient très bien.",
+    anecdote:{ suspect:"teo", qTH:"Vous avez touché à la plomberie ce soir ?", qPF:"Tu as encore démonté un truc ?",
+      ok:"Je regarde, je ne touche pas.", ko:"Un joint. Deux minutes. Et j'avais faim.",
+      pf:"Tu vas finir par inonder l'immeuble." } },
+
+  { id:"la_bassine", temoinCle:"soeur", tags:["plomberie", "porte"], coupable:null,
+    cachettes:["evier", "poubelle"],
+    porteurs:["ticket", "boite", "serviette"],
+    piste:[[0, "Le carton est gondolé. Il a pris l'eau."],
+           [1, "On s'est servi de la boîte comme d'une bassine."]],
+    trouvaille:[[0, "{Ou}. Le carton a servi à autre chose qu'à transporter."],
+                [1, "Personne ne l'a volée. Elle a fini par terre, sous une fuite."]],
+    contradiction:"Vous avez pris la boîte pour la fuite. Vous n'avez pas regardé dedans.",
+    chute:"Ça gouttait. La première chose plate à portée de main était la boîte. Elle a servi de bassine pendant vingt minutes, avec la pizza encore dedans.",
+    anecdote:{ suspect:"soeur", qTH:"Qu'avez-vous mis sous la fuite ?", qPF:"Tu as mis quoi sous la fuite ?",
+      ok:"Une casserole. Comme tout le monde.", ko:"Ce qui traînait. Je n'ai pas regardé quoi.",
+      pf:"Tu ne regardes jamais ce que tu prends." } },
+
+  { id:"le_tabouret", tags:["hauteur", "salon"], coupable:"charles",
+    cachettes:["placards", "portant"],
+    porteurs:["ticket", "miettes", "part"],
+    piste:[[0, "Le tabouret de la cuisine a changé de place."],
+           [1, "Quelqu'un est monté dessus. Puis l'a remis. Presque."]],
+    trouvaille:[[0, "{Ou}. Il a fallu grimper."],
+                [1, "Et redescendre discrètement."]],
+    contradiction:"Le tabouret a bougé de trente centimètres. Vous êtes le seul à être monté.",
+    chute:"Il l'a cachée en hauteur pour que personne ne la trouve avant son départ, et il a mal remis le tabouret. Trente centimètres, c'est tout ce qu'il a laissé derrière lui.",
+    anecdote:{ suspect:"charles", qTH:"Vous êtes monté sur quelque chose ce soir ?", qPF:"Vous grimpez souvent chez les gens ?",
+      ok:"Non. Je ne me sers de rien, ici.", ko:"Sur le tabouret. Pour atteindre une étagère.",
+      pf:"Vous avez une réponse pour tout, vous." } },
+
+  { id:"hors_de_portee", temoinCle:"teo", tags:["hauteur", "porte"], coupable:null,
+    cachettes:["placards", "portant"],
+    porteurs:["ticket", "fromage", "assiette"],
+    piste:[[0, "Nous avons regardé partout. À hauteur d'homme."],
+           [1, "Personne n'a levé la tête."]],
+    trouvaille:[[0, "{Ou}. À trente centimètres au-dessus de nos regards."],
+                [1, "Elle nous a vus passer six fois."]],
+    contradiction:"Personne ne l'a cachée. Personne n'a levé les yeux, c'est différent.",
+    chute:"Elle avait été rangée en hauteur, tout simplement, par quelqu'un de grand qui n'y voyait rien d'extraordinaire. Deux inspecteurs sont passés dessous six fois.",
+    anecdote:{ suspect:"teo", qTH:"Vous avez cherché en hauteur ?", qPF:"Tu as pensé à regarder en haut ?",
+      ok:"Non. On ne pense jamais à lever la tête.", ko:"Je n'y ai pas pensé une seconde.",
+      pf:"Tu es plus grand que moi, tu aurais pu." } },
+
+  { id:"la_tournee", tags:["alcool", "salon"], coupable:"teo",
+    cachettes:["tv", "basse", "canape"],
+    porteurs:["ticket", "part", "serviette"],
+    piste:[[0, "Personne n'a compté les verres. Ni les parts."],
+           [1, "Une tournée, ça se termine toujours par quelqu'un qui a faim."]],
+    trouvaille:[[0, "{Ou}. Ce qu'il en reste a été mangé assis."],
+                [1, "Sans se lever une seule fois."]],
+    contradiction:"Vous n'avez pas quitté ce canapé. La pizza est venue à vous.",
+    chute:"Après la tournée, il a eu faim sans avoir la force de se lever. Quelqu'un lui a apporté la pizza. Il n'a jamais su qui, et il a tout mangé.",
+    anecdote:{ suspect:"teo", qTH:"Combien de verres, ce soir ?", qPF:"Tu as bu combien, toi ?",
+      ok:"Deux. Peut-être trois.", ko:"Je ne compte pas. C'est le principe d'une tournée.",
+      pf:"Tu ne comptes jamais, et c'est bien le problème." } },
+
   { id:"la_tarte", temoinCle:"soeur", tags:["porte", "chat"], coupable:null, cachettes:["placards", "evier"],
     porteurs:["ticket", "chorizo", "assiette"],
     piste:[[0, "Quelqu'un est venu, a échangé quelque chose, et est reparti."],
@@ -850,26 +915,22 @@ const HortenseApp = {
    passant pourrait être faux.
 ================================================================== */
 
-const VISITEUR_DELAI = [28, 52];    /* secondes entre deux visites */
+const VISITEUR_DELAI = [42, 78];    /* secondes entre deux visites */
 const VISITEUR_UTILE = 0.45;        /* part de visites qui apprennent quelque chose */
 
 /* Un visiteur peut avoir des répliques `lie` : elles ne sortent que si
    l'affaire en cours porte l'étiquette correspondante. C'est ce qui
    fait qu'un passant tombe parfois pile sur le sujet — et le reste du
    temps parle de sel. */
+/* Un visiteur peut avoir des répliques `lie` : elles ne sortent que si
+   l'affaire en cours porte l'étiquette correspondante. C'est ce qui
+   fait qu'un passant tombe parfois pile sur le sujet — et le reste du
+   temps parle de sel.
+
+   Seuls des personnages écrits pour le jeu figurent ici. Les figurants
+   pris dans la foule du niveau 1 ont été retirés : un passant sans
+   histoire ne vaut pas la peine d'interrompre une enquête. */
 const VISITEURS = [
-  { id:"francky", nom:"FRANCKY, DU D'TOUR", sprite:"pers_francky", cote:-1, taille:1.02,
-    banal:["Deux cocktails offerts. Vous les prenez maintenant ou après ?",
-           "J'ai fermé plus tôt. Personne ne tenait debout.",
-           "Le grand chauve, là, il m'en doit trois."],
-    lie:{
-      dodo:["Mon « bonne nuit les petits », c'est deux doses. Ce soir j'ai eu la main lourde.",
-            "Ceux qui en boivent un ne se réveillent pas. C'est le principe.",
-            "J'en ai servi un ici, vers {heure}. Après ça, plus personne n'a rien vu."],
-      alcool:["Ils ont bu chez moi avant de monter. Beaucoup.",
-              "Un cocktail comme le mien, ça efface une soirée entière.",
-              "Vous voulez la vérité ? Demandez à quelqu'un qui n'a pas bu."],
-    } },
   { id:"jojo", nom:"JOJO LE NAIN", sprite:"pers_jojo", cote:1, taille:1.0,
     banal:["Je tenais le bar de l'Entrepotes. Ce soir, c'est relâche.",
            "Francky met trop de sirop. Je le dis depuis dix ans.",
@@ -885,35 +946,29 @@ const VISITEURS = [
               "Je sers, je ne juge pas. Mais là, j'ai jugé un peu.",
               "Le plus grand des deux ne se souvenait déjà plus de son prénom."],
     } },
-  { id:"voisine",  nom:"LA VOISINE DU 3e",   sprite:"pnj02", cote:-1,
-    banal:["Vous auriez du sel ?", "C'est vous qui avez le vélo dans le couloir ?",
-           "Je cherche le gardien. Depuis six ans."] },
-  { id:"livreur",  nom:"UN LIVREUR",         sprite:"pnj07", cote:-1,
-    banal:["C'est bien le {etage} ?", "J'ai une commande pour Dupont.",
-           "Personne ne répond, en bas."] },
-  { id:"joggeur",  nom:"UN TYPE EN SURVÊT",  sprite:"pnj09", cote:1,
-    banal:["La porte était ouverte.", "Vous faites une fête ?",
-           "Je repasse plus tard. Ou pas."] },
-  { id:"ado",      nom:"L'ADO DU DESSOUS",   sprite:"pnj16", cote:1,
-    banal:["Y a trop de bruit chez vous.", "C'est quoi cette odeur ?",
-           "Ma mère demande si vous avez fini."] },
-  { id:"monsieur", nom:"UN MONSIEUR POLI",   sprite:"pnj05", cote:-1,
-    banal:["Bonsoir. Je me suis trompé de porte.", "Vous n'auriez pas vu un chat roux ?",
-           "Excusez-moi. Vraiment."] },
-  { id:"dame",     nom:"UNE DAME PRESSÉE",   sprite:"pnj12", cote:1,
-    banal:["Je ne fais que passer.", "Ne vous levez pas.",
-           "J'ai laissé quelque chose ici la semaine dernière."] },
+  { id:"francky", nom:"FRANCKY, DU D'TOUR", sprite:"pers_francky", cote:-1, taille:1.02,
+    banal:["Deux cocktails offerts. Vous les prenez maintenant ou après ?",
+           "J'ai fermé plus tôt. Personne ne tenait debout.",
+           "Le grand chauve, là, il m'en doit trois."],
+    lie:{
+      dodo:["Mon « bonne nuit les petits », c'est deux doses. Ce soir j'ai eu la main lourde.",
+            "Ceux qui en boivent un ne se réveillent pas. C'est le principe.",
+            "J'en ai servi un ici, vers {heure}. Après ça, plus personne n'a rien vu."],
+      alcool:["Ils ont bu chez moi avant de monter. Beaucoup.",
+              "Un cocktail comme le mien, ça efface une soirée entière.",
+              "Vous voulez la vérité ? Demandez à quelqu'un qui n'a pas bu."],
+    } },
 ];
 
 const ETAT_V = { ABSENT:"ABSENT", ENTREE:"ENTREE", PARLE:"PARLE", SORTIE:"SORTIE" };
 
 const Visiteurs = {
   etat:ETAT_V.ABSENT, qui:null, x:0, vise:0, dir:1, pas:0, chrono:0,
-  prochain:0, comptes:0, utiles:0,
+  prochain:0, comptes:0, utiles:0, dernier:null,
 
   raz(){
     this.etat = ETAT_V.ABSENT; this.qui = null;
-    this.comptes = 0; this.utiles = 0;
+    this.comptes = 0; this.utiles = 0; this.dernier = null;
     this.prochain = hasard(VISITEUR_DELAI[0], VISITEUR_DELAI[1]);
   },
 
@@ -943,7 +998,12 @@ const Visiteurs = {
   declencher(){
     if (this.etat !== ETAT_V.ABSENT || !Enquete.actif) return false;
     if (Enquete.dossierOuvert || Enquete.accusation || HortenseApp.visible()) return false;
-    this.qui = piocher(VISITEURS);
+    /* Jamais deux fois le même d'affilée : avec deux personnages, ça se
+       remarquerait tout de suite. */
+    const dispo = VISITEURS.length > 1 && this.dernier
+      ? VISITEURS.filter(v => v.id !== this.dernier) : VISITEURS;
+    this.qui = piocher(dispo);
+    this.dernier = this.qui.id;
     this.dir = this.qui.cote >= 0 ? -1 : 1;         /* d'où il vient */
     this.x = this.dir > 0 ? -0.05 : 1.05;
     const chef = Enquete.actifIns();

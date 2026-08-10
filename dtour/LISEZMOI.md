@@ -63,7 +63,7 @@ chaque pièce, une fois par partie. Et de loin en loin, quand on les
 laisse tranquilles, ils bavardent. Tout est cadencé par le chrono du
 jeu, jamais par `setTimeout`.
 
-**Vingt-deux affaires écrites** qui se servent de ces liens : la pizza mise de
+**Vingt-sept affaires écrites** qui se servent de ces liens : la pizza mise de
 côté pour Hortense, Charles qui efface sa visite, le prof d'histoire qui
 date la soirée à la minute parce qu'il en faisait partie, la chaîne
 Risoto-puis-Charles, le troc contre une tarte au citron, la reconstitution du prof
@@ -215,11 +215,15 @@ suite de tests le vérifie sur trois cents tirages : six indices sans
 doublon, six meubles distincts, jamais d'indice sur la cachette, et les
 deux indices porteurs toujours présents.
 
-**Des gens passent.** Toutes les 28 à 52 secondes, quelqu'un entre par
-un bord, s'arrête près des inspecteurs, dit une phrase et repart. Un
-voisin, un livreur, l'ado du dessous. Un passant sur deux environ ne
-sert à rien — « Vous auriez du sel ? », « C'est quoi cette odeur ? » —
-et l'autre laisse tomber quelque chose de vrai.
+**Des gens passent.** Toutes les 42 à 78 secondes, quelqu'un entre par
+un bord, s'arrête près des inspecteurs, dit une phrase et repart —
+**Francky** ou **Jojo**, jamais deux fois le même d'affilée. Seuls des
+personnages écrits pour le jeu figurent au registre : un passant sans
+histoire ne vaut pas la peine d'interrompre une enquête.
+
+Sept fois sur dix, si l'affaire touche à l'un de ses thèmes, il tombe
+pile sur le sujet. Sinon il dit quelque chose d'utile sur l'affaire, ou
+rien du tout — « Francky met trop de sirop. Je le dis depuis dix ans. »
 
 Les répliques utiles ne sont **pas écrites d'avance** : elles sont
 fabriquées à partir de l'affaire en cours, sinon un passant pourrait
@@ -247,10 +251,17 @@ marié à une femme de très grande taille. Trois thèmes lui répondent :
 sert le second verre après celui de Francky —, et `hauteur`, parce que sa
 femme atteint les placards du haut sans monter sur rien.
 
-Ses trois affaires : la fuite d'évier qui a fait vider le placard du bas
-avec la pizza dedans, le placard du haut que personne ici n'atteint sans
-tabouret, et la tournée des deux bars d'où l'on revient sans se souvenir
-de ce qu'on a emporté.
+Neuf affaires lui donnent la parole : la fuite d'évier qui a fait vider
+le placard du bas avec la pizza dedans, le siphon démonté les mains
+libres, la boîte à pizza transformée en bassine, le placard du haut sans
+trace de tabouret, le tabouret mal remis de trente centimètres, la pizza
+rangée en hauteur devant deux inspecteurs qui n'ont jamais levé la tête,
+la tournée des deux bars, et la tournée dont personne n'a compté les
+verres.
+
+Chaque thème compte au moins trois affaires — un test le refuse en
+dessous, parce qu'un thème sous-alimenté rend un personnage à moitié
+muet.
 
 ### Ajouter un visiteur
 

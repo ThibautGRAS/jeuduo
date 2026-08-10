@@ -918,7 +918,14 @@ if (D){
   egal("loin de tout, interroger ne fait rien", D.Enquete.parler(), false);
 
   titre("Les visiteurs de passage");
-  verifier("huit passants au moins", D.VISITEURS.length >= 8, D.VISITEURS.length);
+  verifier("seuls des personnages écrits pour le jeu passent",
+    D.VISITEURS.every(v => /^pers_/.test(v.sprite)),
+    D.VISITEURS.filter(v => !/^pers_/.test(v.sprite)).map(v => v.id).join(", "));
+  verifier("chacun a au moins un thème d'affaire",
+    D.VISITEURS.every(v => v.lie && Object.keys(v.lie).length >= 1),
+    "un passant sans thème n'est qu'un figurant");
+  verifier("jamais deux fois le même d'affilée",
+    /this\.dernier[\s\S]{0,200}filter\(v => v\.id !== this\.dernier\)/.test(source));
   verifier("Jojo est dans le registre",
     D.VISITEURS.some(v => v.id === "jojo" && v.lie && v.lie.plomberie && v.lie.hauteur));
   verifier("les deux barmen se partagent le thème de l'alcool",
@@ -940,23 +947,29 @@ if (D){
   verifier("les affaires de cocktail existent",
     D.SCENARIOS.filter(sc => (sc.tags || []).indexOf("dodo") >= 0).length >= 3,
     "il faut de quoi faire parler Francky");
-  verifier("chaque thème de visiteur a au moins deux affaires",
+  verifier("chaque thème de visiteur a au moins trois affaires",
     (() => {
       const themes = new Set();
       for (const v of D.VISITEURS) if (v.lie) Object.keys(v.lie).forEach(k => themes.add(k));
       for (const t2 of themes){
-        if (D.SCENARIOS.filter(sc => (sc.tags || []).indexOf(t2) >= 0).length < 1) return false;
+        if (D.SCENARIOS.filter(sc => (sc.tags || []).indexOf(t2) >= 0).length < 3) return false;
       }
       return true;
-    })(), "un thème sans affaire, c'est un personnage muet");
+    })(),
+    (() => {
+      const c = {};
+      for (const v of D.VISITEURS) if (v.lie) for (const k of Object.keys(v.lie))
+        c[k] = D.SCENARIOS.filter(sc => (sc.tags || []).indexOf(k) >= 0).length;
+      return Object.entries(c).map(([k, n]) => k + ":" + n).join(" ");
+    })());
   verifier("chacun a un sprite chargé au démarrage",
-    D.VISITEURS.every(v => /^pnj\d\d$|^pers_/.test(v.sprite)),
+    D.VISITEURS.every(v => /^pers_/.test(v.sprite)),
     D.VISITEURS.map(v => v.sprite).join(", "));
   verifier("chacun a de quoi ne rien dire",
     D.VISITEURS.every(v => v.nom && v.banal.length >= 3));
   lancer2();
   verifier("aucun passant au départ", !D.Visiteurs.visible());
-  verifier("le premier est attendu, pas immédiat", D.Visiteurs.prochain > 20);
+  verifier("le premier est attendu, pas immédiat", D.Visiteurs.prochain > 35);
   /* un passant traverse : il entre, parle, repart */
   D.Visiteurs.declencher();
   verifier("il entre par un bord", D.Visiteurs.visible() && (D.Visiteurs.x < 0 || D.Visiteurs.x > 1));
