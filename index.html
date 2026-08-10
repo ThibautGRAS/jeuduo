@@ -511,7 +511,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v12.2 · 2026-08-09</div>
+  <div id="version">DUO v12.3 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -534,7 +534,8 @@ canvas{
       <div id="reglesListe" class="cache">
           <span class="regle" data-modes="tous"><b class="c">DÉPLACEMENT</b> — Glissez pour bouger votre raquette. Vous êtes toujours en bas, en cyan.<br></span>
           <span class="regle" data-modes="tous"><b class="c">MODES</b> — <b>Arcade</b> : orbes, blocs, vices et matières d'arène. <b>Classique</b> : duel pur, sans aucun de ces éléments — mais vous gardez le décor et la musique de l'arène de votre choix.<br></span>
-          <span class="regle" data-modes="gravite"><b class="v">GRAVITÉ</b> — Chacun projette un puits d'attraction dans la moitié adverse, à l'aplomb de sa propre raquette. Bouger sert donc à défendre <i>et</i> à dévier la balle de l'autre : à vous de choisir ce qui prime.<br></span>
+          <span class="regle" data-modes="gravite"><b class="v">GRAVITÉ</b> — Chacun projette un puits d'attraction dans la moitié adverse, à l'aplomb de sa propre raquette. Bouger sert donc à défendre <i>et</i> à dévier la balle de l'autre : à vous de choisir ce qui prime.<br>
+        <b class="v">TROU DE VER</b> — Une balle qui passe sur un puits, ou qui s'y attarde, est <b>avalée</b> : elle ressort par l'autre puits, plus rapide et en gardant sa direction. Comme votre puits est chez l'adversaire, la balle avalée revient dans <i>votre</i> camp — à manier avec prudence. Les rochers détachés des murs, eux, y sont happés bien plus fort et finissent pulvérisés.<br></span>
           <span class="regle" data-modes="relais"><b class="o">RELAIS</b> — Le mode coopératif : personne ne marque, vous gardez une seule balle en vie à deux. Elle accélère à chaque renvoi et franchit un palier tous les dix échanges. Le record est commun.<br></span>
           <span class="regle" data-modes="arcade classique gravite"><b class="c">MANCHES</b> — 5 points gagnent une manche ; le nombre de manches gagnantes se règle au menu. À 4-4 : <b class="f">MORT SUBITE</b>, le terrain rétrécit et les orbes disparaissent.<br></span>
           <span class="regle" data-modes="tous"><b class="c">LIFT</b> — Fouettez la raquette à l'impact : la balle part courbée, bien plus rapide, et si le geste est franc elle <b>décolle et survole les blocs</b> (halo doré, ombre qui s'écarte).<br></span>
@@ -639,7 +640,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "12.2";
+const VERSION = "12.3";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -690,6 +691,17 @@ const PUITS_FORCE = 1.15, PUITS_PORTEE = 268, PUITS_HAUTEUR = 0.30;
    couvrait presque la moitié de la largeur du terrain et on ne voyait plus
    jouer. Réduit à 62, il se lit sans masquer la balle. */
 const PUITS_R_VISU = 62;
+/* Absorption : ce qui s'approche trop du cœur y tombe. Les éclats sont
+   pulvérisés ; la balle, elle, traverse et ressort par l'AUTRE puits, plus
+   rapide — un trou de ver. Comme le puits d'un joueur se trouve dans le camp
+   adverse, la balle avalée ressort dans son propre camp : les puits deviennent
+   à double tranchant. */
+const PUITS_GOULOT = 27;           /* en deçà, tout est happé */
+const PUITS_SEJOUR = 850;          /* ou après ce temps passé tout près */
+const PUITS_ZONE = 46;             /* rayon du séjour prolongé */
+const PUITS_REPOS = 900;           /* pas de nouvelle absorption aussitôt */
+const PUITS_GAIN = 1.22;           /* la balle ressort accélérée */
+const DEBRIS_ATTIRANCE = 2.6;      /* les rochers sont happés bien plus fort */
 const cvLentille = document.createElement("canvas");
 cvLentille.width = PUITS_R_VISU * 2; cvLentille.height = PUITS_R_VISU * 2;
 const ctxLentille = cvLentille.getContext("2d");
@@ -2444,6 +2456,20 @@ function jouerFx(k, x, y, extra){
   if (k === "mur"){ explosion(x, y, "#8AB4FF", 7, 2.2); sonMur(); }
   if (k === "survol"){ annoncer("BALLE LIFTÉE — ELLE SURVOLE", CO_OR); }
   if (k === "relaisFin" && !estHote){ rebondsEchange = Number(extra) || 0; finirRelais(); }
+  if (k === "avale"){
+    const balle = extra === "balle";
+    explosion(x, y, balle ? "#E0E7FF" : "#94A3B8", balle ? 26 : 16, balle ? 2.2 : 1.6);
+    secousse = Math.max(secousse, balle ? 8 : 3);
+    if (balle) annoncer("AVALÉE", "#C4B5FD");
+    bip(balle ? 300 : 220, 0.26, "sine", balle ? 0.34 : 0.18, 40);
+    souffle(0.22, balle ? 0.3 : 0.16, 380);
+  }
+  if (k === "recrache"){
+    explosion(x, y, "#DDD6FE", 30, 5.2);
+    secousse = Math.max(secousse, 9);
+    bip(120, 0.3, "sawtooth", 0.38, 900);
+    setTimeout(() => bip(880, 0.12, "square", 0.26, 1400), 70);
+  }
   if (k === "palier"){
     annoncer("PALIER " + extra, CO_OR);
     secousse = Math.max(secousse, 7);
@@ -2707,9 +2733,25 @@ function physique(){
     o.x = Math.max(murG_() + 4, Math.min(murD_() - 4 - o.l, o.x));
   }
   /* dérive des débris (ceux qui ne sont pas encore détachés attendent) */
-  for (const d of debris){
+  for (let di = debris.length - 1; di >= 0; di--){
+    const d = debris[di];
     if (d.naissance && maintenant < d.naissance) continue;
     if (d.naissance && !d.ne){ d.ne = true; explosion(d.x, d.y, "#94A3B8", 7, 2.2); }
+    /* Les rochers sont bien plus sensibles que la balle : ils sont légers,
+       et finissent immanquablement dans le trou. */
+    let avale = false;
+    for (const p of puitsActifs()){
+      const dx = p.x - d.x, dy = p.y - d.y, d2 = dx*dx + dy*dy;
+      if (d2 < PUITS_GOULOT * PUITS_GOULOT){ avale = true; break; }
+      if (d2 > 25 && d2 < PUITS_PORTEE * PUITS_PORTEE){
+        const dd = Math.sqrt(d2), u = 1 - dd / PUITS_PORTEE;
+        const f = PUITS_FORCE * DEBRIS_ATTIRANCE * u * u;
+        d.vx += (dx/dd) * f; d.vy += (dy/dd) * f;
+      }
+    }
+    if (avale){ debris.splice(di, 1); fxLocal("avale", d.x, d.y, "roche"); continue; }
+    const vd = Math.hypot(d.vx, d.vy);
+    if (vd > 9){ d.vx = d.vx / vd * 9; d.vy = d.vy / vd * 9; }
     d.x += d.vx; d.y += d.vy; d.rot += d.vr;
     if (d.x < murG_() + d.r){ d.x = murG_() + d.r; d.vx = Math.abs(d.vx); }
     if (d.x > murD_() - d.r){ d.x = murD_() - d.r; d.vx = -Math.abs(d.vx); }
@@ -2720,6 +2762,36 @@ function physique(){
   const aMarquer = [];
   for (const b of balles){
     /* arène VIDE : chaque bloc exerce un puits de gravité sur la balle */
+    /* Trou de ver : la balle happée par un puits ressort par l'autre, plus
+       vive. Deux façons d'y tomber — passer vraiment dessus, ou s'attarder
+       trop près. Le trajet conserve la direction, donc la balle jaillit de
+       l'autre côté du terrain en gardant son élan. */
+    if (cfgMode().puits && maintenant - (b.tPuits || -1e9) > PUITS_REPOS){
+      const liste = puitsActifs();
+      for (let pi = 0; pi < liste.length; pi++){
+        const p = liste[pi];
+        const dx = p.x - b.x, dy = p.y - b.y, dd = Math.hypot(dx, dy);
+        if (dd < PUITS_ZONE) b.sejour = (b.sejour || 0) + PAS_MS;
+        else if (dd > PUITS_ZONE * 1.6) b.sejour = 0;
+        if (dd < PUITS_GOULOT || (b.sejour || 0) > PUITS_SEJOUR){
+          const sortie = liste[1 - pi];
+          const v = Math.hypot(b.vx, b.vy) || VIT_INIT;
+          const vs = Math.min(v * PUITS_GAIN, VIT_MAX_ECLAIR);
+          const nx = b.vx / (v || 1), ny = b.vy / (v || 1);
+          fxLocal("avale", p.x, p.y, "balle");
+          b.x = sortie.x + nx * (PUITS_GOULOT + BALLE_R + 8);
+          b.y = sortie.y + ny * (PUITS_GOULOT + BALLE_R + 8);
+          b.vx = nx * vs; b.vy = ny * vs;
+          if (Math.abs(b.vy) < VY_MIN) b.vy = VY_MIN * (b.vy >= 0 ? 1 : -1);
+          b.x = Math.max(murG_() + BALLE_R, Math.min(murD_() - BALLE_R, b.x));
+          b.tPuits = maintenant; b.sejour = 0;
+          if (b.tr) b.tr.length = 0;          /* sinon la traîne barre l'écran */
+          fxLocal("recrache", b.x, b.y, "");
+          break;
+        }
+      }
+    }
+
     /* puits du mode gravité : ils agissent avant la matière de l'arène */
     for (const p of puitsActifs()){
       const dx = p.x - b.x, dy = p.y - b.y, d2 = dx*dx + dy*dy;
