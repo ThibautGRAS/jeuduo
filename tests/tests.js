@@ -432,6 +432,18 @@ verifier("aucun tracé décoratif ajouté dans la sphère",
   verifier("enroulement concentré au centre", m && auCoeur / auBord > 40,
     m ? "rapport centre/bord de " + Math.round(auCoeur/auBord) : "formule introuvable");
 }
+verifier("l'affichage des puits part de la position locale",
+  /function puitsAffiches\(/.test(script) &&
+  /const x0 = moi === 0 \? maRaquette : raqAdvAffichee/.test(script),
+  "sur l'appareil de l'invité, etat.raqHaut n'est jamais renseigné");
+verifier("le rendu n'utilise plus l'état autoritaire",
+  !/deformerFond[\s\S]{0,200}for \(const p of puitsActifs\(\)\)/.test(script) &&
+  /for \(const p of puitsAffiches\(\)\)/.test(script));
+verifier("la physique garde l'état autoritaire",
+  /function puitsActifs\(\)\{[\s\S]{0,200}etat\.raqBas/.test(script),
+  "l'hôte reste la référence");
+verifier("l'invité tient son propre état à jour",
+  /etat\.raqHaut = maRaquette;/.test(script));
 verifier("aucune donnée réseau supplémentaire",
   /x: etat\.raqBas/.test(script) && /x: etat\.raqHaut/.test(script),
   "les puits se déduisent des raquettes déjà synchronisées");
