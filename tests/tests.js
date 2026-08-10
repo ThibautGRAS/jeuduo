@@ -406,18 +406,21 @@ verifier("trou noir dessiné", /function dessinerTrouNoir\(/.test(script));
   verifier("le puits n'envahit pas le terrain", 2*rv / LG < 0.3,
     Math.round(200*rv/LG) + " % de la largeur, contre 45 % auparavant");
 }
-verifier("la sphère n'est jamais opaque",
-  /g\.addColorStop\(0,\s*"rgba\(2,3,8,\.90\)"\)/.test(script),
-  "on continue de deviner le fond enroulé à l'intérieur");
+{
+  const m = script.match(/g\.addColorStop\(0,\s*"rgba\(2,3,8,\.(\d+)\)"\)/);
+  const opacite = m ? Number("0." + m[1]) : 1;
+  verifier("la sphère n'est jamais opaque", opacite < 0.9,
+    "opacité au cœur " + opacite + " : on devine encore le fond enroulé");
+}
 verifier("liseré fin plutôt que disque d'accrétion",
   !/createLinearGradient\(-Rd, 0, Rd, 0\)/.test(script) &&
   /anneau d'Einstein, mince/.test(script),
   "la référence ne montre aucun disque flamboyant");
 {
   /* le décor doit être ASPIRÉ, pas grossi : facteur inférieur à 1 */
-  const m = script.match(/const echelle = 1 - ([\d.]+) \* u \* u/);
-  verifier("le décor est aspiré vers le trou, pas grossi", !!m,
-    m ? "facteur " + (1 - Number(m[1])).toFixed(2) + " au cœur" : "grossissement encore actif");
+  const m = script.match(/const echelle = 1 \+ ([\d.]+) \* u \* u/);
+  verifier("le décor est grossi par la lentille", !!m,
+    m ? "facteur " + (1 + Number(m[1])).toFixed(2) + " au cœur : comprimer rendait la déformation invisible" : "");
 }
 verifier("creusement progressif au-delà de la sphère",
   /const creux = ctx\.createRadialGradient\(x, y, R \* 0\.8, x, y, PUITS_R_VISU\)/.test(script),
@@ -570,9 +573,9 @@ titre("8terdecies. Absorption et trou de ver");
   verifier("les rochers sont emportés avec le trou",
     /d\.x \+= \(p\.x - puitsPrec\[ip\]\) \* ORBITE_ENTRAINEMENT/.test(script),
     "coefficient " + nombre("ORBITE_ENTRAINEMENT") + " : ils tiennent l'orbite jusqu'à 16 px par image");
-  verifier("des rochers dès le début de la manche",
-    /function semerDebris\(/.test(script) && /DEBRIS_DEPART/.test(script),
-    nombre("DEBRIS_DEPART") + " rochers semés");
+  verifier("des rochers à partir de la deuxième manche",
+    /function semerDebris\(/.test(script) && /manches\[0\] \+ manches\[1\] < 1\) return;/.test(script),
+    nombre("DEBRIS_DEPART") + " rochers, jamais en première manche");
   {
     /* la semence doit venir APRÈS la remise à zéro du tableau */
     const i1 = script.indexOf("debris = []; fissures = [[], []];\n  semerDebris()");
