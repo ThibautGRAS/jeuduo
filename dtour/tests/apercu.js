@@ -281,10 +281,10 @@ function jouerJusqua(D, condition, limite){
     const { D, canevas } = await preparer(1280, 620);
     D.amorcer();
     D.Camera.mesurer(1280, 620, 1);
-    D.Jeu.demarrer(2);
-    const vide = D.Enquete.zones.findIndex(z => !z.trace && z.ref.x > 0.45);
-    D.Enquete.envoyer(vide);
-    for (let i = 0; i < 60 * 4; i++) D.Jeu.pas(1 / 60);
+    D.Jeu.demarrer(2); D.Intro.finir();
+    const z = D.Enquete.zones.findIndex(x => x.ref.id === "frigo");
+    D.Enquete.actifIns().x = D.Enquete.zones[z].ref.pied;
+    for (let i = 0; i < 30; i++) D.Jeu.pas(1 / 60);
     dessinerVia(D, canevas);
     ecrire(canevas, "9_enquete_1280");
   }
@@ -292,10 +292,13 @@ function jouerJusqua(D, condition, limite){
     const { D, canevas } = await preparer(844, 318);
     D.amorcer();
     D.Camera.mesurer(844, 318, 1);
-    D.Jeu.demarrer(2);
+    D.Jeu.demarrer(2); D.Intro.finir();
     const z = D.Enquete.zones.findIndex(x => x.ref.id === "canape");
-    D.Enquete.envoyer(z);
-    for (let i = 0; i < 60 * 3; i++) D.Jeu.pas(1 / 60);
+    D.Enquete.actifIns().x = D.Enquete.zones[z].ref.pied;
+    D.Enquete.indices = 3;
+    for (let i = 0; i < 30; i++) D.Jeu.pas(1 / 60);
+    D.Enquete.inspecter();
+    for (let i = 0; i < 50; i++) D.Jeu.pas(1 / 60);
     dessinerVia(D, canevas);
     ecrire(canevas, "10_enquete_844");
   }

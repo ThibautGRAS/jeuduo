@@ -332,7 +332,14 @@ const Jeu = {
 
   demarrer(niveau){
     if (niveau) this.niveau = niveau;
-    if (this.niveau === 2) return this.demarrerEnquete();
+    if (this.niveau === 2){
+      Score.raz(); Effets.raz(); razHeros(); File.raz(); Foule.raz();
+      this.temps = 0; this.vies = 1; this.finChrono = 0; this.phase = "jeu";
+      Interface.entrerJeu();
+      Intro.lancer();
+      Sons.reveiller(); Sons.lancerAmbiance(); Sons.lancerMusique();
+      return;
+    }
     Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
     this.temps = 0; this.gel = 0; this.vies = VIES; this.ralenti = 1; this.demandes = [];
     this.moment = 0; this.fonduDe = 0; this.fondu = 1; this.finChrono = 0;
@@ -369,7 +376,9 @@ const Jeu = {
     if (this.niveau === 2){
       if (this.phase === "jeu" || this.phase === "fin"){
         this.temps += dt;
+        if (Intro.actif){ Intro.majorer(dt); Sons.ordonnerMusique(88); return; }
         Enquete.pas(dt);
+        Interface.majAction();
         if (this.phase === "fin"){
           this.finChrono += dt;
           if (this.finChrono > 1.2 && !Interface.finAffichee) Interface.afficherFin();
@@ -514,6 +523,7 @@ const Jeu = {
 
   terminer(){
     this.phase = "fin";
+    if (this.niveau === 1) Progres.finirNiveau1();
     this.finChrono = 0;
     this.demandes = [];
     for (const p of Foule.tous) if (p.etat === ETAT.DEMANDE){ p.etat = ETAT.MALAISE; p.chrono = 1; }

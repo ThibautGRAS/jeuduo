@@ -3,7 +3,7 @@
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2Dos","introNiv","introTxt","niv2","niv2Cad","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -52,6 +52,59 @@ const Ecran = {
   basculer(){ this.estPlein() ? this.sortir() : this.demander(); },
 };
 
+/* ---------- LevelManager : ce que le joueur a déjà fait ----------
+   Le niveau 2 se déverrouille dès que le niveau 1 a été terminé une
+   fois. C'est enregistré à part du reste : effacer ses records ne doit
+   pas reverrouiller le jeu. */
+const CLE_PROGRES = "dtour_progres";
+const Progres = {
+  lire(){
+    try{ return JSON.parse(localStorage.getItem(CLE_PROGRES)) || {}; }catch(e){ return {}; }
+  },
+  ecrire(p){ try{ localStorage.setItem(CLE_PROGRES, JSON.stringify(p)); }catch(e){} },
+  niveau2Ouvert(){ return !!this.lire().n1; },
+  finirNiveau1(){ const p = this.lire(); p.n1 = true; this.ecrire(p); },
+};
+
+/* ---------- introduction du niveau 2 ----------
+   Cinq écrans courts, six secondes en tout. On peut passer d'un
+   toucher : une cinématique qu'on ne peut pas sauter est une punition
+   dès la deuxième partie. */
+const INTRO_NIV2 = [
+  { t:1.4, txt:"QUELQUES HEURES\nPLUS TARD..." },
+  { t:1.6, txt:"UNE PIZZA AU CHORIZO\nA DISPARU." },
+  { t:1.3, txt:"Pierre-François sort sa loupe." },
+  { t:1.0, txt:"Thibaut le rejoint." },
+  { t:1.4, txt:"NIVEAU 2\n<em>L'AFFAIRE DE LA PIZZA AU CHORIZO</em>" },
+];
+const Intro = {
+  actif:false, etape:0, chrono:0,
+  lancer(){
+    this.actif = true; this.etape = 0; this.chrono = INTRO_NIV2[0].t;
+    if (E.introNiv) E.introNiv.classList.add("on");
+    this.afficher();
+  },
+  afficher(){
+    if (E.introTxt) E.introTxt.innerHTML = INTRO_NIV2[this.etape].txt.replace(/\n/g, "<br>");
+  },
+  passer(){
+    this.etape++;
+    if (this.etape >= INTRO_NIV2.length) return this.finir();
+    this.chrono = INTRO_NIV2[this.etape].t;
+    this.afficher();
+  },
+  finir(){
+    this.actif = false;
+    if (E.introNiv) E.introNiv.classList.remove("on");
+    Jeu.demarrerEnquete();
+  },
+  majorer(dt){
+    if (!this.actif) return;
+    this.chrono -= dt;
+    if (this.chrono <= 0) this.passer();
+  },
+};
+
 const Interface = {
   finAffichee:false, dernierCombo:0,
 
@@ -90,6 +143,11 @@ const Interface = {
     const r = lireRecords();
     if (E.tRecord) E.tRecord.textContent = r.score ? "MEILLEUR SCORE " + chiffres(r.score) : "";
     if (E.titre) E.titre.classList.remove("parti");
+    const ouvert = Progres.niveau2Ouvert();
+    if (E.niv2) E.niv2.classList.toggle("verrouille", !ouvert);
+    if (E.niv2Sst) E.niv2Sst.textContent = ouvert
+      ? "Six indices, cinq minutes."
+      : "Terminez le niveau 1 pour l'ouvrir.";
     if (E.fin) E.fin.classList.remove("on");
     if (E.hud) E.hud.classList.remove("on");
     if (E.pupitre) E.pupitre.classList.remove("on");
@@ -102,11 +160,24 @@ const Interface = {
     if (E.fin) E.fin.classList.remove("on");
     if (E.hud) E.hud.classList.add("on");
     if (E.pupitre) E.pupitre.classList.toggle("on", Jeu.niveau !== 2);
+    if (E.pupitre2) E.pupitre2.classList.toggle("on", Jeu.niveau === 2);
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
     if (E.pleinBtn) E.pleinBtn.classList.add("on");
     this.majVies(); this.majBandeau();
   },
-  sortirJeu(){ if (E.pupitre) E.pupitre.classList.remove("on"); },
+  sortirJeu(){
+    if (E.pupitre) E.pupitre.classList.remove("on");
+    if (E.pupitre2) E.pupitre2.classList.remove("on");
+  },
+
+  /* Le bouton d'action dit ce qu'il fait, et change quand la tarte
+     arrive : c'est la seule façon d'apprendre l'esquive sans notice. */
+  majAction(){
+    if (!E.c2ATxt || Jeu.niveau !== 2) return;
+    const esq = Enquete.esquiveOuverte;
+    E.c2ATxt.textContent = esq ? "ESQUIVER !" : (Enquete.accusation ? "ACCUSER" : "INSPECTER");
+    if (E.c2A) E.c2A.classList.toggle("esquive", !!esq);
+  },
 
   majBandeau(){
     if (E.vScore) E.vScore.textContent = chiffres(Score.points);
@@ -155,21 +226,24 @@ const Interface = {
     const gagne = Enquete.fini && Enquete.fini.gagne;
     if (E.finTitre){
       E.finTitre.innerHTML = gagne
-        ? "AFFAIRE<em>RÉSOLUE.</em>"
+        ? "AFFAIRE<em>CLASSÉE.</em>"
         : "LA PIZZA<em>COURT TOUJOURS.</em>";
     }
     if (E.releve) E.releve.style.display = "none";
     if (E.releveEnq) E.releveEnq.classList.add("on");
-    if (E.eTemps) E.eTemps.textContent = Math.max(0, Math.ceil(Enquete.restant)) + " s";
-    if (E.eIndices) E.eIndices.textContent = Enquete.indices + " / " + ENQ_INDICES;
+    const pris = Math.max(0, Math.round(ENQ_DUREE - Enquete.restant));
+    if (E.eTemps) E.eTemps.textContent = Math.floor(pris / 60) + ":" + (pris % 60 < 10 ? "0" : "") + (pris % 60);
+    if (E.eIndices) E.eIndices.textContent = Enquete.indices + " / " + ENQ_OBJECTIF;
+    if (E.eFausses) E.eFausses.textContent = chiffres(Enquete.fausses);
+    if (E.eTarte) E.eTarte.textContent = Enquete.tarteEsquivee ? "OUI" : (Enquete.tarteRecue ? "NON" : "—");
     if (E.eFouilles) E.eFouilles.textContent = chiffres(Enquete.fouilles);
     if (E.eScore) E.eScore.textContent = chiffres(Score.points);
     if (E.eCoupable){
-      E.eCoupable.textContent = gagne ? "C'ÉTAIT " + Enquete.coupable.nom : "";
+      E.eCoupable.textContent = gagne ? "C'ÉTAIT " + Affaire.titreSolution() : "";
       E.eCoupable.classList.toggle("on", !!gagne);
     }
     if (E.eChute){
-      E.eChute.textContent = gagne ? Enquete.coupable.chute : "Personne n'a rien vu. Comme d'habitude.";
+      E.eChute.textContent = gagne ? Affaire.chute() : "Personne n'a rien vu. Comme d'habitude.";
       E.eChute.classList.add("on");
     }
     const r = lireRecords();
@@ -237,6 +311,10 @@ const Entrees = {
         if (Jeu.phase !== "jeu") return;
         e.preventDefault();
         Sons.reveiller();
+        if (Intro.actif){ Intro.passer(); return; }
+        if (Enquete.dossierOuvert){ Enquete.basculerDossier(); return; }
+        if (Enquete.accusation){ Enquete.valider(); return; }
+        return;
         const r = E.cv.getBoundingClientRect ? E.cv.getBoundingClientRect() : { left:0, top:0, width:Camera.L, height:Camera.H };
         const img = Images.table.appart;
         if (!img || !img.naturalWidth) return;
@@ -252,7 +330,41 @@ const Entrees = {
       else esquiver(e);
     });
 
+    /* Niveau 2 : ses propres touches. Elles passent avant celles du
+       niveau 1 pour que A et L ne déclenchent pas des saluts. */
     globalThis.addEventListener("keydown", e => {
+      if (Jeu.niveau !== 2 || Jeu.phase !== "jeu") return;
+      const t = e.key.toLowerCase();
+      if (Intro.actif){ if (t === " " || t === "enter"){ e.preventDefault(); Intro.passer(); } return; }
+      if (t === "arrowleft" || t === "q"){
+        e.preventDefault();
+        if (Enquete.accusation) Enquete.deplacerAccusation(-1); else Enquete.marcher(-1);
+      } else if (t === "arrowright" || t === "d" && false){
+        e.preventDefault(); Enquete.marcher(1);
+      } else if (t === "arrowright"){
+        e.preventDefault();
+        if (Enquete.accusation) Enquete.deplacerAccusation(1); else Enquete.marcher(1);
+      } else if (t === "e" || t === "enter"){
+        e.preventDefault(); Sons.reveiller(); Enquete.action();
+      } else if (t === " "){
+        e.preventDefault(); Sons.reveiller();
+        if (Enquete.esquiveOuverte) Enquete.esquiver(); else Enquete.action();
+      } else if (t === "tab"){
+        e.preventDefault(); Enquete.changer();
+      } else if (t === "d"){
+        e.preventDefault(); Enquete.basculerDossier();
+      } else if (t === "a"){
+        e.preventDefault(); Enquete.ouvrirAccusation();
+      }
+    }, { passive:false });
+    globalThis.addEventListener("keyup", e => {
+      if (Jeu.niveau !== 2) return;
+      const t = e.key.toLowerCase();
+      if (t === "arrowleft" || t === "arrowright" || t === "q") Enquete.marcher(0);
+    });
+
+    globalThis.addEventListener("keydown", e => {
+      if (Jeu.niveau === 2 && Jeu.phase === "jeu") return;
       if (e.repeat) return;
       const t = e.key.toLowerCase();
       if (t === "a" || t === "q" || t === "arrowleft"){ presser(0, e); return; }
@@ -293,11 +405,39 @@ const Entrees = {
     if (E.niveaux) E.niveaux.addEventListener("click", ev => {
       const b = ev.target.closest("button[data-niv]");
       if (!b) return;
+      if (Number(b.dataset.niv) === 2 && !Progres.niveau2Ouvert()){
+        Sons.bip(150, 0.14, "square", 0.1);
+        return;
+      }
       Sons.reveiller(); Sons.clic(); Ecran.demander();
       Jeu.demarrer(Number(b.dataset.niv));
     });
     if (E.btnRejouer) E.btnRejouer.addEventListener("click", () => { Sons.clic(); Jeu.demarrer(); });
     if (E.pleinBtn) E.pleinBtn.addEventListener("click", () => { Sons.clic(); Ecran.basculer(); });
+
+    /* Les quatre grandes touches du niveau 2. Marcher se tient : on
+       reste appuyé, donc pointerdown/up et non click. */
+    const tenir = (el, d) => {
+      if (!el) return;
+      el.addEventListener("pointerdown", ev => {
+        ev.preventDefault(); Sons.reveiller();
+        if (Enquete.accusation) Enquete.deplacerAccusation(d); else Enquete.marcher(d);
+        el.classList.add("pressee");
+      });
+      const relacher = () => { Enquete.marcher(0); el.classList.remove("pressee"); };
+      el.addEventListener("pointerup", relacher);
+      el.addEventListener("pointercancel", relacher);
+      el.addEventListener("pointerleave", relacher);
+    };
+    tenir(E.c2G, -1);
+    tenir(E.c2D, 1);
+    if (E.c2A) E.c2A.addEventListener("pointerdown", ev => {
+      ev.preventDefault(); Sons.reveiller();
+      if (Intro.actif) Intro.passer(); else Enquete.action();
+    });
+    if (E.c2C) E.c2C.addEventListener("pointerdown", ev => { ev.preventDefault(); Enquete.changer(); });
+    if (E.c2Dos) E.c2Dos.addEventListener("pointerdown", ev => { ev.preventDefault(); Enquete.basculerDossier(); });
+    for (const b of [E.c2G, E.c2D, E.c2A, E.c2C, E.c2Dos]) if (b) b.addEventListener("click", ev => ev.preventDefault());
     if (E.outilsBtn) E.outilsBtn.addEventListener("click", () => Debug.basculer());
 
     globalThis.addEventListener("resize", () => { ajusterCanevas(); Interface.pensePivot(); });
@@ -482,7 +622,8 @@ globalThis.DTOUR = {
   xPlace, borne, melange, chiffres, doux,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface,
-  Enquete, ZONES, ENQ_DUREE, ENQ_INDICES,
+  Enquete, EnqVue, Affaire, Dossier, HortenseApp, SUSPECTS, INDICES, ZONES,
+  ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, TARTE_DUREE,
   __dessiner:() => dessiner(),

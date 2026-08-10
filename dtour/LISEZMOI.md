@@ -23,27 +23,40 @@ les fichiers de `img/` portent les bons noms.
 
 ## Niveau 2 — l'affaire de la pizza au chorizo
 
-Un appartement en coupe, deux inspecteurs amateurs, seize meubles
-fouillables et trois traces de chorizo tirées au sort à chaque partie.
-On touche un meuble, l'inspecteur le plus proche s'y rend et fouille.
-Une fouille pour rien coûte quatre secondes ; trois traces réunies
-désignent le coupable.
+Il s'ouvre quand le niveau 1 a été terminé une fois. La progression est
+gardée sous `dtour_progres`, à part des records : effacer ses scores ne
+doit pas reverrouiller le jeu.
 
-Le décor est **une seule image de 1505 × 336** sur laquelle la caméra
-glisse. Les zones sont posées en pourcentage de cette image, jamais en
-pixels d'écran : c'est ce qui permet au niveau de tenir aussi bien sur
-un écran large que sur un téléphone couché. La suite de tests vérifie
-que les seize zones sont dans le cadre, qu'aucune n'en recouvre une
-autre — deux zones trop proches se voleraient les touchers — et que les
-quatre pièces sont représentées.
+Une courte introduction — cinq écrans, six secondes — puis l'enquête :
+seize meubles, six indices à réunir, cinq minutes.
 
-La musique reprend le moteur du niveau 1 avec une autre grille : mineur,
-tempo à 88, contrebasse qui ne se pose jamais. Le cliché du polar tient
-en quatre mesures, il ne faut surtout pas qu'il tienne le devant.
+**Commandes.** `←` `→` marcher, `E` inspecter ou interroger, `TAB`
+changer d'inspecteur, `ESPACE` action contextuelle et esquive, `D` le
+dossier, `A` accuser. Au doigt : quatre grandes touches sous les pouces,
+celle du milieu devenant **ESQUIVER** quand la tarte arrive.
 
-La conclusion est cadencée par le chrono du jeu et non par un
-`setTimeout` — une échéance en temps absolu continue de courir pendant
-une pause, et `MEMOIRE.md` garde la trace de ce qu'a coûté cette leçon.
+**Les deux ne servent pas à la même chose.** Pierre-François analyse :
+trois des dix indices ne se lisent qu'avec lui, et ils restent sur place
+tant que Thibaut les regarde sans comprendre. Thibaut interroge : les
+suspects ne répondent qu'à lui, Pierre-François n'obtient que des
+absurdités.
+
+**Le générateur d'affaire** tire un scénario sur trois au début de la
+partie, puis en déduit le coupable, la cachette et les six indices —
+jamais l'inverse. Une enquête impossible ne peut donc pas sortir, et la
+suite de tests le vérifie sur trois cents tirages : six indices sans
+doublon, six meubles distincts, jamais d'indice sur la cachette, et les
+deux indices porteurs toujours présents.
+
+**Hortense** intervient une fois, entre 35 % et 65 % du temps, jamais
+pendant le dossier ni pendant l'accusation. Elle lance sa tarte, on a
+450 ms pour se baisser, et en repartant elle laisse tomber une rondelle
+de chorizo — le doute est permis, la réponse non.
+
+La pizza ne se montre nulle part avant d'avoir trois indices et d'avoir
+ouvert la bonne cachette. Trouver la pizza ne suffit pas : il faut
+encore désigner qui. Une mauvaise accusation coûte vingt secondes et ne
+termine pas la partie.
 
 ## Format
 

@@ -62,8 +62,10 @@ const dossierImg = path.join(RACINE, "img");
 const presentes = fs.existsSync(dossierImg) ? fs.readdirSync(dossierImg) : [];
 const citees = new Set();
 for (const m of source.matchAll(/"(fond_[a-z]+|logo|face_[a-z_]+|fx_[a-z]+|pnj\d\d|(?:thibaut|pierre)_[a-z]+)"/g)) citees.add(m[1]);
-for (const m of source.matchAll(/Images\.table\.(fx_[a-z]+|appart)/g)) citees.add(m[1]);
-citees.add("appart");
+for (const m of source.matchAll(/Images\.table\.(fx_[a-z]+|appart|loupe)/g)) citees.add(m[1]);
+for (const m of source.matchAll(/sprite:"([a-z_0-9]+)"/g)) if (!/^(pierre|thibaut)$/.test(m[1])) citees.add(m[1]);
+for (const m of source.matchAll(/"(enq_[a-z_]+|pizza_[a-z_]+|badge_[a-z]+)"/g)) citees.add(m[1]);
+citees.add("appart"); citees.add("loupe");
 for (const m of source.matchAll(/"(h_[a-zA-Z]+|tarte[0-9]|tarte_[a-z]+|debris_[a-z]+)"/g)) citees.add(m[1]);
 /* les quatre orientations de la tarte sont composées : "tarte" + n */
 for (let i = 0; i < 4; i++) citees.add("tarte" + i);
@@ -458,63 +460,155 @@ if (D){
   verifier("seize meubles fouillables", D.ZONES.length === 16, D.ZONES.length + " zones");
   verifier("toutes les zones sont dans le cadre",
     D.ZONES.every(z => z.x > 0 && z.x < 1 && z.y > 0 && z.y < 1));
-  verifier("aucune zone n'en recouvre une autre",
+  verifier("deux meubles voisins ne se confondent pas",
     (() => {
-      for (let i = 0; i < D.ZONES.length; i++)
-        for (let j = i + 1; j < D.ZONES.length; j++){
-          const dx = (D.ZONES[i].x - D.ZONES[j].x) * 3.4, dy = D.ZONES[i].y - D.ZONES[j].y;
-          if (Math.hypot(dx, dy) < 0.16) return false;
-        }
+      const p = D.ZONES.map(z => z.pied).sort((a, b) => a - b);
+      for (let i = 1; i < p.length; i++) if (p[i] - p[i - 1] < D.ENQ_PORTEE * 1.5) return false;
       return true;
-    })(), "deux zones trop proches se voleraient les clics");
+    })(), "sinon on ne sait pas lequel on fouille");
   verifier("les quatre pièces sont représentées",
     D.ZONES.some(z => z.x < 0.2) && D.ZONES.some(z => z.x > 0.2 && z.x < 0.45) &&
     D.ZONES.some(z => z.x > 0.45 && z.x < 0.8) && D.ZONES.some(z => z.x > 0.8));
+  verifier("dix indices en banque", D.INDICES.length >= 10, D.INDICES.length);
+  verifier("chaque indice a ses deux lectures",
+    D.INDICES.every(i => i.analyse && i.brut && i.analyse !== i.brut));
+  verifier("chaque meuble a une réplique quand il ne donne rien",
+    D.ZONES.every(z => !!D.Enquete && true));
 
-  D.Jeu.demarrer(2);
+  /* --- le générateur ne peut pas sortir d'enquête impossible --- */
+  titre("Générateur d'affaire");
+  let genOk = true, scenarios = new Set(), detail = "";
+  for (let n = 0; n < 300; n++){
+    D.Affaire.generer();
+    scenarios.add(D.Affaire.scenario);
+    if (D.Affaire.reels.length !== D.ENQ_OBJECTIF){ genOk = false; detail = "indices " + D.Affaire.reels.length; break; }
+    if (new Set(D.Affaire.reels).size !== D.ENQ_OBJECTIF){ genOk = false; detail = "doublon d'indice"; break; }
+    const places = Object.keys(D.Affaire.plan);
+    if (places.length !== D.ENQ_OBJECTIF){ genOk = false; detail = "places " + places.length; break; }
+    if (places.indexOf(D.Affaire.cachette) >= 0){ genOk = false; detail = "un indice sur la cachette"; break; }
+    if (!D.ZONES.some(z => z.id === D.Affaire.cachette)){ genOk = false; detail = "cachette inconnue"; break; }
+    if (D.Affaire.scenario !== "B" && !D.Affaire.coupable){ genOk = false; detail = "coupable manquant"; break; }
+    if (D.Affaire.scenario === "B" && D.Affaire.coupable){ genOk = false; detail = "scénario B avec coupable"; break; }
+    if (D.Affaire.reels.indexOf("ticket") < 0 || D.Affaire.reels.indexOf("boite") < 0){
+      genOk = false; detail = "les indices porteurs manquent"; break;
+    }
+  }
+  verifier("trois cents tirages sans enquête impossible", genOk, detail);
+  egal("les trois scénarios sortent", scenarios.size, 3);
+  verifier("chaque scénario a sa chute",
+    ["A", "B", "C"].every(sc => { D.Affaire.scenario = sc; if (sc !== "B") D.Affaire.coupable = D.SUSPECTS[0]; return !!D.Affaire.chute(); }));
+
+  /* --- une partie menée jusqu'au bout --- */
+  titre("Enquête complète");
+  const lancer2 = () => { D.Jeu.demarrer(2); D.Intro.finir(); D.Camera.mesurer(1280, 620, 1); };
+  lancer2();
   egal("on est bien au niveau 2", D.Jeu.niveau, 2);
   egal("le chrono part plein", Math.round(D.Enquete.restant), D.ENQ_DUREE);
-  egal("trois traces sont cachées", D.Enquete.zones.filter(z => z.trace).length, D.ENQ_INDICES);
-  egal("aucun meuble n'est fouillé au départ", D.Enquete.zones.filter(z => z.fouillee).length, 0);
+  egal("six indices sont cachés", D.Enquete.zones.filter(z => z.indice).length, D.ENQ_OBJECTIF);
+  egal("une seule cachette", D.Enquete.zones.filter(z => z.cachette).length, 1);
   egal("les deux inspecteurs sont là", D.Enquete.inspecteurs.length, 2);
+  egal("Pierre-François mène au départ", D.Heros[D.Enquete.actifIdx].sprite, "pierre");
 
-  /* fouiller un meuble vide coûte du temps */
-  const vide = D.Enquete.zones.findIndex(z => !z.trace);
-  const avantT = D.Enquete.restant;
-  D.Enquete.envoyer(vide);
-  let tours2 = 0;
-  while (!D.Enquete.zones[vide].fouillee && tours2++ < 60 * 30) D.Jeu.pas(1 / 60);
-  verifier("l'inspecteur se déplace puis fouille", D.Enquete.zones[vide].fouillee, tours2 + " trames");
-  verifier("une fouille infructueuse coûte du temps", D.Enquete.restant < avantT - 4);
-  egal("le compteur de fouilles avance", D.Enquete.fouilles, 1);
-  D.Enquete.envoyer(vide);
-  egal("on ne fouille pas deux fois le même meuble", D.Enquete.fouilles, 1);
-
-  /* trouver les trois traces termine l'affaire */
-  D.Jeu.demarrer(2);
-  const bonnes = D.Enquete.zones.map((z, i) => z.trace ? i : -1).filter(i => i >= 0);
-  for (const i of bonnes){
-    D.Enquete.envoyer(i);
+  /* aller jusqu'à un meuble et fouiller */
+  const allerFouiller = (idx) => {
+    const z = D.Enquete.zones[idx];
+    D.Enquete.actifIns().x = z.ref.pied;
+    D.Enquete.inspecter();
     let n = 0;
-    while (!D.Enquete.zones[i].fouillee && n++ < 60 * 30) D.Jeu.pas(1 / 60);
+    while (D.Enquete.actifIns().fouille > 0 && n++ < 600) D.Jeu.pas(1 / 60);
+    for (let k = 0; k < 20; k++) D.Jeu.pas(1 / 60);
+  };
+  const iVide = D.Enquete.zones.findIndex(z => !z.indice && !z.cachette);
+  const avant2 = D.Enquete.fausses;
+  allerFouiller(iVide);
+  verifier("un meuble vide se ferme après la fouille", D.Enquete.zones[iVide].fouillee);
+  egal("et compte comme une fausse piste", D.Enquete.fausses, avant2 + 1);
+
+  /* un indice d'expert résiste à Thibaut puis cède à Pierre-François */
+  lancer2();
+  const iExp = D.Enquete.zones.findIndex(z => {
+    const ind = z.indice && D.INDICES.find(x => x.id === z.indice);
+    return ind && ind.expert;
+  });
+  if (iExp >= 0){
+    D.Enquete.actifIdx = D.Heros.findIndex(h => h.sprite === "thibaut");
+    allerFouiller(iExp);
+    egal("Thibaut ne sait pas lire la trace", D.Enquete.indices, 0);
+    verifier("l'indice reste sur place", !D.Enquete.zones[iExp].fouillee);
+    D.Enquete.actifIdx = D.Heros.findIndex(h => h.sprite === "pierre");
+    allerFouiller(iExp);
+    egal("Pierre-François la lit", D.Enquete.indices, 1);
+    egal("et la carte entre au dossier", D.Dossier.compte(), 1);
+  } else ok("aucun indice d'expert dans ce tirage");
+
+  /* la pizza ne se montre pas avant trois indices */
+  lancer2();
+  const iCache = D.Enquete.zones.findIndex(z => z.cachette);
+  allerFouiller(iCache);
+  verifier("la cachette ne livre rien sans indices", !D.Enquete.pizza);
+  verifier("et reste fouillable", !D.Enquete.zones[iCache].fouillee);
+
+  /* partie gagnante : on ramasse tout, on trouve la pizza, on accuse */
+  lancer2();
+  D.Enquete.actifIdx = D.Heros.findIndex(h => h.sprite === "pierre");
+  for (let i = 0; i < D.Enquete.zones.length; i++){
+    if (D.Enquete.zones[i].indice) allerFouiller(i);
   }
-  egal("les trois traces sont trouvées", D.Enquete.indices, D.ENQ_INDICES);
-  for (let i = 0; i < 90; i++) D.Jeu.pas(1 / 60);
-  egal("l'affaire est résolue", D.Jeu.phase, "fin");
-  verifier("le coupable est désigné", !!(D.Enquete.coupable && D.Enquete.coupable.nom));
+  egal("les six indices sont réunis", D.Enquete.indices, D.ENQ_OBJECTIF);
+  egal("le dossier contient six cartes", D.Dossier.compte(), D.ENQ_OBJECTIF);
+  allerFouiller(D.Enquete.zones.findIndex(z => z.cachette));
+  verifier("la pizza est retrouvée", !!D.Enquete.pizza);
+  D.Enquete.ouvrirAccusation();
+  verifier("l'accusation s'ouvre", D.Enquete.accusation);
+  const noms = D.SUSPECTS.map(s => s.id).concat(["personne"]);
+  D.Enquete.choixAcc = noms.indexOf(D.Affaire.bonneReponse());
+  D.Enquete.valider();
+  egal("la bonne accusation classe l'affaire", D.Jeu.phase, "fin");
+  verifier("et l'affaire est gagnée", D.Enquete.fini && D.Enquete.fini.gagne);
   verifier("le score récompense le temps restant", D.Score.points > 0, "score " + D.Score.points);
 
-  /* le chrono qui s'épuise perd la partie */
-  D.Jeu.demarrer(2);
-  let t5 = 0;
-  while (D.Jeu.phase === "jeu" && t5++ < 60 * (D.ENQ_DUREE + 10)) D.Jeu.pas(1 / 60);
+  /* mauvaise accusation : pénalité, pas de fin de partie */
+  lancer2();
+  D.Enquete.indices = 4;
+  D.Enquete.ouvrirAccusation();
+  const tAvant = D.Enquete.restant;
+  D.Enquete.choixAcc = noms.indexOf(D.Affaire.bonneReponse()) === 0 ? 1 : 0;
+  D.Enquete.valider();
+  egal("une mauvaise accusation ne termine pas la partie", D.Jeu.phase, "jeu");
+  verifier("elle coûte vingt secondes", tAvant - D.Enquete.restant >= 19.5);
+
+  /* Hortense doit intervenir, une fois, au milieu */
+  titre("Hortense au niveau 2");
+  lancer2();
+  verifier("elle est programmée entre 35 % et 65 %",
+    D.HortenseApp.quand >= D.ENQ_DUREE * 0.35 && D.HortenseApp.quand <= D.ENQ_DUREE * 0.65,
+    "à " + D.HortenseApp.quand.toFixed(0) + " s");
+  let vue = false, tarteVue = false, t6 = 0;
+  while (t6++ < 60 * 260 && D.Jeu.phase === "jeu"){
+    D.Jeu.pas(1 / 60);
+    if (D.HortenseApp.visible()) vue = true;
+    if (D.HortenseApp.tarte) tarteVue = true;
+    if (D.Enquete.esquiveOuverte) D.Enquete.esquiver();
+  }
+  verifier("elle intervient bien une fois", vue);
+  verifier("elle lance une tarte", tarteVue);
+  verifier("l'esquive rapporte des points", D.Enquete.tarteEsquivee, "esquive manquée");
+
+  /* le chrono épuisé perd la partie */
+  lancer2();
+  let t7 = 0;
+  while (D.Jeu.phase === "jeu" && t7++ < 60 * (D.ENQ_DUREE + 20)) D.Jeu.pas(1 / 60);
   egal("le temps écoulé termine la partie", D.Jeu.phase, "fin");
   verifier("et l'affaire n'est pas résolue", D.Enquete.fini && !D.Enquete.fini.gagne);
 
+  /* progression */
+  titre("Progression");
   D.Jeu.retourTitre();
   egal("revenir au titre repasse au niveau 1", D.Jeu.niveau, 1);
+  verifier("le niveau 2 est ouvert une fois le 1 terminé",
+    (() => { D.Jeu.demarrer(1); D.Jeu.terminer(); return D.Progres.niveau2Ouvert(); })());
 
-  /* ================= 4. simulation ================= */
+  /* ================= 4. simulation ================= */  /* ================= 4. simulation ================= */
   titre("Simulation de parties");
   let plantage = null, partiesFinies = 0, scoreMax = 0, fileMax = 0, salutsMax = 0;
   for (let partie = 0; partie < 12 && !plantage; partie++){

@@ -194,6 +194,48 @@ kbd{
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-height:400px){ .niv{padding:7px 12px} .niv .txt i{display:none} }
 
+.niv .cadenas{margin-left:auto;font-size:15px;opacity:.7;display:none}
+.niv.verrouille{opacity:.55;cursor:not-allowed}
+.niv.verrouille .cadenas{display:block}
+
+/* ---------------- commandes du niveau 2 ----------------
+   Quatre grandes touches sous les pouces : deux pour marcher, une pour
+   l'action contextuelle, une pour changer d'inspecteur. Le bouton
+   d'action devient ESQUIVER quand la tarte arrive. */
+#pupitre2{
+  position:absolute;left:0;right:0;bottom:0;z-index:20;display:none;
+  align-items:flex-end;gap:8px;padding:0 10px calc(8px + var(--bas));
+}
+#pupitre2.on{display:flex}
+.cmd2{
+  height:clamp(40px,10vh,54px);min-width:clamp(44px,9vh,58px);
+  display:flex;align-items:center;justify-content:center;padding:0 12px;
+  border:1px solid rgba(255,255,255,.28);border-radius:999px;cursor:pointer;
+  font-family:inherit;font-weight:800;font-size:clamp(12px,2vw,16px);color:#fff;
+  background:rgba(14,22,40,.72);
+  backdrop-filter:blur(12px) saturate(1.3);-webkit-backdrop-filter:blur(12px) saturate(1.3);
+  box-shadow:0 4px 16px rgba(0,0,0,.36);
+  transition:transform .08s ease,filter .12s ease;
+}
+.cmd2.large{flex:1 1 0;min-width:0}
+#c2A{background:linear-gradient(180deg,rgba(247,179,43,.94),rgba(198,133,14,.94));color:#1A1305}
+#c2A.esquive{animation:tartePrete .45s ease-in-out infinite}
+#c2C{background:linear-gradient(180deg,rgba(42,138,228,.9),rgba(28,98,170,.9))}
+#c2Dos{flex:0 0 auto}
+.cmd2:active,.cmd2.pressee{transform:translateY(2px);filter:brightness(1.15)}
+
+/* ---------------- introduction du niveau 2 ---------------- */
+#introNiv{
+  position:absolute;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
+  background:#05070E;padding:32px;text-align:center;
+}
+#introNiv.on{display:flex}
+#introTxt{
+  font-size:clamp(17px,3.6vw,32px);font-weight:800;line-height:1.25;letter-spacing:.02em;
+  white-space:pre-line;max-width:24ch;
+}
+#introTxt em{font-style:normal;color:var(--ambre);display:block}
+
 /* ---------------- fin de partie ---------------- */
 #fin{
   position:absolute;inset:0;z-index:45;display:none;flex-direction:column;
@@ -306,9 +348,10 @@ kbd{
         <span class="num">01</span>
         <span class="txt"><b>La file du D'Tour</b><i>Ils ne les connaissaient même pas.</i></span>
       </button>
-      <button class="niv" data-niv="2">
+      <button class="niv" data-niv="2" id="niv2">
         <span class="num">02</span>
-        <span class="txt"><b>L'affaire de la pizza au chorizo</b><i>Trois traces, cent secondes.</i></span>
+        <span class="txt"><b>L'affaire de la pizza au chorizo</b><i id="niv2Sst">Six indices, cinq minutes.</i></span>
+        <span class="cadenas" id="niv2Cad">🔒</span>
       </button>
     </div>
     <div id="legende">
@@ -329,8 +372,10 @@ kbd{
       <div><span class="lib">TARTES REÇUES</span><div class="val chiffre" id="fRecues">0</div></div>
     </div>
     <div id="releveEnq" class="verre">
-      <div><span class="lib">TEMPS RESTANT</span><div class="val chiffre" id="eTemps">0</div></div>
-      <div><span class="lib">TRACES TROUVÉES</span><div class="val chiffre" id="eIndices">0</div></div>
+      <div><span class="lib">TEMPS</span><div class="val chiffre" id="eTemps">0</div></div>
+      <div><span class="lib">INDICES TROUVÉS</span><div class="val chiffre" id="eIndices">0</div></div>
+      <div><span class="lib">FAUSSES PISTES</span><div class="val chiffre" id="eFausses">0</div></div>
+      <div><span class="lib">TARTE ESQUIVÉE</span><div class="val chiffre" id="eTarte">—</div></div>
       <div><span class="lib">MEUBLES FOUILLÉS</span><div class="val chiffre" id="eFouilles">0</div></div>
       <div><span class="lib">SCORE</span><div class="val chiffre" id="eScore">0</div></div>
     </div>
@@ -388,7 +433,19 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">D'TOUR v2.0</div>
+  <div id="version">D'TOUR v2.1</div>
+
+  <div id="pupitre2">
+    <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
+    <button class="cmd2" id="c2D" aria-label="Aller à droite">▶</button>
+    <button class="cmd2 large" id="c2A"><span id="c2ATxt">INSPECTER</span></button>
+    <button class="cmd2 large" id="c2C">CHANGER</button>
+    <button class="cmd2" id="c2Dos" aria-label="Dossier d'enquête">🗂</button>
+  </div>
+
+  <div id="introNiv">
+    <p id="introTxt"></p>
+  </div>
 
   <div id="pivot">
     <div class="tourne"></div>
@@ -424,7 +481,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "2.0";
+const VERSION = "2.1";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1244,7 +1301,14 @@ const Jeu = {
 
   demarrer(niveau){
     if (niveau) this.niveau = niveau;
-    if (this.niveau === 2) return this.demarrerEnquete();
+    if (this.niveau === 2){
+      Score.raz(); Effets.raz(); razHeros(); File.raz(); Foule.raz();
+      this.temps = 0; this.vies = 1; this.finChrono = 0; this.phase = "jeu";
+      Interface.entrerJeu();
+      Intro.lancer();
+      Sons.reveiller(); Sons.lancerAmbiance(); Sons.lancerMusique();
+      return;
+    }
     Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
     this.temps = 0; this.gel = 0; this.vies = VIES; this.ralenti = 1; this.demandes = [];
     this.moment = 0; this.fonduDe = 0; this.fondu = 1; this.finChrono = 0;
@@ -1281,7 +1345,9 @@ const Jeu = {
     if (this.niveau === 2){
       if (this.phase === "jeu" || this.phase === "fin"){
         this.temps += dt;
+        if (Intro.actif){ Intro.majorer(dt); Sons.ordonnerMusique(88); return; }
         Enquete.pas(dt);
+        Interface.majAction();
         if (this.phase === "fin"){
           this.finChrono += dt;
           if (this.finChrono > 1.2 && !Interface.finAffichee) Interface.afficherFin();
@@ -1426,6 +1492,7 @@ const Jeu = {
 
   terminer(){
     this.phase = "fin";
+    if (this.niveau === 1) Progres.finirNiveau1();
     this.finChrono = 0;
     this.demandes = [];
     for (const p of Foule.tous) if (p.etat === ETAT.DEMANDE){ p.etat = ETAT.MALAISE; p.chrono = 1; }
@@ -2025,7 +2092,7 @@ function dessiner(){
   if (Jeu.niveau === 2 && Jeu.phase !== "titre"){
     const dpr2 = Math.min(2, globalThis.devicePixelRatio || 1);
     ctx.setTransform(dpr2, 0, 0, dpr2, 0, 0);
-    Enquete.dessiner();
+    EnqVue.dessiner();
     if (Jeu.phase === "fin"){
       ctx.fillStyle = "rgba(7,11,22," + borne(Jeu.finChrono * 0.35, 0, 0.5) + ")";
       ctx.fillRect(0, 0, Camera.L, Camera.H);
@@ -2657,359 +2724,942 @@ function dessinerDebugTarte(){
 /* ==================================================================
    NIVEAU 2 — L'AFFAIRE DE LA PIZZA AU CHORIZO
    ------------------------------------------------------------------
-   Un appartement en coupe, deux inspecteurs amateurs, et une pizza qui
-   a disparu. On fouille des meubles jusqu'à trouver les trois traces
-   de chorizo qui désignent le coupable, avant la fin du chrono.
+   Une mini-enquête dans un appartement vu en coupe. Le décor est une
+   seule image très large ; la caméra glisse dessus. Tout est posé en
+   POURCENTAGE de cette image, jamais en pixels d'écran : c'est ce qui
+   permet au niveau de tenir aussi bien sur un ordinateur que sur un
+   téléphone couché.
 
-   Le décor est une seule image très large (1505 x 336) : la caméra
-   glisse dessus. Les zones sont posées en POURCENTAGE de cette image,
-   jamais en pixels d'écran — c'est la même règle que le niveau 1, et
-   c'est ce qui permet au niveau de tenir aussi bien sur un ordinateur
-   que sur un téléphone couché.
+   Découpage demandé, et où il se trouve ici :
+     LevelManager          -> Jeu.niveau + Progres
+     CaseGenerator         -> Affaire
+     InvestigationManager  -> Enquete
+     EvidenceManager       -> Dossier
+     InteractionManager    -> Enquete.zoneProche / inspecter
+     SuspectManager        -> SUSPECTS + Enquete.interroger
+     HortenseEventManager  -> HortenseApp
+     PieProjectile         -> HortenseApp.tarte
+     DodgeManager          -> HortenseApp.esquiver
 ================================================================== */
 
-const ENQ_DUREE = 100;              /* secondes au départ */
-const ENQ_COUT_FOUILLE = 4;         /* ce que coûte une fouille infructueuse */
-const ENQ_INDICES = 3;              /* traces à réunir pour conclure */
-const ENQ_MARCHE = 0.46;            /* largeur d'image parcourue par seconde */
-const ENQ_LIGNE = 0.925;            /* la bande de circulation, en fraction de hauteur */
-const ENQ_TAILLE = 0.46;            /* hauteur d'un héros, en fraction de l'image */
-const ENQ_FOUILLE = 0.9;            /* durée d'une fouille */
+const ENQ_DUREE = 300;              /* cinq minutes */
+const ENQ_OBJECTIF = 6;             /* indices à réunir */
+const ENQ_PORTEE = 0.026;           /* distance d'interaction, en fraction d'image */
+const ENQ_MARCHE = 0.20;            /* fraction d'image parcourue par seconde */
+const ENQ_LIGNE = 0.925;
+const ENQ_TAILLE = 0.46;
+const ENQ_FOUILLE = 0.75;
+const ENQ_MAUVAISE = 20;            /* secondes perdues sur une accusation ratée */
+const ENQ_TARTE = 10;               /* secondes perdues sur une tarte reçue */
+const ENQ_ESQUIVE_PTS = 100;
 
-/* Les zones fouillables. `x` et `y` sont des fractions de l'image ;
-   `pied` est l'abscisse où le héros s'arrête, souvent décalée pour ne
-   pas se planter dans le meuble. */
+/* ---------- les meubles fouillables ----------
+   `pied` est l'abscisse où l'inspecteur s'arrête, parfois décalée pour
+   ne pas se planter dans le meuble. */
 const ZONES = [
-  { id:"chaussures", nom:"les chaussures",     x:0.038, y:0.74, pied:0.055 },
-  { id:"manteaux",   nom:"les manteaux",       x:0.072, y:0.42, pied:0.080 },
-  { id:"parapluies", nom:"le porte-parapluies", x:0.156, y:0.74, pied:0.156 },
-  { id:"biblio",     nom:"la bibliothèque",    x:0.222, y:0.34, pied:0.222 },
-  { id:"canape",     nom:"sous le canapé",     x:0.272, y:0.70, pied:0.272 },
-  { id:"basse",      nom:"la table basse",     x:0.350, y:0.84, pied:0.350 },
-  { id:"tv",         nom:"le meuble TV",       x:0.392, y:0.66, pied:0.392 },
-  { id:"frigo",      nom:"le frigo",           x:0.503, y:0.56, pied:0.503 },
-  { id:"four",       nom:"le four",            x:0.560, y:0.64, pied:0.560 },
-  { id:"placards",   nom:"les placards",       x:0.640, y:0.26, pied:0.640 },
-  { id:"evier",      nom:"l'évier",            x:0.690, y:0.52, pied:0.690 },
-  { id:"table",      nom:"la table",           x:0.608, y:0.76, pied:0.608 },
-  { id:"poubelle",   nom:"la poubelle",        x:0.752, y:0.72, pied:0.752 },
-  { id:"commode",    nom:"la commode",         x:0.842, y:0.72, pied:0.842 },
-  { id:"lit",        nom:"le lit",             x:0.948, y:0.80, pied:0.930 },
-  { id:"portant",    nom:"le portant",         x:0.966, y:0.44, pied:0.948 },
+  { id:"chaussures", nom:"les chaussures",  x:0.038, y:0.74, pied:0.055 },
+  { id:"manteaux",   nom:"les manteaux",    x:0.078, y:0.42, pied:0.102 },
+  { id:"sac",        nom:"le sac",          x:0.156, y:0.74, pied:0.156 },
+  { id:"biblio",     nom:"la bibliothèque", x:0.222, y:0.34, pied:0.222 },
+  { id:"canape",     nom:"sous le canapé",  x:0.272, y:0.70, pied:0.272 },
+  { id:"basse",      nom:"la table basse",  x:0.350, y:0.84, pied:0.350 },
+  { id:"tv",         nom:"le meuble TV",    x:0.392, y:0.66, pied:0.392 },
+  { id:"frigo",      nom:"le frigo",        x:0.503, y:0.56, pied:0.503 },
+  { id:"four",       nom:"le four",         x:0.560, y:0.64, pied:0.560 },
+  { id:"table",      nom:"la table",        x:0.608, y:0.76, pied:0.608 },
+  { id:"placards",   nom:"les placards",    x:0.648, y:0.26, pied:0.654 },
+  { id:"evier",      nom:"l'évier",         x:0.700, y:0.52, pied:0.700 },
+  { id:"poubelle",   nom:"la poubelle",     x:0.752, y:0.72, pied:0.752 },
+  { id:"commode",    nom:"la commode",      x:0.842, y:0.72, pied:0.842 },
+  { id:"portant",    nom:"le portant",      x:0.966, y:0.44, pied:0.958 },
+  { id:"lit",        nom:"sous le lit",     x:0.948, y:0.80, pied:0.912 },
 ];
 
-/* Ce qu'on trouve quand on ne trouve rien. Une réplique par zone, pour
-   que fouiller deux fois le même meuble ne donne pas la même phrase. */
-const RIEN = [
-  "Rien. Enfin, rien de comestible.",
-  "Que de la poussière.",
-  "Rien du tout. Suspect, non ?",
-  "Alors ça, c'est vide.",
-  "Rien. Mais c'est bien rangé.",
-  "Non. Toujours rien.",
-  "Ah. Non plus.",
-  "Rien ici. On perd du temps.",
-  "Vide. Comme mon estomac.",
-  "Négatif.",
+/* ---------- la banque d'indices ----------
+   `analyse` est ce que dit Pierre-François, qui sait lire une trace ;
+   `brut` ce qu'en dit Thibaut, qui décrit ce qu'il voit. Quand `expert`
+   est vrai, seul Pierre-François en tire quelque chose — et l'indice
+   reste sur place, à récupérer avec le bon inspecteur. */
+const INDICES = [
+  { id:"sauce",     sprite:"ind_sauce",     nom:"Sauce tomate",
+    analyse:"Sauce tomate. Encore tiède.", brut:"C'est rouge.", expert:true },
+  { id:"chorizo",   sprite:"ind_chorizo",   nom:"Rondelle de chorizo",
+    analyse:"Chorizo. Coupé fin, à la main.", brut:"Une rondelle. De quelque chose." },
+  { id:"miettes",   sprite:"ind_miettes",   nom:"Miettes de pâte",
+    analyse:"Miettes de pâte. Semées vers la droite.", brut:"Des miettes. Partout.", expert:true },
+  { id:"fromage",   sprite:"ind_fromage",   nom:"Fromage refroidi",
+    analyse:"Fromage refroidi. Trente minutes, pas plus.", brut:"C'est collant." },
+  { id:"pattes",    sprite:"ind_pattes",    nom:"Traces de pattes",
+    analyse:"Empreintes. Quatre coussinets. Un félin.", brut:"Quelqu'un a marché dedans.", expert:true },
+  { id:"serviette", sprite:"ind_serviette", nom:"Serviette froissée",
+    analyse:"Serviette froissée. Quelqu'un s'est essuyé vite.", brut:"Un mouchoir. Bof." },
+  { id:"ticket",    sprite:"ind_ticket",    nom:"Ticket de livraison",
+    analyse:"Ticket de livraison. 19 h 42. Une pizza chorizo.", brut:"Un papier. Avec des chiffres." },
+  { id:"assiette",  sprite:"ind_assiette",  nom:"Assiette utilisée",
+    analyse:"Assiette utilisée. Jamais rapportée à l'évier.", brut:"Une assiette. Sale." },
+  { id:"boite",     sprite:"pizza_boite_ouverte", nom:"Boîte ouverte",
+    analyse:"La boîte. Ouverte ici, pas à la cuisine.", brut:"La boîte ! Enfin, vide." },
+  { id:"part",      sprite:"pizza_part",    nom:"Part abandonnée",
+    analyse:"Une part entamée puis reposée. Quelqu'un a été dérangé.", brut:"Une part ! On peut la manger ?" },
 ];
-const TROUVE = [
-  "Une trace de chorizo !",
-  "Là ! Du chorizo !",
-  "Ça, c'est du chorizo.",
-  "Une miette. Rouge. Grasse.",
-];
+
+/* ---------- ce qu'on trouve quand on ne trouve rien ---------- */
+const RIEN = {
+  chaussures:"Des chaussures. Rien dedans, heureusement.",
+  manteaux:"Trois manteaux. Deux poches percées.",
+  sac:"Des clés, un chargeur, du désespoir.",
+  biblio:"Beaucoup de livres. Aucun sur la pizza.",
+  canape:"Aucun suspect. Quelques chaussettes.",
+  basse:"Une télécommande. A probablement servi à changer de chaîne.",
+  tv:"Des câbles. Une enquête parallèle pourrait être ouverte.",
+  frigo:"Beaucoup de choses. Pas la pizza.",
+  four:"Étonnamment, quelqu'un a pensé à regarder ici.",
+  placards:"Des bocaux, rangés par ordre de péremption.",
+  evier:"Vaisselle propre. Suspect, dans cet appartement.",
+  table:"Un verre vide. Une enquête parallèle pourrait être ouverte.",
+  poubelle:"Pierre-François regrette immédiatement cette décision.",
+  commode:"Des tiroirs. Puis d'autres tiroirs.",
+  lit:"Aucun suspect. Quelques chaussettes.",
+  portant:"Des vêtements. Aucun ne sent le chorizo.",
+};
+
+/* ---------- les suspects ---------- */
 const SUSPECTS = [
-  { nom:"LE VOISIN DU DESSUS", chute:"Il avait la clé. Et l'appétit." },
-  { nom:"LE CHAT", chute:"Personne ne l'a vu. C'est bien le problème." },
-  { nom:"PIERRE-FRANÇOIS", chute:"Il a dit qu'il n'aimait pas ça. Personne n'a vérifié." },
-  { nom:"THIBAUT", chute:"« J'ai juste goûté. » Trois fois." },
+  { id:"gamer", nom:"LE VOISIN DU DESSUS", sprite:"susp_gamer", x:0.310, y:0.66,
+    dires:["J'étais sur un jeu en ligne.", "Toute la soirée.", "Enfin... presque toute."],
+    absurde:"Il propose une partie.", aveu:"Il avait la clé. Et l'appétit." },
+  { id:"blonde", nom:"LA COLOCATAIRE", sprite:"susp_blonde", x:0.665, y:0.62,
+    dires:["Je n'ai rien entendu.", "J'avais mes écouteurs.", "La porte était fermée. Je crois."],
+    absurde:"Elle demande si c'est une caméra cachée.", aveu:"Elle avait faim. Elle a été efficace." },
+  { id:"brune", nom:"L'AMIE DE PASSAGE", sprite:"susp_brune", x:0.880, y:0.62,
+    dires:["Je suis arrivée après.", "On m'a proposé du vin.", "Personne ne m'a parlé de pizza."],
+    absurde:"Elle resservirait bien un verre.", aveu:"Elle est arrivée avant. Le ticket le dit." },
+  { id:"chat", nom:"RISOTO", sprite:"susp_chat", x:0.452, y:0.88,
+    dires:["...", "Refuse de répondre aux questions.", "Se lèche la patte."],
+    absurde:"Refuse de répondre aux questions.", aveu:"Il a poussé la boîte. Le reste s'est fait tout seul." },
 ];
 
-const Enquete = {
-  actif:false, restant:0, indices:0, fouilles:0, zones:[], coupable:null, conclusion:0,
-  choisie:-1, message:null, messageT:0, fini:null, chrono:0,
-  inspecteurs:[], secousse:0,
+/* ---------- CaseGenerator -> Affaire ----------
+   Trois scénarios, tirés au début de la partie et figés jusqu'à la fin.
+   Le tirage part de la SOLUTION puis distribue ses indices : une
+   enquête impossible ne peut donc pas sortir. */
+const Affaire = {
+  scenario:"A", coupable:null, cachette:null, reels:[], plan:{}, hortenseFaite:false,
 
-  /* --------- mise en place --------- */
+  generer(){
+    this.scenario = piocher(["A", "B", "C"]);
+    if (this.scenario === "C") this.coupable = SUSPECTS[3];
+    else if (this.scenario === "B") this.coupable = null;        /* personne : elle a été rangée */
+    else this.coupable = piocher(SUSPECTS.slice(0, 3));
+
+    this.cachette = piocher(this.scenario === "B"
+      ? ["frigo", "four", "placards"]
+      : ["poubelle", "sac", "lit", "commode", "canape"]);
+
+    const obligatoires = ["ticket", "boite"];
+    if (this.scenario === "C") obligatoires.push("pattes");
+    else if (this.scenario === "B") obligatoires.push("assiette");
+    else obligatoires.push("serviette");
+
+    const reste = INDICES.map(i => i.id).filter(id => obligatoires.indexOf(id) < 0);
+    melangerTableau(reste);
+    this.reels = obligatoires.concat(reste.slice(0, ENQ_OBJECTIF - obligatoires.length));
+
+    const places = ZONES.map(z => z.id).filter(id => id !== this.cachette);
+    melangerTableau(places);
+    this.plan = {};
+    this.reels.forEach((id, k) => { this.plan[places[k]] = id; });
+    this.hortenseFaite = false;
+    return this;
+  },
+
+  bonneReponse(){ return this.coupable ? this.coupable.id : "personne"; },
+  titreSolution(){ return this.coupable ? this.coupable.nom : "PERSONNE"; },
+  chute(){
+    if (this.scenario === "B") return "Personne ne l'a volée. Quelqu'un l'a rangée. C'est pire.";
+    return this.coupable.aveu;
+  },
+};
+
+function melangerTableau(t){
+  for (let i = t.length - 1; i > 0; i--){
+    const j = entier(0, i); const v = t[i]; t[i] = t[j]; t[j] = v;
+  }
+  return t;
+}
+
+/* ---------- EvidenceManager -> Dossier ---------- */
+const Dossier = {
+  cartes:[],
+  raz(){ this.cartes = []; },
+  ajouter(ind){ if (!this.cartes.some(c => c.id === ind.id)) this.cartes.push(ind); },
+  compte(){ return this.cartes.length; },
+};
+
+/* ---------- HortenseEventManager -> HortenseApp ----------
+   Elle entre par un bord, regarde, prépare, lance et repart. La tarte
+   n'est PAS la pizza recherchée : c'est le lien avec le niveau 1. */
+const ETAT_H2 = {
+  CACHEE:"CACHEE", ENTREE:"ENTREE", GUET:"GUET", PREPARE:"PREPARE",
+  LANCE:"LANCE", RIRE:"RIRE", SORTIE:"SORTIE", FINI:"FINI",
+};
+
+const HortenseApp = {
+  etat:ETAT_H2.CACHEE, x:0, vise:0, chrono:0, cible:0, tarte:null, quand:0, faite:false,
+
+  raz(){
+    this.etat = ETAT_H2.CACHEE; this.faite = false; this.tarte = null;
+    /* entre 35 % et 65 % de la durée : ni au tout début, ni à la fin */
+    this.quand = ENQ_DUREE * hasard(0.35, 0.65);
+  },
+  ecoule(){ return ENQ_DUREE - Enquete.restant; },
+  peutVenir(){
+    return !this.faite && this.etat === ETAT_H2.CACHEE && Enquete.actif &&
+           !Enquete.dossierOuvert && !Enquete.accusation && Enquete.gele <= 0 &&
+           this.ecoule() >= this.quand;
+  },
+  declencher(){
+    if (this.etat !== ETAT_H2.CACHEE) return;
+    this.faite = true;
+    const chef = Enquete.actifIns();
+    this.cible = chef.heros;
+    const cote = chef.x > 0.5 ? -1 : 1;
+    this.x = borne(chef.x + cote * 0.17, -0.04, 1.04);
+    this.vise = chef.x + cote * 0.08;
+    this.etat = ETAT_H2.ENTREE;
+    Enquete.dire("Un silence. Puis quelqu'un.", 1.6);
+    Sons.hortenseEntre();
+  },
+  majorer(dt){
+    if (this.etat === ETAT_H2.CACHEE){ if (this.peutVenir()) this.declencher(); return; }
+    switch (this.etat){
+      case ETAT_H2.ENTREE: {
+        const r = this.vise - this.x;
+        this.x += Math.sign(r) * Math.min(Math.abs(r), 0.24 * dt);
+        if (Math.abs(this.vise - this.x) < 0.004){ this.etat = ETAT_H2.GUET; this.chrono = 0.4; }
+        break;
+      }
+      case ETAT_H2.GUET:
+        this.chrono -= dt;
+        if (this.chrono <= 0){ this.etat = ETAT_H2.PREPARE; this.chrono = 0.55; Sons.hortensePrepare(); }
+        break;
+      case ETAT_H2.PREPARE:
+        this.chrono -= dt;
+        if (this.chrono <= 0) this.lancer();
+        break;
+      case ETAT_H2.LANCE:
+        this.chrono -= dt;
+        if (this.chrono <= 0 && !this.tarte){ this.etat = ETAT_H2.RIRE; this.chrono = 0.7; Sons.hortenseRit(); }
+        break;
+      case ETAT_H2.RIRE:
+        this.chrono -= dt;
+        if (this.chrono <= 0) this.etat = ETAT_H2.SORTIE;
+        break;
+      case ETAT_H2.SORTIE: {
+        const dir = Math.sign(this.x - Enquete.actifIns().x) || 1;
+        this.x += dir * 0.28 * dt;
+        if (this.x < -0.06 || this.x > 1.06) this.etat = ETAT_H2.FINI;
+        break;
+      }
+    }
+    if (this.tarte) this.majorerTarte(dt);
+  },
+  lancer(){
+    const ins = Enquete.inspecteurs[this.cible];
+    this.etat = ETAT_H2.LANCE; this.chrono = 0.25;
+    this.tarte = {
+      x:this.x, y:0.52, x0:this.x, but:ins.x, t:0, rot:0, etat:"vol",
+      duree:Math.max(0.9, Math.abs(this.x - ins.x) * 4.4),
+    };
+    Enquete.esquiveOuverte = false;
+    Sons.tarteLancee();
+  },
+  resteAvantImpact(){
+    const p = this.tarte;
+    if (!p) return 1e9;
+    return Math.max(0, (1 - Math.min(1, p.t / p.duree)) * p.duree);
+  },
+  majorerTarte(dt){
+    const p = this.tarte;
+    if (p.etat === "fini"){ this.tarte = null; Enquete.esquiveOuverte = false; return; }
+    p.t += dt;
+    const a = Math.min(1.3, p.t / p.duree);
+    const fin = p.but + Math.sign(p.but - p.x0) * 0.10;
+    p.x = melange(p.x0, fin, a);
+    p.y = 0.52 - Math.sin(Math.PI * Math.min(1, a)) * 0.10 + a * 0.05;
+    p.rot += dt * 9;
+    Enquete.esquiveOuverte = p.etat === "vol" && this.resteAvantImpact() <= 0.45;
+    if (p.etat === "vol" && a >= 1){
+      p.etat = "fini";
+      Enquete.recevoirTarte(this.cible);
+    } else if (p.etat === "esquivee" && a >= 1.25){
+      p.etat = "fini";
+    }
+  },
+  esquiver(){
+    const p = this.tarte;
+    if (!p || p.etat !== "vol") return false;
+    if (this.resteAvantImpact() > 0.45) return false;
+    p.etat = "esquivee";
+    Enquete.esquiveOuverte = false;
+    return true;
+  },
+  visible(){ return this.etat !== ETAT_H2.CACHEE && this.etat !== ETAT_H2.FINI; },
+};
+
+/* ================= InvestigationManager -> Enquete ================= */
+const Enquete = {
+  actif:false, restant:0, indices:0, fouilles:0, fausses:0, zones:[],
+  inspecteurs:[], actifIdx:0, fini:null, secousse:0, message:null, messageT:0,
+  messageDuree:1.6, dossierOuvert:false, accusation:false, choixAcc:0,
+  pizza:null, esquiveOuverte:false, tarteRecue:false, tarteEsquivee:false,
+  gele:0, badge:null, badgeT:0,
+
   demarrer(){
+    Affaire.generer();
+    Dossier.raz();
+    HortenseApp.raz();
+    for (const s of SUSPECTS) s.vus = 0;
     this.actif = true;
     this.restant = ENQ_DUREE;
-    this.indices = 0;
-    this.fouilles = 0;
-    this.choisie = -1;
-    this.message = null;
-    this.fini = null;
-    this.chrono = 0;
-    this.secousse = 0;
-    this.conclusion = 0;
-    this.coupable = piocher(SUSPECTS);
+    this.indices = 0; this.fouilles = 0; this.fausses = 0;
+    this.fini = null; this.secousse = 0; this.message = null;
+    this.dossierOuvert = false; this.accusation = false; this.choixAcc = 0;
+    this.pizza = null; this.esquiveOuverte = false;
+    this.tarteRecue = false; this.tarteEsquivee = false;
+    this.gele = 0; this.badge = null; this.badgeT = 0;
+    this.actifIdx = 0;
 
-    /* on tire les zones qui cachent une trace */
-    const melangees = ZONES.map((z, i) => i);
-    for (let i = melangees.length - 1; i > 0; i--){
-      const j = entier(0, i);
-      const t = melangees[i]; melangees[i] = melangees[j]; melangees[j] = t;
-    }
-    const gagnantes = new Set(melangees.slice(0, ENQ_INDICES));
-    this.zones = ZONES.map((z, i) => ({
-      ref:z, fouillee:false, trace:gagnantes.has(i), pulse:Math.random() * 6.28,
+    this.zones = ZONES.map(z => ({
+      ref:z, fouillee:false, indice:Affaire.plan[z.id] || null,
+      cachette:z.id === Affaire.cachette, pulse:Math.random() * 6.28,
     }));
-
-    /* les deux inspecteurs entrent par la porte, à gauche */
     this.inspecteurs = Heros.map((h, i) => ({
-      heros:i, x:0.10 + i * 0.055, vise:0.10 + i * 0.055,
-      cible:-1, etat:"repos", chrono:0, pas:0,
+      heros:i, x:0.10 + i * 0.05, dir:1, marche:0, pas:0, fouille:0, cible:-1, sale:0,
     }));
     Camera.xEnq = 0;
+  },
+
+  actifIns(){ return this.inspecteurs[this.actifIdx]; },
+  autreIns(){ return this.inspecteurs[1 - this.actifIdx]; },
+  estPF(ins){ return Heros[ins.heros].sprite === "pierre"; },
+  changer(){ if (this.actif){ this.actifIdx = 1 - this.actifIdx; Sons.clic(); } },
+  marcher(d){ if (this.actif && !this.dossierOuvert && !this.accusation) this.actifIns().marche = d; },
+  dire(txt, duree){ this.message = txt; this.messageT = 0; this.messageDuree = duree || 1.8; },
+  poserBadge(nom){ this.badge = nom; this.badgeT = 0; },
+
+  /* --------- ce qui est à portée --------- */
+  zoneProche(){
+    const ins = this.actifIns();
+    let meilleure = -1, dmin = ENQ_PORTEE;
+    for (let i = 0; i < this.zones.length; i++){
+      if (this.zones[i].fouillee) continue;
+      const d = Math.abs(this.zones[i].ref.pied - ins.x);
+      if (d < dmin){ dmin = d; meilleure = i; }
+    }
+    return meilleure;
+  },
+  suspectProche(){
+    const ins = this.actifIns();
+    let meilleur = -1, dmin = ENQ_PORTEE;
+    for (let i = 0; i < SUSPECTS.length; i++){
+      const d = Math.abs(SUSPECTS[i].x - ins.x);
+      if (d < dmin){ dmin = d; meilleur = i; }
+    }
+    return meilleur;
+  },
+
+  /* --------- action contextuelle --------- */
+  action(){
+    if (this.esquiveOuverte) return this.esquiver();
+    if (this.accusation) return this.valider();
+    return this.inspecter();
+  },
+  inspecter(){
+    if (!this.actif || this.gele > 0 || this.dossierOuvert) return false;
+    const ins = this.actifIns();
+    if (ins.fouille > 0) return false;
+    const iz = this.zoneProche();
+    if (iz >= 0){ ins.fouille = ENQ_FOUILLE; ins.cible = iz; ins.marche = 0; Sons.tarteVol(); return true; }
+    const is = this.suspectProche();
+    if (is >= 0){ this.interroger(is); return true; }
+    this.dire("Rien à portée.", 1.0);
+    return false;
+  },
+
+  resoudreFouille(ins){
+    const z = this.zones[ins.cible];
+    ins.fouille = 0;
+    if (!z || z.fouillee){ ins.cible = -1; return; }
+    const pf = this.estPF(ins);
+
+    /* la cachette : la pizza n'apparaît que là, et pas avant trois indices */
+    if (z.cachette){
+      if (this.indices < 3){
+        Effets.parole({ heros:ins.heros }, "Il y a quelque chose. Mais quoi ?", 2.0);
+        ins.cible = -1;
+        return;
+      }
+      z.fouillee = true; this.fouilles++;
+      this.pizza = { t:0, zone:ins.cible };
+      this.gele = 0.15;
+      this.poserBadge("pizza");
+      Effets.parole({ heros:ins.heros }, "La voilà.", 2.0);
+      Sons.tarteEsquive(); Sons.palier();
+      ins.cible = -1;
+      return;
+    }
+
+    if (z.indice){
+      const ind = INDICES.find(i => i.id === z.indice);
+      if (ind.expert && !pf){
+        /* Thibaut voit la chose sans la comprendre : l'indice reste à prendre */
+        this.fausses++;
+        Effets.parole({ heros:ins.heros }, ind.brut, 1.8);
+        this.dire("Pierre-François saurait quoi en faire.", 2.0);
+        Sons.bip(190, 0.16, "sine", 0.14, 130);
+        ins.cible = -1;
+        return;
+      }
+      z.fouillee = true; this.fouilles++;
+      this.indices++;
+      Dossier.ajouter(ind);
+      this.gele = 0.15;
+      this.poserBadge("indice");
+      Effets.parole({ heros:ins.heros }, pf ? ind.analyse : ind.brut, 2.4);
+      Sons.reussite(Math.min(7, this.indices));
+      this.secousse = 0.25;
+      if (this.indices === 4) this.dire("On commence à avoir quelque chose.", 2.4);
+    } else {
+      z.fouillee = true; this.fouilles++;
+      this.fausses++;
+      Effets.parole({ heros:ins.heros }, RIEN[z.ref.id] || "Rien.", 2.2);
+      Sons.bip(190, 0.16, "sine", 0.14, 130);
+    }
+    ins.cible = -1;
+  },
+
+  interroger(is){
+    const s = SUSPECTS[is];
+    const ins = this.actifIns();
+    if (this.estPF(ins)){
+      Effets.parole({ heros:ins.heros }, s.absurde, 2.2);
+      this.dire("Thibaut poserait de meilleures questions.", 2.0);
+      return;
+    }
+    const d = s.dires[s.vus % s.dires.length];
+    s.vus++;
+    Effets.parole({ heros:ins.heros }, d, 2.4);
+    Sons.bip(520, 0.08, "sine", 0.1);
+  },
+
+  /* --------- dossier et accusation --------- */
+  basculerDossier(){
+    if (!this.actif) return;
+    this.dossierOuvert = !this.dossierOuvert;
+    if (this.dossierOuvert) this.accusation = false;
+    Sons.clic();
+  },
+  ouvrirAccusation(){
+    if (!this.actif) return;
+    if (this.indices < 3){ this.dire("Trois indices, au minimum.", 1.8); return; }
+    this.accusation = true; this.dossierOuvert = false; this.choixAcc = 0;
+    Sons.clic();
+  },
+  deplacerAccusation(d){
+    if (!this.accusation) return;
+    const n = SUSPECTS.length + 1;
+    this.choixAcc = (this.choixAcc + d + n) % n;
+    Sons.clic();
+  },
+  valider(){
+    if (!this.accusation) return false;
+    const rep = this.choixAcc < SUSPECTS.length ? SUSPECTS[this.choixAcc].id : "personne";
+    this.accusation = false;
+    if (rep !== Affaire.bonneReponse()){
+      this.dire("Ça ne tient pas.", 2.2);
+      this.poserBadge("suspect");
+      this.restant -= ENQ_MAUVAISE;
+      Sons.erreur();
+      return false;
+    }
+    if (!this.pizza){
+      this.dire("Et la pizza, elle est où ?", 2.4);
+      this.restant -= ENQ_MAUVAISE;
+      return false;
+    }
+    this.terminer(true);
+    return true;
+  },
+
+  recevoirTarte(i){
+    this.tarteRecue = true;
+    this.inspecteurs[i].sale = 3;
+    this.restant -= ENQ_TARTE;
+    this.secousse = 0.6;
+    this.poserBadge("splat");
+    Sons.tarteImpact();
+  },
+  esquiver(){
+    if (!HortenseApp.esquiver()) return false;
+    this.tarteEsquivee = true;
+    Score.points += ENQ_ESQUIVE_PTS;
+    this.poserBadge("esquive");
+    Sons.tarteEsquive();
+    /* En repartant, elle laisse tomber quelque chose. Le doute est
+       permis ; la réponse, non. */
+    if (!Affaire.hortenseFaite){
+      const libres = this.zones.filter(z => !z.fouillee && !z.indice && !z.cachette);
+      if (libres.length){
+        piocher(libres).indice = "chorizo";
+        Affaire.hortenseFaite = true;
+        this.dire("Elle a fait tomber quelque chose.", 2.4);
+      }
+    }
+    return true;
   },
 
   terminer(gagne){
     this.fini = { gagne, t:0 };
     this.actif = false;
+    this.tempsPris = ENQ_DUREE - this.restant;
     if (gagne){
-      const points = Math.round(this.restant * 50 + this.indices * 200);
-      Score.points += points;
-      this.gain = points;
+      Score.points += Math.round(this.restant * 8 + this.indices * 150);
       Sons.palier();
-    } else {
-      this.gain = 0;
-      Sons.fin();
-    }
+    } else Sons.fin();
     Jeu.phase = "fin";
     Jeu.finChrono = 0;
     Interface.sortirJeu();
-  },
-
-  /* --------- désigner une zone --------- */
-  viser(fx, fy){
-    if (!this.actif) return;
-    let meilleure = -1, dmin = 1e9;
-    for (let i = 0; i < this.zones.length; i++){
-      const z = this.zones[i].ref;
-      const dx = (z.x - fx) * 3.4, dy = z.y - fy;      /* l'image est large : on corrige */
-      const d = dx * dx + dy * dy;
-      if (d < dmin){ dmin = d; meilleure = i; }
-    }
-    if (meilleure < 0 || dmin > 0.26) return;
-    this.envoyer(meilleure);
-  },
-
-  envoyer(i){
-    const z = this.zones[i];
-    if (!this.actif || z.fouillee) {
-      if (z && z.fouillee) this.dire("Déjà fouillé.", 0.9);
-      return;
-    }
-    /* l'inspecteur le plus proche s'en charge, s'il est disponible */
-    let choisi = null, dmin = 1e9;
-    for (const ins of this.inspecteurs){
-      if (ins.etat === "fouille") continue;
-      const d = Math.abs(ins.x - z.ref.pied);
-      if (d < dmin){ dmin = d; choisi = ins; }
-    }
-    if (!choisi) return;
-    choisi.cible = i;
-    choisi.vise = z.ref.pied;
-    choisi.etat = "marche";
-    this.choisie = i;
-    Sons.clic();
-  },
-
-  dire(txt, duree){ this.message = txt; this.messageT = 0; this.messageDuree = duree || 1.6; },
-
-  /* --------- la fouille aboutit --------- */
-  fouiller(ins){
-    const z = this.zones[ins.cible];
-    if (!z || z.fouillee) { ins.etat = "repos"; ins.cible = -1; return; }
-    z.fouillee = true;
-    this.fouilles++;
-    ins.etat = "repos";
-    const nom = Heros[ins.heros].court;
-    if (z.trace){
-      this.indices++;
-      Effets.parole({ heros:ins.heros }, piocher(TROUVE), 1.6);
-      Sons.reussite(Math.min(7, this.indices));
-      Sons.poignee();
-      this.secousse = 0.4;
-      /* On laisse une seconde pour lire la dernière réplique, mais avec
-         le chrono du jeu et non un setTimeout : une échéance en temps
-         absolu continue de courir pendant une pause. */
-      if (this.indices >= ENQ_INDICES) this.conclusion = 1.0;
-    } else {
-      this.restant -= ENQ_COUT_FOUILLE;
-      Effets.parole({ heros:ins.heros }, RIEN[this.fouilles % RIEN.length], 1.4);
-      Sons.bip(190, 0.16, "sine", 0.14, 130);
-    }
-    void nom;
-    ins.cible = -1;
   },
 
   /* --------- boucle --------- */
   pas(dt){
     if (this.fini){ this.fini.t += dt; return; }
     if (!this.actif) return;
-    this.chrono += dt;
-    if (this.conclusion > 0){
-      this.conclusion -= dt;
-      if (this.conclusion <= 0) this.terminer(true);
-      for (const ins of this.inspecteurs) if (ins.etat === "fouille") ins.chrono -= dt;
-      Effets.majorer(dt);
-      return;
-    }
+    if (this.badge){ this.badgeT += dt; if (this.badgeT > 1.2) this.badge = null; }
+    if (this.gele > 0){ this.gele -= dt; return; }
+    if (this.pizza) this.pizza.t += dt;
+    if (this.dossierOuvert || this.accusation){ Effets.majorer(dt); return; }
+
     this.restant -= dt;
     this.secousse = Math.max(0, this.secousse - dt * 2);
-    if (this.message) { this.messageT += dt; if (this.messageT > this.messageDuree) this.message = null; }
+    if (this.message){ this.messageT += dt; if (this.messageT > this.messageDuree) this.message = null; }
     for (const z of this.zones) z.pulse += dt * 2.4;
 
-    for (const ins of this.inspecteurs){
-      if (ins.etat === "marche"){
-        const reste = ins.vise - ins.x;
-        const pas = Math.sign(reste) * Math.min(Math.abs(reste), ENQ_MARCHE * dt);
-        ins.x += pas;
-        ins.pas += Math.abs(pas) * 26;
-        if (Math.abs(ins.vise - ins.x) < 0.004){
-          ins.x = ins.vise; ins.etat = "fouille"; ins.chrono = ENQ_FOUILLE;
-        }
-      } else if (ins.etat === "fouille"){
-        ins.chrono -= dt;
-        if (ins.chrono <= 0) this.fouiller(ins);
-      }
+    /* l'actif conduit, l'autre suit deux pas derrière */
+    const chef = this.actifIns(), suit = this.autreIns();
+    if (chef.marche !== 0 && chef.fouille <= 0){
+      chef.x = borne(chef.x + chef.marche * ENQ_MARCHE * dt, 0.02, 0.98);
+      chef.pas += Math.abs(chef.marche) * dt * 9;
+      chef.dir = chef.marche;
+    }
+    const but = borne(chef.x - chef.dir * 0.048, 0.02, 0.98);
+    const ecart = but - suit.x;
+    if (Math.abs(ecart) > 0.006 && suit.fouille <= 0){
+      const v = Math.sign(ecart) * Math.min(Math.abs(ecart), ENQ_MARCHE * 1.2 * dt);
+      suit.x += v; suit.pas += Math.abs(v) * 9; suit.dir = Math.sign(v) || suit.dir;
     }
 
-    /* la caméra suit celui qui bouge, sinon le milieu des deux */
-    const actif = this.inspecteurs.find(i => i.etat !== "repos") || this.inspecteurs[0];
-    Camera.suivreEnq(actif.x, dt);
+    for (const ins of this.inspecteurs){
+      if (ins.fouille > 0){
+        ins.fouille -= dt;
+        if (ins.fouille <= 0) this.resoudreFouille(ins);
+      }
+      if (ins.sale > 0) ins.sale -= dt;
+    }
+
+    HortenseApp.majorer(dt);
+    Camera.suivreEnq(chef.x, dt);
 
     if (this.restant <= 0){ this.restant = 0; this.terminer(false); }
     Effets.majorer(dt);
-    Sons.ambiancer(0.25, dt, this.chrono);
+    Sons.ambiancer(0.2, dt, ENQ_DUREE - this.restant);
   },
+};
 
-  /* --------- rendu --------- */
-  dessiner(){
+/* ==================================================================
+   NIVEAU 2 — RENDU
+   ------------------------------------------------------------------
+   Séparé de la logique : le fichier précédent ne connaît que des
+   fractions, celui-ci ne fait que les convertir en pixels.
+================================================================== */
+
+const EnqVue = {
+  /* Conversion fraction d'image -> pixels écran. */
+  larg(){
     const img = Images.table.appart;
+    if (!img || !img.naturalWidth) return Camera.L;
+    return img.naturalWidth * (Camera.H / img.naturalHeight);
+  },
+  origine(){ return -borne(Camera.xEnq, 0, Math.max(0, this.larg() - Camera.L)); },
+  ex(fx){ return this.origine() + fx * this.larg(); },
+  ey(fy){ return fy * Camera.H; },
+
+  dessiner(){
     const L = Camera.L, H = Camera.H;
-    if (!img || !img.naturalWidth){
-      ctx.fillStyle = "#0B1226"; ctx.fillRect(0, 0, L, H); return;
-    }
-    const s = H / img.naturalHeight;
-    const larg = img.naturalWidth * s;
-    const trem = this.secousse > 0 ? Math.sin(this.secousse * 60) * 4 * this.secousse : 0;
-    const x0 = -borne(Camera.xEnq, 0, Math.max(0, larg - L)) + trem;
+    const img = Images.table.appart;
+    if (!img || !img.naturalWidth){ ctx.fillStyle = "#0B1226"; ctx.fillRect(0, 0, L, H); return; }
+    const E2 = Enquete;
+    const trem = E2.secousse > 0 ? Math.sin(E2.secousse * 62) * 5 * E2.secousse : 0;
+
     ctx.clearRect(0, 0, L, H);
     ctx.imageSmoothingEnabled = true;
     if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(img, x0, 0, larg, H);
+    ctx.save();
+    ctx.translate(trem, 0);
+    ctx.drawImage(img, this.origine(), 0, this.larg(), H);
 
-    const ecranX = fx => x0 + fx * larg;
-    const ecranY = fy => fy * H;
+    this.dessinerSuspects();
+    this.dessinerZones();
+    this.dessinerInspecteurs();
+    if (HortenseApp.visible()) this.dessinerHortense();
+    if (E2.pizza) this.dessinerPizza();
+    ctx.restore();
 
-    /* les zones */
-    for (const z of this.zones){
-      const px = ecranX(z.ref.x), py = ecranY(z.ref.y);
-      if (px < -60 || px > L + 60) continue;
-      const r = Math.max(13, H * 0.048);
+    for (const p of Effets.paroles){
+      if (p.cible.heros === undefined) continue;
+      const ins = E2.inspecteurs[p.cible.heros];
+      if (!ins) continue;
+      dessinerParoleLibre(p, this.ex(ins.x) + trem, this.ey(ENQ_LIGNE) - H * ENQ_TAILLE);
+    }
+
+    this.dessinerBandeau();
+    if (E2.dossierOuvert) this.dessinerDossier();
+    if (E2.accusation) this.dessinerAccusation();
+    if (E2.esquiveOuverte) this.dessinerEsquive();
+    if (E2.badge) this.dessinerBadge();
+    if (E2.message) this.dessinerMessage();
+  },
+
+  /* --------- meubles --------- */
+  dessinerZones(){
+    const H = Camera.H;
+    const iz = Enquete.zoneProche();
+    for (let i = 0; i < Enquete.zones.length; i++){
+      const z = Enquete.zones[i];
+      const px = this.ex(z.ref.x), py = this.ey(z.ref.y);
+      if (px < -70 || px > Camera.L + 70) continue;
+      const r = Math.max(11, H * 0.040);
       ctx.save();
       if (z.fouillee){
-        ctx.globalAlpha = 0.75;
-        ctx.beginPath(); ctx.arc(px, py, r * 0.62, 0, 6.2832);
-        ctx.fillStyle = z.trace ? "rgba(247,179,43,.92)" : "rgba(11,18,38,.72)";
-        ctx.fill();
-        ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 2; ctx.stroke();
-        ctx.strokeStyle = z.trace ? "#3A2A06" : "rgba(255,255,255,.85)";
-        ctx.lineWidth = Math.max(2, r * 0.14); ctx.lineCap = "round";
-        ctx.beginPath();
-        ctx.moveTo(px - r * 0.24, py); ctx.lineTo(px - r * 0.05, py + r * 0.2); ctx.lineTo(px + r * 0.26, py - r * 0.22);
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath(); ctx.arc(px, py, r * 0.5, 0, 6.2832);
+        ctx.fillStyle = "rgba(11,18,38,.70)"; ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = Math.max(1.6, r * 0.11);
+        ctx.lineCap = "round"; ctx.beginPath();
+        ctx.moveTo(px - r * 0.2, py); ctx.lineTo(px - r * 0.04, py + r * 0.17); ctx.lineTo(px + r * 0.22, py - r * 0.18);
         ctx.stroke();
+      } else if (i === iz){
+        /* à portée : la loupe et l'invite */
+        const loupe = Images.table.loupe;
+        const t = H * 0.085;
+        if (loupe && loupe.naturalWidth){
+          const l = t * loupe.naturalWidth / loupe.naturalHeight;
+          ctx.drawImage(loupe, px - l / 2, py - t * 2.05, l, t);
+        }
+        const taille = Math.max(10, H * 0.036);
+        ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        const txt = "INSPECTER";
+        const w = ctx.measureText(txt).width;
+        ctx.fillStyle = "rgba(247,179,43,.95)";
+        const yl = py - taille * 0.9;
+        arrondi(px - w / 2 - 8, yl - taille * 0.8, w + 16, taille * 1.6, taille * 0.8); ctx.fill();
+        ctx.fillStyle = "#1A1305"; ctx.fillText(txt, px, yl + taille * 0.04);
       } else {
         const b = 1 + 0.12 * Math.sin(z.pulse);
-        ctx.globalAlpha = 0.5 + 0.25 * Math.sin(z.pulse);
+        ctx.globalAlpha = 0.34 + 0.20 * Math.sin(z.pulse);
         ctx.beginPath(); ctx.arc(px, py, r * b, 0, 6.2832);
-        ctx.strokeStyle = "#F7B32B"; ctx.lineWidth = Math.max(2, r * 0.13); ctx.stroke();
-        ctx.globalAlpha = 0.9;
-        ctx.beginPath(); ctx.arc(px, py, r * 0.16, 0, 6.2832);
-        ctx.fillStyle = "#F7B32B"; ctx.fill();
+        ctx.strokeStyle = "#F7B32B"; ctx.lineWidth = Math.max(1.8, r * 0.12); ctx.stroke();
       }
       ctx.restore();
     }
+  },
 
-    /* les deux inspecteurs */
-    const haut = H * ENQ_TAILLE;
-    const sol = H * ENQ_LIGNE;
-    for (const ins of this.inspecteurs){
-      const h = Heros[ins.heros];
-      const px = ecranX(ins.x);
-      let pose = "idle";
-      if (ins.etat === "marche") pose = "marche";
-      else if (ins.etat === "fouille") pose = "regarde";
-      const nom = h.sprite + "_" + pose;
-      const img2 = Images.table[nom];
-      if (!img2 || !img2.naturalWidth) continue;
-      const bob = ins.etat === "marche" ? Math.abs(Math.sin(ins.pas)) * haut * 0.02 : 0;
-      const penche = ins.etat === "fouille" ? 0.16 : 0;
-      const versGauche = ins.vise < ins.x - 0.001;
+  /* --------- suspects --------- */
+  dessinerSuspects(){
+    const H = Camera.H;
+    for (const s of SUSPECTS){
+      const img = Images.table[s.sprite];
+      if (!img || !img.naturalWidth) continue;
+      const px = this.ex(s.x);
+      if (px < -140 || px > Camera.L + 140) continue;
+      const h = H * (s.id === "chat" ? 0.16 : 0.30);
+      const l = h * img.naturalWidth / img.naturalHeight;
+      ctx.drawImage(img, px - l / 2, this.ey(s.y) - h * 0.5, l, h);
+    }
+  },
+
+  /* --------- inspecteurs --------- */
+  dessinerInspecteurs(){
+    const H = Camera.H;
+    const haut = H * ENQ_TAILLE, sol = this.ey(ENQ_LIGNE);
+    for (let i = 0; i < Enquete.inspecteurs.length; i++){
+      const ins = Enquete.inspecteurs[i];
+      const pf = Enquete.estPF(ins);
+      let nom;
+      if (ins.sale > 0) nom = pf ? "enq_pf_splat" : "enq_th_splat";
+      else if (ins.fouille > 0) nom = pf ? "enq_pf_fouille" : "enq_th_fouille";
+      else nom = pf ? "enq_pf_marche" : "enq_th_marche";
+      const img = Images.table[nom];
+      if (!img || !img.naturalWidth) continue;
+
+      const px = this.ex(ins.x);
+      const bouge = ins.marche !== 0 && ins.fouille <= 0;
+      const bob = bouge ? Math.abs(Math.sin(ins.pas)) * haut * 0.022 : 0;
+      const h = ins.sale > 0 ? haut * 0.62 : haut;         /* les têtes barbouillées sont des portraits */
+      const l = h * img.naturalWidth / img.naturalHeight;
+      const yBase = ins.sale > 0 ? sol - haut * 0.55 : sol;
 
       const g = ctx.createRadialGradient(px, sol, 0, px, sol, haut * 0.22);
       g.addColorStop(0, "rgba(20,14,10,.34)"); g.addColorStop(1, "rgba(20,14,10,0)");
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.ellipse(px, sol, haut * 0.22, haut * 0.05, 0, 0, 6.2832); ctx.fill();
 
-      const l = haut * img2.naturalWidth / img2.naturalHeight;
-      const a = ancreDe(nom);
       ctx.save();
-      ctx.translate(px, sol - bob);
-      if (penche) ctx.rotate(penche * (versGauche ? -1 : 1));
-      ctx.scale(versGauche ? -1 : 1, 1);
-      ctx.drawImage(img2, -a * l, -haut, l, haut);
+      ctx.translate(px, yBase - bob);
+      ctx.scale(ins.dir < 0 ? -1 : 1, 1);
+      ctx.drawImage(img, -l / 2, -h, l, h);
       ctx.restore();
-    }
 
-    /* les bulles, dessinées par le niveau 1 mais repositionnées ici */
-    for (const p of Effets.paroles){
-      if (p.cible.heros === undefined) continue;
-      const ins = this.inspecteurs[p.cible.heros];
-      if (!ins) continue;
-      dessinerParoleLibre(p, ecranX(ins.x), sol - haut);
+      /* le repère de l'inspecteur actif */
+      if (i === Enquete.actifIdx){
+        const py = sol - haut - H * 0.03;
+        const t = H * 0.030;
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = Heros[ins.heros].couleur;
+        ctx.beginPath();
+        ctx.moveTo(px - t * 0.6, py - t * 0.7); ctx.lineTo(px + t * 0.6, py - t * 0.7); ctx.lineTo(px, py + t * 0.5);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
     }
-
-    /* le bandeau d'enquête */
-    this.dessinerBandeau();
   },
 
+  dessinerHortense(){
+    const H = Camera.H;
+    const h = H * 0.44, sol = this.ey(ENQ_LIGNE);
+    const px = this.ex(HortenseApp.x);
+    /* Hortense n'a pas de sprite propre ici : elle est peinte en ombre
+       chinoise. À contre-jour dans un appartement, son irruption est
+       plus inquiétante que ridicule — et ça reste dans le trait. */
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = "#160F1C";
+    ctx.beginPath(); ctx.ellipse(px, sol - h * 0.86, h * 0.15, h * 0.17, 0, 0, 6.2832); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(px, sol - h * 0.36, h * 0.17, h * 0.38, 0, 0, 6.2832); ctx.fill();
+    if (HortenseApp.etat === ETAT_H2.PREPARE || HortenseApp.etat === ETAT_H2.LANCE){
+      const dir = Math.sign(Enquete.actifIns().x - HortenseApp.x) || 1;
+      ctx.lineCap = "round"; ctx.lineWidth = h * 0.075; ctx.strokeStyle = "#160F1C";
+      ctx.beginPath();
+      ctx.moveTo(px, sol - h * 0.62);
+      ctx.lineTo(px + dir * h * 0.27, sol - h * 0.80);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    const p = HortenseApp.tarte;
+    if (p && p.etat !== "fini"){
+      const im = Images.table.ind_fromage;      /* la meringue, à défaut d'une tarte découpée */
+      const taille = H * 0.11;
+      const px2 = this.ex(p.x), py2 = this.ey(p.y);
+      ctx.save();
+      ctx.translate(px2, py2);
+      ctx.rotate(p.rot);
+      if (im && im.naturalWidth){
+        const l = taille * im.naturalWidth / im.naturalHeight;
+        ctx.drawImage(im, -l / 2, -taille / 2, l, taille);
+      } else {
+        ctx.beginPath(); ctx.arc(0, 0, taille * 0.5, 0, 6.2832);
+        ctx.fillStyle = "#F6E6B4"; ctx.fill();
+        ctx.strokeStyle = "#C98A2A"; ctx.lineWidth = 3; ctx.stroke();
+      }
+      ctx.restore();
+    }
+  },
+
+  dessinerPizza(){
+    const H = Camera.H;
+    const z = Enquete.zones[Enquete.pizza.zone];
+    if (!z) return;
+    const img = Images.table[Affaire.scenario === "B" ? "pizza_entiere" : "pizza_entamee"];
+    if (!img || !img.naturalWidth) return;
+    const t = Math.min(1, Enquete.pizza.t * 3);
+    const h = H * 0.20 * (0.6 + 0.4 * doux(t));
+    const l = h * img.naturalWidth / img.naturalHeight;
+    const px = this.ex(z.ref.x), py = this.ey(z.ref.y) - H * 0.05;
+    ctx.save();
+    ctx.globalAlpha = t;
+    const g = ctx.createRadialGradient(px, py, 0, px, py, h * 1.4);
+    g.addColorStop(0, "rgba(247,179,43,.55)"); g.addColorStop(1, "rgba(247,179,43,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(px, py, h * 1.4, 0, 6.2832); ctx.fill();
+    ctx.drawImage(img, px - l / 2, py - h / 2, l, h);
+    ctx.restore();
+  },
+
+  /* --------- bandeau --------- */
   dessinerBandeau(){
     const L = Camera.L, H = Camera.H;
-    const marge = Math.max(10, H * 0.035);
-    const taille = Math.max(12, H * 0.052);
+    const marge = Math.max(9, H * 0.032);
+    const taille = Math.max(11, H * 0.046);
     ctx.save();
     ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.textBaseline = "middle";
 
-    /* chrono, au centre haut */
-    const s = Math.max(0, Math.ceil(this.restant));
-    const txt = (s < 10 && this.restant > 0 ? "0" : "") + s + " s";
+    /* chrono */
+    const s = Math.max(0, Math.ceil(Enquete.restant));
+    const mn = Math.floor(s / 60), sc = s % 60;
+    const txt = mn + ":" + (sc < 10 ? "0" : "") + sc;
     ctx.textAlign = "center";
     const l = ctx.measureText(txt).width;
-    ctx.fillStyle = "rgba(10,16,30,.72)";
+    ctx.fillStyle = "rgba(10,16,30,.74)";
     arrondi(L / 2 - l / 2 - 14, marge, l + 28, taille * 1.7, 10); ctx.fill();
-    ctx.strokeStyle = this.restant < 20 ? "rgba(226,69,61,.9)" : "rgba(255,255,255,.14)";
+    ctx.strokeStyle = Enquete.restant < 45 ? "rgba(226,69,61,.9)" : "rgba(255,255,255,.14)";
     ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.fillStyle = this.restant < 20 ? "#E2453D" : "#F1F5FF";
+    ctx.fillStyle = Enquete.restant < 45 ? "#E2453D" : "#F1F5FF";
     ctx.fillText(txt, L / 2, marge + taille * 0.86);
 
-    /* traces trouvées, en haut à droite */
-    const r = taille * 0.42;
-    for (let i = 0; i < ENQ_INDICES; i++){
-      const px = L - marge - r - i * (r * 2.6);
-      const py = marge + taille * 0.86;
-      ctx.beginPath(); ctx.arc(px, py, r, 0, 6.2832);
-      ctx.fillStyle = i < this.indices ? "#F7B32B" : "rgba(255,255,255,.14)";
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = 1.5; ctx.stroke();
+    /* indices */
+    const eti = "INDICES  " + Enquete.indices + " / " + ENQ_OBJECTIF;
+    ctx.textAlign = "left";
+    const l2 = ctx.measureText(eti).width;
+    ctx.fillStyle = "rgba(10,16,30,.74)";
+    arrondi(marge, marge, l2 + 24, taille * 1.7, 10); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.14)"; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = "#F7B32B";
+    ctx.fillText(eti, marge + 12, marge + taille * 0.86);
+    ctx.restore();
+  },
+
+  dessinerMessage(){
+    const H = Camera.H, L = Camera.L;
+    const taille = Math.max(11, H * 0.040);
+    ctx.save();
+    ctx.globalAlpha = borne(1 - Math.pow(Enquete.messageT / Enquete.messageDuree, 4), 0, 1);
+    ctx.font = "700 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const w = ctx.measureText(Enquete.message).width;
+    const py = H * 0.135;
+    ctx.fillStyle = "rgba(10,16,30,.8)";
+    arrondi(L / 2 - w / 2 - 14, py - taille, w + 28, taille * 2, 9); ctx.fill();
+    ctx.fillStyle = "#C6D1E6"; ctx.fillText(Enquete.message, L / 2, py);
+    ctx.restore();
+  },
+
+  dessinerBadge(){
+    const H = Camera.H, L = Camera.L;
+    const table = { indice:"badge_indice", suspect:"badge_suspect", esquive:"badge_indice",
+                    splat:"badge_suspect", pizza:"badge_indice" };
+    const img = Images.table[table[Enquete.badge]];
+    const t = Enquete.badgeT / 1.2;
+    const ech = 1 + (1 - Math.min(1, t * 5)) * 0.5;
+    ctx.save();
+    ctx.globalAlpha = borne(1 - Math.pow(t, 3), 0, 1);
+    const h = H * 0.13 * ech;
+    if (img && img.naturalWidth){
+      const l = h * img.naturalWidth / img.naturalHeight;
+      ctx.drawImage(img, L / 2 - l / 2, H * 0.30 - h / 2, l, h);
+    }
+    const mots = { esquive:"ESQUIVÉ !", splat:"SPLAT !", pizza:"PIZZA RETROUVÉE" };
+    if (mots[Enquete.badge]){
+      const taille = Math.max(14, H * 0.055);
+      ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.lineWidth = Math.max(3, taille * 0.22); ctx.strokeStyle = "rgba(12,10,18,.9)";
+      ctx.strokeText(mots[Enquete.badge], L / 2, H * 0.30 + h * 0.7);
+      ctx.fillStyle = "#F7B32B"; ctx.fillText(mots[Enquete.badge], L / 2, H * 0.30 + h * 0.7);
     }
     ctx.restore();
   },
-};
 
+  dessinerEsquive(){
+    const H = Camera.H, L = Camera.L;
+    const taille = Math.max(15, H * 0.070);
+    ctx.save();
+    ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const txt = "ESQUIVER !";
+    const w = ctx.measureText(txt).width;
+    const py = H * 0.20;
+    ctx.fillStyle = "rgba(247,179,43,.96)";
+    arrondi(L / 2 - w / 2 - 22, py - taille, w + 44, taille * 2, taille); ctx.fill();
+    ctx.fillStyle = "#1A1305"; ctx.fillText(txt, L / 2, py);
+    ctx.restore();
+  },
+
+  /* --------- dossier d'enquête --------- */
+  dessinerDossier(){
+    const L = Camera.L, H = Camera.H;
+    ctx.save();
+    ctx.fillStyle = "rgba(8,13,24,.86)"; ctx.fillRect(0, 0, L, H);
+    const taille = Math.max(12, H * 0.050);
+    ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = "#F7B32B";
+    ctx.fillText("DOSSIER D'ENQUÊTE", L / 2, H * 0.13);
+
+    const n = Math.max(1, Dossier.cartes.length);
+    const cw = Math.min(L * 0.15, H * 0.30);
+    const total = n * (cw + 10) - 10;
+    let x = L / 2 - total / 2;
+    for (const c of Dossier.cartes){
+      const img = Images.table[c.sprite];
+      ctx.fillStyle = "rgba(252,250,244,.95)";
+      arrondi(x, H * 0.28, cw, cw * 1.25, 8); ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,.3)"; ctx.lineWidth = 1.5; ctx.stroke();
+      if (img && img.naturalWidth){
+        const ih = cw * 0.62, il = ih * img.naturalWidth / img.naturalHeight;
+        ctx.drawImage(img, x + cw / 2 - Math.min(il, cw * 0.8) / 2, H * 0.30,
+                      Math.min(il, cw * 0.8), ih * Math.min(1, cw * 0.8 / il));
+      }
+      const t2 = Math.max(8, cw * 0.11);
+      ctx.font = "700 " + Math.round(t2) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.fillStyle = "#1A1420";
+      ctx.fillText(c.nom, x + cw / 2, H * 0.28 + cw * 1.06);
+      x += cw + 10;
+    }
+    if (!Dossier.cartes.length){
+      ctx.font = "700 " + Math.round(taille * 0.7) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.fillStyle = "#8496B6";
+      ctx.fillText("Rien pour l'instant.", L / 2, H * 0.45);
+    }
+    ctx.font = "700 " + Math.round(taille * 0.6) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillStyle = "#8496B6";
+    ctx.fillText("D pour refermer · A pour accuser", L / 2, H * 0.86);
+    ctx.restore();
+  },
+
+  /* --------- accusation --------- */
+  dessinerAccusation(){
+    const L = Camera.L, H = Camera.H;
+    ctx.save();
+    ctx.fillStyle = "rgba(8,13,24,.9)"; ctx.fillRect(0, 0, L, H);
+    const taille = Math.max(12, H * 0.050);
+    ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = "#F7B32B";
+    ctx.fillText("QUI A PRIS LA PIZZA ?", L / 2, H * 0.14);
+
+    const noms = SUSPECTS.map(s => s.nom).concat(["PERSONNE"]);
+    const hl = H * 0.10;
+    const y0 = H * 0.30;
+    for (let i = 0; i < noms.length; i++){
+      const y = y0 + i * hl;
+      const choisi = i === Enquete.choixAcc;
+      const w = Math.min(L * 0.7, 460);
+      ctx.fillStyle = choisi ? "rgba(247,179,43,.94)" : "rgba(255,255,255,.06)";
+      arrondi(L / 2 - w / 2, y - hl * 0.36, w, hl * 0.72, hl * 0.36); ctx.fill();
+      ctx.font = "800 " + Math.round(taille * 0.62) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.fillStyle = choisi ? "#1A1305" : "#C6D1E6";
+      ctx.fillText(noms[i], L / 2, y);
+    }
+    ctx.font = "700 " + Math.round(taille * 0.55) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillStyle = "#8496B6";
+    ctx.fillText("← → pour choisir · E pour accuser", L / 2, H * 0.90);
+    ctx.restore();
+  },
+};
 /* Une bulle posée à un endroit libre : le niveau 2 place ses héros
    lui-même, la version du niveau 1 irait les chercher dans la file. */
 function dessinerParoleLibre(p, px, pyTete){
@@ -3045,7 +3695,7 @@ function dessinerParoleLibre(p, px, pyTete){
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2Dos","introNiv","introTxt","niv2","niv2Cad","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -3094,6 +3744,59 @@ const Ecran = {
   basculer(){ this.estPlein() ? this.sortir() : this.demander(); },
 };
 
+/* ---------- LevelManager : ce que le joueur a déjà fait ----------
+   Le niveau 2 se déverrouille dès que le niveau 1 a été terminé une
+   fois. C'est enregistré à part du reste : effacer ses records ne doit
+   pas reverrouiller le jeu. */
+const CLE_PROGRES = "dtour_progres";
+const Progres = {
+  lire(){
+    try{ return JSON.parse(localStorage.getItem(CLE_PROGRES)) || {}; }catch(e){ return {}; }
+  },
+  ecrire(p){ try{ localStorage.setItem(CLE_PROGRES, JSON.stringify(p)); }catch(e){} },
+  niveau2Ouvert(){ return !!this.lire().n1; },
+  finirNiveau1(){ const p = this.lire(); p.n1 = true; this.ecrire(p); },
+};
+
+/* ---------- introduction du niveau 2 ----------
+   Cinq écrans courts, six secondes en tout. On peut passer d'un
+   toucher : une cinématique qu'on ne peut pas sauter est une punition
+   dès la deuxième partie. */
+const INTRO_NIV2 = [
+  { t:1.4, txt:"QUELQUES HEURES\nPLUS TARD..." },
+  { t:1.6, txt:"UNE PIZZA AU CHORIZO\nA DISPARU." },
+  { t:1.3, txt:"Pierre-François sort sa loupe." },
+  { t:1.0, txt:"Thibaut le rejoint." },
+  { t:1.4, txt:"NIVEAU 2\n<em>L'AFFAIRE DE LA PIZZA AU CHORIZO</em>" },
+];
+const Intro = {
+  actif:false, etape:0, chrono:0,
+  lancer(){
+    this.actif = true; this.etape = 0; this.chrono = INTRO_NIV2[0].t;
+    if (E.introNiv) E.introNiv.classList.add("on");
+    this.afficher();
+  },
+  afficher(){
+    if (E.introTxt) E.introTxt.innerHTML = INTRO_NIV2[this.etape].txt.replace(/\n/g, "<br>");
+  },
+  passer(){
+    this.etape++;
+    if (this.etape >= INTRO_NIV2.length) return this.finir();
+    this.chrono = INTRO_NIV2[this.etape].t;
+    this.afficher();
+  },
+  finir(){
+    this.actif = false;
+    if (E.introNiv) E.introNiv.classList.remove("on");
+    Jeu.demarrerEnquete();
+  },
+  majorer(dt){
+    if (!this.actif) return;
+    this.chrono -= dt;
+    if (this.chrono <= 0) this.passer();
+  },
+};
+
 const Interface = {
   finAffichee:false, dernierCombo:0,
 
@@ -3132,6 +3835,11 @@ const Interface = {
     const r = lireRecords();
     if (E.tRecord) E.tRecord.textContent = r.score ? "MEILLEUR SCORE " + chiffres(r.score) : "";
     if (E.titre) E.titre.classList.remove("parti");
+    const ouvert = Progres.niveau2Ouvert();
+    if (E.niv2) E.niv2.classList.toggle("verrouille", !ouvert);
+    if (E.niv2Sst) E.niv2Sst.textContent = ouvert
+      ? "Six indices, cinq minutes."
+      : "Terminez le niveau 1 pour l'ouvrir.";
     if (E.fin) E.fin.classList.remove("on");
     if (E.hud) E.hud.classList.remove("on");
     if (E.pupitre) E.pupitre.classList.remove("on");
@@ -3144,11 +3852,24 @@ const Interface = {
     if (E.fin) E.fin.classList.remove("on");
     if (E.hud) E.hud.classList.add("on");
     if (E.pupitre) E.pupitre.classList.toggle("on", Jeu.niveau !== 2);
+    if (E.pupitre2) E.pupitre2.classList.toggle("on", Jeu.niveau === 2);
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
     if (E.pleinBtn) E.pleinBtn.classList.add("on");
     this.majVies(); this.majBandeau();
   },
-  sortirJeu(){ if (E.pupitre) E.pupitre.classList.remove("on"); },
+  sortirJeu(){
+    if (E.pupitre) E.pupitre.classList.remove("on");
+    if (E.pupitre2) E.pupitre2.classList.remove("on");
+  },
+
+  /* Le bouton d'action dit ce qu'il fait, et change quand la tarte
+     arrive : c'est la seule façon d'apprendre l'esquive sans notice. */
+  majAction(){
+    if (!E.c2ATxt || Jeu.niveau !== 2) return;
+    const esq = Enquete.esquiveOuverte;
+    E.c2ATxt.textContent = esq ? "ESQUIVER !" : (Enquete.accusation ? "ACCUSER" : "INSPECTER");
+    if (E.c2A) E.c2A.classList.toggle("esquive", !!esq);
+  },
 
   majBandeau(){
     if (E.vScore) E.vScore.textContent = chiffres(Score.points);
@@ -3197,21 +3918,24 @@ const Interface = {
     const gagne = Enquete.fini && Enquete.fini.gagne;
     if (E.finTitre){
       E.finTitre.innerHTML = gagne
-        ? "AFFAIRE<em>RÉSOLUE.</em>"
+        ? "AFFAIRE<em>CLASSÉE.</em>"
         : "LA PIZZA<em>COURT TOUJOURS.</em>";
     }
     if (E.releve) E.releve.style.display = "none";
     if (E.releveEnq) E.releveEnq.classList.add("on");
-    if (E.eTemps) E.eTemps.textContent = Math.max(0, Math.ceil(Enquete.restant)) + " s";
-    if (E.eIndices) E.eIndices.textContent = Enquete.indices + " / " + ENQ_INDICES;
+    const pris = Math.max(0, Math.round(ENQ_DUREE - Enquete.restant));
+    if (E.eTemps) E.eTemps.textContent = Math.floor(pris / 60) + ":" + (pris % 60 < 10 ? "0" : "") + (pris % 60);
+    if (E.eIndices) E.eIndices.textContent = Enquete.indices + " / " + ENQ_OBJECTIF;
+    if (E.eFausses) E.eFausses.textContent = chiffres(Enquete.fausses);
+    if (E.eTarte) E.eTarte.textContent = Enquete.tarteEsquivee ? "OUI" : (Enquete.tarteRecue ? "NON" : "—");
     if (E.eFouilles) E.eFouilles.textContent = chiffres(Enquete.fouilles);
     if (E.eScore) E.eScore.textContent = chiffres(Score.points);
     if (E.eCoupable){
-      E.eCoupable.textContent = gagne ? "C'ÉTAIT " + Enquete.coupable.nom : "";
+      E.eCoupable.textContent = gagne ? "C'ÉTAIT " + Affaire.titreSolution() : "";
       E.eCoupable.classList.toggle("on", !!gagne);
     }
     if (E.eChute){
-      E.eChute.textContent = gagne ? Enquete.coupable.chute : "Personne n'a rien vu. Comme d'habitude.";
+      E.eChute.textContent = gagne ? Affaire.chute() : "Personne n'a rien vu. Comme d'habitude.";
       E.eChute.classList.add("on");
     }
     const r = lireRecords();
@@ -3279,6 +4003,10 @@ const Entrees = {
         if (Jeu.phase !== "jeu") return;
         e.preventDefault();
         Sons.reveiller();
+        if (Intro.actif){ Intro.passer(); return; }
+        if (Enquete.dossierOuvert){ Enquete.basculerDossier(); return; }
+        if (Enquete.accusation){ Enquete.valider(); return; }
+        return;
         const r = E.cv.getBoundingClientRect ? E.cv.getBoundingClientRect() : { left:0, top:0, width:Camera.L, height:Camera.H };
         const img = Images.table.appart;
         if (!img || !img.naturalWidth) return;
@@ -3294,7 +4022,41 @@ const Entrees = {
       else esquiver(e);
     });
 
+    /* Niveau 2 : ses propres touches. Elles passent avant celles du
+       niveau 1 pour que A et L ne déclenchent pas des saluts. */
     globalThis.addEventListener("keydown", e => {
+      if (Jeu.niveau !== 2 || Jeu.phase !== "jeu") return;
+      const t = e.key.toLowerCase();
+      if (Intro.actif){ if (t === " " || t === "enter"){ e.preventDefault(); Intro.passer(); } return; }
+      if (t === "arrowleft" || t === "q"){
+        e.preventDefault();
+        if (Enquete.accusation) Enquete.deplacerAccusation(-1); else Enquete.marcher(-1);
+      } else if (t === "arrowright" || t === "d" && false){
+        e.preventDefault(); Enquete.marcher(1);
+      } else if (t === "arrowright"){
+        e.preventDefault();
+        if (Enquete.accusation) Enquete.deplacerAccusation(1); else Enquete.marcher(1);
+      } else if (t === "e" || t === "enter"){
+        e.preventDefault(); Sons.reveiller(); Enquete.action();
+      } else if (t === " "){
+        e.preventDefault(); Sons.reveiller();
+        if (Enquete.esquiveOuverte) Enquete.esquiver(); else Enquete.action();
+      } else if (t === "tab"){
+        e.preventDefault(); Enquete.changer();
+      } else if (t === "d"){
+        e.preventDefault(); Enquete.basculerDossier();
+      } else if (t === "a"){
+        e.preventDefault(); Enquete.ouvrirAccusation();
+      }
+    }, { passive:false });
+    globalThis.addEventListener("keyup", e => {
+      if (Jeu.niveau !== 2) return;
+      const t = e.key.toLowerCase();
+      if (t === "arrowleft" || t === "arrowright" || t === "q") Enquete.marcher(0);
+    });
+
+    globalThis.addEventListener("keydown", e => {
+      if (Jeu.niveau === 2 && Jeu.phase === "jeu") return;
       if (e.repeat) return;
       const t = e.key.toLowerCase();
       if (t === "a" || t === "q" || t === "arrowleft"){ presser(0, e); return; }
@@ -3335,11 +4097,39 @@ const Entrees = {
     if (E.niveaux) E.niveaux.addEventListener("click", ev => {
       const b = ev.target.closest("button[data-niv]");
       if (!b) return;
+      if (Number(b.dataset.niv) === 2 && !Progres.niveau2Ouvert()){
+        Sons.bip(150, 0.14, "square", 0.1);
+        return;
+      }
       Sons.reveiller(); Sons.clic(); Ecran.demander();
       Jeu.demarrer(Number(b.dataset.niv));
     });
     if (E.btnRejouer) E.btnRejouer.addEventListener("click", () => { Sons.clic(); Jeu.demarrer(); });
     if (E.pleinBtn) E.pleinBtn.addEventListener("click", () => { Sons.clic(); Ecran.basculer(); });
+
+    /* Les quatre grandes touches du niveau 2. Marcher se tient : on
+       reste appuyé, donc pointerdown/up et non click. */
+    const tenir = (el, d) => {
+      if (!el) return;
+      el.addEventListener("pointerdown", ev => {
+        ev.preventDefault(); Sons.reveiller();
+        if (Enquete.accusation) Enquete.deplacerAccusation(d); else Enquete.marcher(d);
+        el.classList.add("pressee");
+      });
+      const relacher = () => { Enquete.marcher(0); el.classList.remove("pressee"); };
+      el.addEventListener("pointerup", relacher);
+      el.addEventListener("pointercancel", relacher);
+      el.addEventListener("pointerleave", relacher);
+    };
+    tenir(E.c2G, -1);
+    tenir(E.c2D, 1);
+    if (E.c2A) E.c2A.addEventListener("pointerdown", ev => {
+      ev.preventDefault(); Sons.reveiller();
+      if (Intro.actif) Intro.passer(); else Enquete.action();
+    });
+    if (E.c2C) E.c2C.addEventListener("pointerdown", ev => { ev.preventDefault(); Enquete.changer(); });
+    if (E.c2Dos) E.c2Dos.addEventListener("pointerdown", ev => { ev.preventDefault(); Enquete.basculerDossier(); });
+    for (const b of [E.c2G, E.c2D, E.c2A, E.c2C, E.c2Dos]) if (b) b.addEventListener("click", ev => ev.preventDefault());
     if (E.outilsBtn) E.outilsBtn.addEventListener("click", () => Debug.basculer());
 
     globalThis.addEventListener("resize", () => { ajusterCanevas(); Interface.pensePivot(); });
@@ -3524,7 +4314,8 @@ globalThis.DTOUR = {
   xPlace, borne, melange, chiffres, doux,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface,
-  Enquete, ZONES, ENQ_DUREE, ENQ_INDICES,
+  Enquete, EnqVue, Affaire, Dossier, HortenseApp, SUSPECTS, INDICES, ZONES,
+  ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, TARTE_DUREE,
   __dessiner:() => dessiner(),
