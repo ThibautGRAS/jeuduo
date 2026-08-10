@@ -31,11 +31,15 @@ const EnqVue = {
     ctx.translate(trem, 0);
     ctx.drawImage(img, this.origine(), 0, this.larg(), H);
 
-    this.dessinerSuspects();
-    this.dessinerZones();
-    this.dessinerInspecteurs();
-    this.dessinerNoms();
-    if (HortenseApp.visible()) this.dessinerHortense();
+    /* Rien d'autre que le décor tant que l'enquête n'est pas montée :
+       l'introduction s'affiche par-dessus, en HTML. */
+    if (Enquete.pretes()){
+      this.dessinerSuspects();
+      this.dessinerZones();
+      this.dessinerInspecteurs();
+      this.dessinerNoms();
+    }
+    if (Enquete.pretes() && HortenseApp.visible()) this.dessinerHortense();
     if (E2.pizza) this.dessinerPizza();
 
     /* La lumière de l'appartement est chaude, les sprites sont neutres :
@@ -63,7 +67,7 @@ const EnqVue = {
       dessinerParoleLibre(p, px, this.ey(ENQ_LIGNE) - H * ENQ_TAILLE - etage * H * 0.115);
     }
 
-    this.dessinerBandeau();
+    if (Enquete.pretes()) this.dessinerBandeau();
     if (E2.dossierOuvert) this.dessinerDossier();
     if (E2.accusation) this.dessinerAccusation();
     if (E2.esquiveOuverte) this.dessinerEsquive();

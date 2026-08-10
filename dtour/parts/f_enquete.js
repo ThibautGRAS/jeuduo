@@ -456,8 +456,12 @@ const Enquete = {
     Camera.xEnq = 0;
   },
 
-  actifIns(){ return this.inspecteurs[this.actifIdx]; },
-  autreIns(){ return this.inspecteurs[1 - this.actifIdx]; },
+  /* Pendant l'introduction, l'enquête n'est pas encore montée : il n'y
+     a pas d'inspecteurs. Renvoyer un sosie inoffensif plutôt que
+     `undefined` évite qu'un simple affichage fasse tomber la boucle. */
+  pretes(){ return this.inspecteurs.length === 2; },
+  actifIns(){ return this.inspecteurs[this.actifIdx] || { heros:0, x:0.1, dir:1, marche:0, pas:0, fouille:0, cible:-1, sale:0 }; },
+  autreIns(){ return this.inspecteurs[1 - this.actifIdx] || this.actifIns(); },
   estPF(ins){ return Heros[ins.heros].sprite === "pierre"; },
   changer(){ if (this.actif){ this.actifIdx = 1 - this.actifIdx; Sons.clic(); } },
   marcher(d){ if (this.actif && !this.dossierOuvert && !this.accusation) this.actifIns().marche = d; },

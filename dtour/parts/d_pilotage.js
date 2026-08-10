@@ -586,7 +586,7 @@ const Debug = {
    même sur un écran 60, 90 ou 120 Hz. Rattrapage borné à 5 pas, sinon
    un retour d'onglet rejouerait plusieurs secondes d'un coup. */
 const Boucle = {
-  PAS_S:1 / 60, reste:0, precedent:0, pause:false, lent:false, tourne:false,
+  PAS_S:1 / 60, reste:0, precedent:0, pause:false, lent:false, tourne:false, incidents:0,
 
   demarrer(){
     if (this.tourne) return;
@@ -595,15 +595,24 @@ const Boucle = {
     const trame = maintenant => {
       const dt = Math.min(0.25, (maintenant - this.precedent) / 1000);
       this.precedent = maintenant;
-      if (!this.pause){
-        const echelle = (Jeu.phase === "fin" ? Jeu.ralenti : 1) * (this.lent ? 0.25 : 1);
-        this.reste += dt * echelle;
-        let n = 0;
-        while (this.reste >= this.PAS_S && n < 5){ Jeu.pas(this.PAS_S); this.reste -= this.PAS_S; n++; }
-        if (this.reste > this.PAS_S * 5) this.reste = 0;
+      /* Une trame qui casse ne doit PAS emporter la boucle. Sans ce
+         filet, une exception dans le dessin empêchait la trame suivante
+         d'être demandée : le jeu restait figé sur son dernier écran, ici
+         « QUELQUES HEURES PLUS TARD... », sans le moindre message. */
+      try{
+        if (!this.pause){
+          const echelle = (Jeu.phase === "fin" ? Jeu.ralenti : 1) * (this.lent ? 0.25 : 1);
+          this.reste += dt * echelle;
+          let n = 0;
+          while (this.reste >= this.PAS_S && n < 5){ Jeu.pas(this.PAS_S); this.reste -= this.PAS_S; n++; }
+          if (this.reste > this.PAS_S * 5) this.reste = 0;
+        }
+        dessiner();
+        Debug.lire();
+      }catch(err){
+        this.incidents = (this.incidents || 0) + 1;
+        if (this.incidents <= 3 && globalThis.console) console.error("trame ignorée :", err);
       }
-      dessiner();
-      Debug.lire();
       globalThis.requestAnimationFrame(trame);
     };
     globalThis.requestAnimationFrame(trame);

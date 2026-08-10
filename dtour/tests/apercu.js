@@ -303,6 +303,15 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "10_enquete_844");
   }
 
+  /* 13. pendant l'introduction : le décor seul, rien qui plante */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(2);
+    for (let i = 0; i < 30; i++){ D.Jeu.pas(1 / 60); D.__dessiner(); }
+    ecrire(canevas, "13_intro_844");
+  }
+
   /* 12. face à un suspect, nom affiché */
   {
     const { D, canevas } = await preparer(844, 318);

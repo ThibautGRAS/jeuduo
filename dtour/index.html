@@ -450,7 +450,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">D'TOUR v2.6</div>
+  <div id="version">D'TOUR v2.7</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -499,7 +499,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "2.6";
+const VERSION = "2.7";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -3280,8 +3280,12 @@ const Enquete = {
     Camera.xEnq = 0;
   },
 
-  actifIns(){ return this.inspecteurs[this.actifIdx]; },
-  autreIns(){ return this.inspecteurs[1 - this.actifIdx]; },
+  /* Pendant l'introduction, l'enquête n'est pas encore montée : il n'y
+     a pas d'inspecteurs. Renvoyer un sosie inoffensif plutôt que
+     `undefined` évite qu'un simple affichage fasse tomber la boucle. */
+  pretes(){ return this.inspecteurs.length === 2; },
+  actifIns(){ return this.inspecteurs[this.actifIdx] || { heros:0, x:0.1, dir:1, marche:0, pas:0, fouille:0, cible:-1, sale:0 }; },
+  autreIns(){ return this.inspecteurs[1 - this.actifIdx] || this.actifIns(); },
   estPF(ins){ return Heros[ins.heros].sprite === "pierre"; },
   changer(){ if (this.actif){ this.actifIdx = 1 - this.actifIdx; Sons.clic(); } },
   marcher(d){ if (this.actif && !this.dossierOuvert && !this.accusation) this.actifIns().marche = d; },
@@ -3642,11 +3646,15 @@ const EnqVue = {
     ctx.translate(trem, 0);
     ctx.drawImage(img, this.origine(), 0, this.larg(), H);
 
-    this.dessinerSuspects();
-    this.dessinerZones();
-    this.dessinerInspecteurs();
-    this.dessinerNoms();
-    if (HortenseApp.visible()) this.dessinerHortense();
+    /* Rien d'autre que le décor tant que l'enquête n'est pas montée :
+       l'introduction s'affiche par-dessus, en HTML. */
+    if (Enquete.pretes()){
+      this.dessinerSuspects();
+      this.dessinerZones();
+      this.dessinerInspecteurs();
+      this.dessinerNoms();
+    }
+    if (Enquete.pretes() && HortenseApp.visible()) this.dessinerHortense();
     if (E2.pizza) this.dessinerPizza();
 
     /* La lumière de l'appartement est chaude, les sprites sont neutres :
@@ -3674,7 +3682,7 @@ const EnqVue = {
       dessinerParoleLibre(p, px, this.ey(ENQ_LIGNE) - H * ENQ_TAILLE - etage * H * 0.115);
     }
 
-    this.dessinerBandeau();
+    if (Enquete.pretes()) this.dessinerBandeau();
     if (E2.dossierOuvert) this.dessinerDossier();
     if (E2.accusation) this.dessinerAccusation();
     if (E2.esquiveOuverte) this.dessinerEsquive();
@@ -4684,7 +4692,7 @@ const Debug = {
    même sur un écran 60, 90 ou 120 Hz. Rattrapage borné à 5 pas, sinon
    un retour d'onglet rejouerait plusieurs secondes d'un coup. */
 const Boucle = {
-  PAS_S:1 / 60, reste:0, precedent:0, pause:false, lent:false, tourne:false,
+  PAS_S:1 / 60, reste:0, precedent:0, pause:false, lent:false, tourne:false, incidents:0,
 
   demarrer(){
     if (this.tourne) return;
@@ -4693,15 +4701,24 @@ const Boucle = {
     const trame = maintenant => {
       const dt = Math.min(0.25, (maintenant - this.precedent) / 1000);
       this.precedent = maintenant;
-      if (!this.pause){
-        const echelle = (Jeu.phase === "fin" ? Jeu.ralenti : 1) * (this.lent ? 0.25 : 1);
-        this.reste += dt * echelle;
-        let n = 0;
-        while (this.reste >= this.PAS_S && n < 5){ Jeu.pas(this.PAS_S); this.reste -= this.PAS_S; n++; }
-        if (this.reste > this.PAS_S * 5) this.reste = 0;
+      /* Une trame qui casse ne doit PAS emporter la boucle. Sans ce
+         filet, une exception dans le dessin empêchait la trame suivante
+         d'être demandée : le jeu restait figé sur son dernier écran, ici
+         « QUELQUES HEURES PLUS TARD... », sans le moindre message. */
+      try{
+        if (!this.pause){
+          const echelle = (Jeu.phase === "fin" ? Jeu.ralenti : 1) * (this.lent ? 0.25 : 1);
+          this.reste += dt * echelle;
+          let n = 0;
+          while (this.reste >= this.PAS_S && n < 5){ Jeu.pas(this.PAS_S); this.reste -= this.PAS_S; n++; }
+          if (this.reste > this.PAS_S * 5) this.reste = 0;
+        }
+        dessiner();
+        Debug.lire();
+      }catch(err){
+        this.incidents = (this.incidents || 0) + 1;
+        if (this.incidents <= 3 && globalThis.console) console.error("trame ignorée :", err);
       }
-      dessiner();
-      Debug.lire();
       globalThis.requestAnimationFrame(trame);
     };
     globalThis.requestAnimationFrame(trame);

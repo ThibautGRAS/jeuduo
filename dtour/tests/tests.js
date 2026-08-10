@@ -536,6 +536,26 @@ if (D){
   verifier("chaque affaire sait dire son dénouement",
     D.SCENARIOS.every(sc => { D.Affaire.scenario = sc; return !!D.Affaire.chute() && !!D.Affaire.contradiction(); }));
 
+  /* --- l'introduction doit se dérouler toute seule --- */
+  titre("Introduction du niveau 2");
+  D.Jeu.demarrer(2);
+  D.Camera.mesurer(1280, 620, 1);
+  verifier("elle démarre", D.Intro.actif);
+  verifier("l'enquête n'est pas encore montée", !D.Enquete.pretes(),
+    "rien ne doit être dessiné du niveau tant que les inspecteurs n'existent pas");
+  let trames = 0;
+  while (D.Intro.actif && trames++ < 60 * 30) D.Jeu.pas(1 / 60);
+  verifier("elle se termine seule", !D.Intro.actif, "toujours en cours après 30 s");
+  verifier("en moins de dix secondes", trames < 60 * 10, (trames / 60).toFixed(1) + " s");
+  verifier("et elle enchaîne sur l'enquête", D.Enquete.actif && D.Enquete.pretes());
+  verifier("on peut la passer d'un geste",
+    (() => { D.Jeu.demarrer(2); for (let i = 0; i < 9; i++) D.Intro.passer(); return !D.Intro.actif; })());
+
+  /* Une trame qui casse ne doit pas emporter la boucle. */
+  verifier("la boucle survit à une trame ratée",
+    /catch\s*\(err\)[\s\S]{0,320}requestAnimationFrame\(trame\)/.test(source),
+    "sans filet, une exception de dessin fige le jeu sans message");
+
   /* --- une partie menée jusqu'au bout --- */
   titre("Enquête complète");
   const lancer2 = () => { D.Jeu.demarrer(2); D.Intro.finir(); D.Camera.mesurer(1280, 620, 1); };

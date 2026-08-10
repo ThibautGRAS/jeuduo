@@ -113,6 +113,25 @@ donc 0,62. Le reste — deux ombres, dont une courte au contact des pieds,
 et un voile chaud posé après les personnages — ne fait que finir le
 travail.
 
+### Une exception de dessin fige le jeu, sans un mot
+Le niveau 2 restait bloqué sur « QUELQUES HEURES PLUS TARD... ». Cause :
+pendant l'introduction, l'enquête n'est pas encore montée — pas
+d'inspecteurs — et l'affichage des noms de suspects lisait la position
+d'un inspecteur inexistant. L'exception partait dans `dessiner()`, donc
+`requestAnimationFrame` n'était jamais rappelé et la boucle mourait.
+L'écran restait sur sa dernière image, sans erreur visible.
+
+Deux corrections, et la seconde compte plus que la première :
+1. on ne dessine le niveau que si `Enquete.pretes()` ;
+2. **la boucle attrape ses propres exceptions** et redemande une trame
+   quoi qu'il arrive. Une image ratée doit coûter une image, pas la
+   partie. Les trois premières sont écrites dans la console.
+
+Leçon plus large : la suite de tests n'exerçait jamais le dessin. Elle
+appelait `Intro.finir()` pour aller au gameplay et sautait précisément
+le moment qui plantait. Le harnais d'aperçu rend maintenant une trame
+pendant l'introduction.
+
 ### Masquer un bouton, c'est supprimer une mécanique
 En ajoutant ACCUSER, j'ai caché CHANGER sous 360 px de haut « pour que
 ça tienne ». C'est-à-dire précisément sur l'iPhone couché, le seul
