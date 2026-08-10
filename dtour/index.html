@@ -1,0 +1,1891 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="D'TOUR">
+<meta name="theme-color" content="#0B1226">
+<meta name="description" content="La file du D'Tour — jeu d'arcade : saluez tout le monde devant le bar, avant que ça devienne gênant.">
+<title>La file du D'Tour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+/* ------------------------------------------------------------------
+   Direction artistique : celle de la planche fournie. Bandeau bleu
+   nuit très sombre, lettrage arrondi, ambre pour le combo, vert pour
+   Thibaut, bleu pour Pierre-François. Rien n'est inventé ici : les
+   teintes sont relevées sur la planche.
+   Les chiffres sont en chasse fixe pour que le score ne tressaute pas
+   quand il change de valeur.
+------------------------------------------------------------------ */
+:root{
+  --encre:#0B1226; --encre2:#16203A; --trait:rgba(150,180,235,.20);
+  --craie:#F2F6FF; --sourd:#93A4C4;
+  --ambre:#F7B32B; --ambreF:#C9860E;
+  --vert:#2E9E3F;  --vertF:#186427;
+  --bleu:#1F79D2;  --bleuF:#12507F;
+  --rouge:#E2453D; --ciel:#7FC3F5;
+  --marge:env(safe-area-inset-bottom,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{
+  background:#070B16;color:var(--craie);
+  font-family:"Baloo 2",system-ui,-apple-system,sans-serif;
+  font-weight:700;touch-action:none;user-select:none;-webkit-user-select:none;
+}
+canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
+
+.chiffre{font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:700;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+#cadre{position:fixed;inset:0;overflow:hidden}
+
+/* ---------------- écran de lancement ----------------
+   Il ne sert qu'à masquer la seconde où les polices et les images ne
+   sont pas encore là. Il annonce sa propre progression. */
+#intro{
+  position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:18px;background:#070B16;
+  transition:opacity .3s ease;
+}
+#intro.parti{opacity:0;pointer-events:none}
+#intro .marque{font-size:clamp(26px,6vw,44px);font-weight:800;letter-spacing:.06em;
+  color:var(--craie);text-align:center;line-height:1.05}
+#intro .marque em{display:block;font-style:normal;color:var(--ambre)}
+#intro .jauge{width:min(180px,44vw);height:3px;border-radius:3px;background:rgba(150,180,235,.16);overflow:hidden}
+#intro .jauge span{display:block;height:100%;width:0%;background:var(--ambre);transition:width .18s linear}
+#intro .bas{position:absolute;bottom:calc(18px + var(--marge));font-size:11px;letter-spacing:.22em;
+  color:var(--sourd);font-family:"JetBrains Mono",monospace}
+
+/* ---------------- écran titre ---------------- */
+#titre{
+  position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:clamp(10px,2.4vh,22px);
+  padding:16px;text-align:center;
+  background:radial-gradient(120% 90% at 50% 30%,rgba(7,11,22,.10),rgba(7,11,22,.72));
+  transition:opacity .35s ease;
+}
+#titre.parti{opacity:0;pointer-events:none}
+#titre img{width:min(420px,74vw);image-rendering:auto;filter:drop-shadow(0 8px 22px rgba(0,0,0,.55))}
+#titre .sous{font-size:clamp(13px,2.6vw,19px);font-weight:600;color:#E7ECF8;
+  text-shadow:0 2px 10px rgba(0,0,0,.9);max-width:34ch}
+#titre .rappel{font-size:clamp(11px,2.1vw,14px);font-weight:600;color:#C3CFE6;
+  text-shadow:0 2px 8px rgba(0,0,0,.9)}
+#titre .rappel b{color:var(--ambre)}
+
+.gros{
+  border:none;cursor:pointer;font-family:inherit;font-weight:800;color:#fff;
+  font-size:clamp(18px,3.4vw,26px);letter-spacing:.04em;
+  padding:.62em 1.8em;border-radius:999px;
+  background:linear-gradient(180deg,#3CB44E,#238437);
+  box-shadow:0 4px 0 var(--vertF),0 10px 24px rgba(0,0,0,.45);
+  transition:transform .08s ease,box-shadow .08s ease;
+}
+.gros:active{transform:translateY(3px);box-shadow:0 1px 0 var(--vertF),0 5px 14px rgba(0,0,0,.4)}
+.gros:focus-visible{outline:3px solid var(--ambre);outline-offset:3px}
+
+/* ---------------- bandeau de jeu ---------------- */
+#hud{
+  position:absolute;left:0;right:0;top:0;z-index:20;
+  display:flex;gap:8px;align-items:flex-start;justify-content:space-between;
+  padding:calc(8px + env(safe-area-inset-top,0px)) 10px 0;
+  pointer-events:none;opacity:0;transition:opacity .25s ease;
+}
+#hud.on{opacity:1}
+.barre{
+  display:flex;align-items:stretch;gap:5px;padding:5px;
+  background:var(--encre);border:2px solid rgba(150,180,235,.22);border-radius:14px;
+  box-shadow:0 6px 18px rgba(0,0,0,.45);
+}
+.cell{display:flex;align-items:center;gap:7px;padding:3px 10px;border-radius:9px;
+  border:1.5px solid var(--trait);min-width:0}
+.cell .lib{font-size:9px;letter-spacing:.16em;color:var(--sourd);line-height:1}
+.cell .val{font-size:clamp(15px,3.1vw,21px);line-height:1.05}
+.cell i{font-style:normal;font-size:clamp(15px,3vw,20px);line-height:1}
+#cCombo{border-color:rgba(247,179,43,.5)}
+#cCombo .lib{color:var(--ambre)}
+#vCombo{color:var(--ambre)}
+#cCombo.chaud{animation:pulseCombo .5s ease-out}
+@keyframes pulseCombo{0%{transform:scale(1)}40%{transform:scale(1.13)}100%{transform:scale(1)}}
+#vies{display:flex;gap:5px;align-items:center;padding:7px 10px}
+#vies b{width:13px;height:13px;border-radius:50%;background:var(--rouge);
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.28);transition:background .2s,transform .2s}
+#vies b.perdue{background:rgba(255,255,255,.14);transform:scale(.72)}
+
+/* ---------------- deux commandes ---------------- */
+#pupitre{
+  position:absolute;left:0;right:0;bottom:0;z-index:20;
+  display:flex;gap:10px;padding:10px 10px calc(10px + var(--marge));
+  opacity:0;transition:opacity .25s ease;pointer-events:none;
+}
+#pupitre.on{opacity:1;pointer-events:auto}
+.cmd{
+  flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;gap:9px;
+  border:3px solid rgba(255,255,255,.92);border-radius:16px;cursor:pointer;
+  font-family:inherit;font-weight:800;color:#fff;padding:9px 6px;
+  height:clamp(56px,13vh,86px);
+  text-shadow:0 2px 4px rgba(0,0,0,.45);
+  transition:transform .07s ease,box-shadow .07s ease,filter .12s ease;
+}
+.cmd img{width:clamp(30px,7vh,46px);height:clamp(30px,7vh,46px);border-radius:50%;
+  border:2px solid rgba(255,255,255,.85);flex:0 0 auto}
+.cmd .txt{display:flex;flex-direction:column;line-height:1.02;align-items:flex-start;min-width:0}
+.cmd .txt small{font-size:clamp(9px,1.7vw,11px);letter-spacing:.16em;opacity:.85;font-weight:600}
+.cmd .txt span{font-size:clamp(13px,2.7vw,20px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.cmd .touche{font-family:"JetBrains Mono",monospace;font-size:11px;
+  border:1.5px solid rgba(255,255,255,.6);border-radius:6px;padding:1px 5px;opacity:.9}
+#cmdT{background:linear-gradient(180deg,#37AC48,#1F7B31);box-shadow:0 5px 0 var(--vertF),0 10px 20px rgba(0,0,0,.4)}
+#cmdP{background:linear-gradient(180deg,#2A8AE4,#175FA6);box-shadow:0 5px 0 var(--bleuF),0 10px 20px rgba(0,0,0,.4)}
+#cmdT:active,#cmdT.pressee{transform:translateY(4px);box-shadow:0 1px 0 var(--vertF)}
+#cmdP:active,#cmdP.pressee{transform:translateY(4px);box-shadow:0 1px 0 var(--bleuF)}
+.cmd:focus-visible{outline:3px solid var(--ambre);outline-offset:3px}
+
+/* ---------------- écran de fin ---------------- */
+#fin{
+  position:absolute;inset:0;z-index:45;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:clamp(8px,2vh,16px);padding:18px;
+  background:rgba(7,11,22,.74);text-align:center;
+}
+#fin.on{display:flex;animation:fondu .5s ease both}
+@keyframes fondu{from{opacity:0}to{opacity:1}}
+#fin h2{font-size:clamp(20px,4.6vw,36px);font-weight:800;letter-spacing:.02em;line-height:1.1;
+  text-shadow:0 3px 14px rgba(0,0,0,.8)}
+#fin h2 em{font-style:normal;color:var(--ambre)}
+#releve{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;
+  width:min(440px,94vw);background:var(--encre);border:2px solid rgba(150,180,235,.22);
+  border-radius:16px;padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.5);
+}
+#releve div{border:1.5px solid var(--trait);border-radius:10px;padding:7px 9px;text-align:left}
+#releve .lib{font-size:9px;letter-spacing:.14em;color:var(--sourd);line-height:1.3}
+#releve .val{font-size:clamp(17px,3.6vw,25px);line-height:1.1}
+#releve .record{color:var(--ambre);font-size:10px;letter-spacing:.1em}
+
+/* ---------------- pense-bête paysage ---------------- */
+#pivot{
+  position:absolute;inset:auto 10px calc(10px + var(--marge)) 10px;z-index:30;
+  background:rgba(11,18,38,.9);border:2px solid var(--trait);border-radius:12px;
+  padding:8px 12px;font-size:12px;font-weight:600;color:var(--craie);
+  display:none;align-items:center;justify-content:space-between;gap:10px;
+}
+#pivot button{background:none;border:none;color:var(--ambre);font-family:inherit;
+  font-weight:800;font-size:12px;cursor:pointer;padding:4px 6px}
+
+/* ---------------- réglages / debug ---------------- */
+#outilsBtn{
+  position:absolute;z-index:25;right:10px;bottom:calc(clamp(56px,13vh,86px) + 22px + var(--marge));
+  width:34px;height:34px;border-radius:50%;border:2px solid var(--trait);
+  background:rgba(11,18,38,.82);color:var(--sourd);font-family:inherit;font-weight:800;
+  cursor:pointer;display:none;font-size:15px;line-height:1
+}
+#outilsBtn.on{display:block}
+#debug{
+  position:absolute;z-index:50;right:8px;top:56px;width:min(238px,80vw);display:none;
+  background:rgba(8,13,28,.95);border:2px solid var(--trait);border-radius:12px;padding:10px;
+  font-size:11px;font-weight:600;max-height:70svh;overflow:auto;
+}
+#debug.on{display:block}
+#debug h3{font-size:10px;letter-spacing:.18em;color:var(--ambre);margin-bottom:7px}
+#debug .rangee{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
+#debug button{flex:1 1 auto;background:var(--encre2);border:1px solid var(--trait);color:var(--craie);
+  border-radius:7px;padding:5px 6px;font-family:inherit;font-weight:700;font-size:11px;cursor:pointer}
+#debug button.actif{background:var(--ambre);color:#20180A;border-color:var(--ambre)}
+#debug label{display:flex;align-items:center;gap:6px;color:var(--sourd);margin-bottom:6px}
+#debug input[type=range]{flex:1;accent-color:var(--ambre)}
+#debug .lecture{font-family:"JetBrains Mono",monospace;color:var(--sourd);
+  font-size:10px;line-height:1.55;white-space:pre-wrap;border-top:1px solid var(--trait);padding-top:6px}
+
+#version{position:absolute;left:10px;bottom:calc(clamp(56px,13vh,86px) + 24px + var(--marge));
+  z-index:15;font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.18em;
+  color:rgba(147,164,196,.45);pointer-events:none}
+
+@media (prefers-reduced-motion:reduce){
+  #cCombo.chaud{animation:none}
+  #fin.on{animation:none}
+}
+</style>
+</head>
+<body>
+
+<div id="cadre">
+  <canvas id="cv"></canvas>
+
+  <div id="hud">
+    <div class="barre">
+      <div class="cell"><i>★</i><div><div class="lib">SCORE</div><div class="val chiffre" id="vScore">0</div></div></div>
+      <div class="cell" id="cCombo"><div><div class="lib">COMBO</div><div class="val chiffre" id="vCombo">x1</div></div></div>
+      <div class="cell"><div><div class="lib">FILE</div><div class="val chiffre" id="vFile">4</div></div><i>👥</i></div>
+    </div>
+    <div class="barre"><div id="vies"><b></b><b></b><b></b></div></div>
+  </div>
+
+  <div id="titre">
+    <img id="logo" alt="La file du D'Tour">
+    <p class="sous">Ils ne les connaissaient même pas.</p>
+    <button class="gros" id="btnJouer">JOUER</button>
+    <p class="rappel">Quelqu'un vous tend la main : <b>gauche</b> pour Thibaut, <b>droite</b> pour Pierre-François.</p>
+  </div>
+
+  <div id="fin">
+    <h2>TROP DE GENS<em>À SALUER.</em></h2>
+    <div id="releve">
+      <div><div class="lib">SCORE</div><div class="val chiffre" id="fScore">0</div><div class="record" id="fRecord"></div></div>
+      <div><div class="lib">MEILLEUR COMBO</div><div class="val chiffre" id="fCombo">x0</div></div>
+      <div><div class="lib">PERSONNES SALUÉES</div><div class="val chiffre" id="fSaluts">0</div></div>
+      <div><div class="lib">FILE LA PLUS LONGUE</div><div class="val chiffre" id="fFile">0</div></div>
+    </div>
+    <button class="gros" id="btnRejouer">REJOUER</button>
+  </div>
+
+  <div id="pupitre">
+    <button class="cmd" id="cmdT" aria-label="Saluer Thibaut">
+      <img id="visageT" alt=""><span class="txt"><small>SALUER</small><span>THIBAUT</span></span><span class="touche">A</span>
+    </button>
+    <button class="cmd" id="cmdP" aria-label="Saluer Pierre-François">
+      <span class="touche">L</span><span class="txt"><small>SALUER</small><span>PIERRE-FRANÇOIS</span></span><img id="visageP" alt="">
+    </button>
+  </div>
+
+  <div id="pivot"><span>Le jeu respire mieux en paysage.</span><button id="pivotOk">D'accord</button></div>
+  <button id="outilsBtn" title="Outils">⚙</button>
+
+  <div id="debug">
+    <h3>DEBUG</h3>
+    <div class="rangee">
+      <button data-act="arrivee">+1 arrivant</button>
+      <button data-act="salut">Déclencher salut</button>
+    </div>
+    <div class="rangee">
+      <button data-act="cibleT">Cible : Thibaut</button>
+      <button data-act="cibleP">Cible : P-F</button>
+    </div>
+    <div class="rangee">
+      <button data-act="file10">File +10</button>
+      <button data-act="file50">File +50</button>
+    </div>
+    <div class="rangee">
+      <button data-act="jour">Jour</button><button data-act="soir">Soir</button><button data-act="nuit">Nuit</button>
+    </div>
+    <label>Vitesse <input type="range" id="dVitesse" min="20" max="300" value="100"><span id="dVitesseV" class="chiffre">1.00</span></label>
+    <label>Réaction <input type="range" id="dReaction" min="40" max="250" value="200"><span id="dReactionV" class="chiffre">2.00</span></label>
+    <div class="rangee">
+      <button data-act="invincible">Invincible</button>
+      <button data-act="lent">Ralenti</button>
+    </div>
+    <div class="lecture" id="dLecture"></div>
+  </div>
+
+  <div id="version">D'TOUR v1.0</div>
+
+  <div id="intro">
+    <div class="marque">LA FILE<em>DU D'TOUR</em></div>
+    <div class="jauge"><span id="jauge"></span></div>
+    <div class="bas">CHARGEMENT</div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ==================================================================
+   LA FILE DU D'TOUR
+   ------------------------------------------------------------------
+   Un seul fichier, aucune dépendance, aucun fichier audio : tous les
+   sons sont synthétisés au WebAudio. Les images viennent de img/,
+   découpées de la planche fournie.
+
+   Correspondance avec l'architecture demandée dans le brief :
+     GameManager       -> Jeu
+     QueueManager      -> File
+     NPCManager        -> Foule
+     DifficultyManager -> Difficulte
+     ScoreManager      -> Score
+     InputManager      -> Entrees
+     AudioManager      -> Sons
+     UIManager         -> Interface
+================================================================== */
+
+const VERSION = "1.0";
+
+/* ---------- géométrie ----------
+   Tout est exprimé en « unités monde », où un personnage mesure
+   exactement 100 unités de haut. La conversion en pixels se fait au
+   dernier moment, par un seul facteur d'échelle. Aucun calcul de jeu
+   ne dépend donc de la taille de l'écran — c'est la leçon retenue du
+   terrain 540x880 de DUO. */
+const H_PERSO = 100;
+const BRAS_TENDU = 0.95;   /* la main ne rejoint celle du héros qu'au moment de la poignée */
+const PAS = 62;                       /* écart entre deux places de la file */
+const PLACE_T = 2, PLACE_PF = 3;      /* places fixes des deux héros */
+const X_PORTE = -34;                  /* la porte du bar, à gauche de la place 0 */
+
+function xPlace(i){ return 46 + i * PAS; }
+
+/* Recul de celui qui salue : il ne se plante PAS entre les deux héros
+   — deux personnes espacées de 62 unités ne laissent aucune place à un
+   tiers. Il s'arrête à 88 unités à DROITE de celui qu'il vise, toujours
+   la même distance : le bras peint fait alors la même longueur dans les
+   deux cas, et celle-ci répond à la main tendue des sprites, qui va
+   chercher entre 36 et 45 unités. Viser Thibaut place donc l'arrivant
+   juste devant Pierre-François, à qui il tourne le dos : c'est
+   exactement la bonne image. */
+const RECUL_SALUT = 104;
+const X_SALUT = xPlace(PLACE_T) + RECUL_SALUT;
+
+/* Les arrivants longent la file par devant : plus bas à l'écran et
+   légèrement plus grands, ils passent donc DEVANT les gens rangés.
+   La hauteur d'épaule tombe pile à celle de la main tendue des héros :
+   la poignée de main est horizontale, comme dans la vraie vie. */
+const DEVANT_Y = 0.24, DEVANT_Z = 1.07;
+
+/* Épaule du PNJ, en fraction de sa hauteur mesurée depuis les pieds. */
+const EPAULE = 0.66;
+
+/* ---------- rythme ----------
+   Temps de réaction : 2 s au départ, jamais moins de 0,55 s. La
+   décroissance est géométrique plutôt que par paliers de 0,2 s : la
+   marche d'escalier se sentait, la courbe non. */
+const REACT_DEBUT = 2.0, REACT_PLANCHER = 0.55, REACT_TAUX = 0.962;
+const ARRIVEE_DEBUT = 2.9, ARRIVEE_PLANCHER = 0.78, ARRIVEE_TAUX = 0.972;
+const P_INTERACTION_DEBUT = 0.80, P_INTERACTION_FIN = 0.94;
+const VIT_MARCHE = 78;                /* unités monde par seconde */
+const VIES = 3;
+const SIMULTANE_PALIERS = [0, 13, 30]; /* saluts requis pour 1, 2 puis 3 demandes en même temps */
+
+/* ---------- moments de la journée ----------
+   Le décor ne saute pas d'un état à l'autre : on interpole en continu
+   une teinte, et on croise les deux images sur 2,2 s. */
+const MOMENTS = [
+  { nom:"jour", fond:"fond_jour", seuil:0,
+    voile:"rgba(255,232,190,0)", ombre:0.16, chaleur:0, lampes:0 },
+  { nom:"soir", fond:"fond_soir", seuil:22,
+    voile:"rgba(255,146,64,0.20)", ombre:0.26, chaleur:0.5, lampes:0.55 },
+  { nom:"nuit", fond:"fond_nuit", seuil:52,
+    voile:"rgba(28,44,110,0.34)", ombre:0.40, chaleur:0.15, lampes:1 },
+];
+const DUREE_FONDU = 2.2;
+
+/* ---------- états du PNJ ----------
+   ENTERING / WALKING / WAITING / REQUESTING_HANDSHAKE / HANDSHAKING /
+   AWKWARD / IDLE, en français. */
+const ETAT = {
+  ENTREE:"ENTREE", MARCHE:"MARCHE", ATTENTE:"ATTENTE",
+  DEMANDE:"DEMANDE", POIGNEE:"POIGNEE", MALAISE:"MALAISE", REPOS:"REPOS",
+};
+
+/* ---------- types d'interaction ----------
+   Les absurdités restent rares : c'est leur rareté qui les rend
+   drôles. Chacune n'apparaît qu'après un certain nombre de saluts. */
+const TYPES = {
+  AUCUNE:       { poids:0,    des:0 },
+  SIMPLE:       { poids:100,  des:0 },
+  ENTHOUSIASTE: { poids:9,    des:8,  react:0.62, points:2.0 },
+  PATIENT:      { poids:7,    des:10, react:2.30, points:0.8 },
+  DOUBLE:       { poids:8,    des:16 },
+  FAUSSE:       { poids:7,    des:12 },
+  REVENANT:     { poids:6,    des:20 },
+  PASSANT:      { poids:6,    des:6 },
+  JUMEAU:       { poids:5,    des:24 },
+};
+
+const NB_PNJ = 16;
+const SPRITES_PNJ = Array.from({ length:NB_PNJ }, (_, i) => "pnj" + String(i + 1).padStart(2, "0"));
+const POSES_HEROS = ["idle","attente","marche","regarde","surpris","stress","tendue","victoire"];
+
+const REPLIQUES_OK = ["SALUT !","BONJOUR !","ENCHANTÉ !","ÇA VA ?","SALUT !","BIEN OU BIEN ?"];
+const REPLIQUES_RATE = ["...","MALAISE","GÊNANT.","..."];
+
+/* ================= petits outils ================= */
+const borne = (v, a, b) => v < a ? a : (v > b ? b : v);
+const melange = (a, b, t) => a + (b - a) * t;
+const doux = t => t * t * (3 - 2 * t);
+const hasard = (a, b) => a + Math.random() * (b - a);
+const entier = (a, b) => Math.floor(hasard(a, b + 1));
+const piocher = t => t[Math.floor(Math.random() * t.length)];
+
+/* Séparateur de milliers en espace insécable fine, comme sur la planche. */
+function chiffres(n){ return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F"); }
+
+/* ================= mémoire locale ================= */
+const CLE = "dtour_records";
+function lireRecords(){
+  try{ return JSON.parse(localStorage.getItem(CLE)) || {}; }catch(e){ return {}; }
+}
+function ecrireRecord(r){
+  const a = lireRecords(); let neuf = false;
+  for (const k of ["score","combo","saluts","file"]){
+    if ((r[k] || 0) > (a[k] || 0)){ a[k] = r[k]; if (k === "score") neuf = true; }
+  }
+  try{ localStorage.setItem(CLE, JSON.stringify(a)); }catch(e){}
+  return neuf;
+}
+
+/* ================= AudioManager -> Sons =================
+   Aucun fichier audio : tout est synthétisé. Un lit d'ambiance de rue
+   (bruit filtré) plus des brèves de conversation dont la densité monte
+   avec la nuit. Le contexte n'est créé qu'au premier geste du joueur,
+   sinon iOS le laisse suspendu. */
+const Sons = {
+  ac:null, maitre:null, ambiance:null, gainAmb:null, filtreAmb:null,
+  actif:true, prochaineBrève:0,
+
+  init(){
+    if (this.ac) return;
+    const C = globalThis.AudioContext || globalThis.webkitAudioContext;
+    if (!C) return;
+    this.ac = new C();
+    this.maitre = this.ac.createGain();
+    this.maitre.gain.value = this.actif ? 0.9 : 0;
+    this.maitre.connect(this.ac.destination);
+  },
+  reveiller(){ this.init(); if (this.ac && this.ac.state === "suspended") this.ac.resume(); },
+  basculer(){
+    this.actif = !this.actif;
+    if (this.maitre) this.maitre.gain.value = this.actif ? 0.9 : 0;
+    return this.actif;
+  },
+
+  bip(freq, duree, forme, vol, vers){
+    if (!this.ac || !this.actif) return;
+    const t = this.ac.currentTime;
+    const o = this.ac.createOscillator(), g = this.ac.createGain();
+    o.type = forme || "sine"; o.frequency.setValueAtTime(freq, t);
+    if (vers) o.frequency.exponentialRampToValueAtTime(Math.max(20, vers), t + duree);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol || 0.25, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
+    o.connect(g); g.connect(this.maitre); o.start(t); o.stop(t + duree + 0.02);
+  },
+  souffle(duree, vol, centre, q){
+    if (!this.ac || !this.actif) return;
+    const t = this.ac.currentTime, n = Math.max(1, Math.floor(this.ac.sampleRate * duree));
+    const b = this.ac.createBuffer(1, n, this.ac.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const s = this.ac.createBufferSource(); s.buffer = b;
+    const f = this.ac.createBiquadFilter();
+    f.type = "bandpass"; f.frequency.value = centre || 900; f.Q.value = q || 1.1;
+    const g = this.ac.createGain(); g.gain.value = vol || 0.2;
+    s.connect(f); f.connect(g); g.connect(this.maitre); s.start(t);
+  },
+
+  /* --- lit d'ambiance : rue + terrasse --- */
+  lancerAmbiance(){
+    if (!this.ac || this.ambiance) return;
+    const n = this.ac.sampleRate * 2;
+    const b = this.ac.createBuffer(1, n, this.ac.sampleRate), d = b.getChannelData(0);
+    let prec = 0;
+    for (let i = 0; i < n; i++){ prec = (prec + (Math.random() * 2 - 1) * 0.06) * 0.985; d[i] = prec; }
+    const s = this.ac.createBufferSource(); s.buffer = b; s.loop = true;
+    this.filtreAmb = this.ac.createBiquadFilter();
+    this.filtreAmb.type = "lowpass"; this.filtreAmb.frequency.value = 620;
+    this.gainAmb = this.ac.createGain(); this.gainAmb.gain.value = 0;
+    s.connect(this.filtreAmb); this.filtreAmb.connect(this.gainAmb); this.gainAmb.connect(this.maitre);
+    s.start(); this.ambiance = s;
+  },
+  ambiancer(densite, dt, temps){
+    if (!this.ac || !this.gainAmb) return;
+    const cible = 0.22 + densite * 0.5;
+    const g = this.gainAmb.gain;
+    g.value = melange(g.value, cible, Math.min(1, dt * 1.4));
+    if (this.filtreAmb) this.filtreAmb.frequency.value = melange(520, 1150, densite);
+    /* brèves de conversation : de plus en plus serrées à mesure que ça se remplit */
+    if (temps > this.prochaineBrève){
+      this.prochaineBrève = temps + hasard(1.1, 3.4) / (0.5 + densite);
+      if (this.actif) this.souffle(hasard(0.09, 0.2), 0.035 + densite * 0.05, hasard(300, 1500), 2.2);
+    }
+  },
+
+  arrivee(){ this.souffle(0.1, 0.09, 420, 1.6); },
+  alerte(){ this.bip(880, 0.07, "triangle", 0.2); this.bip(1320, 0.07, "sine", 0.13); },
+  poignee(){ this.souffle(0.11, 0.2, 240, 1.4); this.bip(190, 0.09, "sine", 0.2, 130); },
+  reussite(n){
+    const gamme = [523, 587, 659, 784, 880, 1047, 1175, 1319];
+    const f = gamme[Math.min(gamme.length - 1, n)];
+    this.bip(f, 0.11, "triangle", 0.24); this.bip(f * 2, 0.07, "sine", 0.1);
+  },
+  palier(){ [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => this.bip(f, 0.13, "triangle", 0.2), i * 55)); },
+  erreur(){ this.bip(196, 0.3, "sawtooth", 0.26, 84); this.souffle(0.22, 0.14, 260, 0.8); },
+  gene(){ this.bip(233, 0.5, "sine", 0.16, 150); this.bip(247, 0.5, "sine", 0.12, 160); },
+  fin(){ [392, 349, 294, 233].forEach((f, i) => setTimeout(() => this.bip(f, 0.4, "triangle", 0.24), i * 190)); },
+  clic(){ this.bip(660, 0.04, "square", 0.12); },
+};
+
+/* ================= chargement des images ================= */
+const Images = { pret:false, table:{}, teintes:{} };
+
+function listeImages(){
+  const l = ["logo","face_thibaut","face_pierre"];
+  for (const m of MOMENTS) l.push(m.fond);
+  for (const h of ["thibaut","pierre"]) for (const p of POSES_HEROS) l.push(h + "_" + p);
+  for (const s of SPRITES_PNJ) l.push(s);
+  return l;
+}
+
+/* Les bras tendus des PNJ sont dessinés, pas photographiés : la
+   planche ne fournit qu'une seule main tendue générique et l'employer
+   pour les seize aurait changé le personnage en pleine file. On relève
+   donc, une fois pour toutes, la couleur de peau et celle de la manche
+   de chaque sprite pour peindre un bras au bon coloris. */
+function releverTeintes(nom, img){
+  try{
+    const c = document.createElement("canvas");
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const x = c.getContext("2d", { willReadFrequently:true });
+    x.drawImage(img, 0, 0);
+    const d = x.getImageData(0, 0, c.width, c.height).data;
+    const lire = (fx, fy) => {
+      const px = Math.floor(c.width * fx), py = Math.floor(c.height * fy);
+      const i = (py * c.width + px) * 4;
+      return [d[i], d[i + 1], d[i + 2], d[i + 3]];
+    };
+    /* peau : on cherche le pixel le plus « chair » dans la zone du visage */
+    let peau = [232, 178, 142], meilleur = -1;
+    for (let fy = 0.06; fy <= 0.22; fy += 0.02){
+      for (let fx = 0.3; fx <= 0.7; fx += 0.05){
+        const p = lire(fx, fy);
+        if (p[3] < 200) continue;
+        const note = p[0] - p[2];
+        if (p[0] > 120 && p[0] >= p[1] && p[1] >= p[2] && note > 22 && note > meilleur){
+          meilleur = note; peau = [p[0], p[1], p[2]];
+        }
+      }
+    }
+    /* manche : le flanc du torse, à mi-hauteur du buste */
+    let manche = null;
+    for (const fx of [0.20, 0.80, 0.26, 0.74]){
+      const p = lire(fx, 0.40);
+      if (p[3] > 210){ manche = [p[0], p[1], p[2]]; break; }
+    }
+    if (!manche) manche = lire(0.5, 0.42).slice(0, 3);
+    const fiche = {
+      peau: "rgb(" + peau.join(",") + ")",
+      peauOmbre: "rgb(" + peau.map(v => Math.round(v * 0.82)).join(",") + ")",
+      manche: "rgb(" + manche.join(",") + ")",
+      mancheOmbre: "rgb(" + manche.map(v => Math.round(v * 0.72)).join(",") + ")",
+      ancre: 0.5,
+    };
+
+    /* --- ancre horizontale ---
+       Le centre du sprite n'est pas le centre du corps : la pose « main
+       tendue » est 50 % plus large que la pose au repos, et cadrer sur
+       le milieu de l'image faisait glisser le personnage d'un quart de
+       sa largeur au moment où il tendait le bras. On relève donc le
+       milieu des PIEDS, qui ne bouge pas d'une pose à l'autre. */
+    const opaque = (px, py) => d[(py * c.width + px) * 4 + 3] > 120;
+    let xg = c.width, xd = -1;
+    for (let py = Math.floor(c.height * 0.82); py < c.height; py++){
+      for (let px = 0; px < c.width; px++){
+        if (!opaque(px, py)) continue;
+        if (px < xg) xg = px;
+        if (px > xd) xd = px;
+      }
+    }
+    if (xd >= 0) fiche.ancre = (xg + xd) / 2 / c.width;
+
+    /* --- bout de la main tendue ---
+       Utilisé comme point de rendez-vous du bras peint du PNJ. */
+    if (nom.endsWith("_tendue")){
+      let mx = -1, my = 0, n = 0;
+      for (let px = c.width - 1; px >= 0 && mx < 0; px--){
+        for (let py = 0; py < Math.floor(c.height * 0.72); py++){
+          if (opaque(px, py)){ mx = px; my += py; n++; }
+        }
+      }
+      if (mx >= 0){
+        const largeurMonde = H_PERSO * c.width / c.height;
+        fiche.mainX = (mx / c.width - fiche.ancre) * largeurMonde;
+        fiche.mainY = -(1 - (my / Math.max(1, n)) / c.height) * H_PERSO;
+      }
+    }
+    Images.teintes[nom] = fiche;
+  }catch(e){
+    Images.teintes[nom] = { peau:"#E8B28E", peauOmbre:"#C08F6F", manche:"#2C3550", mancheOmbre:"#1D2439", ancre:0.5 };
+  }
+}
+
+function ancreDe(nom){
+  const t = Images.teintes[nom];
+  return t && t.ancre != null ? t.ancre : 0.5;
+}
+
+function charger(surAvance){
+  const noms = listeImages();
+  let faits = 0;
+  return Promise.all(noms.map(nom => new Promise(resoudre => {
+    const img = new Image();
+    img.onload = () => {
+      Images.table[nom] = img;
+      if (nom.startsWith("pnj") || nom.startsWith("thibaut") || nom.startsWith("pierre")) releverTeintes(nom, img);
+      faits++; if (surAvance) surAvance(faits / noms.length); resoudre();
+    };
+    img.onerror = () => { faits++; if (surAvance) surAvance(faits / noms.length); resoudre(); };
+    img.src = "img/" + nom + ".webp";
+  }))).then(() => { Images.pret = true; });
+}
+
+/* ================= DifficultyManager -> Difficulte ================= */
+const Difficulte = {
+  saluts:0, forcageReaction:null, facteurVitesse:1,
+
+  raz(){ this.saluts = 0; this.forcageReaction = null; this.facteurVitesse = 1; },
+  compter(){ this.saluts++; },
+
+  reaction(){
+    if (this.forcageReaction != null) return this.forcageReaction;
+    return Math.max(REACT_PLANCHER, REACT_DEBUT * Math.pow(REACT_TAUX, this.saluts));
+  },
+  delaiArrivee(){
+    const d = Math.max(ARRIVEE_PLANCHER, ARRIVEE_DEBUT * Math.pow(ARRIVEE_TAUX, this.saluts));
+    return d * hasard(0.75, 1.25) / this.facteurVitesse;
+  },
+  pInteraction(){
+    return melange(P_INTERACTION_DEBUT, P_INTERACTION_FIN, borne(this.saluts / 40, 0, 1));
+  },
+  simultanees(){
+    let n = 1;
+    for (let i = 1; i < SIMULTANE_PALIERS.length; i++) if (this.saluts >= SIMULTANE_PALIERS[i]) n = i + 1;
+    return n;
+  },
+  /* Tire un type d'interaction parmi ceux débloqués, au poids. */
+  tirerType(){
+    const dispo = Object.keys(TYPES).filter(k => k !== "AUCUNE" && this.saluts >= TYPES[k].des);
+    let total = 0; for (const k of dispo) total += TYPES[k].poids;
+    let r = Math.random() * total;
+    for (const k of dispo){ r -= TYPES[k].poids; if (r <= 0) return k; }
+    return "SIMPLE";
+  },
+};
+
+/* ================= ScoreManager -> Score ================= */
+const Score = {
+  points:0, combo:0, meilleurCombo:0, saluts:0, fileMax:0,
+
+  raz(){ this.points = 0; this.combo = 0; this.meilleurCombo = 0; this.saluts = 0; this.fileMax = 0; },
+  multiplicateur(){ return Math.max(1, this.combo); },
+  reussir(bonus){
+    this.combo++;
+    if (this.combo > this.meilleurCombo) this.meilleurCombo = this.combo;
+    this.saluts++;
+    const gagne = Math.round(50 * this.multiplicateur() * (bonus || 1));
+    this.points += gagne;
+    return gagne;
+  },
+  casser(){ const c = this.combo; this.combo = 0; return c; },
+  noterFile(n){ if (n > this.fileMax) this.fileMax = n; },
+};
+
+/* ================= NPC ================= */
+let compteurPnj = 0;
+
+class Pnj {
+  constructor(sprite, type){
+    this.id = ++compteurPnj;
+    this.sprite = sprite;
+    this.etat = ETAT.ENTREE;
+    this.place = -1;            /* queuePosition ; -1 tant qu'il n'est pas rangé */
+    this.cible = -1;            /* targetHero : 0 Thibaut, 1 Pierre-François */
+    this.tReaction = 0;
+    this.type = type || "SIMPLE";
+    this.x = 0;
+    this.vise = 0;
+    this.arrive = false;
+    this.interaction = false;
+    this.bras = 0;              /* extension du bras : 0 le long du corps, 1 main serrée */
+    this.chrono = 0;
+    this.attente = 0;
+    this.regarde = 1;
+    this.phase = Math.random() * Math.PI * 2;
+    this.doubleReste = 0;
+    this.revenant = false;
+    this.viseDemande = false;
+    this.pas = 0;               /* avancement du cycle de marche */
+  }
+
+  get img(){ return Images.table[this.sprite]; }
+  get teinte(){ return Images.teintes[this.sprite] || { peau:"#E8B28E", peauOmbre:"#C08F6F", manche:"#2C3550", mancheOmbre:"#1D2439" }; }
+
+  /* Le PNJ ne connaît que lui-même : il avance vers `vise` et change
+     d'état quand il y arrive. Toute décision qui regarde les autres
+     appartient à Foule. */
+  avancer(dt){
+    this.phase += dt * 2.2;
+    switch (this.etat){
+      case ETAT.ENTREE:
+      case ETAT.MARCHE: {
+        const v = VIT_MARCHE * Difficulte.facteurVitesse;
+        const reste = this.vise - this.x;
+        const pas = Math.sign(reste) * Math.min(Math.abs(reste), v * dt);
+        this.x += pas;
+        this.pas += Math.abs(pas) * 0.09;
+        this.regarde = 1;
+        if (Math.abs(this.vise - this.x) < 0.6){
+          this.x = this.vise;
+          if (this.viseDemande){ this.viseDemande = false; Foule.ouvrirDemande(this); }
+          else Foule.ranger(this);
+        }
+        break;
+      }
+      case ETAT.DEMANDE: {
+        this.attente += dt;
+        this.bras = Math.min(BRAS_TENDU, this.bras + dt * 7);
+        this.chrono -= dt;
+        if (this.chrono <= 0) Jeu.rater(this, "lent");
+        break;
+      }
+      case ETAT.POIGNEE: {
+        this.chrono -= dt;
+        this.bras = 1;
+        if (this.chrono <= 0){
+          if (this.doubleReste > 0){
+            this.doubleReste--;
+            this.cible = 1 - this.cible;
+            this.vise = xSalut(this.cible);
+            this.viseDemande = true;
+            this.etat = ETAT.MARCHE;
+            this.bras = 0;
+          }
+          else Foule.reprendre(this);
+        }
+        break;
+      }
+      case ETAT.MALAISE: {
+        this.chrono -= dt;
+        this.bras = Math.max(0, this.bras - dt * 1.15);
+        if (this.chrono <= 0) Foule.reprendre(this);
+        break;
+      }
+      case ETAT.ATTENTE:
+        this.bras = Math.max(0, this.bras - dt * 3);
+        this.regarde = -1;      /* rangé dans la file, on regarde le bar */
+        break;
+      case ETAT.REPOS: {
+        /* le passant qui traverse sans dire bonjour */
+        this.x += VIT_MARCHE * 1.25 * Difficulte.facteurVitesse * dt;
+        this.pas += dt * 6;
+        this.regarde = 1;
+        break;
+      }
+    }
+  }
+
+  /* Pose affichée : les PNJ n'ont qu'un sprite, l'animation est faite
+     au dessin (balancement, inclinaison, bras peint). */
+  get penche(){
+    /* Il se penche vers la gauche, où sont les deux héros, et d'autant
+       plus qu'il vise Thibaut, qui est le plus loin. */
+    const loin = this.cible === 0 ? 1.7 : 1;
+    if (this.etat === ETAT.DEMANDE) return -0.05 * this.bras * loin;
+    if (this.etat === ETAT.POIGNEE) return -0.05 * loin;
+    if (this.etat === ETAT.MALAISE) return -0.02 * this.bras * loin;
+    return 0;
+  }
+}
+
+/* ================= QueueManager -> File ================= */
+const File = {
+  places:[],          /* index = place dans la file ; { pnj } ou { heros:0|1 } */
+
+  raz(){ this.places = []; },
+  taille(){ return this.places.length; },
+  reserver(pnj){ pnj.place = this.places.length; this.places.push({ pnj }); return pnj.place; },
+  poserHeros(h, place){
+    while (this.places.length < place) this.places.push({ vide:true });
+    this.places[place] = { heros:h };
+  },
+  /* Nombre de personnes réellement en place : c'est ce chiffre qu'affiche
+     le bandeau, pour ne pas compter quelqu'un qui marche encore. */
+  installees(){
+    let n = 0;
+    for (const c of this.places){
+      if (c.heros !== undefined) n++;
+      else if (c.pnj && c.pnj.arrive) n++;
+    }
+    return n;
+  },
+  /* Étendue occupée, en unités monde : sert au cadrage caméra. */
+  etendue(){ return xPlace(Math.max(3, this.places.length - 1)) + 40; },
+  gonfler(n){
+    for (let i = 0; i < n; i++){
+      const p = new Pnj(piocher(SPRITES_PNJ), "SIMPLE");
+      this.reserver(p);
+      p.x = xPlace(p.place); p.vise = p.x; p.arrive = true;
+      p.etat = ETAT.ATTENTE; p.regarde = -1;
+      Foule.tous.push(p);
+    }
+    Score.noterFile(this.installees());
+  },
+};
+
+/* ================= héros ================= */
+const Heros = [
+  { nom:"THIBAUT", sprite:"thibaut", place:PLACE_T, couleur:"#37AC48" },
+  { nom:"PIERRE-FRANÇOIS", sprite:"pierre", place:PLACE_PF, couleur:"#2A8AE4" },
+];
+
+/* Point d'arrêt de l'arrivant selon le héros qu'il vient saluer. */
+function xSalut(h){ return xPlace(Heros[h].place) + RECUL_SALUT; }
+
+function razHeros(){
+  for (const h of Heros){
+    h.geste = null;         /* { type:"poignee"|"vide"|"victoire", t, duree } */
+    h.sueur = 0;
+    h.tremble = 0;
+    h.phase = Math.random() * 6.28;
+  }
+}
+function gesteHeros(h, type, duree){ Heros[h].geste = { type, t:0, duree }; }
+
+/* Point de rendez-vous de la main, en unités monde.
+   Deux cas, et la distinction compte : tant que le joueur n'a pas
+   répondu, le héros garde les mains dans les poches, donc l'arrivant
+   tend le bras vers un point d'attente devant lui. Au moment de la
+   poignée, le sprite « main tendue » entre en jeu et le rendez-vous
+   devient le bout de sa main, relevé sur l'image au chargement — celle
+   de Pierre-François va nettement plus loin que celle de Thibaut, un
+   chiffre en dur décalait la poignée d'une demi-main. */
+function mainHeros(h, serre){
+  const H = Heros[h];
+  const x0 = xPlace(H.place);
+  if (!serre) return { x:x0 + 0.34 * H_PERSO, y:-0.60 * H_PERSO };
+  const m = Images.teintes[H.sprite + "_tendue"];
+  return {
+    x:x0 + (m && m.mainX != null ? m.mainX : 0.38 * H_PERSO),
+    y:(m && m.mainY != null ? m.mainY : -0.58 * H_PERSO),
+  };
+}
+
+/* ================= NPCManager -> Foule ================= */
+const Foule = {
+  tous:[], jumeauSuivant:null,
+
+  raz(){ this.tous = []; this.jumeauSuivant = null; compteurPnj = 0; },
+
+  /* Fait entrer quelqu'un par la gauche. Il longe la file par devant :
+     il passe donc forcément devant les deux héros, et c'est là que se
+     joue tout le gag. */
+  arriver(typeForce){
+    let type = typeForce || Difficulte.tirerType();
+    let sprite;
+    if (this.jumeauSuivant){ sprite = this.jumeauSuivant; this.jumeauSuivant = null; type = "SIMPLE"; }
+    else if (type === "JUMEAU"){ sprite = piocher(SPRITES_PNJ); this.jumeauSuivant = sprite; }
+    else if (type === "REVENANT"){
+      const deja = this.tous.filter(p => p.arrive && p.etat === ETAT.ATTENTE);
+      sprite = deja.length ? piocher(deja).sprite : piocher(SPRITES_PNJ);
+    }
+    else sprite = piocher(SPRITES_PNJ);
+
+    const p = new Pnj(sprite, type);
+    p.revenant = (type === "REVENANT");
+    p.x = Camera.bordGauche() - 46;
+    p.interaction = (type !== "PASSANT") && (typeForce ? true : Math.random() < Difficulte.pInteraction());
+
+    if (type === "PASSANT"){
+      p.etat = ETAT.REPOS; p.interaction = false;
+    } else {
+      File.reserver(p);
+      /* La cible est tirée ici, pas à l'ouverture de la demande : c'est
+         elle qui décide où l'arrivant s'arrête. */
+      if (p.interaction){
+        p.cible = Math.random() < 0.5 ? 0 : 1;
+        p.vise = xSalut(p.cible);
+        p.viseDemande = true;
+      } else {
+        p.vise = xPlace(p.place);
+      }
+      p.etat = ETAT.ENTREE;
+    }
+    this.tous.push(p);
+    Sons.arrivee();
+    return p;
+  },
+
+  /* Ouvre une demande de poignée de main. */
+  ouvrirDemande(pnj, cibleForce, facteur){
+    if (pnj.type === "FAUSSE" && cibleForce === undefined){
+      /* faux signal : la main monte, puis la personne se recoiffe. */
+      pnj.etat = ETAT.MALAISE;
+      pnj.cible = Math.random() < 0.5 ? 0 : 1;
+      pnj.bras = 0.42;
+      pnj.chrono = 0.95;
+      Effets.bulle(pnj, "?", 0.9);
+      Sons.bip(520, 0.09, "sine", 0.1);
+      return;
+    }
+    pnj.etat = ETAT.DEMANDE;
+    if (cibleForce !== undefined) pnj.cible = cibleForce;
+    else if (pnj.cible < 0) pnj.cible = Math.random() < 0.5 ? 0 : 1;
+    const spec = TYPES[pnj.type] || {};
+    pnj.tReaction = Difficulte.reaction() * (spec.react || 1) * (facteur || 1);
+    pnj.chrono = pnj.tReaction;
+    pnj.attente = 0;
+    pnj.bras = 0;
+    pnj.regarde = -1;
+    if (pnj.type === "DOUBLE" && pnj.doubleReste === 0 && cibleForce === undefined) pnj.doubleReste = 1;
+    Jeu.demandes.push(pnj);
+    Effets.alerte(pnj);
+    Sons.alerte();
+  },
+
+  /* Après une interaction, la personne va se ranger au bout de la file. */
+  reprendre(pnj){
+    const i = Jeu.demandes.indexOf(pnj);
+    if (i >= 0) Jeu.demandes.splice(i, 1);
+    if (pnj.place < 0){ pnj.etat = ETAT.REPOS; return; }
+    pnj.etat = ETAT.MARCHE;
+    pnj.vise = xPlace(pnj.place);
+    pnj.bras = 0;
+  },
+
+  ranger(pnj){
+    pnj.etat = ETAT.ATTENTE;
+    pnj.arrive = true;
+    pnj.regarde = -1;
+    Score.noterFile(File.installees());
+  },
+
+  majorer(dt){
+    for (const p of this.tous) p.avancer(dt);
+    /* on oublie les passants sortis du cadre */
+    const limite = Camera.bordDroit() + 120;
+    this.tous = this.tous.filter(p => !(p.place < 0 && p.x > limite));
+  },
+
+  /* PNJ visibles, triés pour que celui de gauche passe devant. */
+  dessinables(){
+    const rangés = [], devant = [];
+    for (const p of this.tous) (p.arrive && p.etat === ETAT.ATTENTE ? rangés : devant).push(p);
+    rangés.sort((a, b) => b.place - a.place);
+    devant.sort((a, b) => b.x - a.x);
+    return { rangés, devant };
+  },
+};
+
+/* ================= GameManager -> Jeu ================= */
+const Jeu = {
+  phase:"chargement",     /* chargement | titre | jeu | fin */
+  temps:0,                /* temps de jeu, en secondes ; n'avance pas hors partie */
+  vies:VIES,
+  invincible:false,
+  ralenti:1,
+  demandes:[],
+  prochaineArrivee:0,
+  finChrono:0,
+  moment:0, fonduDe:0, fondu:1,
+
+  demarrer(){
+    Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros();
+    this.temps = 0; this.vies = VIES; this.ralenti = 1; this.demandes = [];
+    this.moment = 0; this.fonduDe = 0; this.fondu = 1; this.finChrono = 0;
+    this.phase = "jeu";
+
+    /* [BAR] PNJ PNJ THIBAUT PIERRE-FRANÇOIS */
+    File.gonfler(2);
+    File.poserHeros(0, PLACE_T);
+    File.poserHeros(1, PLACE_PF);
+    while (File.places.length <= PLACE_PF) File.places.push({ vide:true });
+    Score.noterFile(File.installees());
+
+    this.prochaineArrivee = this.temps + 1.5;
+    Camera.recaler();
+    Sons.reveiller(); Sons.lancerAmbiance();
+    Interface.majBandeau(); Interface.entrerJeu();
+  },
+
+  /* --------- boucle logique, pas fixe --------- */
+  pas(dt){
+    if (this.phase === "jeu"){
+      this.temps += dt;
+      this.majMoment();
+      Foule.majorer(dt);
+      if (this.temps >= this.prochaineArrivee && this.demandes.length < Difficulte.simultanees()){
+        Foule.arriver();
+        this.prochaineArrivee = this.temps + Difficulte.delaiArrivee();
+      } else if (this.temps >= this.prochaineArrivee){
+        this.prochaineArrivee = this.temps + 0.35;
+      }
+    } else if (this.phase === "titre"){
+      Foule.majorer(dt);
+    } else if (this.phase === "fin"){
+      Foule.majorer(dt);
+      this.finChrono += dt;
+      this.ralenti = melange(this.ralenti, 0.22, Math.min(1, dt * 2.2));
+      if (this.finChrono > 1.7 && !Interface.finAffichee) Interface.afficherFin();
+    }
+    for (const h of Heros){
+      if (h.geste){ h.geste.t += dt; if (h.geste.t >= h.geste.duree) h.geste = null; }
+      h.sueur = Math.max(0, h.sueur - dt * 0.5);
+      h.tremble = Math.max(0, h.tremble - dt * 2.2);
+      h.phase += dt * 1.6;
+    }
+    Effets.majorer(dt);
+    Camera.majorer(dt);
+    Sons.ambiancer(borne(File.installees() / 26, 0, 1), dt, this.temps);
+  },
+
+  majMoment(){
+    const n = Score.saluts;
+    let cible = 0;
+    for (let i = 0; i < MOMENTS.length; i++) if (n >= MOMENTS[i].seuil) cible = i;
+    if (cible !== this.moment){ this.fonduDe = this.moment; this.moment = cible; this.fondu = 0; }
+    if (this.fondu < 1) this.fondu = Math.min(1, this.fondu + 1 / (60 * DUREE_FONDU));
+  },
+
+  /* --------- une commande a été pressée --------- */
+  saluer(h){
+    if (this.phase === "titre"){ this.demarrer(); return; }
+    if (this.phase !== "jeu") return;
+    Sons.reveiller();
+    Interface.flashCommande(h);
+    const bonne = this.demandes.find(p => p.cible === h);
+    if (bonne) return this.reussir(bonne);
+    if (this.demandes.length) return this.rater(this.demandes[0], "mauvais", h);
+    return this.fauxSalut(h);
+  },
+
+  reussir(pnj){
+    const i = this.demandes.indexOf(pnj);
+    if (i >= 0) this.demandes.splice(i, 1);
+    pnj.etat = ETAT.POIGNEE;
+    pnj.chrono = 0.42;
+    const spec = TYPES[pnj.type] || {};
+    const gagne = Score.reussir(spec.points || 1);
+    Difficulte.compter();
+    gesteHeros(pnj.cible, "poignee", 0.5);
+    const m = mainHeros(pnj.cible, true);
+    Effets.eclat(m.x, m.y, Score.combo);
+    Effets.texte(m.x, m.y - 26, piocher(REPLIQUES_OK), "#FFFFFF", 0.9);
+    Effets.texte(m.x, m.y - 46, "+" + chiffres(gagne), "#F7B32B", 0.8);
+    if (pnj.revenant) Effets.texte(pnj.x, -1.28 * H_PERSO, "ENCORE ?!", "#7FC3F5", 0.9);
+    Sons.poignee(); Sons.reussite(Math.min(7, Score.combo - 1));
+    if (Score.combo > 1 && Score.combo % 5 === 0){
+      Effets.texte(X_SALUT, -1.5 * H_PERSO, "COMBO x" + Score.combo + " !", "#F7B32B", 1.2, 1.5);
+      Sons.palier();
+    }
+    Interface.majBandeau();
+  },
+
+  rater(pnj, cause, auteur){
+    const i = this.demandes.indexOf(pnj);
+    if (i >= 0) this.demandes.splice(i, 1);
+    pnj.etat = ETAT.MALAISE;
+    pnj.chrono = cause === "lent" ? 1.15 : 0.9;
+    const casse = Score.casser();
+
+    if (cause === "mauvais"){
+      /* le mauvais héros tend la main à quelqu'un qui ne lui parlait pas */
+      gesteHeros(auteur, "vide", 1.05);
+      const m = mainHeros(auteur, true);
+      Effets.texte(m.x, m.y - 30, "OUPS.", "#E2453D", 1.1);
+      Effets.gouttes(xPlace(Heros[auteur].place), -0.92 * H_PERSO, 5);
+      Heros[auteur].sueur = 1.6; Heros[auteur].tremble = 1;
+      Heros[pnj.cible].sueur = 1.1;
+    } else {
+      Effets.texte(pnj.x, -1.25 * H_PERSO, piocher(REPLIQUES_RATE), "#E2453D", 1.1);
+      Effets.gouttes(xPlace(Heros[pnj.cible].place), -0.92 * H_PERSO, 4);
+      Heros[pnj.cible].sueur = 1.8; Heros[pnj.cible].tremble = 0.8;
+    }
+    if (casse >= 4) Effets.texte(X_SALUT, -1.62 * H_PERSO, "COMBO PERDU", "#93A4C4", 0.9);
+    Sons.erreur(); if (cause === "lent") Sons.gene();
+    this.perdreVie();
+    Interface.majBandeau();
+  },
+
+  /* Presser une commande alors que personne ne tend la main : le héros
+     salue le vide. Ça ne coûte pas de vie — seulement le combo. */
+  fauxSalut(h){
+    gesteHeros(h, "vide", 0.72);
+    Score.casser();
+    const m = mainHeros(h, true);
+    Effets.texte(m.x, m.y - 28, "OUPS.", "#E2453D", 0.85);
+    Heros[h].sueur = 0.9;
+    Sons.bip(150, 0.2, "sawtooth", 0.16, 90);
+    Interface.majBandeau();
+  },
+
+  perdreVie(){
+    if (this.invincible) return;
+    this.vies--;
+    Interface.majVies();
+    if (this.vies <= 0) this.terminer();
+  },
+
+  terminer(){
+    this.phase = "fin";
+    this.finChrono = 0;
+    this.demandes = [];
+    for (const p of Foule.tous) if (p.etat === ETAT.DEMANDE){ p.etat = ETAT.MALAISE; p.chrono = 1; }
+    Sons.fin();
+    Interface.sortirJeu();
+  },
+
+  retourTitre(){
+    this.phase = "titre";
+    this.ralenti = 1;
+    Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros();
+    this.temps = 0; this.moment = 0; this.fondu = 1; this.fonduDe = 0; this.demandes = [];
+    File.gonfler(3);
+    File.poserHeros(0, PLACE_T); File.poserHeros(1, PLACE_PF);
+    while (File.places.length <= PLACE_PF) File.places.push({ vide:true });
+    Camera.recaler();
+    Interface.entrerTitre();
+  },
+};
+
+/* ================= caméra =================
+   Le bar reste collé au bord gauche ; la file pousse vers la droite.
+   Quand elle dépasse ce que l'écran peut montrer, on dézoome — mais pas
+   au-delà de Z_MIN, sinon les personnages deviennent illisibles. Le
+   reste de la file est alors résumé au bord droit. */
+const Z_MIN = 0.40;
+const Camera = {
+  x:X_PORTE - 14, z:1, zVise:1, ech:1, base:120, sol:0, L:1, H:1, dpr:1,
+
+  mesurer(L, H, dpr){
+    this.L = L; this.H = H; this.dpr = dpr;
+    /* La largeur pèse moins que la hauteur, sauf en portrait où c'est
+       elle qui contraint : sans le second terme, un iPhone debout
+       affichait des personnages de 82 px perdus au bas de l'écran. */
+    this.base = borne(Math.min(H * 0.27, L * 0.28), 70, 200);
+    this.sol = H * 0.845;
+    this.calculerVise();
+  },
+  calculerVise(){
+    const echBase = this.base / H_PERSO;
+    this.zVise = borne((this.L * 0.965) / Math.max(1, File.etendue() * echBase), Z_MIN, 1);
+  },
+  recaler(){ this.calculerVise(); this.z = this.zVise; this.ech = (this.base / H_PERSO) * this.z; },
+  majorer(dt){
+    this.calculerVise();
+    this.z = melange(this.z, this.zVise, Math.min(1, dt * 2.6));
+    this.ech = (this.base / H_PERSO) * this.z;
+  },
+  ecran(xMonde){ return (xMonde - this.x) * this.ech; },
+  bordGauche(){ return this.x; },
+  bordDroit(){ return this.x + this.L / this.ech; },
+  /* Combien de places tiennent à l'écran, pour savoir ce qu'on résume. */
+  dernierePlaceVisible(){ return Math.floor((this.bordDroit() - 46) / PAS); },
+};
+
+/* ================= effets ================= */
+const Effets = {
+  textes:[], eclats:[], gouttesL:[], alertes:[], bulles:[],
+
+  raz(){ this.textes = []; this.eclats = []; this.gouttesL = []; this.alertes = []; this.bulles = []; },
+
+  texte(x, y, txt, couleur, taille, duree){
+    this.textes.push({ x, y, txt, couleur, taille:taille || 1, t:0, duree:duree || 1.05 });
+  },
+  eclat(x, y, force){
+    const n = borne(6 + force * 2, 6, 26);
+    this.eclats.push({ x, y, t:0, duree:0.5, force:borne(force / 10, 0.2, 1.6) });
+    for (let i = 0; i < n; i++){
+      const a = hasard(-Math.PI, 0), v = hasard(30, 90) * (1 + force * 0.05);
+      this.gouttesL.push({ x, y, vx:Math.cos(a) * v, vy:Math.sin(a) * v, t:0, duree:hasard(0.4, 0.8),
+        c:i % 3 === 0 ? "#F7B32B" : "#FFFFFF", r:hasard(1.6, 3.4) });
+    }
+  },
+  gouttes(x, y, n){
+    for (let i = 0; i < n; i++){
+      this.gouttesL.push({ x:x + hasard(-8, 8), y:y + hasard(-6, 6),
+        vx:hasard(-16, 16), vy:hasard(-46, -14), t:0, duree:hasard(0.5, 0.9), c:"#7FC3F5", r:hasard(1.8, 3.2) });
+    }
+  },
+  alerte(pnj){ this.alertes.push({ pnj, t:0 }); },
+  bulle(pnj, txt, duree){ this.bulles.push({ pnj, txt, t:0, duree }); },
+
+  majorer(dt){
+    for (const e of this.textes) e.t += dt;
+    this.textes = this.textes.filter(e => e.t < e.duree);
+    for (const e of this.eclats) e.t += dt;
+    this.eclats = this.eclats.filter(e => e.t < e.duree);
+    for (const g of this.gouttesL){ g.t += dt; g.x += g.vx * dt; g.y += g.vy * dt; g.vy += 190 * dt; }
+    this.gouttesL = this.gouttesL.filter(g => g.t < g.duree);
+    for (const b of this.bulles) b.t += dt;
+    this.bulles = this.bulles.filter(b => b.t < b.duree && b.pnj.etat === ETAT.MALAISE);
+    this.alertes = this.alertes.filter(a => a.pnj.etat === ETAT.DEMANDE);
+    for (const a of this.alertes) a.t += dt;
+  },
+};
+
+/* ================= rendu =================
+   Aucun shadowBlur : la leçon de DUO vaut ici aussi, il force une passe
+   de rendu par objet. Les lueurs sont des dégradés radiaux, posés une
+   seule fois. */
+let ctx = null, cv = null;
+
+function ajusterCanevas(){
+  if (!cv) return;
+  const dpr = Math.min(2, globalThis.devicePixelRatio || 1);
+  const L = cv.clientWidth || 640, H = cv.clientHeight || 360;
+  const lp = Math.round(L * dpr), hp = Math.round(H * dpr);
+  if (cv.width !== lp || cv.height !== hp){ cv.width = lp; cv.height = hp; }
+  Camera.mesurer(L, H, dpr);
+}
+
+/* Un personnage, ancré sur ses pieds. */
+function dessinerPerso(nom, xMonde, yBase, hauteur, versGauche, incline, alpha){
+  const img = Images.table[nom];
+  if (!img || !img.naturalWidth) return;
+  const l = hauteur * img.naturalWidth / img.naturalHeight;
+  const a = ancreDe(nom);
+  const px = Camera.ecran(xMonde);
+  ctx.save();
+  if (alpha != null) ctx.globalAlpha = alpha;
+  ctx.translate(px, yBase);
+  if (incline) ctx.rotate(incline);
+  ctx.scale(versGauche ? -1 : 1, 1);
+  ctx.drawImage(img, -a * l, -hauteur, l, hauteur);
+  ctx.restore();
+}
+
+function ombreAuSol(xMonde, yBase, hauteur, force){
+  const px = Camera.ecran(xMonde), r = hauteur * 0.26;
+  const g = ctx.createRadialGradient(px, yBase, 0, px, yBase, r);
+  g.addColorStop(0, "rgba(20,16,24," + (0.34 * force) + ")");
+  g.addColorStop(1, "rgba(20,16,24,0)");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.ellipse(px, yBase, r, r * 0.26, 0, 0, 6.2832);
+  ctx.fill();
+}
+
+/* --- bras peint du PNJ ---
+   La planche ne donne qu'une main tendue générique : s'en servir pour
+   les seize aurait changé le personnage au milieu de la file. On peint
+   donc le bras avec la couleur de manche et la couleur de peau relevées
+   sur le sprite lui-même. Un léger creux au milieu évite qu'il passe
+   devant le visage de Pierre-François. */
+function dessinerBras(pnj, xMonde, yBase, hauteur, cible, ext){
+  const t = pnj.teinte;
+  const ep = { x:Camera.ecran(xMonde) - hauteur * 0.04, y:yBase - hauteur * EPAULE };
+  const but = { x:Camera.ecran(cible.x), y:Camera.sol + cible.y * Camera.ech };
+  const fin = { x:melange(ep.x, but.x, ext), y:melange(ep.y, but.y, ext) };
+
+  /* Le coude tombe sous la ligne épaule-main, d'autant plus que le bras
+     va loin : c'est ce qui donne le geste « je tends le bras par-dessus
+     Pierre-François », et ça fait passer l'avant-bras devant son torse
+     plutôt que devant son visage. */
+  const portee = Math.hypot(fin.x - ep.x, fin.y - ep.y);
+  const coude = {
+    x:melange(ep.x, fin.x, 0.52),
+    y:melange(ep.y, fin.y, 0.52) + portee * 0.14 + hauteur * 0.02,
+  };
+
+  const trait = hauteur * 0.042;
+  const cerne = trait + hauteur * 0.020;
+  ctx.save();
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+
+  /* raccord d'épaule : sans lui, le bras avait l'air posé à côté du corps */
+  ctx.beginPath(); ctx.arc(ep.x, ep.y, hauteur * 0.040, 0, 6.2832);
+  ctx.fillStyle = t.manche; ctx.fill();
+  ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1, hauteur * 0.016); ctx.stroke();
+
+  /* cerne d'un seul tenant : deux traits séparés laissaient un angle net au coude */
+  ctx.beginPath();
+  ctx.moveTo(ep.x, ep.y); ctx.quadraticCurveTo(coude.x, coude.y, fin.x, fin.y);
+  ctx.strokeStyle = "#23181A"; ctx.lineWidth = cerne; ctx.stroke();
+
+  /* manche : de l'épaule au coude */
+  ctx.beginPath();
+  ctx.moveTo(ep.x, ep.y);
+  ctx.quadraticCurveTo(melange(ep.x, coude.x, 0.6), melange(ep.y, coude.y, 0.6), coude.x, coude.y);
+  ctx.strokeStyle = t.manche; ctx.lineWidth = trait; ctx.stroke();
+
+  /* avant-bras nu : du coude à la main, un peu plus fin */
+  ctx.beginPath();
+  ctx.moveTo(coude.x, coude.y);
+  ctx.quadraticCurveTo(melange(coude.x, fin.x, 0.45), melange(coude.y, fin.y, 0.45), fin.x, fin.y);
+  ctx.strokeStyle = t.peau; ctx.lineWidth = trait * 0.86; ctx.stroke();
+
+  /* la main : une ellipse couchée le long du bras. En cercle, elle
+     donnait une sucette au bout d'un bâton. */
+  const ang = Math.atan2(fin.y - coude.y, fin.x - coude.x);
+  const rx = hauteur * 0.062, ry = hauteur * 0.045;
+  ctx.beginPath(); ctx.ellipse(fin.x, fin.y, rx, ry, ang, 0, 6.2832);
+  ctx.fillStyle = t.peau; ctx.fill();
+  ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1, hauteur * 0.015); ctx.stroke();
+  /* le pli du pouce */
+  ctx.beginPath();
+  ctx.ellipse(fin.x, fin.y - ry * 0.35, rx * 0.62, ry * 0.30, ang, 0, 6.2832);
+  ctx.strokeStyle = t.peauOmbre; ctx.lineWidth = Math.max(1, hauteur * 0.010); ctx.stroke();
+  ctx.restore();
+  return fin;
+}
+
+/* --- alerte au-dessus du héros visé ---
+   Le signal est posé sur le héros à saluer, pas sur le PNJ, et reprend
+   la couleur de son bouton : à 0,6 s de temps de réaction, c'est la
+   seule façon de lire la consigne sans réfléchir. */
+function dessinerAlerte(a){
+  const pnj = a.pnj;
+  if (pnj.cible < 0) return;
+  const h = Heros[pnj.cible];
+  const hauteur = H_PERSO * Camera.ech;
+  const px = Camera.ecran(xPlace(h.place));
+  const py = Camera.sol - hauteur * 1.26;
+  const r = Math.max(13, hauteur * 0.15);
+  const reste = borne(pnj.chrono / Math.max(0.001, pnj.tReaction), 0, 1);
+  const bat = 1 + 0.09 * Math.sin(a.t * 15);
+
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.scale(bat, bat);
+
+  /* pastille */
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.2832);
+  ctx.fillStyle = "rgba(11,18,38,.92)"; ctx.fill();
+  ctx.lineWidth = Math.max(2, r * 0.13); ctx.strokeStyle = h.couleur; ctx.stroke();
+
+  /* anneau de décompte */
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 1.34, -Math.PI / 2, -Math.PI / 2 + 6.2832 * reste);
+  ctx.strokeStyle = reste < 0.34 ? "#E2453D" : "#F7B32B";
+  ctx.lineWidth = Math.max(2.5, r * 0.20); ctx.lineCap = "butt"; ctx.stroke();
+
+  /* le point d'exclamation */
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "800 " + Math.round(r * 1.5) + "px 'Baloo 2', system-ui, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText("!", 0, r * 0.06);
+
+  /* petite pointe vers la tête */
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.28, r * 0.86); ctx.lineTo(r * 0.28, r * 0.86); ctx.lineTo(0, r * 1.5);
+  ctx.closePath(); ctx.fillStyle = "rgba(11,18,38,.92)"; ctx.fill();
+  ctx.restore();
+}
+
+function dessinerBulle(b){
+  const hauteur = H_PERSO * Camera.ech * DEVANT_Z;
+  const px = Camera.ecran(b.pnj.x);
+  const py = Camera.sol + DEVANT_Y * H_PERSO * Camera.ech - hauteur * 1.04;
+  const r = Math.max(11, hauteur * 0.13);
+  ctx.save();
+  ctx.globalAlpha = borne(1 - b.t / b.duree * 0.7, 0, 1);
+  ctx.beginPath(); ctx.arc(px, py, r, 0, 6.2832);
+  ctx.fillStyle = "rgba(255,255,255,.94)"; ctx.fill();
+  ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1.6, r * 0.11); ctx.stroke();
+  ctx.fillStyle = "#23181A";
+  ctx.font = "800 " + Math.round(r * 1.3) + "px 'Baloo 2', system-ui, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(b.txt, px, py + r * 0.06);
+  ctx.restore();
+}
+
+/* --- décor ---
+   Les trois images n'ont pas le même cadrage : on les pose donc toutes
+   avec le même point d'ancrage (le trottoir, 82 % de la hauteur) pour
+   que le croisement jour/soir/nuit ne fasse pas sauter le bar. */
+const ANCRE_FOND_Y = 0.86, ANCRE_FOND_X = 0.34;
+
+function poserFond(nom, alpha){
+  const img = Images.table[nom];
+  if (!img || !img.naturalWidth) return;
+  const L = Camera.L, H = Camera.H;
+  const zoom = 0.98 + 0.06 * Camera.z;          /* la caméra recule quand la file s'allonge */
+  const s = Math.max(L / img.naturalWidth, H / img.naturalHeight) * zoom;
+  const l = img.naturalWidth * s, h = img.naturalHeight * s;
+  const x = -ANCRE_FOND_X * l + L * ANCRE_FOND_X;
+  const y = Camera.sol - ANCRE_FOND_Y * h;
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(img, x, Math.min(y, 0), l, h);
+  ctx.globalAlpha = 1;
+}
+
+function dessinerDecor(){
+  const a = MOMENTS[Jeu.fonduDe], b = MOMENTS[Jeu.moment];
+  const t = doux(borne(Jeu.fondu, 0, 1));
+  poserFond(a.fond, 1);
+  if (b !== a && t > 0) poserFond(b.fond, t);
+
+  /* On passe TOUJOURS par melangeVoile, même à t = 1 : renvoyer le
+     MOMENT brut donnait un objet sans champ `couleur`, fillStyle restait
+     au noir par défaut et le décor disparaissait sous un rectangle plein. */
+  return melangeVoile(a, b, t);
+}
+
+/* Le voile de teinte est posé APRÈS les personnages, pas après le
+   décor : sinon les sprites restaient éclairés en plein jour au milieu
+   d'une rue de nuit, et se détachaient comme des découpages. */
+function poserVoile(voile){
+  ctx.fillStyle = voile.couleur;
+  ctx.fillRect(0, 0, Camera.L, Camera.H);
+  if (voile.lampes > 0.02){
+    const g = ctx.createRadialGradient(Camera.L * 0.5, Camera.sol - Camera.H * 0.30, 0,
+                                       Camera.L * 0.5, Camera.sol - Camera.H * 0.30, Camera.L * 0.62);
+    g.addColorStop(0, "rgba(255,196,110," + (0.22 * voile.lampes) + ")");
+    g.addColorStop(1, "rgba(255,196,110,0)");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, Camera.L, Camera.H);
+  }
+}
+
+function melangeVoile(a, b, t){
+  const lire = s => s.match(/[\d.]+/g).map(Number);
+  const va = lire(a.voile), vb = lire(b.voile);
+  const c = [0, 1, 2].map(i => Math.round(melange(va[i], vb[i], t)));
+  const o = melange(va[3], vb[3], t);
+  return {
+    couleur:"rgba(" + c.join(",") + "," + o.toFixed(3) + ")",
+    ombre:melange(a.ombre, b.ombre, t),
+    lampes:melange(a.lampes, b.lampes, t),
+  };
+}
+
+/* --- la file résumée, quand elle déborde de l'écran --- */
+function dessinerDebordement(){
+  const derniere = Camera.dernierePlaceVisible();
+  const cachees = File.places.length - 1 - derniere;
+  if (cachees < 2) return;
+  const hauteur = H_PERSO * Camera.ech;
+
+  /* Un voile qui mange le bord droit plutôt que de fausses silhouettes :
+     posées par-dessus les vrais sprites, elles faisaient un mur. Là, la
+     file se perd dans la nuit et le compteur dit combien il en reste. */
+  const large = Math.min(Camera.L * 0.22, hauteur * 2.4);
+  const g = ctx.createLinearGradient(Camera.L - large, 0, Camera.L, 0);
+  g.addColorStop(0, "rgba(11,18,38,0)");
+  g.addColorStop(1, "rgba(11,18,38,.80)");
+  ctx.fillStyle = g;
+  ctx.fillRect(Camera.L - large, 0, large, Camera.H);
+
+  const eti = "+" + cachees;
+  const py = Camera.sol - hauteur * 0.62;
+  const taille = Math.max(15, Math.round(hauteur * 0.30));
+  ctx.font = "800 " + taille + "px 'Baloo 2', system-ui, sans-serif";
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  const l = ctx.measureText(eti).width;
+  ctx.fillStyle = "rgba(11,18,38,.9)";
+  arrondi(Camera.L - l - 28, py - taille * 0.72, l + 20, taille * 1.44, 10); ctx.fill();
+  ctx.strokeStyle = "rgba(247,179,43,.55)"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = "#F7B32B";
+  ctx.fillText(eti, Camera.L - 16, py);
+}
+
+function arrondi(x, y, l, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + l, y, x + l, y + h, r);
+  ctx.arcTo(x + l, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + l, y, r);
+  ctx.closePath();
+}
+
+/* --- un héros --- */
+function poseHeros(i){
+  const h = Heros[i];
+  if (Jeu.phase === "fin") return i === 0 ? "surpris" : "stress";
+  if (h.geste) return h.geste.type === "victoire" ? "victoire" : "tendue";
+  if (h.sueur > 0.7) return "stress";
+  if (Jeu.demandes.some(p => p.cible === i)) return "regarde";
+  return (Math.floor(h.phase) % 6 === 0) ? "attente" : "idle";
+}
+
+function dessinerHeros(i, voile){
+  const h = Heros[i];
+  const hauteur = H_PERSO * Camera.ech;
+  const pose = poseHeros(i);
+  const nom = h.sprite + "_" + pose;
+  const tourne = !!h.geste;                    /* il se retourne vers la droite pour saluer */
+  const bob = Math.sin(h.phase * 1.7) * hauteur * 0.006;
+  const trem = h.tremble > 0 ? Math.sin(h.tremble * 42) * hauteur * 0.012 : 0;
+  const x = xPlace(h.place);
+
+  ombreAuSol(x, Camera.sol, hauteur, voile.ombre / 0.16);
+  dessinerPerso(nom, x + trem / Camera.ech, Camera.sol + bob, hauteur, !tourne, 0, 1);
+
+  /* gouttes de sueur permanentes tant que le malaise dure */
+  if (h.sueur > 0.25 && Math.random() < 0.05) Effets.gouttes(x, -0.9 * H_PERSO, 1);
+
+  /* liseré de couleur sous le héros visé : redondance utile avec l'alerte */
+  if (Jeu.demandes.some(p => p.cible === i)){
+    const px = Camera.ecran(x);
+    ctx.save();
+    ctx.globalAlpha = 0.55 + 0.25 * Math.sin(Jeu.temps * 9);
+    ctx.strokeStyle = h.couleur; ctx.lineWidth = Math.max(2, hauteur * 0.028);
+    ctx.beginPath(); ctx.ellipse(px, Camera.sol + hauteur * 0.02, hauteur * 0.19, hauteur * 0.055, 0, 0, 6.2832);
+    ctx.stroke(); ctx.restore();
+  }
+}
+
+/* --- un PNJ --- */
+function dessinerPnj(p, voile){
+  const rangé = p.arrive && p.etat === ETAT.ATTENTE;
+  const z = rangé ? 1 : DEVANT_Z;
+  const hauteur = H_PERSO * Camera.ech * z;
+  const yBase = Camera.sol + (rangé ? 0 : DEVANT_Y * H_PERSO * Camera.ech);
+  const marche = (p.etat === ETAT.ENTREE || p.etat === ETAT.MARCHE || p.etat === ETAT.REPOS);
+  const bob = marche ? Math.abs(Math.sin(p.pas)) * hauteur * 0.022 : Math.sin(p.phase) * hauteur * 0.005;
+  const bascule = marche ? Math.sin(p.pas) * 0.035 : 0;
+
+  ombreAuSol(p.x, yBase, hauteur, voile.ombre / 0.16);
+  dessinerPerso(p.sprite, p.x, yBase - bob, hauteur, p.regarde < 0, p.penche + bascule, 1);
+
+  if (p.bras > 0.02 && p.cible >= 0){
+    dessinerBras(p, p.x, yBase - bob, hauteur, mainHeros(p.cible, p.etat === ETAT.POIGNEE), p.bras);
+  }
+}
+
+/* --- boucle de dessin --- */
+function dessiner(){
+  if (!ctx) return;
+  const dpr = Math.min(2, globalThis.devicePixelRatio || 1);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, Camera.L, Camera.H);
+  ctx.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+
+  const voile = dessinerDecor();
+
+  /* la file, de droite à gauche : celui de devant passe par-dessus */
+  for (let i = File.places.length - 1; i >= 0; i--){
+    const c = File.places[i];
+    if (!c) continue;
+    if (c.heros !== undefined) dessinerHeros(c.heros, voile);
+    else if (c.pnj && c.pnj.arrive && c.pnj.etat === ETAT.ATTENTE) dessinerPnj(c.pnj, voile);
+  }
+
+  /* ceux qui longent la file, par devant */
+  const devant = Foule.tous.filter(p => !(p.arrive && p.etat === ETAT.ATTENTE)).sort((a, b) => b.x - a.x);
+  for (const p of devant) dessinerPnj(p, voile);
+
+  dessinerDebordement();
+  poserVoile(voile);
+
+  /* effets */
+  for (const b of Effets.bulles) dessinerBulle(b);
+  for (const a of Effets.alertes) dessinerAlerte(a);
+
+  for (const e of Effets.eclats){
+    const t = e.t / e.duree, r = (14 + 46 * e.force) * Camera.ech * (0.4 + t * 1.5);
+    const px = Camera.ecran(e.x), py = Camera.sol + e.y * Camera.ech;
+    ctx.save(); ctx.globalAlpha = (1 - t) * 0.85;
+    const g = ctx.createRadialGradient(px, py, 0, px, py, r);
+    g.addColorStop(0, "rgba(255,255,255,.95)");
+    g.addColorStop(0.45, "rgba(247,179,43,.55)");
+    g.addColorStop(1, "rgba(247,179,43,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(px, py, r, 0, 6.2832); ctx.fill();
+    ctx.restore();
+  }
+  for (const g of Effets.gouttesL){
+    const t = g.t / g.duree;
+    ctx.globalAlpha = 1 - t;
+    ctx.fillStyle = g.c;
+    ctx.beginPath();
+    ctx.arc(Camera.ecran(g.x), Camera.sol + g.y * Camera.ech, g.r * Camera.ech * 1.6, 0, 6.2832);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  for (const e of Effets.textes){
+    const t = e.t / e.duree;
+    const px = Camera.ecran(e.x), py = Camera.sol + e.y * Camera.ech - t * 34;
+    const taille = Math.max(12, Camera.base * 0.15 * e.taille) * (1 + (1 - Math.min(1, t * 5)) * 0.35);
+    ctx.save();
+    ctx.globalAlpha = borne(1 - Math.pow(t, 2.4), 0, 1);
+    ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.lineWidth = Math.max(2.5, taille * 0.20); ctx.strokeStyle = "rgba(12,10,18,.85)";
+    ctx.strokeText(e.txt, px, py); ctx.fillStyle = e.couleur; ctx.fillText(e.txt, px, py);
+    ctx.restore();
+  }
+
+  if (Jeu.phase === "fin"){
+    ctx.fillStyle = "rgba(7,11,22," + borne(Jeu.finChrono * 0.35, 0, 0.45) + ")";
+    ctx.fillRect(0, 0, Camera.L, Camera.H);
+  }
+}
+
+/* ================= UIManager -> Interface ================= */
+const E = {};
+function accrocher(){
+  for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo",
+                    "vFile","vies","pupitre","cmdT","cmdP","visageT","visageP","fin","fScore","fCombo",
+                    "fSaluts","fFile","fRecord","btnRejouer","pivot","pivotOk","outilsBtn","debug",
+                    "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version"]){
+    E[id] = document.getElementById(id);
+  }
+}
+
+const Interface = {
+  finAffichee:false, dernierCombo:0,
+
+  preparer(){
+    if (E.version) E.version.textContent = "D'TOUR v" + VERSION;
+    if (E.logo && Images.table.logo) E.logo.src = Images.table.logo.src;
+    if (E.visageT && Images.table.face_thibaut) E.visageT.src = Images.table.face_thibaut.src;
+    if (E.visageP && Images.table.face_pierre) E.visageP.src = Images.table.face_pierre.src;
+  },
+  avancement(f){ if (E.jauge) E.jauge.style.width = Math.round(f * 100) + "%"; },
+  fermerIntro(){ if (E.intro) E.intro.classList.add("parti"); },
+
+  entrerTitre(){
+    this.finAffichee = false;
+    if (E.titre) E.titre.classList.remove("parti");
+    if (E.fin) E.fin.classList.remove("on");
+    if (E.hud) E.hud.classList.remove("on");
+    if (E.pupitre) E.pupitre.classList.remove("on");
+    if (E.outilsBtn) E.outilsBtn.classList.remove("on");
+  },
+  entrerJeu(){
+    this.finAffichee = false;
+    if (E.titre) E.titre.classList.add("parti");
+    if (E.fin) E.fin.classList.remove("on");
+    if (E.hud) E.hud.classList.add("on");
+    if (E.pupitre) E.pupitre.classList.add("on");
+    if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
+    this.majVies(); this.majBandeau();
+  },
+  sortirJeu(){ if (E.pupitre) E.pupitre.classList.remove("on"); },
+
+  majBandeau(){
+    if (E.vScore) E.vScore.textContent = chiffres(Score.points);
+    if (E.vCombo) E.vCombo.textContent = "x" + Score.multiplicateur();
+    if (E.vFile) E.vFile.textContent = chiffres(File.installees());
+    if (E.cCombo && Score.combo > this.dernierCombo && Score.combo > 1){
+      E.cCombo.classList.remove("chaud");
+      void E.cCombo.offsetWidth;
+      E.cCombo.classList.add("chaud");
+    }
+    this.dernierCombo = Score.combo;
+  },
+  majVies(){
+    if (!E.vies) return;
+    const b = E.vies.querySelectorAll("b");
+    for (let i = 0; i < b.length; i++) b[i].classList.toggle("perdue", i >= Jeu.vies);
+  },
+  flashCommande(h){
+    const b = h === 0 ? E.cmdT : E.cmdP;
+    if (!b) return;
+    b.classList.add("pressee");
+    setTimeout(() => b.classList.remove("pressee"), 90);
+  },
+  afficherFin(){
+    this.finAffichee = true;
+    const neuf = ecrireRecord({ score:Score.points, combo:Score.meilleurCombo,
+                                saluts:Score.saluts, file:Score.fileMax });
+    const r = lireRecords();
+    if (E.fScore) E.fScore.textContent = chiffres(Score.points);
+    if (E.fCombo) E.fCombo.textContent = "x" + Score.meilleurCombo;
+    if (E.fSaluts) E.fSaluts.textContent = chiffres(Score.saluts);
+    if (E.fFile) E.fFile.textContent = chiffres(Score.fileMax);
+    if (E.fRecord) E.fRecord.textContent = neuf ? "NOUVEAU RECORD" : ("RECORD " + chiffres(r.score || 0));
+    if (E.fin) E.fin.classList.add("on");
+    if (E.btnRejouer) E.btnRejouer.focus({ preventScroll:true });
+  },
+  pensePivot(){
+    if (!E.pivot) return;
+    const portrait = globalThis.innerHeight > globalThis.innerWidth * 1.15;
+    const petit = Math.min(globalThis.innerWidth, globalThis.innerHeight) < 520;
+    E.pivot.style.display = (portrait && petit && !this.pivotVu) ? "flex" : "none";
+  },
+};
+
+/* ================= InputManager -> Entrees =================
+   Les commandes doivent partir à l'appui, pas au relâchement : sur un
+   temps de réaction de 0,55 s, attendre le « click » coûte assez pour
+   perdre la main. On écoute donc pointerdown et keydown, et on neutralise
+   le click qui suit. */
+const Entrees = {
+  brancher(){
+    const presser = (h, ev) => {
+      if (ev){ ev.preventDefault(); ev.stopPropagation(); }
+      Sons.reveiller();
+      Jeu.saluer(h);
+    };
+
+    if (E.cmdT) E.cmdT.addEventListener("pointerdown", e => presser(0, e));
+    if (E.cmdP) E.cmdP.addEventListener("pointerdown", e => presser(1, e));
+    for (const b of [E.cmdT, E.cmdP]) if (b) b.addEventListener("click", e => e.preventDefault());
+
+    /* moitié gauche / moitié droite de l'écran */
+    if (E.cv) E.cv.addEventListener("pointerdown", e => {
+      if (Jeu.phase !== "jeu") return;
+      presser(e.clientX < globalThis.innerWidth / 2 ? 0 : 1, e);
+    });
+
+    globalThis.addEventListener("keydown", e => {
+      if (e.repeat) return;
+      const t = e.key.toLowerCase();
+      if (t === "a" || t === "q" || t === "arrowleft"){ presser(0, e); return; }
+      if (t === "l" || t === "p" || t === "m" || t === "arrowright"){ presser(1, e); return; }
+      if (t === " " || t === "enter"){
+        e.preventDefault();
+        if (Jeu.phase === "titre") Jeu.demarrer();
+        else if (Jeu.phase === "fin" && Interface.finAffichee) Jeu.demarrer();
+        return;
+      }
+      if (t === "s"){ Sons.reveiller(); Sons.basculer(); return; }
+      if (t === "d"){ Debug.basculer(); return; }
+    }, { passive:false });
+
+    if (E.btnJouer) E.btnJouer.addEventListener("click", () => { Sons.reveiller(); Sons.clic(); Jeu.demarrer(); });
+    if (E.btnRejouer) E.btnRejouer.addEventListener("click", () => { Sons.clic(); Jeu.demarrer(); });
+    if (E.pivotOk) E.pivotOk.addEventListener("click", () => { Interface.pivotVu = true; Interface.pensePivot(); });
+    if (E.outilsBtn) E.outilsBtn.addEventListener("click", () => Debug.basculer());
+
+    globalThis.addEventListener("resize", () => { ajusterCanevas(); Interface.pensePivot(); });
+    globalThis.addEventListener("orientationchange", () => setTimeout(() => { ajusterCanevas(); Interface.pensePivot(); }, 220));
+    document.addEventListener("visibilitychange", () => { if (document.hidden) Boucle.pause = true; else Boucle.reprendre(); });
+    /* iOS n'ouvre le son qu'après un geste : on l'attrape au premier contact */
+    globalThis.addEventListener("pointerdown", () => Sons.reveiller(), { once:true });
+  },
+};
+
+/* ================= mode DEBUG ================= */
+const Debug = {
+  ouvert:false, autorise:false, cible:null,
+
+  init(){
+    try{
+      this.autorise = /(\?|&)debug=1/.test(globalThis.location.search) ||
+                      globalThis.location.hostname === "localhost";
+    }catch(e){ this.autorise = false; }
+    if (E.outilsBtn && this.autorise) E.outilsBtn.classList.add("on");
+    if (!E.debug) return;
+    E.debug.addEventListener("click", e => {
+      const b = e.target.closest("button[data-act]");
+      if (b) this.agir(b.dataset.act, b);
+    });
+    if (E.dVitesse) E.dVitesse.addEventListener("input", () => {
+      Difficulte.facteurVitesse = Number(E.dVitesse.value) / 100;
+      if (E.dVitesseV) E.dVitesseV.textContent = Difficulte.facteurVitesse.toFixed(2);
+    });
+    if (E.dReaction) E.dReaction.addEventListener("input", () => {
+      const v = Number(E.dReaction.value) / 100;
+      Difficulte.forcageReaction = v >= 2.5 ? null : v;
+      if (E.dReactionV) E.dReactionV.textContent = v.toFixed(2);
+    });
+  },
+  basculer(){
+    if (!E.debug) return;
+    if (!this.autorise) this.autorise = true;
+    if (E.outilsBtn) E.outilsBtn.classList.add("on");
+    this.ouvert = !this.ouvert;
+    E.debug.classList.toggle("on", this.ouvert);
+  },
+  agir(a, bouton){
+    if (Jeu.phase === "titre" && a !== "jour" && a !== "soir" && a !== "nuit") Jeu.demarrer();
+    switch (a){
+      case "arrivee": Foule.arriver("SIMPLE"); break;
+      case "salut": {
+        const libre = Foule.tous.find(p => p.etat === ETAT.ENTREE || p.etat === ETAT.MARCHE);
+        if (libre){ libre.x = X_SALUT; Foule.ouvrirDemande(libre, this.cible == null ? undefined : this.cible); }
+        else { const p = Foule.arriver("SIMPLE"); p.x = X_SALUT; Foule.ouvrirDemande(p, this.cible == null ? undefined : this.cible); }
+        break;
+      }
+      case "cibleT": case "cibleP": {
+        const v = a === "cibleT" ? 0 : 1;
+        this.cible = this.cible === v ? null : v;
+        for (const b of E.debug.querySelectorAll("[data-act^=cible]")) b.classList.remove("actif");
+        if (this.cible != null) bouton.classList.add("actif");
+        break;
+      }
+      case "file10": File.gonfler(10); break;
+      case "file50": File.gonfler(50); break;
+      case "jour": case "soir": case "nuit": {
+        const i = ["jour","soir","nuit"].indexOf(a);
+        Jeu.fonduDe = Jeu.moment; Jeu.moment = i; Jeu.fondu = 0;
+        Score.saluts = Math.max(Score.saluts, MOMENTS[i].seuil);
+        break;
+      }
+      case "invincible":
+        Jeu.invincible = !Jeu.invincible;
+        bouton.classList.toggle("actif", Jeu.invincible);
+        break;
+      case "lent":
+        Boucle.lent = !Boucle.lent;
+        bouton.classList.toggle("actif", Boucle.lent);
+        break;
+    }
+    Interface.majBandeau();
+  },
+  lire(){
+    if (!this.ouvert || !E.dLecture) return;
+    E.dLecture.textContent =
+      "phase    " + Jeu.phase + "\n" +
+      "saluts   " + Score.saluts + "\n" +
+      "reaction " + Difficulte.reaction().toFixed(2) + " s\n" +
+      "arrivee  " + (Jeu.prochaineArrivee - Jeu.temps).toFixed(2) + " s\n" +
+      "simult.  " + Difficulte.simultanees() + " (" + Jeu.demandes.length + " en cours)\n" +
+      "file     " + File.installees() + " / " + File.places.length + "\n" +
+      "zoom     " + Camera.z.toFixed(2) + "  base " + Math.round(Camera.base) + "\n" +
+      "pnj      " + Foule.tous.length + "\n" +
+      "moment   " + MOMENTS[Jeu.moment].nom + " (" + Jeu.fondu.toFixed(2) + ")";
+  },
+};
+
+/* ================= boucle =================
+   Pas de temps fixe à 60 Hz avec accumulateur : la difficulté est la
+   même sur un écran 60, 90 ou 120 Hz. Rattrapage borné à 5 pas, sinon
+   un retour d'onglet rejouerait plusieurs secondes d'un coup. */
+const Boucle = {
+  PAS_S:1 / 60, reste:0, precedent:0, pause:false, lent:false, tourne:false,
+
+  demarrer(){
+    if (this.tourne) return;
+    this.tourne = true;
+    this.precedent = (globalThis.performance || Date).now();
+    const trame = maintenant => {
+      const dt = Math.min(0.25, (maintenant - this.precedent) / 1000);
+      this.precedent = maintenant;
+      if (!this.pause){
+        const echelle = (Jeu.phase === "fin" ? Jeu.ralenti : 1) * (this.lent ? 0.25 : 1);
+        this.reste += dt * echelle;
+        let n = 0;
+        while (this.reste >= this.PAS_S && n < 5){ Jeu.pas(this.PAS_S); this.reste -= this.PAS_S; n++; }
+        if (this.reste > this.PAS_S * 5) this.reste = 0;
+      }
+      dessiner();
+      Debug.lire();
+      globalThis.requestAnimationFrame(trame);
+    };
+    globalThis.requestAnimationFrame(trame);
+  },
+  reprendre(){ this.pause = false; this.precedent = (globalThis.performance || Date).now(); this.reste = 0; },
+};
+
+/* ================= amorçage =================
+   Ce bloc lit des constantes déclarées plus haut : il reste donc en fin
+   de fichier. La zone morte temporelle a déjà coûté deux écrans blancs
+   sur le projet voisin. */
+function amorcer(){
+  accrocher();
+  cv = E.cv;
+  if (!cv || !cv.getContext) return;
+  ctx = cv.getContext("2d");
+  ajusterCanevas();
+  Debug.init();
+  Entrees.brancher();
+  Interface.pensePivot();
+  Jeu.retourTitre();
+  Boucle.demarrer();
+  charger(f => Interface.avancement(f)).then(() => {
+    Interface.preparer();
+    Jeu.retourTitre();          /* les sprites sont là : on repeuple la file du titre */
+    ajusterCanevas();
+    setTimeout(() => Interface.fermerIntro(), 120);
+  });
+}
+
+if (typeof document !== "undefined" && document.readyState !== "loading") amorcer();
+else if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded", amorcer);
+
+/* Exposé pour la suite de tests, qui exécute ce script hors navigateur. */
+globalThis.DTOUR = {
+  VERSION, ETAT, TYPES, MOMENTS, H_PERSO, PAS, PLACE_T, PLACE_PF, X_SALUT, Z_MIN,
+  REACT_DEBUT, REACT_PLANCHER, VIES,
+  xPlace, borne, melange, chiffres, doux,
+  Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj,
+  mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT,
+  __dessiner:() => dessiner(),
+  __ajuster:() => ajusterCanevas(),
+};
+</script>
+</body>
+</html>
