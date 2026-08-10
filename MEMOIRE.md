@@ -185,6 +185,14 @@ déjà débloqué au premier tap, qui n'est pas soumis à cette restriction. Rè
 générale : un `catch` vide sur une promesse de lecture masque précisément le
 diagnostic dont on aura besoin.
 
+**`speechSynthesis` ne se route pas dans l'AudioContext.** Aucune API ne permet
+de brancher la synthèse vocale sur un nœud audio : le curseur de volume doit
+être recopié dans chaque `SpeechSynthesisUtterance`, sinon la voix ignore le
+réglage. Deux autres pièges du même bord : `getVoices()` renvoie une liste vide
+au chargement sur iOS, il faut écouter `onvoiceschanged` ; et la première
+énonciation exige un geste utilisateur, consommée à vide dans
+`reveillerAudio()`.
+
 **Une capture micro ouverte bascule la sortie iOS sur l'écouteur d'oreille.**
 Tant que `getUserMedia({audio:true})` tient un flux, le haut-parleur est
 abandonné et tout le son du jeu faiblit. Ne tenir le flux que pendant la
@@ -309,3 +317,4 @@ entre proches.
 | 14.5 | Lentille composée hors écran : elle ne disparaît plus après quelques secondes |
 | 14.6 | Clips vocaux lus par l'AudioContext, micro relâché entre deux points |
 | 14.7 | Écho du micro en solo : la chaîne de lecture se valide sans second appareil |
+| 14.8 | Voix de l'IA : elle dit la vanne, moqueuse en gagnant, rageuse en perdant |
