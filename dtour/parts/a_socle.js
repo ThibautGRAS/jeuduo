@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "4.1";
+const VERSION = "4.2";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -425,7 +425,7 @@ const IMAGES_NIVEAU2 = [
   "ind_miettes", "ind_chorizo", "ind_fromage", "ind_serviette",
   "ind_sauce", "ind_assiette", "ind_ticket", "ind_pattes", "ind_billet",
   "pizza_entiere", "pizza_entamee", "pizza_part", "pizza_boite_ouverte",
-  "susp_chat", "pers_teo", "pers_charles", "pers_soeur",
+  "susp_chat", "pers_teo", "pers_charles", "pers_soeur", "pers_francky",
   "badge_indice", "badge_suspect",
 ];
 

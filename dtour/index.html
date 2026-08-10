@@ -471,7 +471,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v4.1</div>
+  <div id="version">CALLAGHAN v4.2</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -531,7 +531,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "4.1";
+const VERSION = "4.2";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -938,7 +938,7 @@ const IMAGES_NIVEAU2 = [
   "ind_miettes", "ind_chorizo", "ind_fromage", "ind_serviette",
   "ind_sauce", "ind_assiette", "ind_ticket", "ind_pattes", "ind_billet",
   "pizza_entiere", "pizza_entamee", "pizza_part", "pizza_boite_ouverte",
-  "susp_chat", "pers_teo", "pers_charles", "pers_soeur",
+  "susp_chat", "pers_teo", "pers_charles", "pers_soeur", "pers_francky",
   "badge_indice", "badge_suspect",
 ];
 
@@ -3402,7 +3402,7 @@ const SCENARIOS = [
       ok:"Jamais. Je n'ai rien à me cacher.", ko:"Une fois. Ça n'a pas marché.",
       pf:"On avait dit qu'on ne parlait plus de ça." } },
 
-  { id:"la_sieste", temoinCle:"teo", tags:["salon"], coupable:null, cachettes:["four", "evier"],
+  { id:"la_sieste", temoinCle:"teo", tags:["salon", "dodo"], coupable:null, cachettes:["four", "evier"],
     porteurs:["ticket", "assiette", "miettes"],
     piste:[[0, "Une assiette utilisée avant notre départ."],
            [1, "Avant notre départ ?"]],
@@ -3425,6 +3425,31 @@ const SCENARIOS = [
     anecdote:{ suspect:"charles", qTH:"Combien de pizzas sont arrivées ce soir ?", qPF:"Vous comptez bien, vous ?",
       ok:"Une. J'ai vu passer le livreur une fois.", ko:"Une. Enfin, une à la fois.",
       pf:"Vous hésitez sur un chiffre simple." } },
+
+  { id:"bonne_nuit", tags:["dodo", "salon", "argent"], coupable:"soeur", cachettes:["frigo", "placards"],
+    porteurs:["ticket", "assiette", "billet"],
+    piste:[[0, "Tout le monde dormait à {heure}. Tout le monde sauf une personne."],
+           [1, "Celle qui n'avait rien bu."]],
+    trouvaille:[[0, "{Ou}. Rangée pendant que les autres ronflaient."],
+                [1, "Elle a eu tout le temps du monde."]],
+    contradiction:"Vous n'avez pas touché au cocktail de Francky. Vous êtes la seule.",
+    chute:"Francky avait servi sa tournée « bonne nuit les petits ». Tout le monde s'est effondré. Elle, non — elle ne boit pas. Elle a mangé tranquillement et rangé la boîte.",
+    anecdote:{ suspect:"soeur", qTH:"Vous avez bu quelque chose ce soir ?", qPF:"Tu as bu, toi ?",
+      ok:"Un verre d'eau. Je conduis demain.", ko:"Rien du tout. Je suis la seule à m'en souvenir.",
+      pf:"Tu sais bien que je ne bois pas non plus. Enfin, presque." } },
+
+  { id:"le_reveil", tags:["dodo", "alcool", "porte"], coupable:null, temoinCle:"teo",
+    cachettes:["four", "evier", "placards"],
+    porteurs:["ticket", "fromage", "menu"],
+    piste:[[0, "Personne ne se souvient de rien après {heure}."],
+           [1, "Ce n'est pas un alibi. C'est un cocktail."]],
+    trouvaille:[[0, "{Ou}. Personne ne l'a bougée depuis."],
+                [1, "Elle était là depuis le début. Nous, non."]],
+    contradiction:"Vous ne vous rappelez de rien. Personne ne se rappelle de rien.",
+    chute:"Personne n'a volé la pizza. Francky avait servi sa tournée maison, tout l'appartement s'est endormi, et au réveil plus personne ne savait où il l'avait posée.",
+    anecdote:{ suspect:"teo", qTH:"Que retenez-vous de la soirée ?", qPF:"Tu te souviens de quoi, toi ?",
+      ok:"Tout, jusqu'à un certain point. Après, un trou.", ko:"Un trou. Un beau trou bien net.",
+      pf:"Tu m'inquiètes quand tu ne te souviens de rien." } },
 
   { id:"la_tarte", temoinCle:"soeur", tags:["porte", "chat"], coupable:null, cachettes:["placards", "evier"],
     porteurs:["ticket", "chorizo", "assiette"],
@@ -3694,7 +3719,23 @@ const HortenseApp = {
 const VISITEUR_DELAI = [28, 52];    /* secondes entre deux visites */
 const VISITEUR_UTILE = 0.45;        /* part de visites qui apprennent quelque chose */
 
+/* Un visiteur peut avoir des répliques `lie` : elles ne sortent que si
+   l'affaire en cours porte l'étiquette correspondante. C'est ce qui
+   fait qu'un passant tombe parfois pile sur le sujet — et le reste du
+   temps parle de sel. */
 const VISITEURS = [
+  { id:"francky", nom:"FRANCKY, DU D'TOUR", sprite:"pers_francky", cote:-1, taille:1.02,
+    banal:["Deux cocktails offerts. Vous les prenez maintenant ou après ?",
+           "J'ai fermé plus tôt. Personne ne tenait debout.",
+           "Le grand chauve, là, il m'en doit trois."],
+    lie:{
+      dodo:["Mon « bonne nuit les petits », c'est deux doses. Ce soir j'ai eu la main lourde.",
+            "Ceux qui en boivent un ne se réveillent pas. C'est le principe.",
+            "J'en ai servi un ici, vers {heure}. Après ça, plus personne n'a rien vu."],
+      alcool:["Ils ont bu chez moi avant de monter. Beaucoup.",
+              "Un cocktail comme le mien, ça efface une soirée entière.",
+              "Vous voulez la vérité ? Demandez à quelqu'un qui n'a pas bu."],
+    } },
   { id:"voisine",  nom:"LA VOISINE DU 3e",   sprite:"pnj02", cote:-1,
     banal:["Vous auriez du sel ?", "C'est vous qui avez le vélo dans le couloir ?",
            "Je cherche le gardien. Depuis six ans."] },
@@ -3767,9 +3808,22 @@ const Visiteurs = {
   parler(){
     this.etat = ETAT_V.PARLE;
     this.chrono = 2.6;
-    const utile = Math.random() < VISITEUR_UTILE;
+    /* Ordre de préférence : ce qui touche à l'affaire, puis ce qui
+       aide, puis ce qui ne sert à rien. */
+    const marques = (Affaire.scenario && Affaire.scenario.tags) || [];
+    const liees = [];
+    if (this.qui.lie){
+      for (const tag of marques) if (this.qui.lie[tag]) liees.push.apply(liees, this.qui.lie[tag]);
+    }
+    let txt, utile = false;
+    if (liees.length && Math.random() < 0.7){
+      txt = remplir(piocher(liees)); utile = true;
+    } else if (Math.random() < VISITEUR_UTILE){
+      txt = this.conseil(); utile = true;
+    } else {
+      txt = remplir(piocher(this.qui.banal));
+    }
     if (utile) this.utiles++;
-    const txt = utile ? this.conseil() : remplir(piocher(this.qui.banal));
     Effets.parole({ visiteur:true }, txt, 2.6);
     /* Un des deux inspecteurs réagit, ce qui évite que la scène tombe
        à plat quand le passant ne sert à rien. */

@@ -918,9 +918,25 @@ if (D){
   egal("loin de tout, interroger ne fait rien", D.Enquete.parler(), false);
 
   titre("Les visiteurs de passage");
-  verifier("six passants au moins", D.VISITEURS.length >= 6, D.VISITEURS.length);
-  verifier("chacun a un sprite qui existe",
-    D.VISITEURS.every(v => D.Images && true) && D.VISITEURS.every(v => /^pnj\d\d$|^pers_/.test(v.sprite)),
+  verifier("sept passants au moins", D.VISITEURS.length >= 7, D.VISITEURS.length);
+  verifier("Francky est dans le registre",
+    D.VISITEURS.some(v => v.id === "francky" && v.lie && v.lie.dodo && v.lie.alcool));
+  verifier("une réplique liée ne sort que dans les affaires concernées",
+    (() => {
+      const tags = new Set();
+      for (const v of D.VISITEURS) if (v.lie) Object.keys(v.lie).forEach(k => tags.add(k));
+      /* chaque étiquette citée par un visiteur doit exister dans au
+         moins une affaire, sinon sa réplique dort pour toujours */
+      for (const tag of tags){
+        if (!D.SCENARIOS.some(sc => (sc.tags || []).indexOf(tag) >= 0)) return false;
+      }
+      return true;
+    })(), "une réplique liée à une étiquette qu'aucune affaire ne porte ne sortirait jamais");
+  verifier("les affaires de cocktail existent",
+    D.SCENARIOS.filter(sc => (sc.tags || []).indexOf("dodo") >= 0).length >= 3,
+    "il faut de quoi faire parler Francky");
+  verifier("chacun a un sprite chargé au démarrage",
+    D.VISITEURS.every(v => /^pnj\d\d$|^pers_/.test(v.sprite)),
     D.VISITEURS.map(v => v.sprite).join(", "));
   verifier("chacun a de quoi ne rien dire",
     D.VISITEURS.every(v => v.nom && v.banal.length >= 3));

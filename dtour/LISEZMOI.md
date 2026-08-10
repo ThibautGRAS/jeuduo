@@ -63,7 +63,7 @@ chaque pièce, une fois par partie. Et de loin en loin, quand on les
 laisse tranquilles, ils bavardent. Tout est cadencé par le chrono du
 jeu, jamais par `setTimeout`.
 
-**Dix-sept affaires écrites** qui se servent de ces liens : la pizza mise de
+**Dix-neuf affaires écrites** qui se servent de ces liens : la pizza mise de
 côté pour Hortense, Charles qui efface sa visite, le prof d'histoire qui
 date la soirée à la minute parce qu'il en faisait partie, la chaîne
 Risoto-puis-Charles, le troc contre une tarte au citron, la reconstitution du prof
@@ -229,12 +229,29 @@ poubelle. Un test le vérifie sur cent vingt affaires.
 
 Ils ne coupent jamais Hortense, ni le dossier, ni l'accusation.
 
+**Francky, du D'Tour**, barman, spécialiste du cocktail « bonne nuit les
+petits » — deux doses, et on ne se réveille pas. Il a des répliques
+**liées** : elles ne sortent que dans les affaires qui portent
+l'étiquette `dodo` ou `alcool`. « J'en ai servi un ici, vers 20 h 15.
+Après ça, plus personne n'a rien vu. » Ailleurs, il parle de sa tournée
+impayée.
+
+Trois affaires lui donnent la parole : la sieste, la tournée « bonne
+nuit les petits » où la seule personne à jeun a tout mangé, et le
+réveil où l'appartement entier s'était endormi et où plus personne ne
+savait où il avait posé la boîte.
+
 ### Ajouter un visiteur
 
 Le registre `VISITEURS` attend un sprite, un nom, le côté d'arrivée et
-trois répliques pour ne rien dire. Les répliques utiles, elles, sont
-communes : elles viennent de l'affaire. Un visiteur tient donc en six
-lignes.
+trois répliques pour ne rien dire. En option, `lie` associe des
+répliques à une étiquette d'affaire — c'est ce qui fait qu'un passant
+tombe parfois pile sur le sujet. Les répliques utiles, elles, sont
+communes : elles viennent de l'affaire. Un visiteur tient donc en six à
+dix lignes.
+
+Un test refuse une réplique liée à une étiquette qu'aucune affaire ne
+porte : elle dormirait pour toujours.
 
 **Hortense** intervient une fois, entre 35 % et 65 % du temps, jamais
 pendant le dossier ni pendant l'accusation. Mais **parler à sa sœur,
