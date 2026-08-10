@@ -3,10 +3,10 @@
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
-                    "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte"]){
+                    "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
     E[id] = document.getElementById(id);
   }
 }
@@ -83,6 +83,10 @@ const Interface = {
 
   entrerTitre(){
     this.finAffichee = false;
+    if (E.releve) E.releve.style.display = "";
+    if (E.releveEnq) E.releveEnq.classList.remove("on");
+    if (E.eCoupable) E.eCoupable.classList.remove("on");
+    if (E.eChute) E.eChute.classList.remove("on");
     const r = lireRecords();
     if (E.tRecord) E.tRecord.textContent = r.score ? "MEILLEUR SCORE " + chiffres(r.score) : "";
     if (E.titre) E.titre.classList.remove("parti");
@@ -97,7 +101,7 @@ const Interface = {
     if (E.titre) E.titre.classList.add("parti");
     if (E.fin) E.fin.classList.remove("on");
     if (E.hud) E.hud.classList.add("on");
-    if (E.pupitre) E.pupitre.classList.add("on");
+    if (E.pupitre) E.pupitre.classList.toggle("on", Jeu.niveau !== 2);
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
     if (E.pleinBtn) E.pleinBtn.classList.add("on");
     this.majVies(); this.majBandeau();
@@ -128,6 +132,7 @@ const Interface = {
   },
   afficherFin(){
     this.finAffichee = true;
+    if (Jeu.niveau === 2) return this.afficherFinEnquete();
     const neuf = ecrireRecord({ score:Score.points, combo:Score.meilleurCombo,
                                 saluts:Score.saluts, file:Score.fileMax });
     const r = lireRecords();
@@ -144,6 +149,40 @@ const Interface = {
   /* Bloque tant qu'on n'est pas en paysage, et met le jeu en pause :
      laisser tourner derrière ferait perdre des vies sans que personne
      ne voie rien. */
+  /* Le relevé du niveau 2 n'a rien à voir avec celui du niveau 1 : on
+     montre l'autre tableau plutôt que de tordre le premier. */
+  afficherFinEnquete(){
+    const gagne = Enquete.fini && Enquete.fini.gagne;
+    if (E.finTitre){
+      E.finTitre.innerHTML = gagne
+        ? "AFFAIRE<em>RÉSOLUE.</em>"
+        : "LA PIZZA<em>COURT TOUJOURS.</em>";
+    }
+    if (E.releve) E.releve.style.display = "none";
+    if (E.releveEnq) E.releveEnq.classList.add("on");
+    if (E.eTemps) E.eTemps.textContent = Math.max(0, Math.ceil(Enquete.restant)) + " s";
+    if (E.eIndices) E.eIndices.textContent = Enquete.indices + " / " + ENQ_INDICES;
+    if (E.eFouilles) E.eFouilles.textContent = chiffres(Enquete.fouilles);
+    if (E.eScore) E.eScore.textContent = chiffres(Score.points);
+    if (E.eCoupable){
+      E.eCoupable.textContent = gagne ? "C'ÉTAIT " + Enquete.coupable.nom : "";
+      E.eCoupable.classList.toggle("on", !!gagne);
+    }
+    if (E.eChute){
+      E.eChute.textContent = gagne ? Enquete.coupable.chute : "Personne n'a rien vu. Comme d'habitude.";
+      E.eChute.classList.add("on");
+    }
+    const r = lireRecords();
+    if (gagne && Score.points > (r.enquete || 0)){
+      try{
+        const t = lireRecords(); t.enquete = Score.points;
+        localStorage.setItem(CLE, JSON.stringify(t));
+      }catch(e){}
+    }
+    if (E.fin) E.fin.classList.add("on");
+    if (E.btnRejouer) E.btnRejouer.focus({ preventScroll:true });
+  },
+
   pensePivot(){
     const L = globalThis.innerWidth || 1, H = globalThis.innerHeight || 1;
     const bloque = !paysageOk(L, H);
@@ -194,6 +233,18 @@ const Entrees = {
        à l'écran : Thibaut à gauche, l'esquive au milieu sous le pouce,
        Pierre-François à droite. Le pouce n'a jamais à traverser. */
     if (E.cv) E.cv.addEventListener("pointerdown", e => {
+      if (Jeu.niveau === 2){
+        if (Jeu.phase !== "jeu") return;
+        e.preventDefault();
+        Sons.reveiller();
+        const r = E.cv.getBoundingClientRect ? E.cv.getBoundingClientRect() : { left:0, top:0, width:Camera.L, height:Camera.H };
+        const img = Images.table.appart;
+        if (!img || !img.naturalWidth) return;
+        const larg = img.naturalWidth * (Camera.H / img.naturalHeight);
+        const x0 = -borne(Camera.xEnq, 0, Math.max(0, larg - Camera.L));
+        Enquete.viser(((e.clientX - r.left) - x0) / larg, (e.clientY - r.top) / Camera.H);
+        return;
+      }
       if (Jeu.phase !== "jeu") return;
       const f = e.clientX / Math.max(1, globalThis.innerWidth);
       if (f < 0.36) presser(0, e);
@@ -236,7 +287,14 @@ const Entrees = {
     /* Le plein écran ne s'obtient que dans un vrai geste utilisateur :
        c'est ici, et nulle part ailleurs, qu'il faut le demander. */
     if (E.btnJouer) E.btnJouer.addEventListener("click", () => {
-      Sons.reveiller(); Sons.clic(); Ecran.demander(); Jeu.demarrer();
+      Sons.reveiller(); Sons.clic(); Ecran.demander(); Jeu.demarrer(1);
+    });
+    /* choix du niveau sur l'écran d'accueil */
+    if (E.niveaux) E.niveaux.addEventListener("click", ev => {
+      const b = ev.target.closest("button[data-niv]");
+      if (!b) return;
+      Sons.reveiller(); Sons.clic(); Ecran.demander();
+      Jeu.demarrer(Number(b.dataset.niv));
     });
     if (E.btnRejouer) E.btnRejouer.addEventListener("click", () => { Sons.clic(); Jeu.demarrer(); });
     if (E.pleinBtn) E.pleinBtn.addEventListener("click", () => { Sons.clic(); Ecran.basculer(); });
@@ -424,6 +482,7 @@ globalThis.DTOUR = {
   xPlace, borne, melange, chiffres, doux,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface,
+  Enquete, ZONES, ENQ_DUREE, ENQ_INDICES,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, TARTE_DUREE,
   __dessiner:() => dessiner(),

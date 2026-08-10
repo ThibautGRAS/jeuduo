@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "1.5";
+const VERSION = "2.0";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -302,12 +302,25 @@ const Sons = {
     src.connect(f); f.connect(g); g.connect(this.gainMus);
     src.start(quand);
   },
-  /* tempo : 92 le jour, 108 le soir, 124 la nuit */
+  /* ---------- grille du niveau 2 ----------
+     Même moteur, autre humeur : mineur, walking bass qui ne se pose
+     jamais, accords rares et sourds. Le cliché du polar tient en quatre
+     mesures, il ne faut surtout pas qu'il tienne le devant. */
+  GRILLE_ENQUETE:[
+    { basse:[110.00, 130.81], accord:[164.81, 196.00, 246.94] },  /* La m   */
+    { basse:[146.83, 174.61], accord:[174.61, 220.00, 261.63] },  /* Ré m   */
+    { basse:[164.81, 196.00], accord:[196.00, 233.08, 293.66] },  /* Mi 7   */
+    { basse:[110.00, 103.83], accord:[164.81, 207.65, 246.94] },  /* La m   */
+  ],
+  grilleCourante(){ return Jeu.niveau === 2 ? this.GRILLE_ENQUETE : this.GRILLE; },
+
+  /* tempo : 92 le jour, 108 le soir, 124 la nuit ; 88 pour l'enquête */
   ordonnerMusique(tempo){
     if (!this.ac || !this.musique || !this.actif) return;
+    const grille = this.grilleCourante();
     const noire = 60 / tempo;
     while (this.quand < this.ac.currentTime + 0.2){
-      const m = this.GRILLE[this.mesure % 4], t = this.temps4, q = this.quand;
+      const m = grille[this.mesure % 4], t = this.temps4, q = this.quand;
       if (t === 0 || t === 2) this.note(m.basse[t === 0 ? 0 : 1], q, noire * 0.85, "triangle", 0.14, 420);
       if (t === 1 || t === 3){
         m.accord.forEach((f, i) => this.note(f, q + 0.012 * i, noire * 0.42, "sine", 0.045, 2400));

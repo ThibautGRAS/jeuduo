@@ -62,7 +62,8 @@ const dossierImg = path.join(RACINE, "img");
 const presentes = fs.existsSync(dossierImg) ? fs.readdirSync(dossierImg) : [];
 const citees = new Set();
 for (const m of source.matchAll(/"(fond_[a-z]+|logo|face_[a-z_]+|fx_[a-z]+|pnj\d\d|(?:thibaut|pierre)_[a-z]+)"/g)) citees.add(m[1]);
-for (const m of source.matchAll(/Images\.table\.(fx_[a-z]+)/g)) citees.add(m[1]);
+for (const m of source.matchAll(/Images\.table\.(fx_[a-z]+|appart)/g)) citees.add(m[1]);
+citees.add("appart");
 for (const m of source.matchAll(/"(h_[a-zA-Z]+|tarte[0-9]|tarte_[a-z]+|debris_[a-z]+)"/g)) citees.add(m[1]);
 /* les quatre orientations de la tarte sont composées : "tarte" + n */
 for (let i = 0; i < 4; i++) citees.add("tarte" + i);
@@ -451,6 +452,67 @@ if (D){
   D.Score.points = 500; D.Score.meilleurCombo = 7;
   const r1 = (() => { try{ return JSON.parse(require("fs") && "null"); }catch(e){ return null; } })();
   void r1;
+
+  /* ================= niveau 2 ================= */
+  titre("Niveau 2 — l'affaire de la pizza");
+  verifier("seize meubles fouillables", D.ZONES.length === 16, D.ZONES.length + " zones");
+  verifier("toutes les zones sont dans le cadre",
+    D.ZONES.every(z => z.x > 0 && z.x < 1 && z.y > 0 && z.y < 1));
+  verifier("aucune zone n'en recouvre une autre",
+    (() => {
+      for (let i = 0; i < D.ZONES.length; i++)
+        for (let j = i + 1; j < D.ZONES.length; j++){
+          const dx = (D.ZONES[i].x - D.ZONES[j].x) * 3.4, dy = D.ZONES[i].y - D.ZONES[j].y;
+          if (Math.hypot(dx, dy) < 0.16) return false;
+        }
+      return true;
+    })(), "deux zones trop proches se voleraient les clics");
+  verifier("les quatre pièces sont représentées",
+    D.ZONES.some(z => z.x < 0.2) && D.ZONES.some(z => z.x > 0.2 && z.x < 0.45) &&
+    D.ZONES.some(z => z.x > 0.45 && z.x < 0.8) && D.ZONES.some(z => z.x > 0.8));
+
+  D.Jeu.demarrer(2);
+  egal("on est bien au niveau 2", D.Jeu.niveau, 2);
+  egal("le chrono part plein", Math.round(D.Enquete.restant), D.ENQ_DUREE);
+  egal("trois traces sont cachées", D.Enquete.zones.filter(z => z.trace).length, D.ENQ_INDICES);
+  egal("aucun meuble n'est fouillé au départ", D.Enquete.zones.filter(z => z.fouillee).length, 0);
+  egal("les deux inspecteurs sont là", D.Enquete.inspecteurs.length, 2);
+
+  /* fouiller un meuble vide coûte du temps */
+  const vide = D.Enquete.zones.findIndex(z => !z.trace);
+  const avantT = D.Enquete.restant;
+  D.Enquete.envoyer(vide);
+  let tours2 = 0;
+  while (!D.Enquete.zones[vide].fouillee && tours2++ < 60 * 30) D.Jeu.pas(1 / 60);
+  verifier("l'inspecteur se déplace puis fouille", D.Enquete.zones[vide].fouillee, tours2 + " trames");
+  verifier("une fouille infructueuse coûte du temps", D.Enquete.restant < avantT - 4);
+  egal("le compteur de fouilles avance", D.Enquete.fouilles, 1);
+  D.Enquete.envoyer(vide);
+  egal("on ne fouille pas deux fois le même meuble", D.Enquete.fouilles, 1);
+
+  /* trouver les trois traces termine l'affaire */
+  D.Jeu.demarrer(2);
+  const bonnes = D.Enquete.zones.map((z, i) => z.trace ? i : -1).filter(i => i >= 0);
+  for (const i of bonnes){
+    D.Enquete.envoyer(i);
+    let n = 0;
+    while (!D.Enquete.zones[i].fouillee && n++ < 60 * 30) D.Jeu.pas(1 / 60);
+  }
+  egal("les trois traces sont trouvées", D.Enquete.indices, D.ENQ_INDICES);
+  for (let i = 0; i < 90; i++) D.Jeu.pas(1 / 60);
+  egal("l'affaire est résolue", D.Jeu.phase, "fin");
+  verifier("le coupable est désigné", !!(D.Enquete.coupable && D.Enquete.coupable.nom));
+  verifier("le score récompense le temps restant", D.Score.points > 0, "score " + D.Score.points);
+
+  /* le chrono qui s'épuise perd la partie */
+  D.Jeu.demarrer(2);
+  let t5 = 0;
+  while (D.Jeu.phase === "jeu" && t5++ < 60 * (D.ENQ_DUREE + 10)) D.Jeu.pas(1 / 60);
+  egal("le temps écoulé termine la partie", D.Jeu.phase, "fin");
+  verifier("et l'affaire n'est pas résolue", D.Enquete.fini && !D.Enquete.fini.gagne);
+
+  D.Jeu.retourTitre();
+  egal("revenir au titre repasse au niveau 1", D.Jeu.niveau, 1);
 
   /* ================= 4. simulation ================= */
   titre("Simulation de parties");

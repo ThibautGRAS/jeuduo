@@ -1,6 +1,13 @@
 # LA FILE DU D'TOUR
 
-Jeu d'arcade 2D, un seul fichier, jouable au doigt.
+Deux niveaux, un seul fichier, jouables au doigt.
+
+| | |
+|---|---|
+| **01 — La file du D'Tour** | Saluez tout le monde devant le bar, avant que ça devienne gênant. |
+| **02 — L'affaire de la pizza au chorizo** | Fouillez l'appartement, trouvez trois traces, cent secondes. |
+
+On choisit le niveau sur l'écran d'accueil.
 
 **Adresse** : https://thibautgras.github.io/jeuduo/dtour/
 
@@ -13,6 +20,30 @@ chauve à lunettes. La planche fournie les annonçait dans l'autre sens ;
 les fichiers de `img/` portent les bons noms.
 
 > Ils ne les connaissaient même pas.
+
+## Niveau 2 — l'affaire de la pizza au chorizo
+
+Un appartement en coupe, deux inspecteurs amateurs, seize meubles
+fouillables et trois traces de chorizo tirées au sort à chaque partie.
+On touche un meuble, l'inspecteur le plus proche s'y rend et fouille.
+Une fouille pour rien coûte quatre secondes ; trois traces réunies
+désignent le coupable.
+
+Le décor est **une seule image de 1505 × 336** sur laquelle la caméra
+glisse. Les zones sont posées en pourcentage de cette image, jamais en
+pixels d'écran : c'est ce qui permet au niveau de tenir aussi bien sur
+un écran large que sur un téléphone couché. La suite de tests vérifie
+que les seize zones sont dans le cadre, qu'aucune n'en recouvre une
+autre — deux zones trop proches se voleraient les touchers — et que les
+quatre pièces sont représentées.
+
+La musique reprend le moteur du niveau 1 avec une autre grille : mineur,
+tempo à 88, contrebasse qui ne se pose jamais. Le cliché du polar tient
+en quatre mesures, il ne faut surtout pas qu'il tienne le devant.
+
+La conclusion est cadencée par le chrono du jeu et non par un
+`setTimeout` — une échéance en temps absolu continue de courir pendant
+une pause, et `MEMOIRE.md` garde la trace de ce qu'a coûté cette leçon.
 
 ## Format
 

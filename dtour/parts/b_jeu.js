@@ -319,6 +319,7 @@ const Foule = {
 /* ================= GameManager -> Jeu ================= */
 const Jeu = {
   phase:"chargement",     /* chargement | titre | jeu | fin */
+  niveau:1,               /* 1 : la file du D'Tour ; 2 : l'affaire de la pizza */
   gel:0,                  /* arrêt sur image très bref, au moment de l'impact */
   temps:0,                /* temps de jeu, en secondes ; n'avance pas hors partie */
   vies:VIES,
@@ -329,7 +330,9 @@ const Jeu = {
   finChrono:0,
   moment:0, fonduDe:0, fondu:1,
 
-  demarrer(){
+  demarrer(niveau){
+    if (niveau) this.niveau = niveau;
+    if (this.niveau === 2) return this.demarrerEnquete();
     Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
     this.temps = 0; this.gel = 0; this.vies = VIES; this.ralenti = 1; this.demandes = [];
     this.moment = 0; this.fonduDe = 0; this.fondu = 1; this.finChrono = 0;
@@ -348,8 +351,33 @@ const Jeu = {
     Interface.majBandeau(); Interface.entrerJeu();
   },
 
+  /* Le niveau 2 a sa propre boucle et son propre rendu : le seul point
+     commun est le cadre — chrono, sons, effets, écran de fin. */
+  demarrerEnquete(){
+    Score.raz(); Effets.raz(); razHeros();
+    File.raz(); Foule.raz();
+    this.temps = 0; this.vies = 1; this.ralenti = 1; this.demandes = [];
+    this.finChrono = 0; this.phase = "jeu";
+    Enquete.demarrer();
+    Sons.reveiller(); Sons.lancerAmbiance(); Sons.lancerMusique();
+    Interface.entrerJeu();
+    Interface.majBandeau();
+  },
+
   /* --------- boucle logique, pas fixe --------- */
   pas(dt){
+    if (this.niveau === 2){
+      if (this.phase === "jeu" || this.phase === "fin"){
+        this.temps += dt;
+        Enquete.pas(dt);
+        if (this.phase === "fin"){
+          this.finChrono += dt;
+          if (this.finChrono > 1.2 && !Interface.finAffichee) Interface.afficherFin();
+        }
+        Sons.ordonnerMusique(88);
+      }
+      return;
+    }
     /* L'arrêt sur image de l'impact : une centaine de millisecondes où
        plus rien n'avance, sauf le décompte du gel lui-même. */
     if (this.gel > 0){
@@ -407,6 +435,7 @@ const Jeu = {
   /* --------- une commande a été pressée --------- */
   saluer(h){
     if (this.phase === "titre"){ this.demarrer(); return; }
+    if (this.niveau === 2) return;
     if (this.phase !== "jeu") return;
     Sons.reveiller();
     Interface.flashCommande(h);
@@ -494,6 +523,7 @@ const Jeu = {
 
   retourTitre(){
     this.phase = "titre";
+    this.niveau = 1;
     this.ralenti = 1;
     Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
     this.temps = 0; this.gel = 0; this.moment = 0; this.fondu = 1; this.fonduDe = 0; this.demandes = [];

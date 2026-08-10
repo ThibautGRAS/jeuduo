@@ -8,7 +8,19 @@
    droit et aux gens qui débordent, pas en rapetissant tout le monde. */
 const Z_MIN = 0.72;
 const Camera = {
-  x:X_PORTE - 14, z:1, zVise:1, ech:1, base:120, sol:0, L:1, H:1, dpr:1, secousse:0,
+  x:X_PORTE - 14, z:1, zVise:1, ech:1, base:120, sol:0, L:1, H:1, dpr:1,
+  xEnq:0,
+
+  /* Niveau 2 : l'appartement est une seule image large sur laquelle on
+     glisse. La caméra vise l'inspecteur actif et le garde au tiers de
+     l'écran, sans jamais montrer le vide au-delà des murs. */
+  suivreEnq(fx, dt){
+    const img = Images.table.appart;
+    if (!img || !img.naturalWidth) return;
+    const larg = img.naturalWidth * (this.H / img.naturalHeight);
+    const vise = borne(fx * larg - this.L * 0.42, 0, Math.max(0, larg - this.L));
+    this.xEnq = melange(this.xEnq, vise, Math.min(1, dt * 2.2));
+  }, secousse:0,
 
   mesurer(L, H, dpr, basUI){
     this.L = L; this.H = H; this.dpr = dpr;
@@ -562,6 +574,16 @@ function dessinerPnj(p, voile){
 /* --- boucle de dessin --- */
 function dessiner(){
   if (!ctx) return;
+  if (Jeu.niveau === 2 && Jeu.phase !== "titre"){
+    const dpr2 = Math.min(2, globalThis.devicePixelRatio || 1);
+    ctx.setTransform(dpr2, 0, 0, dpr2, 0, 0);
+    Enquete.dessiner();
+    if (Jeu.phase === "fin"){
+      ctx.fillStyle = "rgba(7,11,22," + borne(Jeu.finChrono * 0.35, 0, 0.5) + ")";
+      ctx.fillRect(0, 0, Camera.L, Camera.H);
+    }
+    return;
+  }
   const dpr = Math.min(2, globalThis.devicePixelRatio || 1);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, Camera.L, Camera.H);

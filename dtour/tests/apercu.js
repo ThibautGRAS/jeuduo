@@ -276,6 +276,30 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "7_iphone_portrait_390");
   }
 
+  /* 9. niveau 2 : l'appartement */
+  {
+    const { D, canevas } = await preparer(1280, 620);
+    D.amorcer();
+    D.Camera.mesurer(1280, 620, 1);
+    D.Jeu.demarrer(2);
+    const vide = D.Enquete.zones.findIndex(z => !z.trace && z.ref.x > 0.45);
+    D.Enquete.envoyer(vide);
+    for (let i = 0; i < 60 * 4; i++) D.Jeu.pas(1 / 60);
+    dessinerVia(D, canevas);
+    ecrire(canevas, "9_enquete_1280");
+  }
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer();
+    D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(2);
+    const z = D.Enquete.zones.findIndex(x => x.ref.id === "canape");
+    D.Enquete.envoyer(z);
+    for (let i = 0; i < 60 * 3; i++) D.Jeu.pas(1 / 60);
+    dessinerVia(D, canevas);
+    ecrire(canevas, "10_enquete_844");
+  }
+
   /* 8. le malaise : main qui se retire, sueur */
   {
     const { D, canevas } = await preparer(1280, 720);
