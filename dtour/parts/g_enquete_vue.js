@@ -40,6 +40,9 @@ const EnqVue = {
          règles. */
       if (Enquete.actif) this.dessinerZones();
       this.dessinerInspecteurs();
+      /* L'invite du meuble à portée se pose après les inspecteurs :
+         celui qui fouille se plantait devant son propre libellé. */
+      if (Enquete.actif) this.dessinerInvite();
       if (Enquete.actif) this.dessinerNoms();
     }
     if (Enquete.pretes() && HortenseApp.visible()) this.dessinerHortense();
@@ -109,22 +112,7 @@ const EnqVue = {
         ctx.moveTo(px - r * 0.2, py); ctx.lineTo(px - r * 0.04, py + r * 0.17); ctx.lineTo(px + r * 0.22, py - r * 0.18);
         ctx.stroke();
       } else if (i === iz){
-        /* à portée : la loupe et l'invite */
-        const loupe = Images.table.loupe;
-        const t = H * 0.085;
-        if (loupe && loupe.naturalWidth){
-          const l = t * loupe.naturalWidth / loupe.naturalHeight;
-          ctx.drawImage(loupe, px - l / 2, py - t * 2.05, l, t);
-        }
-        const taille = Math.max(10, H * 0.036);
-        ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
-        ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        const txt = "INSPECTER";
-        const w = ctx.measureText(txt).width;
-        ctx.fillStyle = "rgba(247,179,43,.95)";
-        const yl = py - taille * 0.9;
-        arrondi(px - w / 2 - 8, yl - taille * 0.8, w + 16, taille * 1.6, taille * 0.8); ctx.fill();
-        ctx.fillStyle = "#1A1305"; ctx.fillText(txt, px, yl + taille * 0.04);
+        /* rien ici : l'invite est dessinée plus tard, par dessinerInvite */
       } else {
         const b = 1 + 0.12 * Math.sin(z.pulse);
         ctx.globalAlpha = 0.34 + 0.20 * Math.sin(z.pulse);
@@ -133,6 +121,33 @@ const EnqVue = {
       }
       ctx.restore();
     }
+  },
+
+  /* --------- l'invite « INSPECTER », par-dessus tout le monde --------- */
+  dessinerInvite(){
+    const H = Camera.H;
+    const iz = Enquete.zoneProche();
+    if (iz < 0) return;
+    const z = Enquete.zones[iz];
+    const px = this.ex(z.ref.x), py = this.ey(z.ref.y);
+    const loupe = Images.table.loupe;
+    const t = H * 0.085;
+    ctx.save();
+    if (loupe && loupe.naturalWidth){
+      const l = t * loupe.naturalWidth / loupe.naturalHeight;
+      ctx.drawImage(loupe, px - l / 2, py - t * 2.05, l, t);
+    }
+    const taille = Math.max(10, H * 0.036);
+    ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const txt = "INSPECTER";
+    const w = ctx.measureText(txt).width;
+    const yl = py - taille * 0.9;
+    ctx.fillStyle = "rgba(247,179,43,.96)";
+    arrondi(px - w / 2 - 8, yl - taille * 0.8, w + 16, taille * 1.6, taille * 0.8); ctx.fill();
+    ctx.strokeStyle = "rgba(26,19,5,.4)"; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = "#1A1305"; ctx.fillText(txt, px, yl + taille * 0.04);
+    ctx.restore();
   },
 
   /* --------- suspects --------- */

@@ -87,7 +87,9 @@ change ce qu'on obtient de lui.
 | **RISOTO** — au sol | Le chat. Il ne dira rien, mais il laisse des traces. |
 
 Chacun **pose sur une ligne relevée sur le décor** : l'assise du canapé à
-80 %, le plateau de la table à 73,5 %, le sol du couloir à 90 %. Les
+80 %, le plateau de la table à 73 %, le sol du couloir à 90 %. Charles
+occupe la place du fond et non le milieu du plateau : c'est là que se
+plante l'inspecteur qui fouille la table. Les
 poser tous sur la même ligne mettait Charles debout devant sa table et
 faisait flotter Teo au-dessus du canapé.
 

@@ -178,8 +178,8 @@ const RIEN = {
    sur la même ligne mettait Charles debout devant sa table et faisait
    flotter Teo au-dessus du canapé. */
 const PLACES_FIXES = {
-  teo:     { x:0.268, bas:0.805, taille:0.29 },   /* avachi sur le canapé */
-  charles: { x:0.548, bas:0.735, taille:0.225 },  /* accoudé au bout de la table */
+  teo:     { x:0.292, bas:0.805, taille:0.315 },  /* avachi sur la droite du canapé */
+  charles: { x:0.660, bas:0.730, taille:0.260 },  /* attablé, place du fond */
   soeur:   { x:0.818, bas:0.900, taille:0.575 },  /* debout dans le couloir */
   chat:    { x:0.452, bas:0.925, taille:0.170 },  /* par terre            */
 };
