@@ -666,7 +666,13 @@ titre("8quindecies. Pause partagée et départ en cours de partie");
     "il devenait invisible avant le début de partie");
   verifier("l'icône bascule en lecture à la reprise", /bp\.classList\.toggle\("reprise", enPause\)/.test(script));
 }
-verifier("bouton pour quitter", /id="btnQuitter"/.test(html) && /id="confirmation"/.test(html));
+verifier("un seul bouton, deux issues dans le panneau",
+  !/id="btnQuitter"/.test(html) && /id="pausePanneau"/.test(html) &&
+  /id="btnReprendre"/.test(html) && /id="btnQuitterPartie"/.test(html));
+verifier("la raquette est bloquée pendant la pause",
+  /function posDepuisEvenement\(clientX\)\{\s*if \(enPause\) return;/.test(script) &&
+  /function majClavier\(dtMs\)\{\s*if \(enPause\) return;/.test(script),
+  "elle continuait de suivre le doigt");
 verifier("la pause vaut aussi en réseau",
   !/if \(!partieEnCours \|\| !modeSolo\) return;/.test(script) &&
   /envoyerFiable\(\{ t: "pz"/.test(script) && /case "pz":/.test(script),
@@ -685,9 +691,10 @@ verifier("les horodatages sont décalés à la reprise",
 verifier("l'adversaire est prévenu du départ",
   /envoyerFiable\(\{ t: "qt" \}\)/.test(script) && /case "qt":/.test(script),
   "plutôt que de le laisser attendre une déconnexion");
-verifier("confirmation avant de quitter", /function montrerConfirmation\(/.test(script) &&
-  /btnQuitterOui/.test(html) && /btnQuitterNon/.test(html));
-verifier("la scène reste peinte pendant la pause", /function dessinerPause\(/.test(script));
+verifier("quitter passe forcément par la pause",
+  /\$\("btnQuitterPartie"\)\.addEventListener\("click", quitterPartie\)/.test(script),
+  "le geste reste en deux temps, sans panneau supplémentaire");
+verifier("la scène reste peinte sous le panneau", /if \(enPause\)\{\s*dessiner\(\);/.test(script));
 verifier("on ne peut pas mettre en pause hors du jeu",
   /phase === "fin" \|\| phase === "regles"/.test(script));
 
