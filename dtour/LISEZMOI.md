@@ -131,10 +131,10 @@ sortent. »
 On aborde quelqu'un **dès que son nom s'affiche**, pas plus près : la
 portée de la parole vaut plus du double de celle d'un tiroir.
 
-**On voit qui parle.** Les inspecteurs ont une bulle blanche avec un
-liseré de leur couleur — vert pour Pierre-François, bleu pour Thibaut.
-Les habitants répondent au-dessus d'eux-mêmes, dans une bulle papier
-crème signée de leur nom. Auparavant tout sortait de la même bouche et
+**On voit qui parle.** Trois papiers : **blanc** avec un liseré de
+couleur pour les inspecteurs — vert Pierre-François, bleu Thibaut —
+**crème** signé du nom pour les gens de la maison, **mauve** pour ceux
+qui ne font que passer. Auparavant tout sortait de la même bouche et
 on ne savait plus qui demandait quoi.
 
 Toutes les bulles passent par un **calage commun** : on les mesure, on
@@ -214,6 +214,27 @@ jamais l'inverse. Une enquête impossible ne peut donc pas sortir, et la
 suite de tests le vérifie sur trois cents tirages : six indices sans
 doublon, six meubles distincts, jamais d'indice sur la cachette, et les
 deux indices porteurs toujours présents.
+
+**Des gens passent.** Toutes les 28 à 52 secondes, quelqu'un entre par
+un bord, s'arrête près des inspecteurs, dit une phrase et repart. Un
+voisin, un livreur, l'ado du dessous. Un passant sur deux environ ne
+sert à rien — « Vous auriez du sel ? », « C'est quoi cette odeur ? » —
+et l'autre laisse tomber quelque chose de vrai.
+
+Les répliques utiles ne sont **pas écrites d'avance** : elles sont
+fabriquées à partir de l'affaire en cours, sinon un passant pourrait
+envoyer chercher dans un meuble vide. « À votre place, je regarderais la
+poubelle. » ne sort que s'il y a effectivement quelque chose à la
+poubelle. Un test le vérifie sur cent vingt affaires.
+
+Ils ne coupent jamais Hortense, ni le dossier, ni l'accusation.
+
+### Ajouter un visiteur
+
+Le registre `VISITEURS` attend un sprite, un nom, le côté d'arrivée et
+trois répliques pour ne rien dire. Les répliques utiles, elles, sont
+communes : elles viennent de l'affaire. Un visiteur tient donc en six
+lignes.
 
 **Hortense** intervient une fois, entre 35 % et 65 % du temps, jamais
 pendant le dossier ni pendant l'accusation. Mais **parler à sa sœur,

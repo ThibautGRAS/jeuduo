@@ -770,6 +770,141 @@ const HortenseApp = {
   visible(){ return this.etat !== ETAT_H2.CACHEE && this.etat !== ETAT_H2.FINI; },
 };
 
+
+/* ==================================================================
+   LES VISITEURS
+   ------------------------------------------------------------------
+   Un appartement en pleine enquête, ce n'est pas un huis clos : des
+   gens passent. Un voisin sonne, quelqu'un traverse, un livreur se
+   trompe d'étage. La moitié n'a rien à dire ; l'autre moitié laisse
+   tomber quelque chose de vrai.
+
+   Le registre ci-dessous est fait pour grossir : un visiteur = un
+   sprite, un nom, et ses répliques pour ne rien dire. Les répliques
+   UTILES, elles, ne sont pas écrites d'avance — elles sont fabriquées
+   à partir de l'affaire en cours, sinon un « indice » donné par un
+   passant pourrait être faux.
+================================================================== */
+
+const VISITEUR_DELAI = [28, 52];    /* secondes entre deux visites */
+const VISITEUR_UTILE = 0.45;        /* part de visites qui apprennent quelque chose */
+
+const VISITEURS = [
+  { id:"voisine",  nom:"LA VOISINE DU 3e",   sprite:"pnj02", cote:-1,
+    banal:["Vous auriez du sel ?", "C'est vous qui avez le vélo dans le couloir ?",
+           "Je cherche le gardien. Depuis six ans."] },
+  { id:"livreur",  nom:"UN LIVREUR",         sprite:"pnj07", cote:-1,
+    banal:["C'est bien le {etage} ?", "J'ai une commande pour Dupont.",
+           "Personne ne répond, en bas."] },
+  { id:"joggeur",  nom:"UN TYPE EN SURVÊT",  sprite:"pnj09", cote:1,
+    banal:["La porte était ouverte.", "Vous faites une fête ?",
+           "Je repasse plus tard. Ou pas."] },
+  { id:"ado",      nom:"L'ADO DU DESSOUS",   sprite:"pnj16", cote:1,
+    banal:["Y a trop de bruit chez vous.", "C'est quoi cette odeur ?",
+           "Ma mère demande si vous avez fini."] },
+  { id:"monsieur", nom:"UN MONSIEUR POLI",   sprite:"pnj05", cote:-1,
+    banal:["Bonsoir. Je me suis trompé de porte.", "Vous n'auriez pas vu un chat roux ?",
+           "Excusez-moi. Vraiment."] },
+  { id:"dame",     nom:"UNE DAME PRESSÉE",   sprite:"pnj12", cote:1,
+    banal:["Je ne fais que passer.", "Ne vous levez pas.",
+           "J'ai laissé quelque chose ici la semaine dernière."] },
+];
+
+const ETAT_V = { ABSENT:"ABSENT", ENTREE:"ENTREE", PARLE:"PARLE", SORTIE:"SORTIE" };
+
+const Visiteurs = {
+  etat:ETAT_V.ABSENT, qui:null, x:0, vise:0, dir:1, pas:0, chrono:0,
+  prochain:0, comptes:0, utiles:0,
+
+  raz(){
+    this.etat = ETAT_V.ABSENT; this.qui = null;
+    this.comptes = 0; this.utiles = 0;
+    this.prochain = hasard(VISITEUR_DELAI[0], VISITEUR_DELAI[1]);
+  },
+
+  /* --------- ce qu'un passant peut savoir de vrai ---------
+     Construit à partir de l'affaire en cours, jamais écrit d'avance :
+     un passant qui invente serait pire que pas de passant du tout. */
+  conseil(){
+    const restants = Enquete.zones.filter(z => !z.fouillee && z.indice);
+    const cle = SUSPECTS.find(x => x.id === Affaire.temoinCle());
+    const choix = [];
+    if (restants.length){
+      const z = piocher(restants);
+      choix.push("J'ai vu quelqu'un tourner autour de " + z.ref.nom + ".");
+      choix.push("À votre place, je regarderais " + z.ref.nom + ".");
+    }
+    if (cle){
+      choix.push(cle.nom + " est descendu vers " + Affaire.faits.heure + ". Ça m'a marqué.");
+      choix.push("Demandez à " + cle.nom + ". Elle avait l'air pressée.");
+    }
+    if (Enquete.indices >= 3 && !Enquete.pizza){
+      choix.push("Quelqu'un a fouillé " + Affaire.faits.ou + " avant vous.");
+    }
+    choix.push("Le livreur, c'était " + Affaire.faits.livreur + ". Il ne monte jamais.");
+    return piocher(choix);
+  },
+
+  declencher(){
+    if (this.etat !== ETAT_V.ABSENT || !Enquete.actif) return false;
+    if (Enquete.dossierOuvert || Enquete.accusation || HortenseApp.visible()) return false;
+    this.qui = piocher(VISITEURS);
+    this.dir = this.qui.cote >= 0 ? -1 : 1;         /* d'où il vient */
+    this.x = this.dir > 0 ? -0.05 : 1.05;
+    const chef = Enquete.actifIns();
+    this.vise = borne(chef.x + this.dir * -0.085, 0.05, 0.95);
+    this.etat = ETAT_V.ENTREE;
+    this.comptes++;
+    Sons.arrivee();
+    return true;
+  },
+
+  parler(){
+    this.etat = ETAT_V.PARLE;
+    this.chrono = 2.6;
+    const utile = Math.random() < VISITEUR_UTILE;
+    if (utile) this.utiles++;
+    const txt = utile ? this.conseil() : remplir(piocher(this.qui.banal));
+    Effets.parole({ visiteur:true }, txt, 2.6);
+    /* Un des deux inspecteurs réagit, ce qui évite que la scène tombe
+       à plat quand le passant ne sert à rien. */
+    Enquete.dialogue([[Enquete.actifIdx, utile
+      ? piocher(["Notez ça.", "Répétez ?", "Voilà qui aide."])
+      : piocher(["Non.", "Ce n'est pas le moment.", "Merci. Au revoir."])]], 1.5);
+  },
+
+  majorer(dt){
+    if (this.etat === ETAT_V.ABSENT){
+      this.prochain -= dt;
+      if (this.prochain <= 0){
+        this.prochain = hasard(VISITEUR_DELAI[0], VISITEUR_DELAI[1]);
+        this.declencher();
+      }
+      return;
+    }
+    switch (this.etat){
+      case ETAT_V.ENTREE: {
+        const r = this.vise - this.x;
+        this.x += Math.sign(r) * Math.min(Math.abs(r), 0.26 * dt);
+        this.pas += dt * 8;
+        if (Math.abs(this.vise - this.x) < 0.004) this.parler();
+        break;
+      }
+      case ETAT_V.PARLE:
+        this.chrono -= dt;
+        if (this.chrono <= 0){ this.etat = ETAT_V.SORTIE; this.dir = -this.dir; }
+        break;
+      case ETAT_V.SORTIE:
+        this.x += this.dir * 0.30 * dt;
+        this.pas += dt * 8;
+        if (this.x < -0.07 || this.x > 1.07){ this.etat = ETAT_V.ABSENT; this.qui = null; }
+        break;
+    }
+  },
+
+  visible(){ return this.etat !== ETAT_V.ABSENT && !!this.qui; },
+};
+
 /* ================= InvestigationManager -> Enquete ================= */
 const Enquete = {
   actif:false, restant:0, indices:0, fouilles:0, fausses:0, zones:[],
@@ -785,6 +920,7 @@ const Enquete = {
     Affaire.generer();
     Dossier.raz();
     HortenseApp.raz();
+    Visiteurs.raz();
     composerSuspects();
     this.restant = ENQ_DUREE;
     this.indices = 0; this.fouilles = 0; this.fausses = 0;
@@ -1195,6 +1331,7 @@ const Enquete = {
     this.majDialogue(dt);
 
     HortenseApp.majorer(dt);
+    Visiteurs.majorer(dt);
     Camera.suivreEnq(chef.x, dt);
 
     if (this.restant <= 0){ this.restant = 0; this.terminer(false); }

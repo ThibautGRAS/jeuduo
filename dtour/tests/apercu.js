@@ -303,6 +303,21 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "10_enquete_844");
   }
 
+  /* 14. un passant qui traverse et qui parle */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(2); D.Intro.finir();
+    D.Enquete.actifIns().x = 0.42; D.Enquete.autreIns().x = 0.37;
+    for (let i = 0; i < 30; i++) D.Jeu.pas(1 / 60);
+    D.Visiteurs.declencher();
+    let n = 0;
+    while (D.Visiteurs.etat !== "PARLE" && n++ < 60 * 20) D.Jeu.pas(1 / 60);
+    for (let i = 0; i < 40; i++) D.Jeu.pas(1 / 60);
+    dessinerVia(D, canevas);
+    ecrire(canevas, "14_visiteur_844");
+  }
+
   /* 13. pendant l'introduction : le décor seul, rien qui plante */
   {
     const { D, canevas } = await preparer(844, 318);

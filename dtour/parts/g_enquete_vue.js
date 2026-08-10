@@ -39,6 +39,7 @@ const EnqVue = {
          de fouille et les plaques de nom arriveraient avant les
          règles. */
       if (Enquete.actif) this.dessinerZones();
+      if (Visiteurs.visible()) this.dessinerVisiteur();
       this.dessinerInspecteurs();
       /* L'invite du meuble à portée se pose après les inspecteurs :
          celui qui fouille se plantait devant son propre libellé. */
@@ -74,6 +75,11 @@ const EnqVue = {
         bulles.push({ p, px:this.ex(ins.x) + trem,
           base:this.ey(ENQ_LIGNE) - H * ENQ_TAILLE,
           style:{ bord:Heros[ins.heros].couleur } });
+      } else if (p.cible.visiteur){
+        if (!Visiteurs.visible()) continue;
+        bulles.push({ p, px:this.ex(Visiteurs.x) + trem,
+          base:this.ey(ENQ_LIGNE) - H * ENQ_TAILLE * 0.92 - H * 0.05,
+          style:{ visiteur:true, nom:Visiteurs.qui.nom } });
       } else if (p.cible.temoin !== undefined){
         const s = SUSPECTS[p.cible.temoin];
         if (!s) continue;
@@ -162,6 +168,43 @@ const EnqVue = {
       }
       ctx.restore();
     }
+  },
+
+  /* --------- le passant ---------
+     Il marche sur la même ligne que les inspecteurs, à peine plus petit
+     parce qu'il longe le fond de la pièce. */
+  dessinerVisiteur(){
+    const H = Camera.H;
+    const img = Images.table[Visiteurs.qui.sprite];
+    if (!img || !img.naturalWidth) return;
+    const h = H * ENQ_TAILLE * (Visiteurs.qui.taille || 0.92);
+    const l = h * img.naturalWidth / img.naturalHeight;
+    const px = this.ex(Visiteurs.x);
+    const sol = this.ey(ENQ_LIGNE) - H * 0.012;
+    const bouge = Visiteurs.etat !== "PARLE";
+    const bob = bouge ? Math.abs(Math.sin(Visiteurs.pas)) * h * 0.020 : 0;
+    const g2 = ctx.createRadialGradient(px, sol, 0, px, sol, h * 0.24);
+    g2.addColorStop(0, "rgba(24,14,6,.30)"); g2.addColorStop(1, "rgba(24,14,6,0)");
+    ctx.fillStyle = g2;
+    ctx.beginPath(); ctx.ellipse(px, sol, h * 0.24, h * 0.05, 0, 0, 6.2832); ctx.fill();
+    ctx.save();
+    ctx.translate(px, sol - bob);
+    ctx.scale(Visiteurs.dir < 0 ? -1 : 1, 1);
+    ctx.drawImage(img, -l / 2, -h, l, h);
+    ctx.restore();
+
+    /* son nom, tant qu'il est là */
+    const taille = Math.max(9, H * 0.032);
+    ctx.save();
+    ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const w = ctx.measureText(Visiteurs.qui.nom).width;
+    const py = sol - h - H * 0.020;
+    ctx.fillStyle = "rgba(58,42,96,.88)";
+    arrondi(px - w / 2 - 9, py - taille * 0.86, w + 18, taille * 1.72, taille * 0.86); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.22)"; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = "#EDE7FA"; ctx.fillText(Visiteurs.qui.nom, px, py + taille * 0.06);
+    ctx.restore();
   },
 
   /* --------- l'invite « INSPECTER », par-dessus tout le monde --------- */
@@ -573,7 +616,7 @@ function mesurerParole(p, style){
   const l = ctx.measureText(p.txt).width;
   ctx.restore();
   const pad = taille * 0.62;
-  const hNom = st.temoin ? taille * 0.86 : 0;
+  const hNom = (st.temoin || st.visiteur) ? taille * 0.86 : 0;
   return { bl:l + pad * 2, bh:taille * 1.72 + hNom, taille, hNom };
 }
 
@@ -590,7 +633,11 @@ function dessinerParoleLibre(p, px, pyBas, style, x0){
   ctx.globalAlpha = borne(1 - Math.pow(t, 4), 0, 1) * (0.35 + 0.65 * monte);
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
 
-  const fond = st.temoin ? "rgba(247,240,224,.97)" : "rgba(252,253,255,.97)";
+  /* Trois papiers : blanc pour les inspecteurs, crème pour les gens de
+     la maison, mauve pour ceux qui ne font que passer. */
+  const fond = st.visiteur ? "rgba(234,228,248,.97)"
+             : st.temoin   ? "rgba(247,240,224,.97)"
+             : "rgba(252,253,255,.97)";
   arrondi(bx, by, bl, bh, bh * 0.30);
   ctx.fillStyle = fond; ctx.fill();
   ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1.5, taille * 0.10); ctx.stroke();
@@ -607,13 +654,13 @@ function dessinerParoleLibre(p, px, pyBas, style, x0){
   ctx.fillStyle = fond; ctx.fill();
   ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1.5, taille * 0.10); ctx.stroke();
 
-  if (st.temoin && st.nom){
+  if ((st.temoin || st.visiteur) && st.nom){
     ctx.font = "800 " + Math.round(taille * 0.56) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillStyle = "#8A6B34";
+    ctx.fillStyle = st.visiteur ? "#5B4A8C" : "#8A6B34";
     ctx.fillText(st.nom, bx + bl / 2, by + hNom * 0.62);
   }
-  ctx.font = (st.temoin ? "700 " : "800 ") + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
-  ctx.fillStyle = st.temoin ? "#2A2117" : "#1A1420";
+  ctx.font = ((st.temoin || st.visiteur) ? "700 " : "800 ") + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+  ctx.fillStyle = st.visiteur ? "#241C3A" : st.temoin ? "#2A2117" : "#1A1420";
   ctx.fillText(p.txt, bx + bl / 2 + (st.bord ? taille * 0.12 : 0), by + hNom + taille * 0.86);
   ctx.restore();
 }

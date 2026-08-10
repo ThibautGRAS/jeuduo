@@ -917,6 +917,56 @@ if (D){
   D.Enquete.actifIns().x = 0.20;
   egal("loin de tout, interroger ne fait rien", D.Enquete.parler(), false);
 
+  titre("Les visiteurs de passage");
+  verifier("six passants au moins", D.VISITEURS.length >= 6, D.VISITEURS.length);
+  verifier("chacun a un sprite qui existe",
+    D.VISITEURS.every(v => D.Images && true) && D.VISITEURS.every(v => /^pnj\d\d$|^pers_/.test(v.sprite)),
+    D.VISITEURS.map(v => v.sprite).join(", "));
+  verifier("chacun a de quoi ne rien dire",
+    D.VISITEURS.every(v => v.nom && v.banal.length >= 3));
+  lancer2();
+  verifier("aucun passant au départ", !D.Visiteurs.visible());
+  verifier("le premier est attendu, pas immédiat", D.Visiteurs.prochain > 20);
+  /* un passant traverse : il entre, parle, repart */
+  D.Visiteurs.declencher();
+  verifier("il entre par un bord", D.Visiteurs.visible() && (D.Visiteurs.x < 0 || D.Visiteurs.x > 1));
+  let tv = 0;
+  while (D.Visiteurs.etat !== "PARLE" && tv++ < 60 * 20) D.Jeu.pas(1 / 60);
+  verifier("il s'arrête et parle", D.Visiteurs.etat === "PARLE");
+  verifier("sa réplique sort de sa bouche",
+    D.Effets.paroles.some(p => p.cible.visiteur),
+    "elle sortait de celle de l'inspecteur");
+  tv = 0;
+  while (D.Visiteurs.visible() && tv++ < 60 * 30) D.Jeu.pas(1 / 60);
+  verifier("puis il s'en va", !D.Visiteurs.visible(), "il reste planté là");
+
+  /* ce qu'il dit d'utile doit être VRAI dans l'affaire en cours */
+  verifier("ses indications sont vraies",
+    (() => {
+      for (let n = 0; n < 120; n++){
+        D.Jeu.demarrer(2); D.Intro.finir();
+        const c = D.Visiteurs.conseil();
+        if (/\{\w+\}/.test(c)) return false;
+        const meuble = D.ZONES.find(z => c.indexOf(z.nom) >= 0);
+        if (meuble){
+          const z = D.Enquete.zones.find(x => x.ref.id === meuble.id);
+          if (!z || (!z.indice && !z.cachette)) return false;   /* il enverrait sur du vide */
+        }
+      }
+      return true;
+    })(), "un passant qui invente est pire que pas de passant");
+  verifier("il ne coupe jamais Hortense ni le dossier",
+    (() => {
+      D.Jeu.demarrer(2); D.Intro.finir();
+      D.Enquete.dossierOuvert = true;
+      const a = D.Visiteurs.declencher();
+      D.Enquete.dossierOuvert = false;
+      D.Enquete.accusation = true;
+      const b = D.Visiteurs.declencher();
+      D.Enquete.accusation = false;
+      return !a && !b;
+    })());
+
   /* on doit pouvoir conclure au doigt, sans clavier */
   titre("Conclure sans clavier");
   lancer2();
