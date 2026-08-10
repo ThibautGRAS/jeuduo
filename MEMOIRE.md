@@ -168,7 +168,12 @@ flamboyant, c'est le fond enroulé qui fait tout. Le décor est réellement
 déformé par une lentille : on prélève
 l'image autour du puits et on la repose en neuf anneaux de plus en plus tournés
 et grossis vers le centre. Aucune donnée réseau supplémentaire, les puits se
-déduisent des raquettes déjà synchronisées.
+déduisent des raquettes déjà synchronisées. Une balle qui passe sur un puits ou
+s'y attarde plus de 0,85 s est **avalée** et ressort par l'autre puits, plus
+rapide et dans la même direction : comme le puits d'un joueur est chez
+l'adversaire, la balle avalée revient dans son propre camp. Les éclats de mur
+sont happés 2,6 fois plus fort et finissent pulvérisés — 97 % d'entre eux sont
+avalés en moins de sept secondes.
 
 **CASSE-MUR** — un mur de blocs occupe la moitié du terrain, dans la matière de
 l'arène : la glace ralentit, la lave accélère, les cristaux attirent. Chacun
