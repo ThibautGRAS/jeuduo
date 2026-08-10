@@ -271,8 +271,8 @@ kbd{
     <p class="sous">Ils ne les connaissaient même pas.</p>
     <button class="primaire" id="btnJouer">JOUER</button>
     <div id="legende">
-      <span><i class="pt"></i>Thibaut <kbd>A</kbd><kbd>←</kbd></span>
-      <span><i class="pp"></i>Pierre-François <kbd>L</kbd><kbd>→</kbd></span>
+      <span><i class="pt"></i><b id="legG">…</b> <kbd>A</kbd><kbd>←</kbd></span>
+      <span><i class="pp"></i><b id="legD">…</b> <kbd>L</kbd><kbd>→</kbd></span>
       <span><i class="pe"></i>Esquiver <kbd>ESPACE</kbd></span>
     </div>
   </div>
@@ -291,14 +291,14 @@ kbd{
   </div>
 
   <div id="pupitre">
-    <button class="cmd" id="cmdT" aria-label="Saluer Thibaut">
-      <img id="visageT" alt=""><span class="txt"><small>SALUER</small><span>Thibaut</span></span><kbd>A</kbd>
+    <button class="cmd" id="cmdT">
+      <img id="visageT" alt=""><span class="txt"><small>SALUER</small><span id="nomG">…</span></span><kbd>A</kbd>
     </button>
     <button class="cmd" id="cmdE" aria-label="Esquiver la tarte">
       <span class="txt"><small>TARTE</small><span>Esquiver</span></span><kbd>ESPACE</kbd>
     </button>
-    <button class="cmd" id="cmdP" aria-label="Saluer Pierre-François">
-      <img id="visageP" alt=""><span class="txt"><small>SALUER</small><span>Pierre-François</span></span><kbd>L</kbd>
+    <button class="cmd" id="cmdP">
+      <img id="visageP" alt=""><span class="txt"><small>SALUER</small><span id="nomD">…</span></span><kbd>L</kbd>
     </button>
   </div>
 
@@ -312,8 +312,8 @@ kbd{
       <button data-act="salut">Déclencher salut</button>
     </div>
     <div class="rangee">
-      <button data-act="cibleT">Cible : Thibaut</button>
-      <button data-act="cibleP">Cible : P-F</button>
+      <button data-act="cibleT" id="cibleG">Cible : gauche</button>
+      <button data-act="cibleP" id="cibleD">Cible : droite</button>
     </div>
     <div class="rangee">
       <button data-act="file10">File +10</button>
@@ -339,7 +339,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">D'TOUR v1.4</div>
+  <div id="version">D'TOUR v1.5</div>
 
   <div id="pivot">
     <div class="tourne"></div>
@@ -375,7 +375,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "1.4";
+const VERSION = "1.5";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -386,7 +386,7 @@ const VERSION = "1.4";
 const H_PERSO = 100;
 const BRAS_TENDU = 0.95;   /* la main ne rejoint celle du héros qu'au moment de la poignée */
 const PAS = 62;                       /* écart entre deux places de la file */
-const PLACE_T = 2, PLACE_PF = 3;      /* places fixes des deux héros */
+const PLACE_G = 2, PLACE_D = 3;      /* places fixes des deux héros */
 const X_PORTE = -34;                  /* la porte du bar, à gauche de la place 0 */
 
 function xPlace(i){ return 46 + i * PAS; }
@@ -400,7 +400,7 @@ function xPlace(i){ return 46 + i * PAS; }
    juste devant Pierre-François, à qui il tourne le dos : c'est
    exactement la bonne image. */
 const RECUL_SALUT = 104;
-const X_SALUT = xPlace(PLACE_T) + RECUL_SALUT;
+const X_SALUT = xPlace(PLACE_G) + RECUL_SALUT;
 
 /* Les arrivants longent la file par devant : plus bas à l'écran et
    légèrement plus grands, ils passent donc DEVANT les gens rangés.
@@ -1014,9 +1014,14 @@ const File = {
 };
 
 /* ================= héros ================= */
+/* L'ordre du tableau est celui des COMMANDES : 0 = pastille verte à
+   gauche, touche A ; 1 = pastille bleue à droite, touche L. Le prénom,
+   le sprite et donc le portrait se lisent ICI et nulle part ailleurs —
+   écrits en dur dans le HTML, ils avaient fini par désigner l'autre
+   bonhomme. Échanger deux prénoms se fait donc sur ces deux lignes. */
 const Heros = [
-  { nom:"THIBAUT", sprite:"thibaut", place:PLACE_T, couleur:"#37AC48" },
-  { nom:"PF", sprite:"pierre", place:PLACE_PF, couleur:"#2A8AE4" },
+  { nom:"PIERRE-FRANÇOIS", court:"P-F", sprite:"pierre", place:PLACE_G, couleur:"#37AC48" },
+  { nom:"THIBAUT", court:"Thibaut", sprite:"thibaut", place:PLACE_D, couleur:"#2A8AE4" },
 ];
 
 /* Point d'arrêt de l'arrivant selon le héros qu'il vient saluer. */
@@ -1182,9 +1187,9 @@ const Jeu = {
 
     /* [BAR] PNJ PNJ THIBAUT PIERRE-FRANÇOIS */
     File.gonfler(2);
-    File.poserHeros(0, PLACE_T);
-    File.poserHeros(1, PLACE_PF);
-    while (File.places.length <= PLACE_PF) File.places.push({ vide:true });
+    File.poserHeros(0, PLACE_G);
+    File.poserHeros(1, PLACE_D);
+    while (File.places.length <= PLACE_D) File.places.push({ vide:true });
     Score.noterFile(File.installees());
 
     this.prochaineArrivee = this.temps + 1.5;
@@ -1343,8 +1348,8 @@ const Jeu = {
     Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
     this.temps = 0; this.gel = 0; this.moment = 0; this.fondu = 1; this.fonduDe = 0; this.demandes = [];
     File.gonfler(3);
-    File.poserHeros(0, PLACE_T); File.poserHeros(1, PLACE_PF);
-    while (File.places.length <= PLACE_PF) File.places.push({ vide:true });
+    File.poserHeros(0, PLACE_G); File.poserHeros(1, PLACE_D);
+    while (File.places.length <= PLACE_D) File.places.push({ vide:true });
     Camera.recaler();
     Interface.entrerTitre();
   },
@@ -1391,7 +1396,7 @@ const Camera = {
      le bar qui sort par la gauche, jamais la poignée de main. */
   recentrer(){
     const large = this.L / this.ech;
-    let x = xPlace(PLACE_T) - 0.30 * large;
+    let x = xPlace(PLACE_G) - 0.30 * large;
     const droiteVoulue = xSalut(1) + 0.35 * PAS;
     if (x + large * 0.92 < droiteVoulue) x = droiteVoulue - large * 0.92;
     this.x = Math.max(x, X_PORTE - 16);
@@ -2252,7 +2257,7 @@ const Tartes = {
       Hortense.vise = Math.max(xSalut(1) + 0.7 * PAS, Camera.bordDroit() - 1.5 * H_PERSO);
     } else {
       Hortense.x = Camera.bordGauche() - marge;
-      Hortense.vise = xPlace(PLACE_T) - 1.5 * H_PERSO;
+      Hortense.vise = xPlace(PLACE_G) - 1.5 * H_PERSO;
     }
     /* une fois de temps en temps, elle se poste derrière un meuble */
     if (Math.random() < 0.28) Hortense.cachette = Math.random() < 0.5 ? "h_parasol" : "h_chaise";
@@ -2539,7 +2544,7 @@ function dessinerDebugTarte(){
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","visageT","visageP","fin","fScore","fCombo",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte"]){
@@ -2594,9 +2599,22 @@ const Interface = {
   preparer(){
     if (E.version) E.version.textContent = "D'TOUR v" + VERSION;
     if (E.logo && Images.table.logo) E.logo.src = Images.table.logo.src;
-    for (const [el, nom] of [[E.visageT, "face_thibaut"], [E.miniT, "face_thibaut"],
-                             [E.visageP, "face_pierre"], [E.miniP, "face_pierre"]]){
-      if (el && Images.table[nom]) el.src = Images.table[nom].src;
+    /* Prénoms, portraits et libellés : tout se déduit du tableau Heros,
+       dans l'ordre gauche puis droite. Les identifiants HTML gardent
+       leurs vieilles lettres T et P, qui désignent désormais la place
+       et non la personne. */
+    const cases = [
+      { img:[E.visageT, E.miniT], nom:E.nomG, leg:E.legG, cible:E.cibleG, bouton:E.cmdT },
+      { img:[E.visageP, E.miniP], nom:E.nomD, leg:E.legD, cible:E.cibleD, bouton:E.cmdP },
+    ];
+    for (let i = 0; i < Heros.length; i++){
+      const h = Heros[i], c = cases[i];
+      const face = Images.table["face_" + h.sprite];
+      for (const el of c.img) if (el && face){ el.src = face.src; el.alt = h.court; }
+      if (c.nom) c.nom.textContent = h.court;
+      if (c.leg) c.leg.textContent = h.court;
+      if (c.cible) c.cible.textContent = "Cible : " + h.court;
+      if (c.bouton && c.bouton.setAttribute) c.bouton.setAttribute("aria-label", "Saluer " + h.court);
     }
     const r = lireRecords();
     if (E.tRecord) E.tRecord.textContent = r.score ? "MEILLEUR SCORE " + chiffres(r.score) : "";
@@ -2942,7 +2960,7 @@ else if (typeof document !== "undefined") document.addEventListener("DOMContentL
 
 /* Exposé pour la suite de tests, qui exécute ce script hors navigateur. */
 globalThis.DTOUR = {
-  VERSION, ETAT, TYPES, MOMENTS, H_PERSO, PAS, PLACE_T, PLACE_PF, X_SALUT, Z_MIN,
+  VERSION, ETAT, TYPES, MOMENTS, H_PERSO, PAS, PLACE_G, PLACE_D, X_SALUT, Z_MIN,
   REACT_DEBUT, REACT_PLANCHER, VIES,
   xPlace, borne, melange, chiffres, doux,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj,

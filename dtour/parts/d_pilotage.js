@@ -3,7 +3,7 @@
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","visageT","visageP","fin","fScore","fCombo",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte"]){
@@ -58,9 +58,22 @@ const Interface = {
   preparer(){
     if (E.version) E.version.textContent = "D'TOUR v" + VERSION;
     if (E.logo && Images.table.logo) E.logo.src = Images.table.logo.src;
-    for (const [el, nom] of [[E.visageT, "face_thibaut"], [E.miniT, "face_thibaut"],
-                             [E.visageP, "face_pierre"], [E.miniP, "face_pierre"]]){
-      if (el && Images.table[nom]) el.src = Images.table[nom].src;
+    /* Prénoms, portraits et libellés : tout se déduit du tableau Heros,
+       dans l'ordre gauche puis droite. Les identifiants HTML gardent
+       leurs vieilles lettres T et P, qui désignent désormais la place
+       et non la personne. */
+    const cases = [
+      { img:[E.visageT, E.miniT], nom:E.nomG, leg:E.legG, cible:E.cibleG, bouton:E.cmdT },
+      { img:[E.visageP, E.miniP], nom:E.nomD, leg:E.legD, cible:E.cibleD, bouton:E.cmdP },
+    ];
+    for (let i = 0; i < Heros.length; i++){
+      const h = Heros[i], c = cases[i];
+      const face = Images.table["face_" + h.sprite];
+      for (const el of c.img) if (el && face){ el.src = face.src; el.alt = h.court; }
+      if (c.nom) c.nom.textContent = h.court;
+      if (c.leg) c.leg.textContent = h.court;
+      if (c.cible) c.cible.textContent = "Cible : " + h.court;
+      if (c.bouton && c.bouton.setAttribute) c.bouton.setAttribute("aria-label", "Saluer " + h.court);
     }
     const r = lireRecords();
     if (E.tRecord) E.tRecord.textContent = r.score ? "MEILLEUR SCORE " + chiffres(r.score) : "";
@@ -406,7 +419,7 @@ else if (typeof document !== "undefined") document.addEventListener("DOMContentL
 
 /* Exposé pour la suite de tests, qui exécute ce script hors navigateur. */
 globalThis.DTOUR = {
-  VERSION, ETAT, TYPES, MOMENTS, H_PERSO, PAS, PLACE_T, PLACE_PF, X_SALUT, Z_MIN,
+  VERSION, ETAT, TYPES, MOMENTS, H_PERSO, PAS, PLACE_G, PLACE_D, X_SALUT, Z_MIN,
   REACT_DEBUT, REACT_PLANCHER, VIES,
   xPlace, borne, melange, chiffres, doux,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj,

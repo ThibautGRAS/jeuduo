@@ -243,11 +243,11 @@ try{
 if (D){
   /* --- géométrie --- */
   titre("Géométrie");
-  verifier("Thibaut est devant Pierre-François dans la file", D.PLACE_T < D.PLACE_PF);
-  verifier("le point de salut est derrière les deux héros", D.X_SALUT > D.xPlace(D.PLACE_PF),
-    "X_SALUT=" + D.X_SALUT + " place PF=" + D.xPlace(D.PLACE_PF));
-  const dPF = D.X_SALUT - D.xPlace(D.PLACE_PF);
-  const dT = D.X_SALUT - D.xPlace(D.PLACE_T);
+  verifier("Thibaut est devant Pierre-François dans la file", D.PLACE_G < D.PLACE_D);
+  verifier("le point de salut est derrière les deux héros", D.X_SALUT > D.xPlace(D.PLACE_D),
+    "X_SALUT=" + D.X_SALUT + " place PF=" + D.xPlace(D.PLACE_D));
+  const dPF = D.X_SALUT - D.xPlace(D.PLACE_D);
+  const dT = D.X_SALUT - D.xPlace(D.PLACE_G);
   verifier("saluer Pierre-François est un geste court", dPF > 0.2 * D.H_PERSO && dPF < 0.8 * D.H_PERSO, "d=" + dPF);
   verifier("saluer Thibaut demande de tendre le bras plus loin", dT > dPF * 1.6, "dT=" + dT + " dPF=" + dPF);
   verifier("les places sont régulièrement espacées",
@@ -326,8 +326,8 @@ if (D){
   egal("quatre personnes au départ", D.File.places.length, 4);
   egal("les deux premières sont des PNJ",
     [D.File.places[0].pnj !== undefined, D.File.places[1].pnj !== undefined], [true, true]);
-  egal("Thibaut est à sa place", D.File.places[D.PLACE_T].heros, 0);
-  egal("Pierre-François est à sa place", D.File.places[D.PLACE_PF].heros, 1);
+  egal("Thibaut est à sa place", D.File.places[D.PLACE_G].heros, 0);
+  egal("Pierre-François est à sa place", D.File.places[D.PLACE_D].heros, 1);
   egal("le bandeau annonce quatre personnes", D.File.installees(), 4);
   egal("trois vies", D.Jeu.vies, D.VIES);
   egal("phase de jeu", D.Jeu.phase, "jeu");
@@ -408,7 +408,7 @@ if (D){
   /* Ce qui doit rester visible en toutes circonstances : les deux héros
      et le point où l'on vient leur serrer la main. */
   const dansEcran = () => {
-    const xT = D.Camera.ecran(D.xPlace(D.PLACE_T));
+    const xT = D.Camera.ecran(D.xPlace(D.PLACE_G));
     const xS = D.Camera.ecran(D.xSalut(1));
     return xT > 0 && xS < D.Camera.L;
   };
@@ -417,7 +417,7 @@ if (D){
   D.Camera.recaler();
   verifier("elle ne descend pas sous le plancher", D.Camera.z >= D.Z_MIN - 1e-9, "z=" + D.Camera.z);
   verifier("la zone d'action reste à l'écran même avec 64 personnes", dansEcran(),
-    "xT=" + D.Camera.ecran(D.xPlace(D.PLACE_T)).toFixed(0) + " xS=" + D.Camera.ecran(D.xSalut(1)).toFixed(0));
+    "xT=" + D.Camera.ecran(D.xPlace(D.PLACE_G)).toFixed(0) + " xS=" + D.Camera.ecran(D.xSalut(1)).toFixed(0));
   verifier("les personnages restent gros", D.H_PERSO * D.Camera.ech > 120,
     (D.H_PERSO * D.Camera.ech).toFixed(0) + " px");
   verifier("la file déborde volontairement de l'écran", D.Camera.dernierePlaceVisible() < D.File.places.length - 1,
@@ -429,7 +429,7 @@ if (D){
     verifier("cadrage tenu en " + L + "x" + H,
       dansEcran() && D.H_PERSO * D.Camera.ech > mini,
       "h=" + (D.H_PERSO * D.Camera.ech).toFixed(0) + " px, xT=" +
-      D.Camera.ecran(D.xPlace(D.PLACE_T)).toFixed(0) + ", xS=" + D.Camera.ecran(D.xSalut(1)).toFixed(0));
+      D.Camera.ecran(D.xPlace(D.PLACE_G)).toFixed(0) + ", xS=" + D.Camera.ecran(D.xSalut(1)).toFixed(0));
   }
 
   titre("Paysage imposé");

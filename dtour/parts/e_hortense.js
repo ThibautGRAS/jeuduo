@@ -244,7 +244,7 @@ const Tartes = {
       Hortense.vise = Math.max(xSalut(1) + 0.7 * PAS, Camera.bordDroit() - 1.5 * H_PERSO);
     } else {
       Hortense.x = Camera.bordGauche() - marge;
-      Hortense.vise = xPlace(PLACE_T) - 1.5 * H_PERSO;
+      Hortense.vise = xPlace(PLACE_G) - 1.5 * H_PERSO;
     }
     /* une fois de temps en temps, elle se poste derrière un meuble */
     if (Math.random() < 0.28) Hortense.cachette = Math.random() < 0.5 ? "h_parasol" : "h_chaise";

@@ -40,7 +40,7 @@ const Camera = {
      le bar qui sort par la gauche, jamais la poignée de main. */
   recentrer(){
     const large = this.L / this.ech;
-    let x = xPlace(PLACE_T) - 0.30 * large;
+    let x = xPlace(PLACE_G) - 0.30 * large;
     const droiteVoulue = xSalut(1) + 0.35 * PAS;
     if (x + large * 0.92 < droiteVoulue) x = droiteVoulue - large * 0.92;
     this.x = Math.max(x, X_PORTE - 16);

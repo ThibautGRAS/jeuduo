@@ -4,7 +4,7 @@ Jeu d'arcade 2D, un seul fichier, jouable au doigt.
 
 **Adresse** : https://thibautgras.github.io/jeuduo/dtour/
 
-Thibaut et Pierre-François font la queue devant Le D'Tour. Les gens qui
+Pierre-François et Thibaut font la queue devant Le D'Tour. Les gens qui
 longent la file leur tendent la main comme s'ils les connaissaient. Il
 faut saluer avec le bon héros, assez vite. Trois ratés et c'est fini.
 
@@ -127,6 +127,19 @@ cadre dès que la barre du navigateur mangeait cent pixels.
 | InputManager | `Entrees` |
 | AudioManager | `Sons` |
 | UIManager | `Interface` |
+
+### Qui est qui
+
+Le tableau `Heros` est la **seule** source : prénom, sprite et donc
+portrait. Son ordre est celui des commandes — 0 = pastille verte à
+gauche, touche A ; 1 = pastille bleue à droite, touche L. Les libellés
+des boutons, la légende de l'écran titre et les boutons du panneau
+debug se remplissent depuis lui.
+
+Écrits en dur dans le HTML, ces prénoms avaient fini par désigner
+l'autre bonhomme. Échanger les deux héros se fait maintenant en
+échangeant deux lignes, et `decoupe2.py` refuse de sortir les images si
+le buste de Thibaut n'est pas vert et celui de Pierre-François noir.
 
 ### Ce qu'ils se disent
 

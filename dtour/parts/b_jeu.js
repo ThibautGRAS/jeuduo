@@ -164,9 +164,14 @@ const File = {
 };
 
 /* ================= héros ================= */
+/* L'ordre du tableau est celui des COMMANDES : 0 = pastille verte à
+   gauche, touche A ; 1 = pastille bleue à droite, touche L. Le prénom,
+   le sprite et donc le portrait se lisent ICI et nulle part ailleurs —
+   écrits en dur dans le HTML, ils avaient fini par désigner l'autre
+   bonhomme. Échanger deux prénoms se fait donc sur ces deux lignes. */
 const Heros = [
-  { nom:"THIBAUT", sprite:"thibaut", place:PLACE_T, couleur:"#37AC48" },
-  { nom:"PF", sprite:"pierre", place:PLACE_PF, couleur:"#2A8AE4" },
+  { nom:"PIERRE-FRANÇOIS", court:"P-F", sprite:"pierre", place:PLACE_G, couleur:"#37AC48" },
+  { nom:"THIBAUT", court:"Thibaut", sprite:"thibaut", place:PLACE_D, couleur:"#2A8AE4" },
 ];
 
 /* Point d'arrêt de l'arrivant selon le héros qu'il vient saluer. */
@@ -332,9 +337,9 @@ const Jeu = {
 
     /* [BAR] PNJ PNJ THIBAUT PIERRE-FRANÇOIS */
     File.gonfler(2);
-    File.poserHeros(0, PLACE_T);
-    File.poserHeros(1, PLACE_PF);
-    while (File.places.length <= PLACE_PF) File.places.push({ vide:true });
+    File.poserHeros(0, PLACE_G);
+    File.poserHeros(1, PLACE_D);
+    while (File.places.length <= PLACE_D) File.places.push({ vide:true });
     Score.noterFile(File.installees());
 
     this.prochaineArrivee = this.temps + 1.5;
@@ -493,8 +498,8 @@ const Jeu = {
     Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
     this.temps = 0; this.gel = 0; this.moment = 0; this.fondu = 1; this.fonduDe = 0; this.demandes = [];
     File.gonfler(3);
-    File.poserHeros(0, PLACE_T); File.poserHeros(1, PLACE_PF);
-    while (File.places.length <= PLACE_PF) File.places.push({ vide:true });
+    File.poserHeros(0, PLACE_G); File.poserHeros(1, PLACE_D);
+    while (File.places.length <= PLACE_D) File.places.push({ vide:true });
     Camera.recaler();
     Interface.entrerTitre();
   },

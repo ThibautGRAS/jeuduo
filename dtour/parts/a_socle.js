@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "1.4";
+const VERSION = "1.5";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -29,7 +29,7 @@ const VERSION = "1.4";
 const H_PERSO = 100;
 const BRAS_TENDU = 0.95;   /* la main ne rejoint celle du héros qu'au moment de la poignée */
 const PAS = 62;                       /* écart entre deux places de la file */
-const PLACE_T = 2, PLACE_PF = 3;      /* places fixes des deux héros */
+const PLACE_G = 2, PLACE_D = 3;      /* places fixes des deux héros */
 const X_PORTE = -34;                  /* la porte du bar, à gauche de la place 0 */
 
 function xPlace(i){ return 46 + i * PAS; }
@@ -43,7 +43,7 @@ function xPlace(i){ return 46 + i * PAS; }
    juste devant Pierre-François, à qui il tourne le dos : c'est
    exactement la bonne image. */
 const RECUL_SALUT = 104;
-const X_SALUT = xPlace(PLACE_T) + RECUL_SALUT;
+const X_SALUT = xPlace(PLACE_G) + RECUL_SALUT;
 
 /* Les arrivants longent la file par devant : plus bas à l'écran et
    légèrement plus grands, ils passent donc DEVANT les gens rangés.
