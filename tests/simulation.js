@@ -272,8 +272,15 @@ try {
   const s2 = jeu.etat.score, m2 = jeu.manches;
   verifier("le jeu progresse en gravité", s2[0] + s2[1] + m2[0] + m2[1] > 0,
     "score " + s2.join("-") + " | manches " + m2.join("-"));
-  verifier("des rochers gravitent dès le départ", jeu.debris.length > 0,
-    jeu.debris.length + " rochers en jeu");
+  /* ils n'arrivent qu'à partir de la deuxième manche : on ne l'exige donc
+     qu'une fois la première remportée */
+  const manchesJouees = jeu.manches[0] + jeu.manches[1];
+  if (manchesJouees > 0)
+    verifier("des rochers à partir de la deuxième manche", jeu.debris.length > 0,
+      jeu.debris.length + " rochers après " + manchesJouees + " manche(s)");
+  else
+    verifier("aucun rocher en première manche", jeu.debris.length === 0,
+      "la première manche se joue sans encombrement");
   {
     /* ils doivent tourner AUTOUR, pas être collés au trou */
     const dists = jeu.debris.map(d => {
