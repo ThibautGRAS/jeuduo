@@ -176,6 +176,20 @@ Une clé secrète Metered a été publiée dans un dépôt public avant d'être 
 et régénérée. Distinguer les identifiants **conçus pour le client** (TURN
 statiques) des clés serveur. Le dépôt est public : rien de sensible dedans.
 
+**Un `<audio>` créé hors geste utilisateur ne joue pas sur iOS, et se tait sans
+prévenir.** Les clips vocaux arrivaient bien, mais `new Audio(url).play()`
+partait d'un callback réseau : Safari refusait, et le `.catch(() => {})` avalait
+le refus. La bannière « VOUS PARLE » s'affichant juste après, tout semblait
+fonctionner côté émetteur comme côté récepteur. Passer par l'`AudioContext`
+déjà débloqué au premier tap, qui n'est pas soumis à cette restriction. Règle
+générale : un `catch` vide sur une promesse de lecture masque précisément le
+diagnostic dont on aura besoin.
+
+**Une capture micro ouverte bascule la sortie iOS sur l'écouteur d'oreille.**
+Tant que `getUserMedia({audio:true})` tient un flux, le haut-parleur est
+abandonné et tout le son du jeu faiblit. Ne tenir le flux que pendant la
+fenêtre d'enregistrement, et couper les pistes ensuite.
+
 ---
 
 ## 3bis. Palmarès sans serveur
@@ -293,3 +307,4 @@ entre proches.
 | 14.0 → 14.3 | Pause partagée valable en réseau, clavier, bouton unique |
 | 14.4 | Rochers à partir de la manche 2, relance automatique à 14 s |
 | 14.5 | Lentille composée hors écran : elle ne disparaît plus après quelques secondes |
+| 14.6 | Clips vocaux lus par l'AudioContext, micro relâché entre deux points |
