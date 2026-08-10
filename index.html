@@ -418,6 +418,7 @@ canvas{
       <button class="btnMode secondaire" data-mode="arcade">Arcade</button>
       <button class="btnMode secondaire" data-mode="classique">Classique</button>
       <button class="btnMode secondaire" data-mode="gravite">Gravité</button>
+      <button class="btnMode secondaire" data-mode="relais">Relais</button>
     </div>
     <div class="aideMode" id="aideMode">Orbes, blocs, vices et arènes à thème.</div>
     <h2>GRAPHISMES</h2>
@@ -464,7 +465,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v11.5 · 2026-08-09</div>
+  <div id="version">DUO v12.0 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -492,6 +493,7 @@ canvas{
         <b class="c">DÉPLACEMENT</b> — Glissez pour bouger votre raquette. Vous êtes toujours en bas, en cyan.<br>
         <b class="c">MODES</b> — <b>Arcade</b> : orbes, blocs, vices et matières d'arène. <b>Classique</b> : duel pur, sans aucun de ces éléments — mais vous gardez le décor et la musique de l'arène de votre choix.<br>
         <b class="v">GRAVITÉ</b> — Chacun projette un puits d'attraction dans la moitié adverse, à l'aplomb de sa propre raquette. Bouger sert donc à défendre <i>et</i> à dévier la balle de l'autre : à vous de choisir ce qui prime.<br>
+        <b class="o">RELAIS</b> — Le mode coopératif : personne ne marque, vous gardez une seule balle en vie à deux. Elle accélère à chaque renvoi et franchit un palier tous les dix échanges. Le record est commun.<br>
         <b class="c">MANCHES</b> — 5 points gagnent une manche ; le nombre de manches gagnantes se règle au menu. À 4-4 : <b class="f">MORT SUBITE</b>, le terrain rétrécit et les orbes disparaissent.<br>
         <b class="c">LIFT</b> — Fouettez la raquette à l'impact : la balle part courbée, bien plus rapide, et si le geste est franc elle <b>décolle et survole les blocs</b> (halo doré, ombre qui s'écarte).<br>
         <b class="c">SMASH</b> — Raquette immobile 1 s : elle se charge et vire à l'<span style="color:#FBBF24">or</span>. La frappe suivante part à pleine puissance.<br>
@@ -595,7 +597,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "11.5";
+const VERSION = "12.0";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -618,7 +620,21 @@ const MODES = {
   arcade:    { bonus: true,  obstacles: true,  vices: true,  degats: true,  puits: false },
   classique: { bonus: false, obstacles: false, vices: false, degats: false, puits: false },
   gravite:   { bonus: false, obstacles: false, vices: false, degats: true,  puits: true },
+  relais:    { bonus: false, obstacles: false, vices: false, degats: true,  puits: false, coop: true },
 };
+
+/* ---------- mode RELAIS ----------
+   Le seul mode où l'on ne joue pas l'un CONTRE l'autre : à deux, garder une
+   seule balle en vie le plus longtemps possible. Pas de score, pas de manche —
+   un compteur commun, une balle qui accélère, et un record partagé. */
+const RELAIS_ACCEL = 1.035;        /* par renvoi */
+const RELAIS_PALIER = 10;          /* un cran tous les dix échanges */
+function lireRecordRelais(){ return lireRecords().relais || 0; }
+function ecrireRecordRelais(v){
+  const r = lireRecords();
+  if (v > (r.relais || 0)){ r.relais = v; ecrireRecords(r); return true; }
+  return false;
+}
 
 /* ---------- mode GRAVITÉ ----------
    Chaque joueur projette un puits d'attraction dans la moitié ADVERSE, à
@@ -1427,6 +1443,7 @@ function gestionnaireConnexion(c){
 const AIDE_MODE = {
   arcade: "Orbes, blocs destructibles, vices et 5 arènes tirées au sort.",
   gravite: "Chaque joueur projette un puits d'attraction chez l'adversaire, à l'aplomb de sa raquette. Se placer, c'est à la fois défendre et dévier la balle de l'autre.",
+  relais: "Coopératif : à deux, gardez une seule balle en vie le plus longtemps possible. Elle accélère sans arrêt, et le record est commun.",
   classique: "Duel pur : ni orbe, ni bloc, ni vice. Le décor et la musique de l'arène restent, la balle accélère pour éviter les échanges interminables.",
 };
 function majReglages(){
@@ -2358,6 +2375,14 @@ function jouerFx(k, x, y, extra){
   }
   if (k === "mur"){ explosion(x, y, "#8AB4FF", 7, 2.2); sonMur(); }
   if (k === "survol"){ annoncer("BALLE LIFTÉE — ELLE SURVOLE", CO_OR); }
+  if (k === "relaisFin" && !estHote){ rebondsEchange = Number(extra) || 0; finirRelais(); }
+  if (k === "palier"){
+    annoncer("PALIER " + extra, CO_OR);
+    secousse = Math.max(secousse, 7);
+    explosion(x, y, "#FBBF24", 26, 4);
+    bip(660, 0.14, "square", 0.3, 990);
+    setTimeout(() => bip(990, 0.18, "square", 0.28, 1320), 110);
+  }
   if (k === "arcOn"){ sonArcOn(); }
   if (k === "arc"){
     explosion(x, y, "#C4B5FD", 22, 4.2);
@@ -2820,6 +2845,16 @@ function physique(){
     if (b.y < -30) aMarquer.push({ b, qui: 0 });
   }
 
+  if (cfgMode().coop && aMarquer.length){
+    /* coopératif : personne ne marque, la série s'arrête là */
+    for (const m of aMarquer){
+      const idx = balles.indexOf(m.b);
+      if (idx >= 0) balles.splice(idx, 1);
+      fxLocal("but", m.b.x, Math.max(20, Math.min(HAUT-20, m.b.y)));
+    }
+    finirRelais();
+    return;
+  }
   for (const m of aMarquer){
     const idx = balles.indexOf(m.b);
     if (idx >= 0) balles.splice(idx, 1);
@@ -2828,7 +2863,7 @@ function physique(){
     majScore(true);
     fxLocal("but", m.b.x, Math.max(20, Math.min(HAUT-20, m.b.y)));
   }
-  if (aMarquer.length){
+  if (aMarquer.length && !cfgMode().coop){
     if (etat.score[0] >= SCORE_MANCHE || etat.score[1] >= SCORE_MANCHE){
       finDeManche(etat.score[0] >= SCORE_MANCHE ? 0 : 1);
     } else if (balles.length === 0){
@@ -2904,6 +2939,15 @@ function frapper(b, xRaq, largeur, sensY, vitRaq, frappeur){
   rebondsEchange++;
   noterEchange(rebondsEchange);
   verifierDefi();
+  if (cfgMode().coop){
+    /* la balle accélère à chaque renvoi : la série finit toujours par tomber */
+    const n = Math.hypot(b.vx, b.vy) || 1;
+    const vc = Math.min(n * RELAIS_ACCEL, VIT_MAX_ECLAIR);
+    b.vx = b.vx / n * vc; b.vy = b.vy / n * vc;
+    majScore(false);
+    if (rebondsEchange % RELAIS_PALIER === 0)
+      fxLocal("palier", LARG/2, HAUT/2, String(rebondsEchange / RELAIS_PALIER + 1));
+  }
   if (!enFeu && rebondsEchange >= FEU_SEUIL){
     enFeu = true;
     fxLocal("feu", b.x, b.y);
@@ -3194,8 +3238,35 @@ btnRevanche.addEventListener("click", () => {
   btnRevanche.disabled = true;
   setTimeout(() => btnRevanche.disabled = false, 1200);
 });
+/* Fin de série : pas de vainqueur, un compteur commun et un record partagé. */
+function finirRelais(){
+  if (phase === "fin") return;
+  phase = "fin";
+  const tenu = rebondsEchange;
+  const record = lireRecordRelais();
+  const battu = ecrireRecordRelais(tenu);
+  masquerPanneaux();
+  voile.classList.remove("cache");
+  voileTitre.textContent = String(tenu);
+  voileTitre.style.background = "linear-gradient(100deg,#FBBF24,#F471B5)";
+  voileTitre.style.filter = "drop-shadow(0 0 26px rgba(251,191,36,.55))";
+  voileSous.textContent = tenu > 1 ? "ÉCHANGES TENUS À DEUX" : "ÉCHANGE TENU";
+  $("voilePhrase").textContent = battu
+    ? "NOUVEAU RECORD ! L'ancien tenait à " + record + "."
+    : (record ? "Votre record commun : " + record + " échanges." : "");
+  $("voileRecords").classList.add("cache");
+  btnRevanche.textContent = "Nouvelle série";
+  btnRevanche.classList.remove("cache");
+  $("btnMenu").classList.remove("cache");
+  $("btnPartage").classList.remove("cache");
+  lancerDecompteRelance();
+  sonFin(battu);
+  if (estHote && !modeSolo) envoyerFx("relaisFin", LARG/2, HAUT/2, String(tenu));
+}
+
 function lancerRevanche(){
   arreterDecompteRelance();
+  if (cfgMode().coop){ rebondsEchange = 0; btnRevanche.textContent = "Revanche"; }
   $("btnMenu").classList.add("cache");
   $("btnPartage").classList.add("cache");
   duelEnregistre = false;
@@ -3258,6 +3329,12 @@ function majNoms(){
 }
 
 function majScore(pop){
+  if (cfgMode().coop){
+    /* pas de score en coopératif : un seul compteur commun */
+    pts1.innerHTML = '<span class="pop" style="color:var(--or)">' + rebondsEchange + '</span>';
+    pts2.innerHTML = '';
+    return;
+  }
   const [sH, sI] = etat.score;
   const g = estHote ? sH : sI, d = estHote ? sI : sH;
   const mg = estHote ? manches[0] : manches[1];
