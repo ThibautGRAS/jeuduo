@@ -104,6 +104,15 @@ héros se fait en échangeant deux lignes.
 file à zéro flottait au-dessus de l'enquête, qui dessine le sien sur le
 canevas.
 
+### Des personnages à la mauvaise échelle ont l'air collés
+Ils étaient à 0,46 de la hauteur du décor, soit un mètre trente dans une
+pièce de deux mètres cinquante. Aucun réglage d'ombre ou de teinte ne
+rattrape ça : c'est l'échelle qu'il faut mesurer sur le décor, pas
+ajuster à l'œil. Pièce = 88 % de l'image, adulte = 70 % de la pièce,
+donc 0,62. Le reste — deux ombres, dont une courte au contact des pieds,
+et un voile chaud posé après les personnages — ne fait que finir le
+travail.
+
 ### Aucun chemin tactile vers la fin de partie
 L'accusation n'était liée qu'à la touche `A`, et son mode d'emploi
 n'apparaissait qu'à l'intérieur du dossier. Sur téléphone, on pouvait

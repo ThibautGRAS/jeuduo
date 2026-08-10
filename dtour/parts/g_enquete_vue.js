@@ -36,6 +36,17 @@ const EnqVue = {
     this.dessinerInspecteurs();
     if (HortenseApp.visible()) this.dessinerHortense();
     if (E2.pizza) this.dessinerPizza();
+
+    /* La lumière de l'appartement est chaude, les sprites sont neutres :
+       sans ce voile posé APRÈS les personnages, ils se détachent du
+       décor comme des découpages. C'est la même leçon qu'au niveau 1. */
+    ctx.fillStyle = "rgba(255,168,88,.11)";
+    ctx.fillRect(-trem, 0, L + Math.abs(trem) * 2, H);
+    const vig = ctx.createRadialGradient(L / 2, H * 0.52, H * 0.35, L / 2, H * 0.52, H * 1.05);
+    vig.addColorStop(0, "rgba(10,6,2,0)");
+    vig.addColorStop(1, "rgba(10,6,2,.34)");
+    ctx.fillStyle = vig;
+    ctx.fillRect(-trem, 0, L + Math.abs(trem) * 2, H);
     ctx.restore();
 
     for (const p of Effets.paroles){
@@ -106,8 +117,15 @@ const EnqVue = {
       if (!img || !img.naturalWidth) continue;
       const px = this.ex(s.x);
       if (px < -140 || px > Camera.L + 140) continue;
-      const h = H * (s.id === "chat" ? 0.16 : 0.30);
+      /* Les suspects sont des bustes, pas des corps entiers : on les
+         cale sur la hauteur d'un buste assis, pas sur celle d'un
+         personnage debout. */
+      const h = H * (s.id === "chat" ? 0.19 : 0.36);
       const l = h * img.naturalWidth / img.naturalHeight;
+      const g3 = ctx.createRadialGradient(px, this.ey(s.y) + h * 0.46, 0, px, this.ey(s.y) + h * 0.46, h * 0.34);
+      g3.addColorStop(0, "rgba(24,14,6,.30)"); g3.addColorStop(1, "rgba(24,14,6,0)");
+      ctx.fillStyle = g3;
+      ctx.beginPath(); ctx.ellipse(px, this.ey(s.y) + h * 0.46, h * 0.34, h * 0.07, 0, 0, 6.2832); ctx.fill();
       ctx.drawImage(img, px - l / 2, this.ey(s.y) - h * 0.5, l, h);
     }
   },
@@ -133,10 +151,15 @@ const EnqVue = {
       const l = h * img.naturalWidth / img.naturalHeight;
       const yBase = ins.sale > 0 ? sol - haut * 0.55 : sol;
 
-      const g = ctx.createRadialGradient(px, sol, 0, px, sol, haut * 0.22);
-      g.addColorStop(0, "rgba(20,14,10,.34)"); g.addColorStop(1, "rgba(20,14,10,0)");
+      /* Deux ombres : une large et douce pour asseoir la silhouette dans
+         la pièce, une courte et franche au contact des pieds. Sans la
+         seconde, le personnage flotte à un centimètre du parquet. */
+      const g = ctx.createRadialGradient(px, sol, 0, px, sol, haut * 0.26);
+      g.addColorStop(0, "rgba(24,14,6,.40)"); g.addColorStop(1, "rgba(24,14,6,0)");
       ctx.fillStyle = g;
-      ctx.beginPath(); ctx.ellipse(px, sol, haut * 0.22, haut * 0.05, 0, 0, 6.2832); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(px, sol, haut * 0.26, haut * 0.055, 0, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = "rgba(20,12,6,.34)";
+      ctx.beginPath(); ctx.ellipse(px, sol, haut * 0.10, haut * 0.020, 0, 0, 6.2832); ctx.fill();
 
       ctx.save();
       ctx.translate(px, yBase - bob);

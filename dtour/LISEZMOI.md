@@ -31,10 +31,31 @@ information, pas une serrure.
 Une courte introduction — cinq écrans, six secondes — puis l'enquête :
 seize meubles, six indices à réunir, cinq minutes.
 
+**Échelle.** Un adulte fait environ 70 % de la hauteur sous plafond, et
+la pièce occupe 88 % de l'image : les inspecteurs mesurent donc 0,62 de
+la hauteur du décor. Ce n'est pas un chiffre au jugé — à 0,46, ils
+faisaient un mètre trente et avaient l'air collés sur une carte postale.
+Deux ombres les asseyent dans la pièce, une large et douce, une courte
+et franche au contact des pieds, et un voile chaud posé **après** eux
+les met à la lumière de l'appartement.
+
 **Commandes.** `←` `→` marcher, `E` inspecter ou interroger, `TAB`
 changer d'inspecteur, `ESPACE` action contextuelle et esquive, `D` le
 dossier, `A` accuser. Au doigt : quatre grandes touches sous les pouces,
 celle du milieu devenant **ESQUIVER** quand la tarte arrive.
+
+**Ils se parlent.** Trouver un indice déclenche un échange à deux voix :
+celui qui fouille annonce, l'autre commente. Un mot en entrant dans
+chaque pièce, une fois par partie. Et de loin en loin, quand on les
+laisse tranquilles, ils bavardent. Tout est cadencé par le chrono du
+jeu, jamais par `setTimeout`.
+
+**Les trois scénarios se voient enfin.** Au quatrième indice, les deux
+inspecteurs formulent la piste — « Rien n'a été volé. Tout a été
+rangé. » — et la découverte de la pizza a sa réplique propre. Surtout,
+interroger la bonne personne avec quatre indices en poche fait sauter
+une contradiction, une seule fois par partie : c'est ce qui donne un
+intérêt à l'interrogatoire au-delà de la réplique amusante.
 
 **Les deux ne servent pas à la même chose.** Pierre-François analyse :
 trois des dix indices ne se lisent qu'avec lui, et ils restent sur place

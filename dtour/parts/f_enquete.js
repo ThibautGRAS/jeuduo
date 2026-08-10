@@ -24,8 +24,12 @@ const ENQ_DUREE = 300;              /* cinq minutes */
 const ENQ_OBJECTIF = 6;             /* indices à réunir */
 const ENQ_PORTEE = 0.026;           /* distance d'interaction, en fraction d'image */
 const ENQ_MARCHE = 0.20;            /* fraction d'image parcourue par seconde */
-const ENQ_LIGNE = 0.925;
-const ENQ_TAILLE = 0.46;
+const ENQ_LIGNE = 0.920;   /* la ligne de sol du salon, relevée sur le décor */
+/* Un adulte fait environ 70 % de la hauteur sous plafond, et la pièce
+   occupe 88 % de l'image : 0,62 et pas un chiffre au jugé. À 0,46, les
+   inspecteurs mesuraient un mètre trente et avaient l'air collés sur
+   une carte postale plutôt que debout dans le salon. */
+const ENQ_TAILLE = 0.62;
 const ENQ_FOUILLE = 0.75;
 const ENQ_MAUVAISE = 20;            /* secondes perdues sur une accusation ratée */
 const ENQ_TARTE = 10;               /* secondes perdues sur une tarte reçue */
@@ -80,6 +84,63 @@ const INDICES = [
   { id:"part",      sprite:"pizza_part",    nom:"Part abandonnée",
     analyse:"Une part entamée puis reposée. Quelqu'un a été dérangé.", brut:"Une part ! On peut la manger ?" },
 ];
+
+/* ---------- ce que l'autre en dit ----------
+   Trouver un indice déclenche un échange à deux voix : celui qui fouille
+   annonce, l'autre commente. C'est ce qui fait qu'ils ont l'air de
+   travailler ensemble plutôt que de se relayer. */
+const ECHOS = {
+  sauce:["Tiède ? Donc récent.", "Ne touche pas. Enfin, trop tard."],
+  chorizo:["Coupé à la main. Personne ne fait ça.", "Moi je l'aurais mangée entière."],
+  miettes:["Vers la droite, tu es sûr ?", "Quelqu'un est parti par là."],
+  fromage:["Trente minutes. On l'a raté de peu.", "On était là il y a trente minutes."],
+  pattes:["Un félin. On en connaît un.", "Il est juste là. Il nous regarde."],
+  serviette:["Vite, et mal.", "Un coupable pressé, c'est déjà quelque chose."],
+  ticket:["19 h 42. Note-le.", "Je note. Enfin, je retiens."],
+  assiette:["Jamais rapportée. Ça en dit long.", "Ça en dit surtout sur cet appartement."],
+  boite:["Ouverte ici. Pas à la cuisine.", "Donc on a mangé debout. Comme des sauvages."],
+  part:["Reposée, pas jetée. On l'a dérangé.", "Ou il a eu honte."],
+};
+
+/* Un mot en entrant dans chaque pièce, une fois par partie. */
+const PIECES = [
+  { id:"entree",  jusqua:0.19, ligne:"L'entrée. On commence par le commencement." },
+  { id:"salon",   jusqua:0.45, ligne:"Le salon. C'est ici que ça s'est joué." },
+  { id:"cuisine", jusqua:0.80, ligne:"La cuisine. Le point de départ, en théorie." },
+  { id:"chambre", jusqua:1.01, ligne:"La chambre. Personne ne mange une pizza ici." },
+];
+
+/* Remarques d'attente : ils se parlent quand on les laisse tranquilles. */
+const BAVARDAGES = [
+  [0, "On avance ?"], [1, "On avance."],
+  [1, "J'ai faim."], [0, "Ce n'est pas le sujet."],
+  [0, "Reprenons depuis le début."], [1, "On n'a pas encore de début."],
+  [1, "Et si personne ne l'avait prise ?"], [0, "Alors elle serait là."],
+  [0, "Note tout."], [1, "Je n'ai pas de carnet."],
+];
+
+/* Ce que le scénario retenu laisse entendre, une fois qu'on a de quoi
+   raisonner. C'est la seule chose qui distingue les trois parties du
+   point de vue du joueur — sans elle, le générateur ne se voyait pas. */
+const PISTES = {
+  A:[[0, "Quelqu'un est entré, a mangé, et est reparti."], [1, "Donc quelqu'un d'ici."]],
+  B:[[0, "Rien n'a été volé. Tout a été rangé."], [1, "C'est pire."]],
+  C:[[0, "Ce n'est pas une main qui a fait ça."], [1, "Ne me dis pas que c'est le chat."]],
+};
+/* La contradiction : ce que Thibaut relève quand il interroge la bonne
+   personne avec assez d'indices en poche. C'est ce qui donne un intérêt
+   à l'interrogatoire, au-delà de la réplique amusante. */
+const CONTRADICTIONS = {
+  A:"Ça ne colle pas avec le ticket. Vous étiez là avant.",
+  B:"Personne n'a rien pris. Mais quelqu'un a rangé.",
+  C:"Vous n'avez pas de mains. C'est embêtant.",
+};
+
+const TROUVAILLE = {
+  A:[[0, "Elle était cachée. Mal."], [1, "On sait donc qui range mal."]],
+  B:[[0, "Elle n'a jamais quitté l'appartement."], [1, "Elle a juste changé de meuble."]],
+  C:[[0, "Poussée jusqu'ici. Regarde les traces."], [1, "Risoto, on doit parler."]],
+};
 
 /* ---------- ce qu'on trouve quand on ne trouve rien ---------- */
 const RIEN = {
@@ -206,6 +267,7 @@ const HortenseApp = {
     this.vise = chef.x + cote * 0.08;
     this.etat = ETAT_H2.ENTREE;
     Enquete.dire("Un silence. Puis quelqu'un.", 1.6);
+    Enquete.dialogue([[1 - this.cible, "Attends. Tu entends ?"]], 0.4);
     Sons.hortenseEntre();
   },
   majorer(dt){
@@ -298,7 +360,7 @@ const Enquete = {
     Affaire.generer();
     Dossier.raz();
     HortenseApp.raz();
-    for (const s of SUSPECTS) s.vus = 0;
+    for (const s of SUSPECTS){ s.vus = 0; s.coince = false; }
     this.actif = true;
     this.restant = ENQ_DUREE;
     this.indices = 0; this.fouilles = 0; this.fausses = 0;
@@ -308,6 +370,10 @@ const Enquete = {
     this.tarteRecue = false; this.tarteEsquivee = false;
     this.gele = 0; this.badge = null; this.badgeT = 0;
     this.actifIdx = 0;
+    this.fileDial = [];
+    this.piecesVues = {};
+    this.prochainBavardage = hasard(18, 30);
+    this.pisteDite = false;
 
     this.zones = ZONES.map(z => ({
       ref:z, fouillee:false, indice:Affaire.plan[z.id] || null,
@@ -325,6 +391,23 @@ const Enquete = {
   changer(){ if (this.actif){ this.actifIdx = 1 - this.actifIdx; Sons.clic(); } },
   marcher(d){ if (this.actif && !this.dossierOuvert && !this.accusation) this.actifIns().marche = d; },
   dire(txt, duree){ this.message = txt; this.messageT = 0; this.messageDuree = duree || 1.8; },
+
+  /* Une réplique après l'autre, cadencées par le chrono du jeu. Les
+     empiler d'un coup les rendait illisibles ; un setTimeout les aurait
+     laissées courir pendant le dossier. */
+  dialogue(paires, delai){
+    this.fileDial = (this.fileDial || []).concat(paires.map((p, i) => ({
+      qui:p[0], txt:p[1], quand:(delai || 0) + i * 1.5,
+    })));
+  },
+  majDialogue(dt){
+    if (!this.fileDial || !this.fileDial.length) return;
+    for (const r of this.fileDial) r.quand -= dt;
+    while (this.fileDial.length && this.fileDial[0].quand <= 0){
+      const r = this.fileDial.shift();
+      Effets.parole({ heros:this.inspecteurs[r.qui].heros }, r.txt, 2.0);
+    }
+  },
   poserBadge(nom){ this.badge = nom; this.badgeT = 0; },
 
   /* --------- ce qui est à portée --------- */
@@ -384,6 +467,7 @@ const Enquete = {
       this.gele = 0.15;
       this.poserBadge("pizza");
       Effets.parole({ heros:ins.heros }, "La voilà.", 2.0);
+      this.dialogue(TROUVAILLE[Affaire.scenario] || TROUVAILLE.A, 1.6);
       this.dire("Il reste à désigner qui. Bouton ACCUSER.", 3.2);
       Sons.tarteEsquive(); Sons.palier();
       ins.cible = -1;
@@ -407,10 +491,15 @@ const Enquete = {
       this.gele = 0.15;
       this.poserBadge("indice");
       Effets.parole({ heros:ins.heros }, pf ? ind.analyse : ind.brut, 2.4);
+      const echo = ECHOS[ind.id];
+      if (echo) this.dialogue([[1 - this.actifIdx, echo[this.estPF(ins) ? 0 : 1]]], 1.4);
       Sons.reussite(Math.min(7, this.indices));
       this.secousse = 0.25;
       if (this.indices === 3) this.dire("Assez pour accuser. Mais où est la pizza ?", 2.8);
-      else if (this.indices === 4) this.dire("On commence à avoir quelque chose.", 2.4);
+      else if (this.indices === 4 && !this.pisteDite){
+        this.pisteDite = true;
+        this.dialogue(PISTES[Affaire.scenario] || PISTES.A, 3.0);
+      }
     } else {
       z.fouillee = true; this.fouilles++;
       this.fausses++;
@@ -432,6 +521,15 @@ const Enquete = {
     s.vus++;
     Effets.parole({ heros:ins.heros }, d, 2.4);
     Sons.bip(520, 0.08, "sine", 0.1);
+    /* Assez d'indices en poche, et la bonne personne en face : la
+       contradiction saute aux yeux. C'est la seule récompense concrète
+       de l'interrogatoire, et elle ne tombe qu'une fois. */
+    if (this.indices >= 4 && s.id === Affaire.bonneReponse() && !s.coince){
+      s.coince = true;
+      this.dialogue([[this.actifIdx, CONTRADICTIONS[Affaire.scenario] || CONTRADICTIONS.A]], 1.6);
+      this.poserBadge("suspect");
+      Sons.reussite(6);
+    }
   },
 
   /* --------- dossier et accusation --------- */
@@ -501,6 +599,7 @@ const Enquete = {
     this.restant -= ENQ_TARTE;
     this.secousse = 0.6;
     this.poserBadge("splat");
+    this.dialogue([[i, "..."], [1 - i, "Ce n'est pas la pizza non plus."]], 0.8);
     Sons.tarteImpact();
   },
   esquiver(){
@@ -508,6 +607,7 @@ const Enquete = {
     this.tarteEsquivee = true;
     Score.points += ENQ_ESQUIVE_PTS;
     this.poserBadge("esquive");
+    this.dialogue([[this.actifIdx, "Encore elle."], [1 - this.actifIdx, "Ce n'est pas la pizza, ça."]], 0.6);
     Sons.tarteEsquive();
     /* En repartant, elle laisse tomber quelque chose. Le doute est
        permis ; la réponse, non. */
@@ -570,6 +670,22 @@ const Enquete = {
       }
       if (ins.sale > 0) ins.sale -= dt;
     }
+
+    /* un mot en entrant dans une pièce, une seule fois */
+    const piece = PIECES.find(p => chef.x < p.jusqua);
+    if (piece && !this.piecesVues[piece.id]){
+      this.piecesVues[piece.id] = true;
+      if (this.fouilles > 0 || piece.id !== "entree") this.dialogue([[this.actifIdx, piece.ligne]], 0.2);
+    }
+
+    /* et de loin en loin, ils se parlent */
+    this.prochainBavardage -= dt;
+    if (this.prochainBavardage <= 0 && !(this.fileDial && this.fileDial.length)){
+      this.prochainBavardage = hasard(22, 38);
+      const k = entier(0, BAVARDAGES.length / 2 - 1) * 2;
+      this.dialogue([BAVARDAGES[k], BAVARDAGES[k + 1]], 0);
+    }
+    this.majDialogue(dt);
 
     HortenseApp.majorer(dt);
     Camera.suivreEnq(chef.x, dt);

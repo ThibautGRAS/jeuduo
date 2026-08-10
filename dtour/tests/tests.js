@@ -595,6 +595,41 @@ if (D){
   verifier("et l'affaire est gagnée", D.Enquete.fini && D.Enquete.fini.gagne);
   verifier("le score récompense le temps restant", D.Score.points > 0, "score " + D.Score.points);
 
+  /* dialogues et scénarios */
+  titre("Dialogues et scénarios");
+  lancer2();
+  D.Enquete.dialogue([[0, "Un."], [1, "Deux."]], 0);
+  for (let i = 0; i < 6; i++) D.Jeu.pas(1 / 60);
+  egal("la première réplique part tout de suite", D.Effets.paroles.length, 1);
+  for (let i = 0; i < 60 * 2; i++) D.Jeu.pas(1 / 60);
+  verifier("la seconde arrive après, pas en même temps",
+    D.Enquete.fileDial.length === 0, "il reste " + D.Enquete.fileDial.length + " réplique(s)");
+  verifier("chaque scénario a sa piste et sa trouvaille",
+    ["A", "B", "C"].every(sc => D.PISTES[sc] && D.TROUVAILLE[sc] && D.CONTRADICTIONS[sc]));
+  verifier("chaque indice a un écho de l'autre inspecteur",
+    D.INDICES.every(i => D.ECHOS[i.id] && D.ECHOS[i.id].length === 2));
+  verifier("les quatre pièces ont leur réplique d'entrée",
+    D.PIECES.length === 4 && D.PIECES.every(p => p.ligne && p.jusqua > 0));
+  verifier("le bavardage va par paires", D.BAVARDAGES.length % 2 === 0);
+
+  /* la contradiction ne tombe qu'une fois, et sur la bonne personne */
+  lancer2();
+  D.Enquete.indices = 5;
+  D.Enquete.actifIdx = D.Heros.findIndex(h => h.sprite === "thibaut");
+  const coupable = D.SUSPECTS.findIndex(s => s.id === D.Affaire.bonneReponse());
+  if (coupable >= 0){
+    D.Enquete.fileDial = [];
+    D.Enquete.interroger(coupable);
+    verifier("interroger le coupable révèle la contradiction", D.Enquete.fileDial.length === 1);
+    D.Enquete.fileDial = [];
+    D.Enquete.interroger(coupable);
+    verifier("elle ne tombe qu'une fois", D.Enquete.fileDial.length === 0);
+  } else ok("scénario sans coupable : rien à contredire");
+
+  /* la taille des inspecteurs suit la hauteur sous plafond */
+  verifier("un inspecteur mesure environ 70 % de la pièce",
+    D.ENQ_TAILLE > 0.55 && D.ENQ_TAILLE < 0.70, "ENQ_TAILLE = " + D.ENQ_TAILLE);
+
   /* on doit pouvoir conclure au doigt, sans clavier */
   titre("Conclure sans clavier");
   lancer2();
