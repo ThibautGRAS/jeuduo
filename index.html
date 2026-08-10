@@ -464,7 +464,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v11.3 · 2026-08-09</div>
+  <div id="version">DUO v11.4 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -595,7 +595,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "11.3";
+const VERSION = "11.4";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -625,10 +625,13 @@ const MODES = {
    l'aplomb de sa propre raquette. Déplacer sa raquette sert donc à deux choses
    à la fois : se placer pour défendre, et tordre la trajectoire chez l'autre.
    Un seul geste, deux enjeux — et rien de nouveau à apprendre.
-   Calibré par simulation : 182 px d'écart au point d'arrivée entre un puits
-   à gauche et un puits à droite, soit 1,75 largeur de raquette. */
-const PUITS_FORCE = 1.0, PUITS_PORTEE = 265, PUITS_HAUTEUR = 0.30;
-const PUITS_R_VISU = 122;          /* rayon de la déformation visible */
+   Calibré par simulation : 136 px d'écart au point d'arrivée entre un puits
+   à gauche et un puits à droite, soit 1,3 largeur de raquette. */
+const PUITS_FORCE = 0.85, PUITS_PORTEE = 255, PUITS_HAUTEUR = 0.30;
+/* Le rayon visible n'a rien à voir avec la portée physique : à 122 px le puits
+   couvrait presque la moitié de la largeur du terrain et on ne voyait plus
+   jouer. Réduit à 62, il se lit sans masquer la balle. */
+const PUITS_R_VISU = 62;
 const cvLentille = document.createElement("canvas");
 cvLentille.width = PUITS_R_VISU * 2; cvLentille.height = PUITS_R_VISU * 2;
 const ctxLentille = cvLentille.getContext("2d");
@@ -4343,14 +4346,16 @@ function deformerFond(Y, t){
     /* on garde l'alignement même quand le puits frôle un bord */
     ctxLentille.drawImage(cv, ix0, iy0, ix1 - ix0, iy1 - iy0,
                               ix0 - sx, iy0 - sy, ix1 - ix0, iy1 - iy0);
-    const N = 14;
+    const N = 18;   /* plus d'anneaux : les frontières se voient moins */
     for (let i = N; i >= 1; i--){
-      const r0 = R * (i - 1) / N, r1 = R * i / N;
+      /* chevauchement d'un pixel : sans lui, chaque frontière d'anneau
+         laissait une couture nette, d'où l'aspect de rouage cranté */
+      const r0 = Math.max(0, R * (i - 1) / N - 1.5), r1 = R * i / N;
       const u = 1 - r1 / R;                        /* 0 au bord, 1 au centre */
-      /* enroulement très marqué près du cœur : c'est lui qui dessine les
-         anneaux concentriques visibles à l'intérieur de la sphère */
-      const angle = 2.7 * Math.pow(u, 2.2) + t * 0.42 * u;
-      const echelle = 1 + 1.15 * u * u;
+      /* Enroulement volontairement doux : les arènes portent un grand cercle
+         peint que le grossissement dédoublait en cercle fantôme. */
+      const angle = 0.9 * Math.pow(u, 2.1) + t * 0.3 * u;
+      const echelle = 1 + 0.3 * u * u;
       ctx.save();
       ctx.beginPath();
       ctx.arc(cx, cy, r1, 0, Math.PI*2);
@@ -4370,7 +4375,7 @@ function deformerFond(Y, t){
    son cœur sans jamais devenir opaque — on continue d'y deviner les anneaux
    concentriques du décor — et un simple liseré marque le bord. */
 function dessinerTrouNoir(x, y, coul, t){
-  const R = 58;                     /* rayon de la sphère */
+  const R = 33;                     /* rayon de la sphère */
   ctx.save();
 
   /* extinction progressive : le fond enroulé reste perceptible au centre */
@@ -4392,23 +4397,10 @@ function dessinerTrouNoir(x, y, coul, t){
   ctx.beginPath(); ctx.arc(x, y, R*0.965, 0, Math.PI*2); ctx.stroke();
 
   /* second anneau très ténu, plus loin : la lumière rasante */
-  ctx.strokeStyle = rgba(coul, 0.16);
-  ctx.lineWidth = 1.4;
-  ctx.beginPath(); ctx.arc(x, y, R*1.1, 0, Math.PI*2); ctx.stroke();
-
-  /* arcs internes : le fond replié sur lui-même, tournant lentement */
-  ctx.save();
-  ctx.beginPath(); ctx.arc(x, y, R*0.92, 0, Math.PI*2); ctx.clip();
   ctx.strokeStyle = rgba(coul, 0.13);
-  ctx.lineWidth = 1;
-  for (let i = 1; i <= 3; i++){
-    const rr = R * (0.30 + i * 0.20);
-    const dep = t * 0.3 * (i % 2 ? 1 : -1);
-    ctx.beginPath();
-    ctx.arc(x, y, rr, dep, dep + Math.PI * 1.35);
-    ctx.stroke();
-  }
-  ctx.restore();
+  ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.arc(x, y, R*1.14, 0, Math.PI*2); ctx.stroke();
+
   ctx.restore();
 }
 
@@ -4419,16 +4411,16 @@ function dessinerPuits(Y, t){
     const coul = couleurJoueur(p.j);
     ctx.save();
     /* halo d'influence : on voit jusqu'où le puits agit */
-    const g = ctx.createRadialGradient(x, y, 40, x, y, PUITS_PORTEE * 0.6);
-    g.addColorStop(0, rgba(coul, 0.13));
-    g.addColorStop(0.5, rgba(coul, 0.05));
+    const g = ctx.createRadialGradient(x, y, 26, x, y, PUITS_PORTEE * 0.55);
+    g.addColorStop(0, rgba(coul, 0.10));
+    g.addColorStop(0.5, rgba(coul, 0.035));
     g.addColorStop(1, rgba(coul, 0));
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(x, y, PUITS_PORTEE * 0.55, 0, Math.PI*2); ctx.fill();
 
     ctx.restore();
     dessinerTrouNoir(x, y, coul, t);
-    bloomCercle(x, y, 74, coul, 0.30);
+    bloomCercle(x, y, 46, coul, 0.26);
   }
 }
 
