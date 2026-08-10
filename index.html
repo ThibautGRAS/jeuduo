@@ -194,7 +194,11 @@ button.choisi{
   border-radius:22px;border:1px solid var(--bord);background:#000;transform:scaleX(-1);
 }
 #capPhoto .rang{display:flex;gap:10px;width:min(74vw,280px)}
-.rangSolo{display:flex;gap:8px}
+/* Les rangées de boutons passent à la ligne : à quatre modes, le dernier
+   sortait de l'écran. */
+.rangSolo{display:flex;gap:8px;flex-wrap:wrap}
+.rangSolo button{flex:1 1 calc(50% - 4px);min-width:0;padding-left:6px;padding-right:6px}
+.rangSolo:has(button:nth-child(3):last-child) button{flex:1 1 calc(33.333% - 6px)}
 .rangSolo button{padding:12px 8px;font-size:13.5px}
 .pulse::after{content:"";display:inline-block;width:6px;height:6px;margin-left:8px;border-radius:50%;background:var(--moi);vertical-align:middle;animation:pulse 1.1s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
@@ -368,6 +372,8 @@ canvas{
 }
 #regles h3{font-size:20px;font-weight:700;letter-spacing:.2em;margin-bottom:2px}
 #reglesCourt{font-size:13px;line-height:1.7;color:var(--texte);max-width:420px;text-align:left}
+.regle{display:block;margin-bottom:2px}
+.regle.hors{display:none}
 #reglesCourt .c{color:var(--moi)} #reglesCourt .o{color:var(--or)}
 #regles #btnPlus{padding:9px 18px;font-size:12.5px}
 #reglesListe{
@@ -505,7 +511,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v12.1 · 2026-08-09</div>
+  <div id="version">DUO v12.2 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -523,31 +529,27 @@ canvas{
 
     <div id="regles" class="panneau">
       <h3>RÈGLES</h3>
-      <div id="reglesCourt">
-        Glissez pour déplacer votre raquette — vous êtes <b class="c">en bas</b>.<br>
-        5 points gagnent une manche. Fouettez à l'impact pour lifter, restez immobile pour charger un smash.<br>
-        Touchez les <b class="o">orbes</b> avec la balle pour déclencher un bonus.
-      </div>
+      <div id="reglesCourt"></div>
       <button id="btnPlus" class="secondaire">Voir toutes les règles</button>
       <div id="reglesListe" class="cache">
-        <b class="c">DÉPLACEMENT</b> — Glissez pour bouger votre raquette. Vous êtes toujours en bas, en cyan.<br>
-        <b class="c">MODES</b> — <b>Arcade</b> : orbes, blocs, vices et matières d'arène. <b>Classique</b> : duel pur, sans aucun de ces éléments — mais vous gardez le décor et la musique de l'arène de votre choix.<br>
-        <b class="v">GRAVITÉ</b> — Chacun projette un puits d'attraction dans la moitié adverse, à l'aplomb de sa propre raquette. Bouger sert donc à défendre <i>et</i> à dévier la balle de l'autre : à vous de choisir ce qui prime.<br>
-        <b class="o">RELAIS</b> — Le mode coopératif : personne ne marque, vous gardez une seule balle en vie à deux. Elle accélère à chaque renvoi et franchit un palier tous les dix échanges. Le record est commun.<br>
-        <b class="c">MANCHES</b> — 5 points gagnent une manche ; le nombre de manches gagnantes se règle au menu. À 4-4 : <b class="f">MORT SUBITE</b>, le terrain rétrécit et les orbes disparaissent.<br>
-        <b class="c">LIFT</b> — Fouettez la raquette à l'impact : la balle part courbée, bien plus rapide, et si le geste est franc elle <b>décolle et survole les blocs</b> (halo doré, ombre qui s'écarte).<br>
-        <b class="c">SMASH</b> — Raquette immobile 1 s : elle se charge et vire à l'<span style="color:#FBBF24">or</span>. La frappe suivante part à pleine puissance.<br>
-        <b class="o">ORBES</b> — Touchez-les avec la balle : le bonus va au dernier frappeur. Agrandir · rétrécir l'autre · éclair · balle double · fantôme · <span style="color:#FB923C">boule de feu</span> (7 s : la balle pulvérise les blocs).<br>
-        <b class="o">ARÈNES</b> — Six arènes, ordre tiré au sort dès la manche 1 : <b>MÉTAL</b> (neutre), <b>GLACE</b> (ralentit), <b>LAVE</b> (accélère), <b>ORAGE</b> (dévie et charge), <b>VIDE</b> (attire la balle), <b>JUNGLE</b> (absorbe l'effet). Décor, musique et physique changent avec elle.<br>
-        <b class="o">BLOCS</b> — Une ou deux bûches mobiles selon l'arène. Elles se fêlent au premier choc mais ne changent jamais de taille et ne peuvent pas être détruites.<br>
-        <b class="o">ÉCLATS</b> — Les petits rochers arrachés aux murs, eux, s'écornent au premier impact et se pulvérisent au second. Une balle bien liftée les survole sans les toucher.<br>
-        <b class="v">ARC ÉLECTRIQUE</b> — Dans l'arène ORAGE, un arc traverse le terrain par intermittence, dans une orientation quelconque. Il se révèle progressivement avant la décharge : toute balle qui le franchit repart dans une direction imprévisible.<br>
-        <b class="f">BALLE EN FEU</b> — 8 rebonds sans point : la balle s'enflamme à vitesse maximale.<br>
-        <b class="o">DÉCOR</b> — À partir de la manche 2, des blocs de la ligne médiane se détachent et dérivent au centre du terrain.<br>
-        <b class="f">DÉGÂTS</b> — Les frappes surpuissantes fissurent les murs : les rebonds y deviennent imprévisibles et des débris sont projetés sur le terrain jusqu'à la fin de la manche.<br>
-        <b class="c">MICRO</b> — Icône 🎙 en bas à droite : une fois activée, votre micro s'ouvre 2 secondes après <i>chaque point</i> pour glisser un mot à l'adversaire. Icône ♪ en bas à gauche : musique.<br>
-        <b class="v">VICES</b> — Le gagnant d'une manche choisit un vice <i>secret</i> : inversion, brouillard ou gravité. Il se déclenche tout seul, une seule fois, à un moment imprévisible d'une manche suivante — et frappe l'adversaire sans prévenir.
-      </div>
+          <span class="regle" data-modes="tous"><b class="c">DÉPLACEMENT</b> — Glissez pour bouger votre raquette. Vous êtes toujours en bas, en cyan.<br></span>
+          <span class="regle" data-modes="tous"><b class="c">MODES</b> — <b>Arcade</b> : orbes, blocs, vices et matières d'arène. <b>Classique</b> : duel pur, sans aucun de ces éléments — mais vous gardez le décor et la musique de l'arène de votre choix.<br></span>
+          <span class="regle" data-modes="gravite"><b class="v">GRAVITÉ</b> — Chacun projette un puits d'attraction dans la moitié adverse, à l'aplomb de sa propre raquette. Bouger sert donc à défendre <i>et</i> à dévier la balle de l'autre : à vous de choisir ce qui prime.<br></span>
+          <span class="regle" data-modes="relais"><b class="o">RELAIS</b> — Le mode coopératif : personne ne marque, vous gardez une seule balle en vie à deux. Elle accélère à chaque renvoi et franchit un palier tous les dix échanges. Le record est commun.<br></span>
+          <span class="regle" data-modes="arcade classique gravite"><b class="c">MANCHES</b> — 5 points gagnent une manche ; le nombre de manches gagnantes se règle au menu. À 4-4 : <b class="f">MORT SUBITE</b>, le terrain rétrécit et les orbes disparaissent.<br></span>
+          <span class="regle" data-modes="tous"><b class="c">LIFT</b> — Fouettez la raquette à l'impact : la balle part courbée, bien plus rapide, et si le geste est franc elle <b>décolle et survole les blocs</b> (halo doré, ombre qui s'écarte).<br></span>
+          <span class="regle" data-modes="tous"><b class="c">SMASH</b> — Raquette immobile 1 s : elle se charge et vire à l'<span style="color:#FBBF24">or</span>. La frappe suivante part à pleine puissance.<br></span>
+          <span class="regle" data-modes="arcade"><b class="o">ORBES</b> — Touchez-les avec la balle : le bonus va au dernier frappeur. Agrandir · rétrécir l'autre · éclair · balle double · fantôme · <span style="color:#FB923C">boule de feu</span> (7 s : la balle pulvérise les blocs).<br></span>
+          <span class="regle" data-modes="arcade classique gravite relais"><b class="o">ARÈNES</b> — Six arènes, ordre tiré au sort dès la manche 1 : <b>MÉTAL</b> (neutre), <b>GLACE</b> (ralentit), <b>LAVE</b> (accélère), <b>ORAGE</b> (dévie et charge), <b>VIDE</b> (attire la balle), <b>JUNGLE</b> (absorbe l'effet). Décor, musique et physique changent avec elle.<br></span>
+          <span class="regle" data-modes="arcade"><b class="o">BLOCS</b> — Une ou deux bûches mobiles selon l'arène. Elles se fêlent au premier choc mais ne changent jamais de taille et ne peuvent pas être détruites.<br></span>
+          <span class="regle" data-modes="arcade"><b class="o">ÉCLATS</b> — Les petits rochers arrachés aux murs, eux, s'écornent au premier impact et se pulvérisent au second. Une balle bien liftée les survole sans les toucher.<br></span>
+          <span class="regle" data-modes="arcade"><b class="v">ARC ÉLECTRIQUE</b> — Dans l'arène ORAGE, un arc traverse le terrain par intermittence, dans une orientation quelconque. Il se révèle progressivement avant la décharge : toute balle qui le franchit repart dans une direction imprévisible.<br></span>
+          <span class="regle" data-modes="arcade classique gravite"><b class="f">BALLE EN FEU</b> — 8 rebonds sans point : la balle s'enflamme à vitesse maximale.<br></span>
+          <span class="regle" data-modes="tous"><b class="o">DÉCOR</b> — À partir de la manche 2, des blocs de la ligne médiane se détachent et dérivent au centre du terrain.<br></span>
+          <span class="regle" data-modes="arcade classique gravite"><b class="f">DÉGÂTS</b> — Les frappes surpuissantes fissurent les murs : les rebonds y deviennent imprévisibles et des débris sont projetés sur le terrain jusqu'à la fin de la manche.<br></span>
+          <span class="regle" data-modes="tous"><b class="c">MICRO</b> — Icône 🎙 en bas à droite : une fois activée, votre micro s'ouvre 2 secondes après <i>chaque point</i> pour glisser un mot à l'adversaire. Icône ♪ en bas à gauche : musique.<br></span>
+          <span class="regle" data-modes="arcade"><b class="v">VICES</b> — Le gagnant d'une manche choisit un vice <i>secret</i> : inversion, brouillard ou gravité. Il se déclenche tout seul, une seule fois, à un moment imprévisible d'une manche suivante — et frappe l'adversaire sans prévenir.</span>
+        </div>
       <button id="btnLu">LU — JE SUIS PRÊT</button>
       <div class="petit" id="etatLu"></div>
     </div>
@@ -637,7 +639,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "12.1";
+const VERSION = "12.2";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -1782,6 +1784,31 @@ function texteRecords(){
          (r.remontee ? " · REMONTÉE " + r.remontee : "");
 }
 
+/* Le panneau ne montre que ce qui concerne le mode choisi : afficher les orbes
+   en classique, ou les manches en coopératif, ne fait qu'égarer. */
+const RESUME_MODE = {
+  arcade: "Glissez pour déplacer votre raquette — vous êtes <b class=\"c\">en bas</b>.<br>" +
+          "5 points gagnent une manche. Fouettez à l'impact pour lifter, restez immobile pour charger un smash.<br>" +
+          "Touchez les <b class=\"o\">orbes</b> avec la balle pour déclencher un bonus.",
+  classique: "Glissez pour déplacer votre raquette — vous êtes <b class=\"c\">en bas</b>.<br>" +
+          "5 points gagnent une manche. Duel pur : ni orbe, ni bloc, ni vice.<br>" +
+          "Fouettez à l'impact pour lifter, restez immobile pour charger un smash.",
+  gravite: "Glissez pour déplacer votre raquette — vous êtes <b class=\"c\">en bas</b>.<br>" +
+          "Votre <b class=\"v\">puits de gravité</b> apparaît dans la moitié adverse, à l'aplomb de votre raquette.<br>" +
+          "Se placer sert donc à défendre <i>et</i> à dévier la balle de l'autre.",
+  relais: "Glissez pour déplacer votre raquette — vous êtes <b class=\"c\">en bas</b>.<br>" +
+          "<b class=\"o\">Coopératif</b> : personne ne marque, gardez la balle en vie à deux.<br>" +
+          "Elle accélère à chaque renvoi, et un palier tombe tous les dix échanges.",
+};
+function adapterRegles(){
+  const court = document.getElementById("reglesCourt");
+  if (court) court.innerHTML = RESUME_MODE[modeJeu] || RESUME_MODE.arcade;
+  for (const r of document.querySelectorAll(".regle")){
+    const m = r.dataset.modes || "tous";
+    r.classList.toggle("hors", m !== "tous" && m.indexOf(modeJeu) < 0);
+  }
+}
+
 function texteDuels(){
   if (modeSolo || !nomAdverse) return "";
   const s = lireDuels();
@@ -2183,6 +2210,7 @@ function demarrerPartie(){
     envoyerFiable({ t: "ver", v: VERSION });
   }
   phase = "regles";
+  adapterRegles();
   panRegles.classList.remove("cache");
   if (modeSolo){
     elPing.textContent = "IA";
@@ -3051,18 +3079,25 @@ function afficherVersus(){
   pD.innerHTML = photoAdverse ? '<img alt="">' : (modeSolo ? "IA" : "?");
   pD.style.fontFamily = photoAdverse ? "" : '"JetBrains Mono", monospace';
   if (photoAdverse) pD.querySelector("img").src = photoAdverse;
+  const coop = cfgMode().coop;
+  $("vsLogo").textContent = coop ? "&" : "VS";
+  $("vsLogo").style.fontStyle = coop ? "normal" : "italic";
   for (const [id, nom] of [["vsNomG", monNom], ["vsNomD", nomAdv]]){
     const el = $(id);
     el.textContent = nom;
     el.style.fontSize = nom.length > 12 ? "9.5px" : (nom.length > 9 ? "11px" : (nom.length > 6 ? "12.5px" : "14px"));
   }
-  const fmt = "AU MEILLEUR DES " + (2 * MANCHES_GAGNANTES - 1);
+  const rec = lireRecordRelais();
+  const fmt = cfgMode().coop
+    ? (rec ? "COOPÉRATIF · RECORD " + rec : "COOPÉRATIF · PREMIÈRE SÉRIE")
+    : "AU MEILLEUR DES " + (2 * MANCHES_GAGNANTES - 1);
   const arene = (modeJeu === "arcade" && choixArene >= 0 && ARENES[choixArene])
     ? "ARÈNE " + ARENES[choixArene].nom : "";
   /* on n'assemble que les éléments non vides : sinon un séparateur restait
      seul en fin de ligne quand il n'y avait pas d'historique de duels */
   $("vsFormat").textContent =
-    [fmt, modeJeu.toUpperCase(), arene, texteDuels()].filter(Boolean).join(" · ");
+    [fmt, modeJeu.toUpperCase(), arene, cfgMode().coop ? "" : texteDuels()]
+      .filter(Boolean).join(" · ");
   /* on relance les animations en réinjectant les noeuds */
   for (const id of ["vsG", "vsD", "vsLogo", "vsFlash"]){
     const el = $(id);
@@ -3365,7 +3400,9 @@ function basculerPause(){
 
 /* ================= RENDU ================= */
 function majNoms(){
-  elRole.textContent = monNom + (nomAdverse ? " vs " + nomAdverse : (estHote ? " · HÔTE" : " · INVITÉ"));
+  /* en coopératif on joue AVEC l'autre, pas contre */
+  const lien = cfgMode().coop ? " & " : " vs ";
+  elRole.textContent = monNom + (nomAdverse ? lien + nomAdverse : (estHote ? " · HÔTE" : " · INVITÉ"));
 }
 
 function majScore(pop){
