@@ -162,6 +162,22 @@ maintenant les recouvrements en hauteur **jusqu'à un plafond**, puis se
 replie latéralement. Et la mesure d'une bulle est une fonction séparée
 du dessin : deux calculs parallèles auraient fini par divorcer.
 
+### Un détail écrit en dur transforme dix-sept affaires en une seule
+« 19 h 42 » revenait à chaque partie, dans le ticket comme dans la
+contradiction. Les détails sont désormais tirés une fois par affaire et
+insérés par marqueurs `{heure}`, `{livreur}`, `{froid}`… Un seul point
+d'insertion, donc un texte oublié se voit immédiatement : il reste des
+accolades à l'écran. Un test le vérifie sur deux cents tirages.
+
+### Un indice qu'on ne peut pas refermer n'est pas une fausse piste
+Le garnissage puisait dans toute la banque : des traces de pattes
+pouvaient sortir dans une affaire sans chat. Chaque indice signifiant
+porte maintenant une étiquette, chaque affaire aussi, et ils doivent se
+répondre. Attention au piège qui a suivi : filtrer le garnissage a privé
+sept affaires de tout indice réservé à Thibaut, donc jouables avec un
+seul inspecteur. Un test refuse toute affaire dont les étiquettes
+n'admettent pas au moins un indice pour chacun des deux.
+
 ### Deux listes parallèles finissent par se désynchroniser
 Les questions des inspecteurs et les réponses des témoins étaient deux
 tableaux distincts, chacun avec son curseur. On demandait l'heure, on

@@ -522,6 +522,48 @@ if (D){
     }
   }
   verifier("neuf cents tirages sans enquête impossible", genOk, detail);
+  /* Une affaire dont les étiquettes n'admettent aucun indice d'expert ou
+     aucun indice social se jouerait avec un seul inspecteur. */
+  verifier("chaque affaire admet un indice pour chacun des deux",
+    D.SCENARIOS.every(sc => {
+      const tags = sc.tags || [];
+      const ouvert = i => !i.exige || tags.indexOf(i.exige) >= 0;
+      return D.INDICES.some(i => i.expert && ouvert(i)) && D.INDICES.some(i => i.social && ouvert(i));
+    }),
+    D.SCENARIOS.filter(sc => {
+      const tags = sc.tags || [];
+      const ouvert = i => !i.exige || tags.indexOf(i.exige) >= 0;
+      return !(D.INDICES.some(i => i.expert && ouvert(i)) && D.INDICES.some(i => i.social && ouvert(i)));
+    }).map(sc => sc.id).join(", "));
+  verifier("un indice qui désigne quelqu'un n'apparaît que là où il se lit",
+    (() => {
+      for (let n = 0; n < 400; n++){
+        D.Affaire.generer();
+        const tags = D.Affaire.scenario.tags || [];
+        for (const id of D.Affaire.reels){
+          const i = D.INDICES.find(x => x.id === id);
+          if (i.exige && tags.indexOf(i.exige) < 0) return false;
+        }
+      }
+      return true;
+    })(), "des traces de pattes sans chat, c'est une piste qu'on ne referme jamais");
+  verifier("aucun texte ne laisse traîner un marqueur",
+    (() => {
+      for (let n = 0; n < 200; n++){
+        D.Affaire.generer();
+        const tout = [D.Affaire.chute(), D.Affaire.contradiction()]
+          .concat(D.Affaire.piste().map(p => p[1]), D.Affaire.trouvaille().map(p => p[1]));
+        if (tout.some(x => /\{\w+\}/.test(x))) return false;
+      }
+      return true;
+    })(), "un {marqueur} affiché tel quel se voit tout de suite");
+  verifier("les détails changent d'une affaire à l'autre",
+    (() => {
+      const heures = new Set(), livreurs = new Set();
+      for (let n = 0; n < 200; n++){ D.Affaire.generer(); heures.add(D.Affaire.faits.heure); livreurs.add(D.Affaire.faits.livreur); }
+      return heures.size > 40 && livreurs.size >= 4;
+    })(), "l'heure du ticket ne doit pas être la même à chaque partie");
+
   verifier("chaque affaire demande les deux inspecteurs",
     (() => {
       for (let n = 0; n < 400; n++){
@@ -532,7 +574,7 @@ if (D){
       }
       return true;
     })(), "un tirage se bouclait avec un seul inspecteur");
-  egal("les dix scénarios sortent", scenarios.size, D.SCENARIOS.length);
+  egal("tous les scénarios sortent", scenarios.size, D.SCENARIOS.length);
   verifier("chaque affaire sait dire son dénouement",
     D.SCENARIOS.every(sc => { D.Affaire.scenario = sc; return !!D.Affaire.chute() && !!D.Affaire.contradiction(); }));
 

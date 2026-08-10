@@ -182,6 +182,20 @@ différence entre « une image » et « un endroit ». La pendule est calée
 sur l'horloge audio et non sur l'affichage — une seconde qui traîne
 s'entend tout de suite.
 
+**Les détails changent à chaque partie.** L'heure du ticket, le temps
+que le fromage a mis à refroidir, le nom du livreur, la pointure des
+chaussures, l'étage : tout est tiré une fois au début et repris partout.
+L'heure que le ticket porte est exactement celle que Thibaut oppose au
+suspect. Écrits en dur, ces détails faisaient de dix-sept affaires une
+seule soirée répétée.
+
+**Les indices collent à l'affaire.** Un indice qui désigne quelqu'un —
+des traces de pattes, un billet, le menu du livreur — porte une
+étiquette, et n'apparaît que dans les affaires qui portent la même. Des
+traces de pattes dans une affaire sans chat, c'est une piste qu'on ne
+peut jamais refermer. Les indices neutres, eux, vont partout : il reste
+des fausses pistes, mais des fausses pistes qu'on peut refermer.
+
 **Le générateur d'affaire** tire un scénario sur trois au début de la
 partie, puis en déduit le coupable, la cachette et les six indices —
 jamais l'inverse. Une enquête impossible ne peut donc pas sortir, et la

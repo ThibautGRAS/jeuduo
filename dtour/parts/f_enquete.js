@@ -75,23 +75,29 @@ const INDICES = [
   { id:"miettes",   sprite:"ind_miettes",   nom:"Miettes de pâte",
     analyse:"Miettes de pâte. Semées vers la droite.", brut:"Des miettes. Partout.", expert:true },
   { id:"fromage",   sprite:"ind_fromage",   nom:"Fromage refroidi",
-    analyse:"Fromage refroidi. Trente minutes, pas plus.", brut:"C'est collant." },
-  { id:"pattes",    sprite:"ind_pattes",    nom:"Traces de pattes",
+    analyse:"Fromage refroidi. {froid}, pas plus.", brut:"C'est collant." },
+  /* `exige` limite un indice aux affaires qui le rendent lisible : des
+     traces de pattes dans une affaire sans chat, c'est une piste qu'on
+     ne peut jamais refermer. Les autres indices vont partout. */
+  { id:"pattes",    sprite:"ind_pattes",    nom:"Traces de pattes", exige:"chat",
     analyse:"Empreintes. Quatre coussinets. Un félin.", brut:"Quelqu'un a marché dedans.", expert:true },
   { id:"serviette", sprite:"ind_serviette", nom:"Serviette froissée",
     analyse:"Serviette froissée. Quelqu'un s'est essuyé vite.", brut:"Un mouchoir. Bof." },
   { id:"ticket",    sprite:"ind_ticket",    nom:"Ticket de livraison",
-    analyse:"Ticket de livraison. 19 h 42. Une pizza chorizo.", brut:"Un papier. Avec des chiffres." },
+    analyse:"Ticket de livraison. {heure}. Une pizza chorizo.", brut:"Un papier. Avec des chiffres." },
+  { id:"menu",      sprite:"ind_ticket",    nom:"Menu du livreur", exige:"porte",
+    analyse:"Un menu. Papier ordinaire, encre fraîche.",
+    brut:"{livreur} ? Je le connais. Il ne monte jamais au {etage}.", social:true },
   { id:"assiette",  sprite:"ind_assiette",  nom:"Assiette utilisée",
     analyse:"Assiette utilisée. Jamais rapportée à l'évier.", brut:"Une assiette. Sale." },
   { id:"boite",     sprite:"pizza_boite_ouverte", nom:"Boîte ouverte",
     analyse:"La boîte. Ouverte ici, pas à la cuisine.", brut:"La boîte ! Enfin, vide." },
   { id:"part",      sprite:"pizza_part",    nom:"Part abandonnée",
-    analyse:"Une part entamée puis reposée. Quelqu'un a été dérangé.", brut:"Une part ! On peut la manger ?" },
-  { id:"billet",    sprite:"ind_billet",    nom:"Billet de cinq euros",
+    analyse:"Une part sur {parts}, entamée puis reposée. Quelqu'un a été dérangé.", brut:"Une part ! On peut la manger ?" },
+  { id:"billet",    sprite:"ind_billet",    nom:"Billet de cinq euros", exige:"argent",
     analyse:"Cinq euros. Posé bien à plat, pas tombé de poche.",
     brut:"Cinq euros ! On rachète une pizza ?" },
-  { id:"manette",   sprite:"ind_serviette", nom:"Manette grasse",
+  { id:"manette",   sprite:"ind_serviette", nom:"Manette grasse", exige:"salon",
     analyse:"Une manette. Sale.", brut:"Des traces de doigts gras. Il a joué en mangeant.", social:true },
 ];
 
@@ -102,7 +108,7 @@ const INDICES = [
 const ECHOS = {
   sauce:["Tiède ? Donc récent.", "Ne touche pas. Enfin, trop tard."],
   billet:["Personne ne paie pour un vol.", "Alors ce n'est pas un vol. C'est un remboursement."],
-  ticket_menu:["Tu connais le livreur ?", "Je connais surtout ses horaires."],
+  menu:["Tu connais le livreur ?", "Je connais surtout ses horaires."],
   manette:["Gras. Donc il mangeait.", "Et il jouait. Les deux."],
   chorizo:["Coupé à la main. Personne ne fait ça.", "Moi je l'aurais mangée entière."],
   miettes:["Vers la droite, tu es sûr ?", "Quelqu'un est parti par là."],
@@ -151,7 +157,7 @@ const BAVARDAGES = [
    c'est précisément ce qui le rend efficace. */
 const SUJETS = {
   soeur:[
-    { qPF:"Tu étais où, ce soir ?", qTH:"Vous étiez où, ce soir ?",
+    { qPF:"Tu étais où à {heure} ?", qTH:"Vous étiez où à {heure} ?",
       pf:"Chez moi. Comme tous les soirs. Passe dimanche.",
       ok:"Dans ma chambre. La porte du couloir grince, je l'aurais entendue.",
       ko:"Dans ma chambre. Enfin, pas tout le temps." },
@@ -171,7 +177,7 @@ const SUJETS = {
       ko:"Deux minutes. Pour la cuisine. C'est tout." },
     { qPF:"Tu as entendu la porte ?", qTH:"Avez-vous entendu la porte ?",
       pf:"J'entends surtout que tu me soupçonnes.",
-      ok:"Deux fois. À dix minutes d'écart. La seconde plus discrète.",
+      ok:"Deux fois. Vers {heure}. La seconde plus discrète.",
       ko:"Non. J'avais le son fort." },
     { qPF:"Tu as touché au frigo ?", qTH:"Avez-vous ouvert le réfrigérateur ?",
       pf:"On ne va pas se fâcher pour un frigo.",
@@ -181,7 +187,7 @@ const SUJETS = {
   charles:[
     { qPF:"Vous êtes qui, exactement ?", qTH:"Vous êtes arrivé quand ?",
       pf:"Vous êtes de la famille, vous ? Ah. Alors rien.",
-      ok:"Vers vingt heures. La porte était déjà ouverte.",
+      ok:"Vers {heure}. La porte était déjà ouverte.",
       ko:"Je ne suis pas arrivé. Je veux dire : pas resté." },
     { qPF:"Vous connaissez qui, ici ?", qTH:"Vous êtes venu voir qui ?",
       pf:"Personne. Enfin, tout le monde. Enfin.",
@@ -208,7 +214,7 @@ const SUJETS = {
    meuble avec l'autre inspecteur doit apprendre quelque chose, même
    quand il n'y a rien à trouver. */
 const RIEN = {
-  chaussures:{ pf:"Pointure 43. Boueuses. Sorties récemment.", th:"Des chaussures. Rien dedans, heureusement." },
+  chaussures:{ pf:"Pointure {pointure}. Boueuses. Sorties récemment.", th:"Des chaussures. Rien dedans, heureusement." },
   manteaux:  { pf:"Trois manteaux, une seule poche vidée.", th:"Il fait froid dehors. Je dis ça." },
   sac:       { pf:"Un sac préparé à la hâte.", th:"Des clés, un chargeur, du désespoir." },
   biblio:    { pf:"Rangée par taille. Quelqu'un de méthodique vit ici.", th:"Beaucoup de livres. Aucun sur la pizza." },
@@ -329,7 +335,7 @@ function composerSuspects(){
    peut donc pas sortir. */
 const SCENARIOS = [
   /* --- la sœur --- */
-  { id:"pour_hortense", coupable:"soeur", cachettes:["frigo", "placards"],
+  { id:"pour_hortense", tags:["porte"], coupable:"soeur", cachettes:["frigo", "placards"],
     porteurs:["ticket", "assiette", "serviette"],
     piste:[[0, "Elle n'a pas été volée. Elle a été mise de côté."],
            [1, "Mise de côté pour qui ?"]],
@@ -340,7 +346,7 @@ const SCENARIOS = [
     anecdote:{ suspect:"soeur", qTH:"Pourquoi au frigo, et pas sur le plan ?", qPF:"Pourquoi au frigo, et pas sur le plan ?", ok:"Parce qu'au frigo, ça se garde.", ko:"Elle se garde pour qui ?", pf:"Tu poses des questions de flic." }
   },
 
-  { id:"la_porte", coupable:"soeur", cachettes:["commode", "portant"],
+  { id:"la_porte", tags:["porte", "chat"], coupable:"soeur", cachettes:["commode", "portant"],
     porteurs:["ticket", "boite", "pattes"],
     piste:[[0, "Quelqu'un est entré sans sonner."],
            [1, "Donc quelqu'un lui a ouvert."]],
@@ -351,7 +357,7 @@ const SCENARIOS = [
     anecdote:{ suspect:"soeur", qTH:"Qui avez-vous laissé entrer ?", qPF:"Qui avez-vous laissé entrer ?", ok:"Quelqu'un qui n'aurait pas dû monter.", ko:"Et vous n'avez rien dit.", pf:"Ne me fais pas dire ça." }
   },
 
-  { id:"la_dette", coupable:"soeur", cachettes:["poubelle", "evier"],
+  { id:"la_dette", tags:["argent", "salon"], coupable:"soeur", cachettes:["poubelle", "evier"],
     porteurs:["billet", "miettes", "boite"],
     piste:[[0, "Des miettes, et cinq euros posés à côté."],
            [1, "Personne ne paie pour un vol."]],
@@ -363,7 +369,7 @@ const SCENARIOS = [
   },
 
   /* --- Charles --- */
-  { id:"amant", coupable:"charles", cachettes:["manteaux", "sac"],
+  { id:"amant", tags:["porte"], coupable:"charles", cachettes:["manteaux", "sac"],
     porteurs:["ticket", "serviette", "fromage"],
     piste:[[0, "Il a mangé vite. Debout. Sans s'asseoir."],
            [1, "Quelqu'un qui ne voulait pas être vu."]],
@@ -374,7 +380,7 @@ const SCENARIOS = [
     anecdote:{ suspect:"charles", qTH:"Ce manteau est à vous ?", qPF:"Ce manteau est à vous ?", ok:"Il traînait. J'avais froid.", ko:"Il sent le chorizo.", pf:"Il traînait, je vous dis." }
   },
 
-  { id:"effacer", coupable:"charles", cachettes:["poubelle"],
+  { id:"effacer", tags:["salon"], coupable:"charles", cachettes:["poubelle"],
     porteurs:["boite", "sauce", "assiette"],
     piste:[[0, "Deux assiettes lavées. Une seule utilisée."],
            [1, "Quelqu'un a fait le ménage de sa propre présence."]],
@@ -385,7 +391,7 @@ const SCENARIOS = [
     anecdote:{ suspect:"charles", qTH:"Pourquoi deux assiettes lavées ?", qPF:"Pourquoi deux assiettes lavées ?", ok:"J'aime que ce soit propre.", ko:"Vous dîniez donc à deux.", pf:"C'est un crime, être ordonné ?" }
   },
 
-  { id:"le_couloir", coupable:"charles", cachettes:["lit", "commode"],
+  { id:"le_couloir", tags:["salon"], coupable:"charles", cachettes:["lit", "commode"],
     porteurs:["ticket", "miettes", "part"],
     piste:[[0, "Des miettes jusqu'au couloir."],
            [1, "Personne ne mange une pizza dans une chambre."]],
@@ -397,7 +403,7 @@ const SCENARIOS = [
   },
 
   /* --- TeoPedo --- */
-  { id:"vieux_reflexe", coupable:"teo", cachettes:["frigo", "four"],
+  { id:"vieux_reflexe", tags:["porte"], coupable:"teo", cachettes:["frigo", "four"],
     porteurs:["ticket", "fromage", "serviette"],
     piste:[[0, "Aucune trace sur la poignée. Aucune."],
            [1, "Ça s'apprend, ça ?"]],
@@ -408,19 +414,19 @@ const SCENARIOS = [
     anecdote:{ suspect:"teo", qTH:"Où avez-vous appris à ouvrir sans laisser de trace ?", qPF:"Où avez-vous appris à ouvrir sans laisser de trace ?", ok:"On apprend des choses, dans une vie.", ko:"Quelle vie, exactement ?", pf:"Tu ne veux pas savoir. Vraiment." }
   },
 
-  { id:"le_prof", coupable:"teo", cachettes:["biblio", "tv"],
+  { id:"le_prof", tags:["salon"], coupable:"teo", cachettes:["biblio", "tv"],
     porteurs:["ticket", "boite", "miettes"],
     piste:[[0, "Il connaît l'heure de la livraison à la minute."],
            [1, "Il connaît beaucoup de choses à la minute."]],
     trouvaille:[[0, "Derrière les livres. Rangée par taille."],
                 [1, "Même en cachant, il classe."]],
-    contradiction:"Vous savez tout de cette soirée. Sauf où vous étiez à dix-neuf heures cinquante.",
+    contradiction:"Vous savez tout de cette soirée. Sauf où vous étiez à {heure}.",
     chute:"Le prof d'histoire a daté la scène mieux que nous. Il en avait besoin : il en faisait partie." ,
     anecdote:{ suspect:"teo", qTH:"Comment connaissez-vous l'heure à la minute ?", qPF:"Comment connaissez-vous l'heure à la minute ?", ok:"Je date les choses. C'est mon métier.", ko:"On date ce qu'on a vécu.", pf:"Tu m'as déjà entendu dater une soirée ?" }
   },
 
   /* --- Risoto, et les chaînes --- */
-  { id:"le_chat_seul", coupable:"chat", cachettes:["canape", "lit"],
+  { id:"le_chat_seul", tags:["chat", "salon"], coupable:"chat", cachettes:["canape", "lit"],
     porteurs:["pattes", "boite", "chorizo"],
     piste:[[0, "Ce n'est pas une main qui a fait ça."],
            [1, "Ne me dis pas que c'est le chat."]],
@@ -431,7 +437,7 @@ const SCENARIOS = [
     anecdote:{ suspect:"chat", qTH:"Risoto, cette boîte, c'était vous ?", qPF:"Risoto, cette boîte, c'était vous ?", ok:"Il fixe le meuble du bas.", ko:"Il ne dira rien de plus.", pf:"Il ronronne, ce qui n'est pas une réponse." }
   },
 
-  { id:"la_chaine", coupable:"charles", cachettes:["sac", "poubelle"],
+  { id:"la_chaine", tags:["chat", "salon"], coupable:"charles", cachettes:["sac", "poubelle"],
     porteurs:["pattes", "sauce", "boite"],
     piste:[[0, "Le chat a renversé. Quelqu'un a ramassé."],
            [1, "Et n'a rien dit. C'est ça qui compte."]],
@@ -443,7 +449,7 @@ const SCENARIOS = [
   },
 
   /* --- les invraisemblables --- */
-  { id:"la_reconstitution", coupable:"teo", cachettes:["biblio", "tv", "commode"],
+  { id:"la_reconstitution", tags:["salon"], coupable:"teo", cachettes:["biblio", "tv", "commode"],
     porteurs:["ticket", "miettes", "assiette"],
     piste:[[0, "Tout est disposé exactement comme au moment des faits."],
            [1, "Trop exactement."]],
@@ -455,7 +461,7 @@ const SCENARIOS = [
       ok:"Mentalement. C'est un exercice.", ko:"On ne reconstitue bien qu'en refaisant les gestes.",
       pf:"Tu sais que ça m'inquiète, quand tu fais ça." } },
 
-  { id:"le_pari", coupable:"charles", cachettes:["basse", "sac"],
+  { id:"le_pari", tags:["chat", "salon"], coupable:"charles", cachettes:["basse", "sac"],
     porteurs:["chorizo", "serviette", "part"],
     piste:[[0, "Il a mangé vite. Très vite."],
            [1, "Trop vite pour quelqu'un qui avait faim."]],
@@ -467,7 +473,7 @@ const SCENARIOS = [
       ok:"Jamais. Je n'ai personne avec qui parier.", ko:"Avec le chat. Il ne compte pas.",
       pf:"Je ne vois pas le rapport avec la pizza." } },
 
-  { id:"le_congelateur", coupable:null, cachettes:["frigo"],
+  { id:"le_congelateur", tags:["porte"], coupable:null, cachettes:["frigo"],
     porteurs:["ticket", "fromage", "boite"],
     piste:[[0, "Elle est passée du chaud au froid en dix minutes."],
            [1, "Personne ne fait ça par accident."]],
@@ -479,7 +485,7 @@ const SCENARIOS = [
       ok:"Personne. C'est bien le problème de cet appartement.", ko:"Moi. Et je range bien.",
       pf:"Tu ranges toujours des choses au mauvais endroit." } },
 
-  { id:"le_regime", coupable:"soeur", cachettes:["portant", "lit", "commode"],
+  { id:"le_regime", tags:["argent", "salon"], coupable:"soeur", cachettes:["portant", "lit", "commode"],
     porteurs:["billet", "serviette", "chorizo"],
     piste:[[0, "Elle l'a cachée. Puis elle l'a retrouvée."],
            [1, "Se cacher quelque chose à soi-même, ça se paie."]],
@@ -491,7 +497,7 @@ const SCENARIOS = [
       ok:"Jamais. Je n'ai rien à me cacher.", ko:"Une fois. Ça n'a pas marché.",
       pf:"On avait dit qu'on ne parlait plus de ça." } },
 
-  { id:"la_sieste", coupable:null, cachettes:["four", "evier"],
+  { id:"la_sieste", tags:["salon"], coupable:null, cachettes:["four", "evier"],
     porteurs:["ticket", "assiette", "miettes"],
     piste:[[0, "Une assiette utilisée avant notre départ."],
            [1, "Avant notre départ ?"]],
@@ -503,7 +509,7 @@ const SCENARIOS = [
       ok:"Oui. L'un des deux avait l'air repu.", ko:"Je n'ai rien vu. Je jouais.",
       pf:"Tu me regardes bizarrement, là." } },
 
-  { id:"le_double", coupable:"charles", cachettes:["sac", "manteaux", "poubelle"],
+  { id:"le_double", tags:["argent", "porte"], coupable:"charles", cachettes:["sac", "manteaux", "poubelle"],
     porteurs:["ticket", "boite", "billet"],
     piste:[[0, "Deux tickets. Une seule livraison enregistrée."],
            [1, "Il y en avait deux, donc."]],
@@ -515,7 +521,7 @@ const SCENARIOS = [
       ok:"Une. J'ai vu passer le livreur une fois.", ko:"Une. Enfin, une à la fois.",
       pf:"Vous hésitez sur un chiffre simple." } },
 
-  { id:"la_tarte", coupable:null, cachettes:["placards", "evier"],
+  { id:"la_tarte", tags:["porte", "chat"], coupable:null, cachettes:["placards", "evier"],
     porteurs:["ticket", "chorizo", "assiette"],
     piste:[[0, "Quelqu'un est venu, a échangé quelque chose, et est reparti."],
            [1, "Échangé ?"]],
@@ -532,12 +538,35 @@ const Affaire = {
 
   generer(){
     this.scenario = piocher(SCENARIOS);
+
+    /* Les détails de l'affaire sont tirés ICI, une seule fois, et tous
+       les textes y puisent : l'heure du ticket est la même que celle
+       que Thibaut oppose au suspect, et elle change à chaque partie.
+       Écrits en dur, ils faisaient de dix-sept affaires une seule
+       soirée répétée. */
+    const h = entier(19, 21), mn = entier(0, 59);
+    this.faits = {
+      heure:h + " h " + (mn < 10 ? "0" : "") + mn,
+      froid:piocher(["vingt", "vingt-cinq", "trente", "trente-cinq", "quarante"]) + " minutes",
+      parts:piocher(["six", "huit"]),
+      livreur:piocher(["Maurice", "Kevin", "Sofiane", "le grand blond", "celui du samedi"]),
+      pointure:entier(38, 46),
+      etage:piocher(["deuxième", "troisième", "quatrième"]),
+    };
     this.coupable = this.scenario.coupable
       ? SUSPECTS_BANQUE.find(s => s.id === this.scenario.coupable) : null;
     this.cachette = piocher(this.scenario.cachettes);
 
     const obligatoires = this.scenario.porteurs.slice();
-    const reste = INDICES.map(i => i.id).filter(id => obligatoires.indexOf(id) < 0);
+    /* Le garnissage ne pioche que dans ce qui a du sens ici : les
+       indices étiquetés n'apparaissent que si l'affaire porte la même
+       étiquette. On garde des fausses pistes, mais des fausses pistes
+       qu'on peut refermer. */
+    const marques = this.scenario.tags || [];
+    const reste = INDICES
+      .filter(i => obligatoires.indexOf(i.id) < 0)
+      .filter(i => !i.exige || marques.indexOf(i.exige) >= 0)
+      .map(i => i.id);
     melangerTableau(reste);
     this.reels = obligatoires.concat(reste.slice(0, ENQ_OBJECTIF - obligatoires.length));
 
@@ -566,11 +595,20 @@ const Affaire = {
 
   bonneReponse(){ return this.coupable ? this.coupable.id : "personne"; },
   titreSolution(){ return this.coupable ? this.coupable.nom : "PERSONNE"; },
-  chute(){ return this.scenario.chute; },
-  piste(){ return this.scenario.piste; },
-  trouvaille(){ return this.scenario.trouvaille; },
-  contradiction(){ return this.scenario.contradiction; },
+  chute(){ return remplir(this.scenario.chute); },
+  piste(){ return this.scenario.piste.map(p => [p[0], remplir(p[1])]); },
+  trouvaille(){ return this.scenario.trouvaille.map(p => [p[0], remplir(p[1])]); },
+  contradiction(){ return remplir(this.scenario.contradiction); },
 };
+
+/* Remplace les {marqueurs} par les faits de l'affaire en cours. Passer
+   par un seul point garantit qu'un texte oublié se voit tout de suite :
+   il reste des accolades à l'écran. */
+function remplir(t){
+  if (!t || t.indexOf("{") < 0) return t;
+  const f = (Affaire && Affaire.faits) || {};
+  return t.replace(/\{(\w+)\}/g, (m, k) => (f[k] !== undefined ? f[k] : m));
+}
 
 function melangerTableau(t){
   for (let i = t.length - 1; i > 0; i--){
@@ -881,7 +919,7 @@ const Enquete = {
          jouait tout le niveau avec Pierre-François. */
       if (ind.social && pf){
         this.fausses++;
-        Effets.parole({ heros:ins.heros }, ind.analyse, 1.8);
+        Effets.parole({ heros:ins.heros }, remplir(ind.analyse), 1.8);
         this.dire("Thibaut connaît mieux la maison.", 2.0);
         Sons.bip(190, 0.16, "sine", 0.14, 130);
         ins.cible = -1;
@@ -890,7 +928,7 @@ const Enquete = {
       if (ind.expert && !pf){
         /* Thibaut voit la chose sans la comprendre : l'indice reste à prendre */
         this.fausses++;
-        Effets.parole({ heros:ins.heros }, ind.brut, 1.8);
+        Effets.parole({ heros:ins.heros }, remplir(ind.brut), 1.8);
         this.dire("Pierre-François saurait quoi en faire.", 2.0);
         Sons.bip(190, 0.16, "sine", 0.14, 130);
         ins.cible = -1;
@@ -904,7 +942,7 @@ const Enquete = {
       /* On annonce ce qu'on a trouvé et où : sans le lieu, le dossier
          devient une liste d'objets sans enquête. */
       this.dernier = ind.nom + " — " + z.ref.nom;
-      Effets.parole({ heros:ins.heros }, (pf && !ind.social) ? ind.analyse : ind.brut, 2.6);
+      Effets.parole({ heros:ins.heros }, remplir((pf && !ind.social) ? ind.analyse : ind.brut), 2.6);
       const echo = ECHOS[ind.id];
       if (echo) this.dialogue([[1 - this.actifIdx, echo[pf ? 0 : 1]]], 1.4);
       Sons.reussite(Math.min(7, this.indices));
@@ -918,7 +956,7 @@ const Enquete = {
       z.fouillee = true; this.fouilles++;
       this.fausses++;
       const r = RIEN[z.ref.id];
-      Effets.parole({ heros:ins.heros }, r ? (pf ? r.pf : r.th) : "Rien.", 2.4);
+      Effets.parole({ heros:ins.heros }, remplir(r ? (pf ? r.pf : r.th) : "Rien."), 2.4);
       Sons.bip(190, 0.16, "sine", 0.14, 130);
     }
     ins.cible = -1;
@@ -944,10 +982,10 @@ const Enquete = {
     /* Question puis réponse, sur le MÊME sujet. Avant, les deux listes
        défilaient séparément : on demandait l'heure et on s'entendait
        répondre qu'il y avait deux pizzas. */
-    Effets.parole({ heros:ins.heros }, pf ? sujet.qPF : sujet.qTH, 2.0);
+    Effets.parole({ heros:ins.heros }, remplir(pf ? sujet.qPF : sujet.qTH), 2.0);
     Sons.bip(pf ? 470 : 540, 0.08, "sine", 0.1);
     const reponse = pf ? sujet.pf : (s.coupable ? sujet.ko : sujet.ok);
-    this.dialogue([[{ temoin:is }, reponse]], 1.25);
+    this.dialogue([[{ temoin:is }, remplir(reponse)]], 1.25);
 
     /* Une remarque de fond au premier passage : ce qu'on voit, pas ce
        qu'on entend. Elle vaut pour les deux. */
