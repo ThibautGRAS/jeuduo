@@ -398,8 +398,26 @@ verifier("lentille désactivée au cran minimal",
   /if \(qualite === "minimal"\) return;/.test(script), "passe coûteuse");
 verifier("alignement conservé au bord du terrain",
   /ix0 - sx, iy0 - sy/.test(script), "sinon l'image se décalerait près des bords");
-verifier("horizon noir et anneau de photons",
-  /rgba\(0,0,0,1\)/.test(script) && /ctx\.ellipse\(0, 0, 19\.5, 17\.5/.test(script));
+verifier("trou noir complet", /function dessinerTrouNoir\(/.test(script) &&
+  /disque d'accrétion/.test(script));
+verifier("disque d'accrétion en deux moitiés",
+  /anneau\(Rd, Rd\*aplat, 13, Math\.PI, Math\.PI\*2/.test(script) &&
+  /anneau\(Rd, Rd\*aplat, 13, 0, Math\.PI/.test(script),
+  "l'arrière passe derrière l'ombre, l'avant devant");
+verifier("arcs relevés par courbure de la lumière",
+  /anneau\(R\*2\.05[^)]*Math\.PI\*1\.06/.test(script) &&
+  /anneau\(R\*1\.72[^)]*Math\.PI\*0\.08/.test(script));
+verifier("effet Doppler sur le disque",
+  /const dop = ctx\.createLinearGradient\(-Rd, 0, Rd, 0\)/.test(script),
+  "la matière qui vient vers nous paraît plus brillante");
+{
+  /* l'ombre ne doit pas déborder sur l'anneau d'Einstein */
+  const mOmbre = script.match(/createRadialGradient\(0, 0, 0, 0, 0, R\*([\d.]+)\)/);
+  const mAnneau = script.match(/anneau\(R\*([\d.]+), R\*[\d.]+, 2\.6/);
+  verifier("l'ombre s'arrête avant l'anneau",
+    mOmbre && mAnneau && Number(mAnneau[1]) > Number(mOmbre[1]),
+    mOmbre && mAnneau ? "anneau à " + mAnneau[1] + "R, ombre jusqu'à " + mOmbre[1] + "R" : "");
+}
 verifier("aucune donnée réseau supplémentaire",
   /x: etat\.raqBas/.test(script) && /x: etat\.raqHaut/.test(script),
   "les puits se déduisent des raquettes déjà synchronisées");
