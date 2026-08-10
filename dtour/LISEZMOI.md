@@ -189,6 +189,18 @@ L'heure que le ticket porte est exactement celle que Thibaut oppose au
 suspect. Écrits en dur, ces détails faisaient de dix-sept affaires une
 seule soirée répétée.
 
+**La découverte nomme le vrai meuble.** Chaque zone sait se dire au bon
+cas — « à la poubelle », « sous le lit », « derrière les livres » — et
+les répliques de découverte l'appellent par `{Ou}`. Écrites en dur,
+huit affaires sur dix-sept annonçaient un meuble alors que la pizza
+était dans un autre.
+
+**Chaque affaire a quelqu'un à confondre.** Dans les trois affaires où
+personne n'a rien volé, il n'y avait pas de coupable, donc la
+contradiction n'était jamais dite : elle existait dans le fichier et ne
+sortait jamais à l'écran. Ces affaires désignent maintenant un **témoin
+clé** — celui qui lâche la phrase qui change tout.
+
 **Les indices collent à l'affaire.** Un indice qui désigne quelqu'un —
 des traces de pattes, un billet, le menu du livreur — porte une
 étiquette, et n'apparaît que dans les affaires qui portent la même. Des

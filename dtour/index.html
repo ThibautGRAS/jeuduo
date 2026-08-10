@@ -471,7 +471,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v3.9</div>
+  <div id="version">CALLAGHAN v4.0</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -531,7 +531,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "3.9";
+const VERSION = "4.0";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -2948,22 +2948,22 @@ const ENQ_ESQUIVE_PTS = 100;
    `pied` est l'abscisse où l'inspecteur s'arrête, parfois décalée pour
    ne pas se planter dans le meuble. */
 const ZONES = [
-  { id:"chaussures", nom:"les chaussures",  x:0.038, y:0.74, pied:0.055 },
-  { id:"manteaux",   nom:"les manteaux",    x:0.078, y:0.42, pied:0.102 },
-  { id:"sac",        nom:"le sac",          x:0.156, y:0.74, pied:0.156 },
-  { id:"biblio",     nom:"la bibliothèque", x:0.222, y:0.34, pied:0.222 },
-  { id:"canape",     nom:"sous le canapé",  x:0.272, y:0.70, pied:0.272 },
-  { id:"basse",      nom:"la table basse",  x:0.350, y:0.84, pied:0.350 },
-  { id:"tv",         nom:"le meuble TV",    x:0.392, y:0.66, pied:0.392 },
-  { id:"frigo",      nom:"le frigo",        x:0.503, y:0.56, pied:0.503 },
-  { id:"four",       nom:"le four",         x:0.560, y:0.64, pied:0.560 },
-  { id:"table",      nom:"la table",        x:0.608, y:0.76, pied:0.608 },
-  { id:"placards",   nom:"les placards",    x:0.648, y:0.26, pied:0.654 },
-  { id:"evier",      nom:"l'évier",         x:0.700, y:0.52, pied:0.700 },
-  { id:"poubelle",   nom:"la poubelle",     x:0.752, y:0.72, pied:0.752 },
-  { id:"commode",    nom:"la commode",      x:0.842, y:0.72, pied:0.842 },
-  { id:"portant",    nom:"le portant",      x:0.966, y:0.44, pied:0.958 },
-  { id:"lit",        nom:"sous le lit",     x:0.948, y:0.80, pied:0.912 },
+  { id:"chaussures", nom:"les chaussures", dedans:"dans une chaussure",  x:0.038, y:0.74, pied:0.055 },
+  { id:"manteaux",   nom:"les manteaux", dedans:"dans une poche de manteau",    x:0.078, y:0.42, pied:0.102 },
+  { id:"sac",        nom:"le sac", dedans:"dans le sac",          x:0.156, y:0.74, pied:0.156 },
+  { id:"biblio",     nom:"la bibliothèque", dedans:"derrière les livres", x:0.222, y:0.34, pied:0.222 },
+  { id:"canape",     nom:"sous le canapé", dedans:"sous le canapé",  x:0.272, y:0.70, pied:0.272 },
+  { id:"basse",      nom:"la table basse", dedans:"sous la table basse",  x:0.350, y:0.84, pied:0.350 },
+  { id:"tv",         nom:"le meuble TV", dedans:"dans le meuble TV",    x:0.392, y:0.66, pied:0.392 },
+  { id:"frigo",      nom:"le frigo", dedans:"au frigo",        x:0.503, y:0.56, pied:0.503 },
+  { id:"four",       nom:"le four", dedans:"dans le four",         x:0.560, y:0.64, pied:0.560 },
+  { id:"table",      nom:"la table", dedans:"sous la table",        x:0.608, y:0.76, pied:0.608 },
+  { id:"placards",   nom:"les placards", dedans:"au fond d'un placard",    x:0.648, y:0.26, pied:0.654 },
+  { id:"evier",      nom:"l'évier", dedans:"sous l'évier",         x:0.700, y:0.52, pied:0.700 },
+  { id:"poubelle",   nom:"la poubelle", dedans:"à la poubelle",     x:0.752, y:0.72, pied:0.752 },
+  { id:"commode",    nom:"la commode", dedans:"dans la commode",      x:0.842, y:0.72, pied:0.842 },
+  { id:"portant",    nom:"le portant", dedans:"derrière les vêtements",      x:0.966, y:0.44, pied:0.958 },
+  { id:"lit",        nom:"sous le lit", dedans:"sous le lit",     x:0.948, y:0.80, pied:0.912 },
 ];
 
 /* ---------- la banque d'indices ----------
@@ -3243,8 +3243,8 @@ const SCENARIOS = [
     porteurs:["ticket", "assiette", "serviette"],
     piste:[[0, "Elle n'a pas été volée. Elle a été mise de côté."],
            [1, "Mise de côté pour qui ?"]],
-    trouvaille:[[0, "Au frigo. Emballée. Étiquetée, presque."],
-                [1, "On garde une pizza comme ça pour quelqu'un qu'on aime."]],
+    trouvaille:[[0, "{Ou}. Emballée. Étiquetée, presque."],
+                [1, "On range une pizza comme ça pour quelqu'un qu'on aime."]],
     contradiction:"Vous l'avez rangée pour votre sœur. Elle repasse ce soir.",
     chute:"Elle la gardait pour Hortense. Personne n'a rien volé, et personne n'a rien dit." ,
     anecdote:{ suspect:"soeur", qTH:"Pourquoi au frigo, et pas sur le plan ?", qPF:"Pourquoi au frigo, et pas sur le plan ?", ok:"Parce qu'au frigo, ça se garde.", ko:"Elle se garde pour qui ?", pf:"Tu poses des questions de flic." }
@@ -3254,7 +3254,7 @@ const SCENARIOS = [
     porteurs:["ticket", "boite", "pattes"],
     piste:[[0, "Quelqu'un est entré sans sonner."],
            [1, "Donc quelqu'un lui a ouvert."]],
-    trouvaille:[[0, "Dans la commode. Sous du linge propre."],
+    trouvaille:[[0, "{Ou}. Sous du linge propre."],
                 [1, "Il a fallu vouloir la cacher."]],
     contradiction:"Vous avez ouvert à quelqu'un. Ce n'était pas le livreur.",
     chute:"Elle a ouvert la porte à quelqu'un qui n'aurait pas dû venir. La pizza a payé le silence." ,
@@ -3265,7 +3265,7 @@ const SCENARIOS = [
     porteurs:["billet", "miettes", "boite"],
     piste:[[0, "Des miettes, et cinq euros posés à côté."],
            [1, "Personne ne paie pour un vol."]],
-    trouvaille:[[0, "La boîte est là. Vide, pliée, rangée."],
+    trouvaille:[[0, "{Ou}. La boîte, vide, pliée, rangée."],
                 [1, "Elle a même fait le tri."]],
     contradiction:"Vous avez laissé cinq euros. On ne rembourse que ce qu'on a pris.",
     chute:"Nous étions sortis. Elle a tout mangé, laissé des miettes et un billet de cinq euros pour qu'on en rachète une. C'est presque de la politesse." ,
@@ -3277,8 +3277,8 @@ const SCENARIOS = [
     porteurs:["ticket", "serviette", "fromage"],
     piste:[[0, "Il a mangé vite. Debout. Sans s'asseoir."],
            [1, "Quelqu'un qui ne voulait pas être vu."]],
-    trouvaille:[[0, "Dans la poche d'un manteau. Encore chaude."],
-                [1, "Ce manteau n'est pas à lui."]],
+    trouvaille:[[0, "{Ou}. Encore chaude."],
+                [1, "Et ce n'est pas le sien."]],
     contradiction:"Vous n'étiez pas là. Alors pourquoi votre manteau sent le chorizo ?",
     chute:"Il n'était pas censé être là. Il a pris la pizza pour effacer sa visite. Il a effacé l'inverse." ,
     anecdote:{ suspect:"charles", qTH:"Ce manteau est à vous ?", qPF:"Ce manteau est à vous ?", ok:"Il traînait. J'avais froid.", ko:"Il sent le chorizo.", pf:"Il traînait, je vous dis." }
@@ -3288,7 +3288,7 @@ const SCENARIOS = [
     porteurs:["boite", "sauce", "assiette"],
     piste:[[0, "Deux assiettes lavées. Une seule utilisée."],
            [1, "Quelqu'un a fait le ménage de sa propre présence."]],
-    trouvaille:[[0, "À la poubelle. Entière, sous le sac."],
+    trouvaille:[[0, "{Ou}. Entière, sous le sac-poubelle."],
                 [1, "On ne jette pas une pizza. On jette une preuve."]],
     contradiction:"Vous avez lavé deux assiettes. Vous dîniez seul ?",
     chute:"Il a tout nettoyé pour qu'on ne sache pas qu'il était venu. Y compris le dîner." ,
@@ -3299,7 +3299,7 @@ const SCENARIOS = [
     porteurs:["ticket", "miettes", "part"],
     piste:[[0, "Des miettes jusqu'au couloir."],
            [1, "Personne ne mange une pizza dans une chambre."]],
-    trouvaille:[[0, "Sous le lit. Avec une part entamée."],
+    trouvaille:[[0, "{Ou}. Avec une part entamée."],
                 [1, "Il a été dérangé au milieu."]],
     contradiction:"Vous surveillez ce couloir depuis vingt minutes. Pourquoi ?",
     chute:"Il s'était réfugié dans la chambre avec la pizza. Quelqu'un a frappé. Il a tout laissé là." ,
@@ -3311,7 +3311,7 @@ const SCENARIOS = [
     porteurs:["ticket", "fromage", "serviette"],
     piste:[[0, "Aucune trace sur la poignée. Aucune."],
            [1, "Ça s'apprend, ça ?"]],
-    trouvaille:[[0, "Au four. Éteint. Refermé proprement."],
+    trouvaille:[[0, "{Ou}. Refermé proprement. Trop proprement."],
                 [1, "Un amateur laisse la porte ouverte."]],
     contradiction:"Vous avez ouvert le frigo sans le toucher. Où apprend-on ça ?",
     chute:"Il a ouvert, pris, refermé, sans une marque. Un vieux réflexe, dit-il. Il n'a pas dit de quand." ,
@@ -3322,7 +3322,7 @@ const SCENARIOS = [
     porteurs:["ticket", "boite", "miettes"],
     piste:[[0, "Il connaît l'heure de la livraison à la minute."],
            [1, "Il connaît beaucoup de choses à la minute."]],
-    trouvaille:[[0, "Derrière les livres. Rangée par taille."],
+    trouvaille:[[0, "{Ou}. Rangée par taille."],
                 [1, "Même en cachant, il classe."]],
     contradiction:"Vous savez tout de cette soirée. Sauf où vous étiez à {heure}.",
     chute:"Le prof d'histoire a daté la scène mieux que nous. Il en avait besoin : il en faisait partie." ,
@@ -3334,7 +3334,7 @@ const SCENARIOS = [
     porteurs:["pattes", "boite", "chorizo"],
     piste:[[0, "Ce n'est pas une main qui a fait ça."],
            [1, "Ne me dis pas que c'est le chat."]],
-    trouvaille:[[0, "Poussée jusque là-dessous. Regarde les traces."],
+    trouvaille:[[0, "{Ou}. Poussée jusque là. Regarde les traces."],
                 [1, "Risoto. On doit parler."]],
     contradiction:"Vous n'avez pas de mains. C'est embêtant pour la boîte.",
     chute:"Il a poussé la boîte du plan de travail au sol, puis du sol au dessous. Le reste s'est fait tout seul." ,
@@ -3345,7 +3345,7 @@ const SCENARIOS = [
     porteurs:["pattes", "sauce", "boite"],
     piste:[[0, "Le chat a renversé. Quelqu'un a ramassé."],
            [1, "Et n'a rien dit. C'est ça qui compte."]],
-    trouvaille:[[0, "Dans un sac. Emballée à la hâte."],
+    trouvaille:[[0, "{Ou}. Emballée à la hâte."],
                 [1, "Ramasser, ce n'est pas voler. Cacher, si."]],
     contradiction:"Vous avez ramassé après le chat. Pourquoi ne pas le dire ?",
     chute:"Risoto a fait tomber la boîte. Charles a ramassé — et caché, parce qu'être là suffisait à le condamner." ,
@@ -3357,7 +3357,7 @@ const SCENARIOS = [
     porteurs:["ticket", "miettes", "assiette"],
     piste:[[0, "Tout est disposé exactement comme au moment des faits."],
            [1, "Trop exactement."]],
-    trouvaille:[[0, "Ce qu'il en reste est rangé par ordre de taille."],
+    trouvaille:[[0, "{Ou}. Ce qu'il en reste est rangé par ordre de taille."],
                 [1, "Il a refait la scène. En entier."]],
     contradiction:"Pour reconstituer un repas, il faut le refaire. Vous l'avez refait.",
     chute:"Il voulait comprendre comment ça s'était passé. Il a reconstitué la soirée, méthodiquement, et il a mangé la pizza deux fois pour être sûr.",
@@ -3369,7 +3369,7 @@ const SCENARIOS = [
     porteurs:["chorizo", "serviette", "part"],
     piste:[[0, "Il a mangé vite. Très vite."],
            [1, "Trop vite pour quelqu'un qui avait faim."]],
-    trouvaille:[[0, "Ce qu'il en reste tient dans une main."],
+    trouvaille:[[0, "{Ou}. Ce qu'il en reste tient dans une main."],
                 [1, "Quatre minutes. Il a dû s'entraîner."]],
     contradiction:"On ne mange pas une pizza en quatre minutes sans raison.",
     chute:"Il a parié avec le chat qu'il la finirait en moins de quatre minutes. Le chat n'a pas relevé. Il a mangé quand même.",
@@ -3377,12 +3377,12 @@ const SCENARIOS = [
       ok:"Jamais. Je n'ai personne avec qui parier.", ko:"Avec le chat. Il ne compte pas.",
       pf:"Je ne vois pas le rapport avec la pizza." } },
 
-  { id:"le_congelateur", tags:["porte"], coupable:null, cachettes:["frigo"],
+  { id:"le_congelateur", temoinCle:"teo", tags:["porte"], coupable:null, cachettes:["frigo"],
     porteurs:["ticket", "fromage", "boite"],
     piste:[[0, "Elle est passée du chaud au froid en dix minutes."],
            [1, "Personne ne fait ça par accident."]],
-    trouvaille:[[0, "Au congélateur. Dure comme un carreau."],
-                [1, "Quelqu'un a voulu la garder au chaud. Au congélateur."]],
+    trouvaille:[[0, "{Ou}. Dure comme un carreau."],
+                [1, "Quelqu'un a voulu la garder au chaud. En la congelant."]],
     contradiction:"On ne garde pas une pizza au chaud dans un congélateur.",
     chute:"Quelqu'un a voulu bien faire. Personne ne l'a volée : elle a été mise à congeler pour rester bonne, ce qui reste discutable.",
     anecdote:{ suspect:"teo", qTH:"Qui range les restes, ici ?", qPF:"C'est toi qui ranges les restes ?",
@@ -3393,7 +3393,7 @@ const SCENARIOS = [
     porteurs:["billet", "serviette", "chorizo"],
     piste:[[0, "Elle l'a cachée. Puis elle l'a retrouvée."],
            [1, "Se cacher quelque chose à soi-même, ça se paie."]],
-    trouvaille:[[0, "Sous une pile de linge. Bien enfouie."],
+    trouvaille:[[0, "{Ou}. Bien enfouie."],
                 [1, "Elle l'a cachée d'elle-même. Et elle a perdu."]],
     contradiction:"Vous l'avez cachée pour ne pas la manger. Ça n'a pas suffi.",
     chute:"Elle commençait un régime le lendemain. Elle a caché la pizza pour tenir. Elle a tenu quarante minutes.",
@@ -3401,11 +3401,11 @@ const SCENARIOS = [
       ok:"Jamais. Je n'ai rien à me cacher.", ko:"Une fois. Ça n'a pas marché.",
       pf:"On avait dit qu'on ne parlait plus de ça." } },
 
-  { id:"la_sieste", tags:["salon"], coupable:null, cachettes:["four", "evier"],
+  { id:"la_sieste", temoinCle:"teo", tags:["salon"], coupable:null, cachettes:["four", "evier"],
     porteurs:["ticket", "assiette", "miettes"],
     piste:[[0, "Une assiette utilisée avant notre départ."],
            [1, "Avant notre départ ?"]],
-    trouvaille:[[0, "Ce qu'il en reste était déjà là quand nous sommes partis."],
+    trouvaille:[[0, "{Ou}. Et ce qu'il en reste était déjà là quand nous sommes partis."],
                 [1, "Pierre-François. Regarde-moi."]],
     contradiction:"Personne n'a rien pris après notre départ. Le problème est avant.",
     chute:"Personne n'a volé la pizza. Pierre-François en a mangé la moitié avant de sortir, puis a fait une sieste et a tout oublié. L'enquête aura duré cinq minutes de plus que nécessaire.",
@@ -3417,7 +3417,7 @@ const SCENARIOS = [
     porteurs:["ticket", "boite", "billet"],
     piste:[[0, "Deux tickets. Une seule livraison enregistrée."],
            [1, "Il y en avait deux, donc."]],
-    trouvaille:[[0, "La première. Intacte, jamais ouverte."],
+    trouvaille:[[0, "{Ou}. La première. Intacte, jamais ouverte."],
                 [1, "Il en a commandé une seconde pour cacher la première."]],
     contradiction:"Vous avez payé deux fois. Une seule pizza a été mangée.",
     chute:"Il en a commandé une deuxième pour que personne ne remarque la disparition de la première. Il a doublé le problème et le budget.",
@@ -3425,11 +3425,11 @@ const SCENARIOS = [
       ok:"Une. J'ai vu passer le livreur une fois.", ko:"Une. Enfin, une à la fois.",
       pf:"Vous hésitez sur un chiffre simple." } },
 
-  { id:"la_tarte", tags:["porte", "chat"], coupable:null, cachettes:["placards", "evier"],
+  { id:"la_tarte", temoinCle:"soeur", tags:["porte", "chat"], coupable:null, cachettes:["placards", "evier"],
     porteurs:["ticket", "chorizo", "assiette"],
     piste:[[0, "Quelqu'un est venu, a échangé quelque chose, et est reparti."],
            [1, "Échangé ?"]],
-    trouvaille:[[0, "Dans le placard. À la place d'autre chose."],
+    trouvaille:[[0, "{Ou}. À la place d'autre chose."],
                 [1, "Il y avait une tarte au citron ici. Plus maintenant."]],
     contradiction:"Personne n'a volé. Quelqu'un a troqué.",
     chute:"Hortense est passée. Elle a laissé une tarte au citron et emporté l'idée. La pizza, elle, n'a jamais bougé." ,
@@ -3460,7 +3460,12 @@ const Affaire = {
     this.coupable = this.scenario.coupable
       ? SUSPECTS_BANQUE.find(s => s.id === this.scenario.coupable) : null;
     this.cachette = piocher(this.scenario.cachettes);
-
+    /* Le lieu de la cachette est un fait comme un autre : les textes de
+       découverte le nomment par {ou}, sinon huit affaires sur dix-sept
+       annonçaient un meuble alors que la pizza était dans un autre. */
+    const zc = ZONES.find(z => z.id === this.cachette);
+    this.faits.ou = (zc && zc.dedans) || "quelque part";
+    this.faits.Ou = this.faits.ou.charAt(0).toUpperCase() + this.faits.ou.slice(1);
     const obligatoires = this.scenario.porteurs.slice();
     /* Le garnissage ne pioche que dans ce qui a du sens ici : les
        indices étiquetés n'apparaissent que si l'affaire porte la même
@@ -3498,6 +3503,11 @@ const Affaire = {
   },
 
   bonneReponse(){ return this.coupable ? this.coupable.id : "personne"; },
+  /* Qui craque. Dans les affaires où personne n'a rien volé, il n'y a
+     pas de coupable à confondre : c'est le témoin clé qui lâche la
+     phrase qui change tout. Sans lui, trois affaires sur dix-sept
+     n'avaient aucune contradiction atteignable. */
+  temoinCle(){ return this.coupable ? this.coupable.id : (this.scenario.temoinCle || null); },
   titreSolution(){ return this.coupable ? this.coupable.nom : "PERSONNE"; },
   chute(){ return remplir(this.scenario.chute); },
   piste(){ return this.scenario.piste.map(p => [p[0], remplir(p[1])]); },
@@ -3917,7 +3927,7 @@ const Enquete = {
 
     /* Assez d'indices en poche et la bonne personne en face : la
        contradiction saute aux yeux. Une seule fois. */
-    if (this.indices >= 4 && s.id === Affaire.bonneReponse() && !s.coince){
+    if (this.indices >= 4 && s.id === Affaire.temoinCle() && !s.coince){
       s.coince = true;
       this.dialogue([[this.actifIdx, Affaire.contradiction()]], 2.9);
       this.poserBadge("suspect");

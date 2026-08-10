@@ -162,6 +162,24 @@ maintenant les recouvrements en hauteur **jusqu'à un plafond**, puis se
 replie latéralement. Et la mesure d'une bulle est une fonction séparée
 du dessin : deux calculs parallèles auraient fini par divorcer.
 
+### Du texte écrit pour un cas particulier, tiré au sort ensuite
+Les répliques de découverte nommaient un meuble — « Dans un sac » —
+alors que le scénario tirait sa cachette parmi deux ou trois. Huit
+affaires sur dix-sept pouvaient annoncer le mauvais endroit. Chaque zone
+porte maintenant sa tournure locative (`dedans`), et les textes
+l'appellent par un marqueur. Règle générale : dès qu'une valeur est
+tirée au sort, tout texte qui la mentionne doit passer par le marqueur,
+jamais par la copie.
+
+### Une branche de contenu que rien n'atteignait
+Trois affaires n'ont pas de coupable. La contradiction se déclenchait sur
+`bonneReponse()`, qui vaut alors « personne » — aucun suspect ne porte
+cet identifiant, donc la phrase existait dans le fichier et n'est jamais
+sortie à l'écran. Elle vise désormais un `temoinCle`. À retenir : une
+valeur sentinelle (« personne ») qui traverse une comparaison
+d'identifiants ne lève aucune erreur, elle rend juste du contenu
+invisible. Seul un audit qui déroule les dix-sept cas l'a montré.
+
 ### Un détail écrit en dur transforme dix-sept affaires en une seule
 « 19 h 42 » revenait à chaque partie, dans le ticket comme dans la
 contradiction. Les détails sont désormais tirés une fois par affaire et

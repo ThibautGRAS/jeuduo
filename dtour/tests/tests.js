@@ -753,6 +753,22 @@ if (D){
     D.SUJETS.charles.every(su => /\bVous\b|\bvous\b/.test(su.qPF)));
   verifier("Thibaut vouvoie tout le monde",
     D.SUJETS.soeur.concat(D.SUJETS.teo, D.SUJETS.charles).every(su => /\bvous\b/i.test(su.qTH)));
+  /* Une découverte qui nomme un meuble doit nommer LE BON. */
+  verifier("chaque découverte nomme la vraie cachette",
+    D.SCENARIOS.every(sc => sc.trouvaille.some(p => /\{Ou\}|\{ou\}/.test(p[1]))),
+    D.SCENARIOS.filter(sc => !sc.trouvaille.some(p => /\{Ou\}|\{ou\}/.test(p[1]))).map(sc => sc.id).join(", "));
+  verifier("chaque meuble sait se dire au bon cas",
+    D.ZONES.every(z => z.dedans && z.dedans.length > 4),
+    D.ZONES.filter(z => !z.dedans).map(z => z.id).join(", "));
+  verifier("la contradiction est toujours atteignable",
+    D.SCENARIOS.every(sc => {
+      D.Affaire.scenario = sc;
+      D.Affaire.coupable = sc.coupable ? D.SUSPECTS_BANQUE.find(x => x.id === sc.coupable) : null;
+      const t2 = D.Affaire.temoinCle();
+      return t2 && D.SUSPECTS_BANQUE.some(x => x.id === t2);
+    }), "trois affaires n'avaient personne à confondre");
+  verifier("dans une affaire sans coupable, c'est un témoin qui craque",
+    D.SCENARIOS.filter(sc => !sc.coupable).every(sc => sc.temoinCle));
   verifier("chaque affaire a son anecdote",
     D.SCENARIOS.every(sc => sc.anecdote && sc.anecdote.suspect && sc.anecdote.qTH && sc.anecdote.ok && sc.anecdote.ko),
     D.SCENARIOS.filter(sc => !sc.anecdote).map(sc => sc.id).join(", "));
