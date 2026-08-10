@@ -567,6 +567,22 @@ titre("8terdecies. Absorption et trou de ver");
   verifier("les rochers orbitent à distance du trou", om >= 60,
     "plancher à " + om + " px, contre un rayon visible de sphère de 33 px");
   verifier("poussée vers l'extérieur sous le plancher", /ORBITE_POUSSEE \* \(1 - dd \/ ORBITE_MIN\)/.test(script));
+  verifier("les rochers sont emportés avec le trou",
+    /d\.x \+= \(p\.x - puitsPrec\[ip\]\) \* ORBITE_ENTRAINEMENT/.test(script),
+    "coefficient " + nombre("ORBITE_ENTRAINEMENT") + " : ils tiennent l'orbite jusqu'à 16 px par image");
+  verifier("des rochers dès le début de la manche",
+    /function semerDebris\(/.test(script) && /DEBRIS_DEPART/.test(script),
+    nombre("DEBRIS_DEPART") + " rochers semés");
+  {
+    /* la semence doit venir APRÈS la remise à zéro du tableau */
+    const i1 = script.indexOf("debris = []; fissures = [[], []];\n  semerDebris()");
+    const i2 = script.indexOf("semerDebris();\n  debris = []");
+    verifier("la semence n'est pas effacée aussitôt", i1 >= 0 && i2 < 0,
+      "elle était placée avant la remise à zéro");
+  }
+  verifier("ils naissent déjà lancés sur leur orbite",
+    /vx: -Math\.sin\(a\) \* 1\.5, vy: Math\.cos\(a\) \* 1\.5/.test(script),
+    "sinon ils plongeraient droit vers le trou");
   verifier("attraction adoucie", nombre("DEBRIS_ATTIRANCE") < 2.2,
     "coefficient " + nombre("DEBRIS_ATTIRANCE") + ", contre 2,6 auparavant");
   verifier("relance moins pressante", nombre("RELANCE_DELAI") >= 12000,
