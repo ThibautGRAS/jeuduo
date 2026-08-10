@@ -539,7 +539,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v14.7 · 2026-08-09</div>
+  <div id="version">DUO v14.8 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -679,7 +679,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "14.7";
+const VERSION = "14.8";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -1380,7 +1380,64 @@ function initAudio(){
   gainMaitre.gain.value = volume;
   gainMaitre.connect(ac.destination);
 }
-function reveillerAudio(){ initAudio(); if (ac && ac.state === "suspended") ac.resume(); }
+function reveillerAudio(){ initAudio(); if (ac && ac.state === "suspended") ac.resume(); debloquerVoix(); }
+/* ---------- voix de l'IA ----------
+   Les vannes sont déjà écrites en français : on les fait dire plutôt que
+   d'inventer des grognements. On passe par speechSynthesis faute d'API pour
+   router la synthèse dans un nœud audio — donc le curseur de volume est
+   recopié dans chaque énonciation, il ne s'y applique pas tout seul. */
+const HUMEURS = {
+  moqueur: { rate: 0.85, pitch: 0.70 },   /* traîne et descend : la condescendance */
+  rageur:  { rate: 1.35, pitch: 1.55 },   /* précipité et haut perché */
+};
+let voixFR = null, voixPretes = false, voixDebloquee = false;
+function chargerVoix(){
+  const S = window.speechSynthesis;
+  if (!S) return;
+  const toutes = S.getVoices();
+  if (!toutes.length) return;             /* iOS les charge en asynchrone */
+  voixFR = toutes.find(v => v.lang === "fr-FR")
+        || toutes.find(v => (v.lang || "").indexOf("fr") === 0)
+        || null;
+  voixPretes = true;
+}
+if (window.speechSynthesis){
+  chargerVoix();
+  window.speechSynthesis.onvoiceschanged = chargerVoix;
+}
+/* iOS exige un geste utilisateur pour la première énonciation : on la consomme
+   à vide au premier tap, en même temps que le déblocage de l'AudioContext. */
+function debloquerVoix(){
+  const S = window.speechSynthesis;
+  if (!S || voixDebloquee) return;
+  voixDebloquee = true;
+  try{
+    const u = new SpeechSynthesisUtterance(" ");
+    u.volume = 0;
+    S.speak(u);
+  } catch(e){}
+}
+function parlerIA(texte, humeur, essai){
+  const S = window.speechSynthesis;
+  if (!S || !modeSolo || !texte || volume <= 0) return;
+  /* l'écho du micro tient encore la parole : on attend son tour */
+  if (enTrainDEnregistrer && (essai || 0) < 12){
+    setTimeout(() => parlerIA(texte, humeur, (essai || 0) + 1), 400);
+    return;
+  }
+  if (!voixPretes) chargerVoix();
+  const h = HUMEURS[humeur] || HUMEURS.moqueur;
+  try{
+    S.cancel();
+    const u = new SpeechSynthesisUtterance(texte);
+    if (voixFR) u.voice = voixFR;
+    u.lang = "fr-FR";
+    u.rate = h.rate;
+    u.pitch = h.pitch;
+    u.volume = Math.min(1, volume * 2.6);
+    S.speak(u);
+  } catch(e){}
+}
 let volume = 0.32;
 (function initVolume(){
   const c = document.getElementById("curseurVolume");
@@ -3661,7 +3718,10 @@ function afficherFin(){
   const nomMoiF = monNom, nomAdvF = nomAdverse || (modeSolo ? "IA" : "ADVERSAIRE");
   const gagnantF = jAiGagne ? nomMoiF : nomAdvF, perdantF = jAiGagne ? nomAdvF : nomMoiF;
   const poolF = poolMatch(perdantF);
-  $("voilePhrase").textContent = habiller(poolF[sarcasmeMatch % poolF.length], gagnantF, perdantF, sarcasmeMatch);
+  const phraseF = habiller(poolF[sarcasmeMatch % poolF.length], gagnantF, perdantF, sarcasmeMatch);
+  $("voilePhrase").textContent = phraseF;
+  /* moqueuse quand elle gagne, rageuse quand elle perd */
+  if (modeSolo) parlerIA(phraseF, jAiGagne ? "rageur" : "moqueur");
   const battus = cloturerRecords(jAiGagne);
   if (!modeSolo) ajouterHistorique({
     d: Date.now(), a: nomAdverse || "ADVERSAIRE",
