@@ -8,11 +8,15 @@ Thibaut et Pierre-François font la queue devant Le D'Tour. Les gens qui
 longent la file leur tendent la main comme s'ils les connaissaient. Il
 faut saluer avec le bon héros, assez vite. Trois ratés et c'est fini.
 
+Thibaut, c'est le brun au polo vert. **PF** — Pierre-François — c'est le
+chauve à lunettes. La planche fournie les annonçait dans l'autre sens ;
+les fichiers de `img/` portent les bons noms.
+
 > Ils ne les connaissaient même pas.
 
 ## Commandes
 
-| | Thibaut | Pierre-François |
+| | Thibaut | PF |
 |---|---|---|
 | Clavier | `A` `Q` `←` | `L` `P` `M` `→` |
 | Écran | moitié gauche | moitié droite |
@@ -29,7 +33,10 @@ pièges du dépôt valent ici aussi, et plusieurs ont déjà été payés.
 - **Un seul fichier livré.** Tout le jeu tient dans `index.html`. Les
   seules ressources séparées sont les images de `img/`.
 - **Aucun fichier audio.** Tout est synthétisé au WebAudio, comme dans
-  DUO : rien à télécharger, rien de protégé.
+  DUO : l'ambiance de rue, les bruitages, et la petite boucle de bistrot
+  — contrebasse, deux accords à contretemps, un balai sur la caisse
+  claire, sur une grille de quatre mesures. Rien à télécharger, rien de
+  protégé.
 - **Pas de `shadowBlur`**, pas de `dvh` — voir `MEMOIRE.md`.
 - La géométrie est en **unités monde**, où un personnage mesure 100 de
   haut. Rien dans la logique ne dépend de la taille de l'écran ; la
@@ -128,13 +135,26 @@ réaction, c'est la seule façon de lire la consigne sans réfléchir.
 
 ### La caméra
 
-Le bar reste collé au bord gauche, la file pousse vers la droite. La
-caméra recule à mesure, mais jamais sous `Z_MIN = 0.40`, sinon les
-personnages deviennent illisibles. Au-delà, la file se perd dans un
-voile au bord droit et un compteur annonce combien de personnes ne sont
-plus à l'écran. La suite de tests vérifie qu'avec cinquante personnes,
-les deux héros et le point de salut restent visibles en 1280×720, en
-844×390 et en 390×844.
+Premier réglage : cadrer toute la file. Mauvaise idée — à trente
+personnes, les têtes faisaient quarante pixels sur un téléphone et on ne
+voyait plus qui tendait la main.
+
+Maintenant la caméra cadre la **zone d'action** : les deux héros et le
+point de salut. Rien n'a le droit de la réduire, et le dézoom s'arrête à
+`Z_MIN = 0.85`. Quand la file déborde, c'est le bar qui sort par la
+gauche, jamais la poignée de main. La longueur se lit au compteur FILE,
+au voile qui mange le bord droit et au badge « +N ».
+
+La suite de tests vérifie qu'avec soixante-quatre personnes, les deux
+héros et le point de salut restent à l'écran et les personnages au-dessus
+de 120 px en 1280×720, de 95 px en 844×390 et en 390×750.
+
+Le décor fait 2,3 fois plus large que haut : sur un téléphone debout on
+n'en voit qu'une tranche étroite. Centrée à 34 %, elle tombait sur
+l'angle du mur — quatre cents pixels de crépi beige. L'ancrage
+horizontal suit donc le format, et glisse vers la devanture éclairée
+quand l'écran se resserre. La ligne de sol remonte aussi en portrait,
+sinon la file se range derrière les deux gros boutons.
 
 ## Réglages
 
@@ -150,6 +170,8 @@ relancer la suite.
 | Vies | 3 | |
 | Jour → soir → nuit | 0 / 22 / 52 saluts | croisement sur 2,2 s |
 | Écart entre deux places | 62 unités | |
+| Dézoom minimal | 0,85 | en dessous, on ne voit plus qui salue |
+| Tempo de la musique | 92 → 124 | c'est le seul endroit où l'on entend que la soirée avance |
 | Recul de celui qui salue | 104 unités | répond à la main tendue des sprites (36 à 45) |
 
 Les événements absurdes — l'enthousiaste, le patient, le double salut,
@@ -159,10 +181,16 @@ ordinaire garde plus de 60 % des tirages même tard dans la partie.
 
 ## Images
 
-`img/` contient 38 fichiers WebP, 272 ko en tout, découpés
+`img/` contient 38 fichiers WebP, 730 ko en tout, découpés
 automatiquement de la planche fournie : trois décors, huit poses pour
 chacun des deux héros, seize PNJ, le logo et deux portraits ronds pour
 les boutons.
+
+Ils sont exportés en **double résolution**, rééchantillonnés au filtre
+de Lanczos puis légèrement renforcés. Ça n'invente aucun détail : les
+sprites d'origine font 130 px de haut et sont affichés jusqu'à 360 px
+réels sur un écran retina, le rééchantillonnage du navigateur les
+rendait mous. On choisit simplement le noyau plutôt que de le subir.
 
 Le détourage se fait par **remontée depuis les bords** sur le clair
 désaturé, jamais par seuil global : un seuil aurait mangé le t-shirt
@@ -175,3 +203,4 @@ séparés par détection des creux d'occupation, vérifiée à l'œil.
 - Pas de manifeste PWA propre au jeu.
 - Le portrait est jouable mais à l'étroit ; un pense-bête suggère le
   paysage, et se referme si on insiste.
+- La musique n'a pas de réglage de volume séparé : `S` coupe tout.

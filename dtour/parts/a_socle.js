@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "1.0";
+const VERSION = "1.1";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -221,6 +221,78 @@ const Sons = {
   gene(){ this.bip(233, 0.5, "sine", 0.16, 150); this.bip(247, 0.5, "sine", 0.12, 160); },
   fin(){ [392, 349, 294, 233].forEach((f, i) => setTimeout(() => this.bip(f, 0.4, "triangle", 0.24), i * 190)); },
   clic(){ this.bip(660, 0.04, "square", 0.12); },
+
+  /* ---------- musique ----------
+     Une petite boucle de bistrot, entièrement synthétisée : contrebasse
+     qui marche, deux accords soufflés à contretemps, un balai sur la
+     caisse claire. Quatre mesures, une grille de jazz simple, et un
+     tempo qui monte du jour à la nuit — c'est le seul endroit où l'on
+     entend que la soirée avance.
+     Ordonnancement à l'avance de 0,2 s : sans ça, iOS place les notes
+     de travers dès que l'onglet respire. */
+  GRILLE:[
+    { basse:[146.83, 110.00], accord:[220.00, 261.63, 329.63] },  /* Ré m7  */
+    { basse:[196.00, 146.83], accord:[246.94, 293.66, 349.23] },  /* Sol 7  */
+    { basse:[130.81, 196.00], accord:[196.00, 261.63, 329.63] },  /* Do maj7*/
+    { basse:[110.00, 164.81], accord:[220.00, 277.18, 329.63] },  /* La 7   */
+  ],
+  musique:false, mesure:0, temps4:0, quand:0, gainMus:null, intensite:0,
+
+  lancerMusique(){
+    if (!this.ac || this.gainMus) return;
+    this.gainMus = this.ac.createGain();
+    this.gainMus.gain.value = 0;
+    this.gainMus.connect(this.maitre);
+    this.quand = this.ac.currentTime + 0.12;
+    this.mesure = 0; this.temps4 = 0; this.musique = true;
+  },
+  volumeMusique(v){
+    if (this.gainMus) this.gainMus.gain.value = v;
+  },
+  note(freq, quand, duree, forme, vol, filtre){
+    if (!this.ac || !this.gainMus) return;
+    const o = this.ac.createOscillator(), g = this.ac.createGain();
+    o.type = forme; o.frequency.setValueAtTime(freq, quand);
+    g.gain.setValueAtTime(0.0001, quand);
+    g.gain.exponentialRampToValueAtTime(vol, quand + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, quand + duree);
+    let sortie = g;
+    if (filtre){
+      const f = this.ac.createBiquadFilter();
+      f.type = "lowpass"; f.frequency.value = filtre;
+      g.connect(f); sortie = f;
+    }
+    o.connect(g); sortie.connect(this.gainMus);
+    o.start(quand); o.stop(quand + duree + 0.05);
+  },
+  balai(quand, vol){
+    if (!this.ac || !this.gainMus) return;
+    const n = Math.floor(this.ac.sampleRate * 0.07);
+    const b = this.ac.createBuffer(1, n, this.ac.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.4);
+    const src = this.ac.createBufferSource(); src.buffer = b;
+    const f = this.ac.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 4200;
+    const g = this.ac.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(this.gainMus);
+    src.start(quand);
+  },
+  /* tempo : 92 le jour, 108 le soir, 124 la nuit */
+  ordonnerMusique(tempo){
+    if (!this.ac || !this.musique || !this.actif) return;
+    const noire = 60 / tempo;
+    while (this.quand < this.ac.currentTime + 0.2){
+      const m = this.GRILLE[this.mesure % 4], t = this.temps4, q = this.quand;
+      if (t === 0 || t === 2) this.note(m.basse[t === 0 ? 0 : 1], q, noire * 0.85, "triangle", 0.14, 420);
+      if (t === 1 || t === 3){
+        m.accord.forEach((f, i) => this.note(f, q + 0.012 * i, noire * 0.42, "sine", 0.045, 2400));
+      }
+      this.balai(q, t % 2 === 0 ? 0.05 : 0.028);
+      if (t === 3) this.balai(q + noire * 0.5, 0.034);
+      this.quand += noire;
+      this.temps4++;
+      if (this.temps4 > 3){ this.temps4 = 0; this.mesure++; }
+    }
+  },
 };
 
 /* ================= chargement des images ================= */

@@ -330,14 +330,18 @@ if (D){
 
   /* --- machine à états --- */
   titre("Machine à états du PNJ");
+  D.Camera.mesurer(1280, 720, 1); D.Camera.recaler();
   const p = D.Foule.arriver("SIMPLE");
   egal("il entre par la gauche", p.etat, D.ETAT.ENTREE);
-  verifier("il entre hors champ, à gauche", p.x < D.xPlace(0));
+  verifier("il entre hors champ, à gauche", p.x < D.Camera.bordGauche(),
+    "x=" + p.x.toFixed(0) + " bord=" + D.Camera.bordGauche().toFixed(0));
   verifier("une place lui est réservée", p.place >= 4);
+  verifier("sa cible est choisie dès l'arrivée", p.cible === 0 || p.cible === 1);
+  const arret = D.xSalut(p.cible);
   let tours = 0;
   while (p.etat === D.ETAT.ENTREE && tours++ < 4000) p.avancer(1 / 60);
   egal("il s'arrête pour saluer", p.etat, D.ETAT.DEMANDE);
-  presque("il s'arrête au bon endroit", p.x, D.X_SALUT, 1);
+  presque("il s'arrête devant le héros qu'il vise", p.x, arret, 1);
   verifier("il vise un héros existant", p.cible === 0 || p.cible === 1);
   verifier("la demande est enregistrée", D.Jeu.demandes.includes(p));
   verifier("le chrono part du temps de réaction", p.chrono > 0 && p.chrono <= p.tReaction + 1e-9);
@@ -397,28 +401,31 @@ if (D){
   D.Jeu.demarrer();
   D.Camera.mesurer(1280, 720, 1);
   D.Camera.recaler();
+  /* Ce qui doit rester visible en toutes circonstances : les deux héros
+     et le point où l'on vient leur serrer la main. */
   const dansEcran = () => {
     const xT = D.Camera.ecran(D.xPlace(D.PLACE_T));
-    const xS = D.Camera.ecran(D.X_SALUT);
+    const xS = D.Camera.ecran(D.xSalut(1));
     return xT > 0 && xS < D.Camera.L;
   };
   verifier("au départ, la zone de jeu est à l'écran", dansEcran());
-  const z0 = D.Camera.z;
-  D.File.gonfler(40);
+  D.File.gonfler(60);
   D.Camera.recaler();
-  verifier("la caméra recule quand la file s'allonge", D.Camera.z < z0, "z " + z0 + " -> " + D.Camera.z);
   verifier("elle ne descend pas sous le plancher", D.Camera.z >= D.Z_MIN - 1e-9, "z=" + D.Camera.z);
-  verifier("les deux héros et le point de salut restent à l'écran", dansEcran(),
-    "xT=" + D.Camera.ecran(D.xPlace(D.PLACE_T)).toFixed(0) + " xS=" + D.Camera.ecran(D.X_SALUT).toFixed(0));
-  verifier("les personnages restent lisibles", D.H_PERSO * D.Camera.ech > 48,
+  verifier("la zone d'action reste à l'écran même avec 64 personnes", dansEcran(),
+    "xT=" + D.Camera.ecran(D.xPlace(D.PLACE_T)).toFixed(0) + " xS=" + D.Camera.ecran(D.xSalut(1)).toFixed(0));
+  verifier("les personnages restent gros", D.H_PERSO * D.Camera.ech > 120,
     (D.H_PERSO * D.Camera.ech).toFixed(0) + " px");
-  /* et sur un iPhone en paysage */
-  D.Camera.mesurer(844, 390, 3); D.Camera.recaler();
-  verifier("idem sur iPhone en paysage", dansEcran() && D.H_PERSO * D.Camera.ech > 40,
-    "h=" + (D.H_PERSO * D.Camera.ech).toFixed(0) + " px");
-  D.Camera.mesurer(390, 844, 3); D.Camera.recaler();
-  verifier("le portrait reste jouable", dansEcran(),
-    "xT=" + D.Camera.ecran(D.xPlace(D.PLACE_T)).toFixed(0) + " xS=" + D.Camera.ecran(D.X_SALUT).toFixed(0));
+  verifier("la file déborde volontairement de l'écran", D.Camera.dernierePlaceVisible() < D.File.places.length - 1,
+    "visible jusqu'à " + D.Camera.dernierePlaceVisible());
+  /* les deux formats de téléphone */
+  for (const [L, H, mini] of [[844, 390, 95], [390, 750, 95]]){
+    D.Camera.mesurer(L, H, 3); D.Camera.recaler();
+    verifier("cadrage tenu en " + L + "x" + H,
+      dansEcran() && D.H_PERSO * D.Camera.ech > mini,
+      "h=" + (D.H_PERSO * D.Camera.ech).toFixed(0) + " px, xT=" +
+      D.Camera.ecran(D.xPlace(D.PLACE_T)).toFixed(0) + ", xS=" + D.Camera.ecran(D.xSalut(1)).toFixed(0));
+  }
 
   /* --- records --- */
   titre("Records");

@@ -162,7 +162,7 @@ const File = {
 /* ================= héros ================= */
 const Heros = [
   { nom:"THIBAUT", sprite:"thibaut", place:PLACE_T, couleur:"#37AC48" },
-  { nom:"PIERRE-FRANÇOIS", sprite:"pierre", place:PLACE_PF, couleur:"#2A8AE4" },
+  { nom:"PF", sprite:"pierre", place:PLACE_PF, couleur:"#2A8AE4" },
 ];
 
 /* Point d'arrêt de l'arrivant selon le héros qu'il vient saluer. */
@@ -330,7 +330,7 @@ const Jeu = {
 
     this.prochaineArrivee = this.temps + 1.5;
     Camera.recaler();
-    Sons.reveiller(); Sons.lancerAmbiance();
+    Sons.reveiller(); Sons.lancerAmbiance(); Sons.lancerMusique();
     Interface.majBandeau(); Interface.entrerJeu();
   },
 
@@ -362,7 +362,12 @@ const Jeu = {
     }
     Effets.majorer(dt);
     Camera.majorer(dt);
-    Sons.ambiancer(borne(File.installees() / 26, 0, 1), dt, this.temps);
+    const densite = borne(File.installees() / 26, 0, 1);
+    Sons.ambiancer(densite, dt, this.temps);
+    /* la musique n'existe qu'en partie, et le tempo monte avec le soir */
+    const tempo = melange(92, 124, borne(Score.saluts / MOMENTS[2].seuil, 0, 1));
+    Sons.volumeMusique(this.phase === "jeu" ? 0.80 : (this.phase === "fin" ? 0.25 : 0.45));
+    Sons.ordonnerMusique(tempo);
   },
 
   majMoment(){

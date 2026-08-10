@@ -70,12 +70,34 @@ canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
   transition:opacity .35s ease;
 }
 #titre.parti{opacity:0;pointer-events:none}
-#titre img{width:min(420px,74vw);image-rendering:auto;filter:drop-shadow(0 8px 22px rgba(0,0,0,.55))}
-#titre .sous{font-size:clamp(13px,2.6vw,19px);font-weight:600;color:#E7ECF8;
-  text-shadow:0 2px 10px rgba(0,0,0,.9);max-width:34ch}
-#titre .rappel{font-size:clamp(11px,2.1vw,14px);font-weight:600;color:#C3CFE6;
-  text-shadow:0 2px 8px rgba(0,0,0,.9)}
-#titre .rappel b{color:var(--ambre)}
+#titre .panneau{
+  display:flex;flex-direction:column;align-items:center;gap:clamp(9px,1.9vh,17px);
+  width:min(460px,92vw);padding:clamp(16px,3vh,26px) clamp(14px,3vw,26px);
+  background:linear-gradient(180deg,rgba(13,20,42,.93),rgba(8,12,26,.96));
+  border:2px solid rgba(150,180,235,.22);border-radius:22px;
+  box-shadow:0 18px 50px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.07);
+}
+#titre .panneau::before{
+  content:"";width:52px;height:3px;border-radius:3px;background:var(--ambre);opacity:.85;
+}
+#titre img{width:min(340px,68vw);filter:drop-shadow(0 6px 16px rgba(0,0,0,.6))}
+#titre .sous{font-size:clamp(13px,2.6vw,18px);font-weight:600;color:#DCE4F5;font-style:italic}
+#titre .consigne{font-size:clamp(11px,2.1vw,14px);font-weight:600;color:var(--sourd)}
+#titre .qui{display:flex;gap:10px;width:100%}
+.fiche{
+  flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 6px;border-radius:13px;border:2px solid;background:rgba(255,255,255,.04);
+}
+.fiche img{width:clamp(30px,7vw,40px);height:clamp(30px,7vw,40px);border-radius:50%;
+  border:2px solid rgba(255,255,255,.8)}
+.fiche b{font-size:clamp(12px,2.4vw,15px);letter-spacing:.04em}
+.fiche i{font-style:normal;font-size:10px;letter-spacing:.12em;color:var(--sourd)}
+.fiche.vert{border-color:rgba(55,172,72,.65)}
+.fiche.vert b{color:#61D178}
+.fiche.bleu{border-color:rgba(42,138,228,.65)}
+.fiche.bleu b{color:#7FC3F5}
+#titre .record{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.18em;
+  color:rgba(147,164,196,.75);min-height:12px}
 
 .gros{
   border:none;cursor:pointer;font-family:inherit;font-weight:800;color:#fff;
@@ -167,7 +189,7 @@ canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
 
 /* ---------------- pense-bête paysage ---------------- */
 #pivot{
-  position:absolute;inset:auto 10px calc(10px + var(--marge)) 10px;z-index:30;
+  position:absolute;inset:auto 10px calc(10px + var(--marge)) 10px;z-index:55;
   background:rgba(11,18,38,.9);border:2px solid var(--trait);border-radius:12px;
   padding:8px 12px;font-size:12px;font-weight:600;color:var(--craie);
   display:none;align-items:center;justify-content:space-between;gap:10px;
@@ -224,10 +246,17 @@ canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
   </div>
 
   <div id="titre">
-    <img id="logo" alt="La file du D'Tour">
-    <p class="sous">Ils ne les connaissaient même pas.</p>
-    <button class="gros" id="btnJouer">JOUER</button>
-    <p class="rappel">Quelqu'un vous tend la main : <b>gauche</b> pour Thibaut, <b>droite</b> pour Pierre-François.</p>
+    <div class="panneau">
+      <img id="logo" alt="La file du D'Tour">
+      <p class="sous">Ils ne les connaissaient même pas.</p>
+      <button class="gros" id="btnJouer">JOUER</button>
+      <p class="consigne">Quelqu'un vous tend la main. Répondez avec le bon.</p>
+      <div class="qui">
+        <span class="fiche vert"><img id="miniT" alt=""><b>THIBAUT</b><i>gauche · A</i></span>
+        <span class="fiche bleu"><img id="miniP" alt=""><b>PF</b><i>droite · L</i></span>
+      </div>
+      <p class="record" id="tRecord"></p>
+    </div>
   </div>
 
   <div id="fin">
@@ -246,7 +275,7 @@ canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
       <img id="visageT" alt=""><span class="txt"><small>SALUER</small><span>THIBAUT</span></span><span class="touche">A</span>
     </button>
     <button class="cmd" id="cmdP" aria-label="Saluer Pierre-François">
-      <span class="touche">L</span><span class="txt"><small>SALUER</small><span>PIERRE-FRANÇOIS</span></span><img id="visageP" alt="">
+      <span class="touche">L</span><span class="txt"><small>SALUER</small><span>PF</span></span><img id="visageP" alt="">
     </button>
   </div>
 
@@ -279,7 +308,7 @@ canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">D'TOUR v1.0</div>
+  <div id="version">D'TOUR v1.1</div>
 
   <div id="intro">
     <div class="marque">LA FILE<em>DU D'TOUR</em></div>
@@ -309,7 +338,7 @@ canvas{display:block;position:absolute;inset:0;width:100%;height:100%}
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "1.0";
+const VERSION = "1.1";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -512,6 +541,78 @@ const Sons = {
   gene(){ this.bip(233, 0.5, "sine", 0.16, 150); this.bip(247, 0.5, "sine", 0.12, 160); },
   fin(){ [392, 349, 294, 233].forEach((f, i) => setTimeout(() => this.bip(f, 0.4, "triangle", 0.24), i * 190)); },
   clic(){ this.bip(660, 0.04, "square", 0.12); },
+
+  /* ---------- musique ----------
+     Une petite boucle de bistrot, entièrement synthétisée : contrebasse
+     qui marche, deux accords soufflés à contretemps, un balai sur la
+     caisse claire. Quatre mesures, une grille de jazz simple, et un
+     tempo qui monte du jour à la nuit — c'est le seul endroit où l'on
+     entend que la soirée avance.
+     Ordonnancement à l'avance de 0,2 s : sans ça, iOS place les notes
+     de travers dès que l'onglet respire. */
+  GRILLE:[
+    { basse:[146.83, 110.00], accord:[220.00, 261.63, 329.63] },  /* Ré m7  */
+    { basse:[196.00, 146.83], accord:[246.94, 293.66, 349.23] },  /* Sol 7  */
+    { basse:[130.81, 196.00], accord:[196.00, 261.63, 329.63] },  /* Do maj7*/
+    { basse:[110.00, 164.81], accord:[220.00, 277.18, 329.63] },  /* La 7   */
+  ],
+  musique:false, mesure:0, temps4:0, quand:0, gainMus:null, intensite:0,
+
+  lancerMusique(){
+    if (!this.ac || this.gainMus) return;
+    this.gainMus = this.ac.createGain();
+    this.gainMus.gain.value = 0;
+    this.gainMus.connect(this.maitre);
+    this.quand = this.ac.currentTime + 0.12;
+    this.mesure = 0; this.temps4 = 0; this.musique = true;
+  },
+  volumeMusique(v){
+    if (this.gainMus) this.gainMus.gain.value = v;
+  },
+  note(freq, quand, duree, forme, vol, filtre){
+    if (!this.ac || !this.gainMus) return;
+    const o = this.ac.createOscillator(), g = this.ac.createGain();
+    o.type = forme; o.frequency.setValueAtTime(freq, quand);
+    g.gain.setValueAtTime(0.0001, quand);
+    g.gain.exponentialRampToValueAtTime(vol, quand + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, quand + duree);
+    let sortie = g;
+    if (filtre){
+      const f = this.ac.createBiquadFilter();
+      f.type = "lowpass"; f.frequency.value = filtre;
+      g.connect(f); sortie = f;
+    }
+    o.connect(g); sortie.connect(this.gainMus);
+    o.start(quand); o.stop(quand + duree + 0.05);
+  },
+  balai(quand, vol){
+    if (!this.ac || !this.gainMus) return;
+    const n = Math.floor(this.ac.sampleRate * 0.07);
+    const b = this.ac.createBuffer(1, n, this.ac.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.4);
+    const src = this.ac.createBufferSource(); src.buffer = b;
+    const f = this.ac.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 4200;
+    const g = this.ac.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(this.gainMus);
+    src.start(quand);
+  },
+  /* tempo : 92 le jour, 108 le soir, 124 la nuit */
+  ordonnerMusique(tempo){
+    if (!this.ac || !this.musique || !this.actif) return;
+    const noire = 60 / tempo;
+    while (this.quand < this.ac.currentTime + 0.2){
+      const m = this.GRILLE[this.mesure % 4], t = this.temps4, q = this.quand;
+      if (t === 0 || t === 2) this.note(m.basse[t === 0 ? 0 : 1], q, noire * 0.85, "triangle", 0.14, 420);
+      if (t === 1 || t === 3){
+        m.accord.forEach((f, i) => this.note(f, q + 0.012 * i, noire * 0.42, "sine", 0.045, 2400));
+      }
+      this.balai(q, t % 2 === 0 ? 0.05 : 0.028);
+      if (t === 3) this.balai(q + noire * 0.5, 0.034);
+      this.quand += noire;
+      this.temps4++;
+      if (this.temps4 > 3){ this.temps4 = 0; this.mesure++; }
+    }
+  },
 };
 
 /* ================= chargement des images ================= */
@@ -823,7 +924,7 @@ const File = {
 /* ================= héros ================= */
 const Heros = [
   { nom:"THIBAUT", sprite:"thibaut", place:PLACE_T, couleur:"#37AC48" },
-  { nom:"PIERRE-FRANÇOIS", sprite:"pierre", place:PLACE_PF, couleur:"#2A8AE4" },
+  { nom:"PF", sprite:"pierre", place:PLACE_PF, couleur:"#2A8AE4" },
 ];
 
 /* Point d'arrêt de l'arrivant selon le héros qu'il vient saluer. */
@@ -991,7 +1092,7 @@ const Jeu = {
 
     this.prochaineArrivee = this.temps + 1.5;
     Camera.recaler();
-    Sons.reveiller(); Sons.lancerAmbiance();
+    Sons.reveiller(); Sons.lancerAmbiance(); Sons.lancerMusique();
     Interface.majBandeau(); Interface.entrerJeu();
   },
 
@@ -1023,7 +1124,12 @@ const Jeu = {
     }
     Effets.majorer(dt);
     Camera.majorer(dt);
-    Sons.ambiancer(borne(File.installees() / 26, 0, 1), dt, this.temps);
+    const densite = borne(File.installees() / 26, 0, 1);
+    Sons.ambiancer(densite, dt, this.temps);
+    /* la musique n'existe qu'en partie, et le tempo monte avec le soir */
+    const tempo = melange(92, 124, borne(Score.saluts / MOMENTS[2].seuil, 0, 1));
+    Sons.volumeMusique(this.phase === "jeu" ? 0.80 : (this.phase === "fin" ? 0.25 : 0.45));
+    Sons.ordonnerMusique(tempo);
   },
 
   majMoment(){
@@ -1136,32 +1242,53 @@ const Jeu = {
 };
 
 /* ================= caméra =================
-   Le bar reste collé au bord gauche ; la file pousse vers la droite.
-   Quand elle dépasse ce que l'écran peut montrer, on dézoome — mais pas
-   au-delà de Z_MIN, sinon les personnages deviennent illisibles. Le
-   reste de la file est alors résumé au bord droit. */
-const Z_MIN = 0.40;
+   Le premier réglage cadrait toute la file : à trente personnes, les
+   têtes faisaient quarante pixels sur un téléphone et on ne voyait plus
+   qui tendait la main. On cadre maintenant la ZONE D'ACTION — les deux
+   héros et le point de salut — et rien d'autre n'a le droit de la
+   réduire. La file qui s'allonge se lit au compteur, au voile du bord
+   droit et aux gens qui débordent, pas en rapetissant tout le monde. */
+const Z_MIN = 0.85;
 const Camera = {
   x:X_PORTE - 14, z:1, zVise:1, ech:1, base:120, sol:0, L:1, H:1, dpr:1,
 
   mesurer(L, H, dpr){
     this.L = L; this.H = H; this.dpr = dpr;
-    /* La largeur pèse moins que la hauteur, sauf en portrait où c'est
-       elle qui contraint : sans le second terme, un iPhone debout
-       affichait des personnages de 82 px perdus au bas de l'écran. */
-    this.base = borne(Math.min(H * 0.27, L * 0.28), 70, 200);
-    this.sol = H * 0.845;
+    /* La largeur pèse autant que la hauteur : sur un iPhone debout,
+       c'est elle qui contraint, et sans ce terme les personnages
+       tombaient à 82 px perdus en bas de l'écran. */
+    this.base = borne(Math.min(H * 0.34, L * 0.30), 88, 280);
+    /* On remonte la ligne de sol en portrait : sinon la file se range
+       derrière les deux gros boutons du bas. */
+    this.sol = H * melange(0.79, 0.845, borne((L / H - 0.6) / 0.9, 0, 1));
     this.calculerVise();
+    this.recentrer();
   },
   calculerVise(){
     const echBase = this.base / H_PERSO;
-    this.zVise = borne((this.L * 0.965) / Math.max(1, File.etendue() * echBase), Z_MIN, 1);
+    const droite = Math.max(xPlace(Math.max(3, File.places.length - 1)), xSalut(1)) + 40;
+    const plein = (this.L * 0.97) / Math.max(1, (droite - (X_PORTE - 14)) * echBase);
+    this.zVise = borne(plein, Z_MIN, 1);
   },
-  recaler(){ this.calculerVise(); this.z = this.zVise; this.ech = (this.base / H_PERSO) * this.z; },
+  /* Le cadrage suit les héros, pas le bar : quand la file déborde, c'est
+     le bar qui sort par la gauche, jamais la poignée de main. */
+  recentrer(){
+    const large = this.L / this.ech;
+    let x = xPlace(PLACE_T) - 0.30 * large;
+    const droiteVoulue = xSalut(1) + 0.35 * PAS;
+    if (x + large * 0.92 < droiteVoulue) x = droiteVoulue - large * 0.92;
+    this.x = Math.max(x, X_PORTE - 16);
+  },
+  recaler(){
+    this.calculerVise(); this.z = this.zVise;
+    this.ech = (this.base / H_PERSO) * this.z;
+    this.recentrer();
+  },
   majorer(dt){
     this.calculerVise();
     this.z = melange(this.z, this.zVise, Math.min(1, dt * 2.6));
     this.ech = (this.base / H_PERSO) * this.z;
+    this.recentrer();
   },
   ecran(xMonde){ return (xMonde - this.x) * this.ech; },
   bordGauche(){ return this.x; },
@@ -1381,19 +1508,36 @@ function dessinerBulle(b){
    Les trois images n'ont pas le même cadrage : on les pose donc toutes
    avec le même point d'ancrage (le trottoir, 82 % de la hauteur) pour
    que le croisement jour/soir/nuit ne fasse pas sauter le bar. */
-const ANCRE_FOND_Y = 0.86, ANCRE_FOND_X = 0.34;
+/* Où se trouve le sol DANS l'image de décor : c'est une propriété du
+   dessin, pas un réglage. Il reste très peu de trottoir en dessous, donc
+   la ligne de sol du jeu doit rester basse à l'écran. */
+const ANCRE_FOND_Y = 0.86;
+
+/* Le cadrage horizontal, en revanche, dépend du format. Le décor fait
+   2,3 fois plus large que haut : sur un téléphone debout, on n'en voit
+   qu'une tranche étroite. Centrée à 34 %, cette tranche tombait sur
+   l'angle du mur — quatre cents pixels de crépi beige. Décalée à 62 %,
+   elle tombe sur la devanture éclairée. */
+function ancreFondX(){
+  return melange(0.62, 0.34, borne((Camera.L / Camera.H - 0.6) / 0.9, 0, 1));
+}
 
 function poserFond(nom, alpha){
   const img = Images.table[nom];
   if (!img || !img.naturalWidth) return;
   const L = Camera.L, H = Camera.H;
   const zoom = 0.98 + 0.06 * Camera.z;          /* la caméra recule quand la file s'allonge */
-  const s = Math.max(L / img.naturalWidth, H / img.naturalHeight) * zoom;
+  /* Il faut assez d'image AU-DESSUS et AU-DESSOUS de la ligne de sol :
+     sans cette contrainte, remonter le sol laissait une bande noire en
+     bas de l'écran. */
+  const hMin = Math.max(Camera.sol / ANCRE_FOND_Y, (H - Camera.sol) / (1 - ANCRE_FOND_Y));
+  const s = Math.max(L / img.naturalWidth, hMin / img.naturalHeight) * zoom;
   const l = img.naturalWidth * s, h = img.naturalHeight * s;
-  const x = -ANCRE_FOND_X * l + L * ANCRE_FOND_X;
+  const ax = ancreFondX();
+  const x = ax * (L - l);
   const y = Camera.sol - ANCRE_FOND_Y * h;
   ctx.globalAlpha = alpha;
-  ctx.drawImage(img, x, Math.min(y, 0), l, h);
+  ctx.drawImage(img, x, y, l, h);
   ctx.globalAlpha = 1;
 }
 
@@ -1604,7 +1748,7 @@ function dessiner(){
 /* ================= UIManager -> Interface ================= */
 const E = {};
 function accrocher(){
-  for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo",
+  for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
                     "vFile","vies","pupitre","cmdT","cmdP","visageT","visageP","fin","fScore","fCombo",
                     "fSaluts","fFile","fRecord","btnRejouer","pivot","pivotOk","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version"]){
@@ -1618,14 +1762,20 @@ const Interface = {
   preparer(){
     if (E.version) E.version.textContent = "D'TOUR v" + VERSION;
     if (E.logo && Images.table.logo) E.logo.src = Images.table.logo.src;
-    if (E.visageT && Images.table.face_thibaut) E.visageT.src = Images.table.face_thibaut.src;
-    if (E.visageP && Images.table.face_pierre) E.visageP.src = Images.table.face_pierre.src;
+    for (const [el, nom] of [[E.visageT, "face_thibaut"], [E.miniT, "face_thibaut"],
+                             [E.visageP, "face_pierre"], [E.miniP, "face_pierre"]]){
+      if (el && Images.table[nom]) el.src = Images.table[nom].src;
+    }
+    const r = lireRecords();
+    if (E.tRecord) E.tRecord.textContent = r.score ? "MEILLEUR SCORE " + chiffres(r.score) : "";
   },
   avancement(f){ if (E.jauge) E.jauge.style.width = Math.round(f * 100) + "%"; },
   fermerIntro(){ if (E.intro) E.intro.classList.add("parti"); },
 
   entrerTitre(){
     this.finAffichee = false;
+    const r = lireRecords();
+    if (E.tRecord) E.tRecord.textContent = r.score ? "MEILLEUR SCORE " + chiffres(r.score) : "";
     if (E.titre) E.titre.classList.remove("parti");
     if (E.fin) E.fin.classList.remove("on");
     if (E.hud) E.hud.classList.remove("on");

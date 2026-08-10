@@ -2,7 +2,7 @@
 /* ================= UIManager -> Interface ================= */
 const E = {};
 function accrocher(){
-  for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo",
+  for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
                     "vFile","vies","pupitre","cmdT","cmdP","visageT","visageP","fin","fScore","fCombo",
                     "fSaluts","fFile","fRecord","btnRejouer","pivot","pivotOk","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version"]){
@@ -16,14 +16,20 @@ const Interface = {
   preparer(){
     if (E.version) E.version.textContent = "D'TOUR v" + VERSION;
     if (E.logo && Images.table.logo) E.logo.src = Images.table.logo.src;
-    if (E.visageT && Images.table.face_thibaut) E.visageT.src = Images.table.face_thibaut.src;
-    if (E.visageP && Images.table.face_pierre) E.visageP.src = Images.table.face_pierre.src;
+    for (const [el, nom] of [[E.visageT, "face_thibaut"], [E.miniT, "face_thibaut"],
+                             [E.visageP, "face_pierre"], [E.miniP, "face_pierre"]]){
+      if (el && Images.table[nom]) el.src = Images.table[nom].src;
+    }
+    const r = lireRecords();
+    if (E.tRecord) E.tRecord.textContent = r.score ? "MEILLEUR SCORE " + chiffres(r.score) : "";
   },
   avancement(f){ if (E.jauge) E.jauge.style.width = Math.round(f * 100) + "%"; },
   fermerIntro(){ if (E.intro) E.intro.classList.add("parti"); },
 
   entrerTitre(){
     this.finAffichee = false;
+    const r = lireRecords();
+    if (E.tRecord) E.tRecord.textContent = r.score ? "MEILLEUR SCORE " + chiffres(r.score) : "";
     if (E.titre) E.titre.classList.remove("parti");
     if (E.fin) E.fin.classList.remove("on");
     if (E.hud) E.hud.classList.remove("on");

@@ -1,31 +1,52 @@
 
 /* ================= caméra =================
-   Le bar reste collé au bord gauche ; la file pousse vers la droite.
-   Quand elle dépasse ce que l'écran peut montrer, on dézoome — mais pas
-   au-delà de Z_MIN, sinon les personnages deviennent illisibles. Le
-   reste de la file est alors résumé au bord droit. */
-const Z_MIN = 0.40;
+   Le premier réglage cadrait toute la file : à trente personnes, les
+   têtes faisaient quarante pixels sur un téléphone et on ne voyait plus
+   qui tendait la main. On cadre maintenant la ZONE D'ACTION — les deux
+   héros et le point de salut — et rien d'autre n'a le droit de la
+   réduire. La file qui s'allonge se lit au compteur, au voile du bord
+   droit et aux gens qui débordent, pas en rapetissant tout le monde. */
+const Z_MIN = 0.85;
 const Camera = {
   x:X_PORTE - 14, z:1, zVise:1, ech:1, base:120, sol:0, L:1, H:1, dpr:1,
 
   mesurer(L, H, dpr){
     this.L = L; this.H = H; this.dpr = dpr;
-    /* La largeur pèse moins que la hauteur, sauf en portrait où c'est
-       elle qui contraint : sans le second terme, un iPhone debout
-       affichait des personnages de 82 px perdus au bas de l'écran. */
-    this.base = borne(Math.min(H * 0.27, L * 0.28), 70, 200);
-    this.sol = H * 0.845;
+    /* La largeur pèse autant que la hauteur : sur un iPhone debout,
+       c'est elle qui contraint, et sans ce terme les personnages
+       tombaient à 82 px perdus en bas de l'écran. */
+    this.base = borne(Math.min(H * 0.34, L * 0.30), 88, 280);
+    /* On remonte la ligne de sol en portrait : sinon la file se range
+       derrière les deux gros boutons du bas. */
+    this.sol = H * melange(0.79, 0.845, borne((L / H - 0.6) / 0.9, 0, 1));
     this.calculerVise();
+    this.recentrer();
   },
   calculerVise(){
     const echBase = this.base / H_PERSO;
-    this.zVise = borne((this.L * 0.965) / Math.max(1, File.etendue() * echBase), Z_MIN, 1);
+    const droite = Math.max(xPlace(Math.max(3, File.places.length - 1)), xSalut(1)) + 40;
+    const plein = (this.L * 0.97) / Math.max(1, (droite - (X_PORTE - 14)) * echBase);
+    this.zVise = borne(plein, Z_MIN, 1);
   },
-  recaler(){ this.calculerVise(); this.z = this.zVise; this.ech = (this.base / H_PERSO) * this.z; },
+  /* Le cadrage suit les héros, pas le bar : quand la file déborde, c'est
+     le bar qui sort par la gauche, jamais la poignée de main. */
+  recentrer(){
+    const large = this.L / this.ech;
+    let x = xPlace(PLACE_T) - 0.30 * large;
+    const droiteVoulue = xSalut(1) + 0.35 * PAS;
+    if (x + large * 0.92 < droiteVoulue) x = droiteVoulue - large * 0.92;
+    this.x = Math.max(x, X_PORTE - 16);
+  },
+  recaler(){
+    this.calculerVise(); this.z = this.zVise;
+    this.ech = (this.base / H_PERSO) * this.z;
+    this.recentrer();
+  },
   majorer(dt){
     this.calculerVise();
     this.z = melange(this.z, this.zVise, Math.min(1, dt * 2.6));
     this.ech = (this.base / H_PERSO) * this.z;
+    this.recentrer();
   },
   ecran(xMonde){ return (xMonde - this.x) * this.ech; },
   bordGauche(){ return this.x; },
@@ -245,19 +266,36 @@ function dessinerBulle(b){
    Les trois images n'ont pas le même cadrage : on les pose donc toutes
    avec le même point d'ancrage (le trottoir, 82 % de la hauteur) pour
    que le croisement jour/soir/nuit ne fasse pas sauter le bar. */
-const ANCRE_FOND_Y = 0.86, ANCRE_FOND_X = 0.34;
+/* Où se trouve le sol DANS l'image de décor : c'est une propriété du
+   dessin, pas un réglage. Il reste très peu de trottoir en dessous, donc
+   la ligne de sol du jeu doit rester basse à l'écran. */
+const ANCRE_FOND_Y = 0.86;
+
+/* Le cadrage horizontal, en revanche, dépend du format. Le décor fait
+   2,3 fois plus large que haut : sur un téléphone debout, on n'en voit
+   qu'une tranche étroite. Centrée à 34 %, cette tranche tombait sur
+   l'angle du mur — quatre cents pixels de crépi beige. Décalée à 62 %,
+   elle tombe sur la devanture éclairée. */
+function ancreFondX(){
+  return melange(0.62, 0.34, borne((Camera.L / Camera.H - 0.6) / 0.9, 0, 1));
+}
 
 function poserFond(nom, alpha){
   const img = Images.table[nom];
   if (!img || !img.naturalWidth) return;
   const L = Camera.L, H = Camera.H;
   const zoom = 0.98 + 0.06 * Camera.z;          /* la caméra recule quand la file s'allonge */
-  const s = Math.max(L / img.naturalWidth, H / img.naturalHeight) * zoom;
+  /* Il faut assez d'image AU-DESSUS et AU-DESSOUS de la ligne de sol :
+     sans cette contrainte, remonter le sol laissait une bande noire en
+     bas de l'écran. */
+  const hMin = Math.max(Camera.sol / ANCRE_FOND_Y, (H - Camera.sol) / (1 - ANCRE_FOND_Y));
+  const s = Math.max(L / img.naturalWidth, hMin / img.naturalHeight) * zoom;
   const l = img.naturalWidth * s, h = img.naturalHeight * s;
-  const x = -ANCRE_FOND_X * l + L * ANCRE_FOND_X;
+  const ax = ancreFondX();
+  const x = ax * (L - l);
   const y = Camera.sol - ANCRE_FOND_Y * h;
   ctx.globalAlpha = alpha;
-  ctx.drawImage(img, x, Math.min(y, 0), l, h);
+  ctx.drawImage(img, x, y, l, h);
   ctx.globalAlpha = 1;
 }
 
