@@ -541,15 +541,27 @@ if (D){
   D.Jeu.demarrer(2);
   D.Camera.mesurer(1280, 620, 1);
   verifier("elle démarre", D.Intro.actif);
-  verifier("l'enquête n'est pas encore montée", !D.Enquete.pretes(),
-    "rien ne doit être dessiné du niveau tant que les inspecteurs n'existent pas");
+  verifier("la scène est montée mais la partie n'a pas commencé",
+    D.Enquete.pretes() && !D.Enquete.actif,
+    "les deux doivent exister pour entrer à l'image, sans que le chrono tourne");
+  verifier("ils entrent par la gauche, hors champ",
+    D.Enquete.inspecteurs.every(i => i.x < 0),
+    D.Enquete.inspecteurs.map(i => i.x.toFixed(3)).join(" / "));
   let trames = 0;
   while (D.Intro.actif && trames++ < 60 * 30) D.Jeu.pas(1 / 60);
   verifier("elle se termine seule", !D.Intro.actif, "toujours en cours après 30 s");
   verifier("en moins de dix secondes", trames < 60 * 10, (trames / 60).toFixed(1) + " s");
   verifier("et elle enchaîne sur l'enquête", D.Enquete.actif && D.Enquete.pretes());
+  verifier("les deux sont entrés dans le champ",
+    D.Enquete.inspecteurs.every(i => i.x > 0.02),
+    D.Enquete.inspecteurs.map(i => i.x.toFixed(3)).join(" / "));
+  verifier("et ils ne se marchent pas dessus",
+    Math.abs(D.Enquete.inspecteurs[0].x - D.Enquete.inspecteurs[1].x) > 0.03);
   verifier("on peut la passer d'un geste",
     (() => { D.Jeu.demarrer(2); for (let i = 0; i < 9; i++) D.Intro.passer(); return !D.Intro.actif; })());
+  verifier("la passer met quand même les deux en place",
+    D.Enquete.inspecteurs.every(i => i.x > 0.02),
+    "sauter l'introduction ne doit pas laisser un inspecteur hors champ");
 
   /* Une trame qui casse ne doit pas emporter la boucle. */
   verifier("la boucle survit à une trame ratée",

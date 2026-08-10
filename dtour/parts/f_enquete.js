@@ -426,12 +426,14 @@ const Enquete = {
   pizza:null, esquiveOuverte:false, tarteRecue:false, tarteEsquivee:false,
   gele:0, badge:null, badgeT:0,
 
-  demarrer(){
+  /* Monter la scène ne lance pas la partie. L'introduction a besoin des
+     deux inspecteurs pour les faire entrer à l'image, mais surtout pas
+     du chrono ni des commandes. */
+  monter(){
     Affaire.generer();
     Dossier.raz();
     HortenseApp.raz();
     for (const s of SUSPECTS){ s.vus = 0; s.coince = false; }
-    this.actif = true;
     this.restant = ENQ_DUREE;
     this.indices = 0; this.fouilles = 0; this.fausses = 0;
     this.fini = null; this.secousse = 0; this.message = null;
@@ -450,10 +452,23 @@ const Enquete = {
       ref:z, fouillee:false, indice:Affaire.plan[z.id] || null,
       cachette:z.id === Affaire.cachette, pulse:Math.random() * 6.28,
     }));
+    /* Hors champ à gauche : c'est l'introduction qui les fait entrer. */
     this.inspecteurs = Heros.map((h, i) => ({
-      heros:i, x:0.10 + i * 0.05, dir:1, marche:0, pas:0, fouille:0, cible:-1, sale:0,
+      heros:i, x:-0.06 - i * 0.05, dir:1, marche:0, pas:0, fouille:0, cible:-1, sale:0,
     }));
+    this.actif = false;
     Camera.xEnq = 0;
+  },
+
+  /* Le chrono part ici, et pas avant. */
+  lancer(){
+    this.actif = true;
+    this.restant = ENQ_DUREE;
+  },
+
+  demarrer(){
+    this.monter();
+    this.lancer();
   },
 
   /* Pendant l'introduction, l'enquête n'est pas encore montée : il n'y

@@ -365,8 +365,11 @@ const Jeu = {
     File.raz(); Foule.raz();
     this.temps = 0; this.vies = 1; this.ralenti = 1; this.demandes = [];
     this.finChrono = 0; this.phase = "jeu";
-    Enquete.demarrer();
-    Sons.reveiller(); Sons.lancerAmbiance(); Sons.lancerMusique();
+    /* La scène a déjà été montée par l'introduction, avec l'affaire
+       tirée et les deux inspecteurs entrés à l'image : la remonter ici
+       les renverrait hors champ et redistribuerait les indices. */
+    if (Enquete.pretes()) Enquete.lancer(); else Enquete.demarrer();
+    Sons.reveiller(); Sons.lancerFondEnquete(); Sons.lancerMusique();
     Interface.entrerJeu();
     Interface.majBandeau();
   },
@@ -376,7 +379,18 @@ const Jeu = {
     if (this.niveau === 2){
       if (this.phase === "jeu" || this.phase === "fin"){
         this.temps += dt;
-        if (Intro.actif){ Intro.majorer(dt); Sons.ordonnerMusique(88); return; }
+        if (Intro.actif){
+          Intro.majorer(dt);
+          /* On vise le milieu des deux : suivre le premier laissait le
+             second coupé au bord de l'écran pendant qu'il entrait. */
+          const m = Enquete.inspecteurs.length
+            ? Enquete.inspecteurs.reduce((a2, i2) => a2 + Math.max(0, i2.x), 0) / Enquete.inspecteurs.length
+            : 0.1;
+          Camera.suivreEnq(m, dt);
+          Sons.fondEnquete(dt);
+          Sons.ordonnerMusique(88);
+          return;
+        }
         Enquete.pas(dt);
         Interface.majAction();
         if (this.phase === "fin"){

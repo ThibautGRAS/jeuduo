@@ -28,8 +28,14 @@ veut sur l'écran d'accueil, sans rien avoir à débloquer. Le fait d'avoir
 terminé le niveau 1 reste enregistré sous `dtour_progres` — c'est une
 information, pas une serrure.
 
-Une courte introduction — cinq écrans, six secondes — puis l'enquête :
-seize meubles, six indices à réunir, cinq minutes.
+Une courte introduction — six temps, une dizaine de secondes, sautable
+d'un geste. Elle est **jouée dans le décor** : écran noir sur « Quelques
+heures plus tard... », puis l'appartement apparaît, Pierre-François
+entre par la gauche avec sa loupe, Thibaut le rejoint, et le titre
+tombe. La scène est montée avant que le chrono parte — c'est ce qui
+permet de les faire entrer à l'image sans que la partie ait commencé.
+
+Puis l'enquête : seize meubles, six indices à réunir, cinq minutes.
 
 **Échelle.** Un adulte fait environ 70 % de la hauteur sous plafond, et
 la pièce occupe 88 % de l'image : les inspecteurs mesurent donc 0,62 de

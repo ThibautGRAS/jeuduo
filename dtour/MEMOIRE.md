@@ -113,6 +113,15 @@ donc 0,62. Le reste — deux ombres, dont une courte au contact des pieds,
 et un voile chaud posé après les personnages — ne fait que finir le
 travail.
 
+### Monter la scène et lancer la partie sont deux choses
+Pour que les deux inspecteurs entrent à l'image pendant l'introduction,
+il faut qu'ils existent — mais surtout pas que le chrono tourne.
+`Enquete.monter()` tire l'affaire, pose les meubles et place les deux
+hors champ ; `Enquete.lancer()` démarre seulement le décompte. Le piège
+qui a suivi : la fin de l'introduction rappelait `demarrer()`, qui
+remonte tout — les deux repartaient hors champ et les indices étaient
+redistribués. On ne remonte que si la scène n'existe pas encore.
+
 ### Une exception de dessin fige le jeu, sans un mot
 Le niveau 2 restait bloqué sur « QUELQUES HEURES PLUS TARD... ». Cause :
 pendant l'introduction, l'enquête n'est pas encore montée — pas

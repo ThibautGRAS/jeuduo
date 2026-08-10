@@ -308,7 +308,9 @@ function jouerJusqua(D, condition, limite){
     const { D, canevas } = await preparer(844, 318);
     D.amorcer(); D.Camera.mesurer(844, 318, 1);
     D.Jeu.demarrer(2);
-    for (let i = 0; i < 30; i++){ D.Jeu.pas(1 / 60); D.__dessiner(); }
+    /* au troisième temps : Pierre-François est entré, Thibaut arrive */
+    for (let i = 0; i < 60 * 7.2; i++){ D.Jeu.pas(1 / 60); }
+    D.__dessiner();
     ecrire(canevas, "13_intro_844");
   }
 

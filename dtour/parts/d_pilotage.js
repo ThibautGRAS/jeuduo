@@ -71,25 +71,45 @@ const Progres = {
    Cinq écrans courts, six secondes en tout. On peut passer d'un
    toucher : une cinématique qu'on ne peut pas sauter est une punition
    dès la deuxième partie. */
+/* Six temps, une dizaine de secondes, sautables d'un geste : une
+   cinématique qu'on ne peut pas passer est une punition dès la
+   deuxième partie. Les deux inspecteurs entrent à l'image pendant
+   qu'elle se déroule — le décor est là dès le deuxième temps, ils
+   arrivent au troisième et au quatrième. */
 const INTRO_NIV2 = [
-  { t:1.4, txt:"QUELQUES HEURES\nPLUS TARD..." },
-  { t:1.6, txt:"UNE PIZZA AU CHORIZO\nA DISPARU." },
-  { t:1.3, txt:"Pierre-François sort sa loupe." },
-  { t:1.0, txt:"Thibaut le rejoint." },
-  { t:1.4, txt:"NIVEAU 2\n<em>L'AFFAIRE DE LA PIZZA AU CHORIZO</em>" },
-  { t:2.2, txt:"<em>Fouillez. Retrouvez la pizza.\nPuis désignez qui.</em>" },
+  { t:1.5, txt:"QUELQUES HEURES\nPLUS TARD...", noir:true },
+  { t:1.7, txt:"UNE PIZZA AU CHORIZO\n<em>A DISPARU.</em>" },
+  { t:1.8, txt:"Pierre-François sort sa loupe.", entree:0 },
+  { t:1.5, txt:"Thibaut le rejoint.", entree:1 },
+  { t:1.6, txt:"NIVEAU 2\n<em>L'AFFAIRE DE LA PIZZA AU CHORIZO</em>" },
+  { t:1.7, txt:"<em>Fouillez. Retrouvez la pizza.\nPuis désignez qui.</em>" },
 ];
+/* Où chacun s'arrête en entrant, et à quelle vitesse. */
+const INTRO_PLACES = [0.115, 0.062];
+const INTRO_PAS = 0.150;
+
 const Intro = {
-  actif:false, etape:0, chrono:0,
+  actif:false, etape:0, chrono:0, entres:[false, false],
+
   lancer(){
     this.actif = true; this.etape = 0; this.chrono = INTRO_NIV2[0].t;
+    this.entres = [false, false];
+    Enquete.monter();
+    Camera.xEnq = 0;
     if (E.introNiv) E.introNiv.classList.add("on");
     this.afficher();
   },
   afficher(){
-    if (E.introTxt) E.introTxt.innerHTML = INTRO_NIV2[this.etape].txt.replace(/\n/g, "<br>");
+    const e = INTRO_NIV2[this.etape];
+    if (E.introTxt) E.introTxt.innerHTML = e.txt.replace(/\n/g, "<br>");
+    if (E.introNiv) E.introNiv.classList.toggle("noir", !!e.noir);
+    if (e.entree !== undefined){
+      this.entres[e.entree] = true;
+      Sons.clic();
+    }
   },
   passer(){
+    /* Passer d'un geste : on saute à la fin, et les deux sont en place. */
     this.etape++;
     if (this.etape >= INTRO_NIV2.length) return this.finir();
     this.chrono = INTRO_NIV2[this.etape].t;
@@ -97,11 +117,23 @@ const Intro = {
   },
   finir(){
     this.actif = false;
-    if (E.introNiv) E.introNiv.classList.remove("on");
+    this.entres = [true, true];
+    if (E.introNiv) E.introNiv.classList.remove("on", "noir");
+    for (let i = 0; i < Enquete.inspecteurs.length; i++) Enquete.inspecteurs[i].x = INTRO_PLACES[i];
     Jeu.demarrerEnquete();
   },
+  /* Les deux entrent par la gauche pendant que le texte défile. */
   majorer(dt){
     if (!this.actif) return;
+    for (let i = 0; i < Enquete.inspecteurs.length; i++){
+      const ins = Enquete.inspecteurs[i];
+      if (!this.entres[i]) continue;
+      const but = INTRO_PLACES[i];
+      const reste = but - ins.x;
+      if (Math.abs(reste) < 0.002){ ins.marche = 0; continue; }
+      const pas = Math.sign(reste) * Math.min(Math.abs(reste), INTRO_PAS * dt);
+      ins.x += pas; ins.pas += Math.abs(pas) * 9; ins.dir = 1; ins.marche = 1;
+    }
     this.chrono -= dt;
     if (this.chrono <= 0) this.passer();
   },

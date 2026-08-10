@@ -35,9 +35,12 @@ const EnqVue = {
        l'introduction s'affiche par-dessus, en HTML. */
     if (Enquete.pretes()){
       this.dessinerSuspects();
-      this.dessinerZones();
+      /* Pendant l'introduction on ne montre que les gens : les repères
+         de fouille et les plaques de nom arriveraient avant les
+         règles. */
+      if (Enquete.actif) this.dessinerZones();
       this.dessinerInspecteurs();
-      this.dessinerNoms();
+      if (Enquete.actif) this.dessinerNoms();
     }
     if (Enquete.pretes() && HortenseApp.visible()) this.dessinerHortense();
     if (E2.pizza) this.dessinerPizza();
@@ -67,7 +70,7 @@ const EnqVue = {
       dessinerParoleLibre(p, px, this.ey(ENQ_LIGNE) - H * ENQ_TAILLE - etage * H * 0.115);
     }
 
-    if (Enquete.pretes()) this.dessinerBandeau();
+    if (Enquete.actif) this.dessinerBandeau();
     if (E2.dossierOuvert) this.dessinerDossier();
     if (E2.accusation) this.dessinerAccusation();
     if (E2.esquiveOuverte) this.dessinerEsquive();
@@ -212,7 +215,7 @@ const EnqVue = {
       ctx.restore();
 
       /* le repère de l'inspecteur actif */
-      if (i === Enquete.actifIdx){
+      if (i === Enquete.actifIdx && Enquete.actif){
         const py = sol - haut - H * 0.03;
         const t = H * 0.030;
         ctx.save();
