@@ -192,6 +192,25 @@ un jeu entre proches, c'est le bon compromis : zéro infrastructure, zéro compt
 zéro modération de noms. Tableau borné à 24 joueurs, soit environ 1,3 Ko
 transmis.
 
+## 3ter. Autour du duel
+
+Ces briques existent dans le code depuis longtemps sans avoir jamais été
+consignées ici. Elles vivent toutes hors de la boucle de jeu, ce qui explique
+qu'aucun piège ne les ait fait remonter.
+
+- **Carte de résultat partageable** — l'issue du match est peinte en image,
+  destinée à être envoyée telle quelle.
+- **Photo de profil** — capturée puis transmise par le canal fiable, avec le nom.
+- **Défi asynchrone** — un record voyage dans un lien : l'adversaire le reçoit
+  sans qu'aucune partie soit en cours.
+- **Musique rétro percussive** — batterie, basse et lead synthétisés, sans
+  fichier audio à charger.
+- **Vannes sur le nom** — commentaires générés à partir du nom du joueur.
+- **Diagnostic réseau** — le HUD affiche `DIRECT` ou `RELAIS`, et le détail des
+  serveurs de signalisation.
+- **Historique et records locaux** — conservés sur l'appareil, distincts du
+  palmarès échangé en fin de match.
+
 ## 4. Mini-jeux à tester
 
 Quatre pistes retenues, à construire et éprouver une par une. Toutes réutilisent
@@ -245,12 +264,12 @@ Par ordre d'intérêt, issus de l'audit :
 1. **Trafic réseau** — 620 octets à 30 Hz, dont environ 2 Ko/s de données qui ne
    changent jamais en cours de match. Un envoi initial fiable pour le statique
    et une cadence réduite pour le décor feraient gagner un bon quart.
-2. **Clavier et pause** — aucun gestionnaire de touches, aucune interruption
-   possible en cours de partie.
-3. **Manifeste PWA** — pas d'ajout à l'écran d'accueil ni de plein écran.
-4. **Volume** — activable ou coupé, sans réglage intermédiaire.
-5. **Compteur de duels** — local à chaque appareil, donc chacun compte sa propre
+2. **Volume** — activable ou coupé, sans réglage intermédiaire.
+3. **Compteur de duels** — local à chaque appareil, donc chacun compte sa propre
    vision du score.
+
+Réglés depuis l'audit : le clavier et la pause partagée (v14.0 à v14.3), le
+manifeste PWA et ses quatre icônes.
 
 Écartés volontairement : découper le fichier en modules, et ajouter un vrai
 serveur de jeu. L'architecture hôte-autoritaire suffit largement pour du duel
@@ -268,3 +287,9 @@ entre proches.
 | 8 | Modes arcade et classique, écran VERSUS, récap de manche |
 | 9 | Décors peints, éclairage puis son retrait, arc électrique, rimes |
 | 10 | Fiabilité du canal de contrôle, reprise après coupure, suite de tests |
+| 11 | Mini-jeu GRAVITÉ : puits en camp adverse, lentille, balle avalée |
+| 12 | Mini-jeu RELAIS coopératif, record commun aux deux joueurs |
+| 13 | Palmarès propagé de proche en proche, rochers capturés en orbite |
+| 14.0 → 14.3 | Pause partagée valable en réseau, clavier, bouton unique |
+| 14.4 | Rochers à partir de la manche 2, relance automatique à 14 s |
+| 14.5 | Lentille composée hors écran : elle ne disparaît plus après quelques secondes |
