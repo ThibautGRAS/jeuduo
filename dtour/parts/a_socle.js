@@ -404,7 +404,11 @@ function charger(surAvance){
       faits++; if (surAvance) surAvance(faits / noms.length); resoudre();
     };
     img.onerror = () => { faits++; if (surAvance) surAvance(faits / noms.length); resoudre(); };
-    img.src = "img/" + nom + ".webp";
+    /* Le numéro de version suit l'adresse : les images ont changé de
+       définition et de prénom sans changer de nom de fichier, et Safari
+       aurait resservi les anciennes depuis son cache — boutons neufs sur
+       sprites périmés. */
+    img.src = "img/" + nom + ".webp?v=" + VERSION;
   }))).then(() => { Images.pret = true; });
 }
 
