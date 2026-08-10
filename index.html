@@ -464,7 +464,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v11.4 · 2026-08-09</div>
+  <div id="version">DUO v11.5 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -595,7 +595,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "11.4";
+const VERSION = "11.5";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -625,9 +625,9 @@ const MODES = {
    l'aplomb de sa propre raquette. Déplacer sa raquette sert donc à deux choses
    à la fois : se placer pour défendre, et tordre la trajectoire chez l'autre.
    Un seul geste, deux enjeux — et rien de nouveau à apprendre.
-   Calibré par simulation : 136 px d'écart au point d'arrivée entre un puits
-   à gauche et un puits à droite, soit 1,3 largeur de raquette. */
-const PUITS_FORCE = 0.85, PUITS_PORTEE = 255, PUITS_HAUTEUR = 0.30;
+   Calibré par simulation : 219 px d'écart au point d'arrivée entre un puits
+   à gauche et un puits à droite, soit 2,1 largeurs de raquette. */
+const PUITS_FORCE = 1.15, PUITS_PORTEE = 268, PUITS_HAUTEUR = 0.30;
 /* Le rayon visible n'a rien à voir avec la portée physique : à 122 px le puits
    couvrait presque la moitié de la largeur du terrain et on ne voyait plus
    jouer. Réduit à 62, il se lit sans masquer la balle. */
@@ -4352,10 +4352,12 @@ function deformerFond(Y, t){
          laissait une couture nette, d'où l'aspect de rouage cranté */
       const r0 = Math.max(0, R * (i - 1) / N - 1.5), r1 = R * i / N;
       const u = 1 - r1 / R;                        /* 0 au bord, 1 au centre */
-      /* Enroulement volontairement doux : les arènes portent un grand cercle
-         peint que le grossissement dédoublait en cercle fantôme. */
-      const angle = 0.9 * Math.pow(u, 2.1) + t * 0.3 * u;
-      const echelle = 1 + 0.3 * u * u;
+      /* Facteur INFÉRIEUR à 1 : chaque anneau va chercher le décor plus loin
+         et le repose plus près du centre. Le fond est donc aspiré vers le
+         trou — un entonnoir — au lieu d'être grossi comme une loupe, ce qui
+         dédoublait le cercle peint des arènes. */
+      const angle = 1.05 * Math.pow(u, 2.1) + t * 0.32 * u;
+      const echelle = 1 - 0.42 * u * u;
       ctx.save();
       ctx.beginPath();
       ctx.arc(cx, cy, r1, 0, Math.PI*2);
@@ -4377,6 +4379,22 @@ function deformerFond(Y, t){
 function dessinerTrouNoir(x, y, coul, t){
   const R = 33;                     /* rayon de la sphère */
   ctx.save();
+
+  /* Creusement : l'ombre ne commence pas au bord de la sphère mais bien avant,
+     et s'approfondit graduellement. C'est ce dégradé large qui donne la
+     sensation d'un entonnoir plutôt que d'une pastille posée sur le décor. */
+  const creux = ctx.createRadialGradient(x, y, R * 0.8, x, y, PUITS_R_VISU);
+  creux.addColorStop(0,    "rgba(2,4,10,.55)");
+  creux.addColorStop(0.35, "rgba(3,5,12,.30)");
+  creux.addColorStop(0.68, "rgba(4,6,14,.12)");
+  creux.addColorStop(1,    "rgba(4,6,14,0)");
+  ctx.fillStyle = creux;
+  ctx.beginPath(); ctx.arc(x, y, PUITS_R_VISU, 0, Math.PI*2); ctx.fill();
+
+  /* lèvre de l'entonnoir : un liseré très ténu marque le bord du creux */
+  ctx.strokeStyle = rgba(coul, 0.10);
+  ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(x, y, PUITS_R_VISU * 0.94, 0, Math.PI*2); ctx.stroke();
 
   /* extinction progressive : le fond enroulé reste perceptible au centre */
   const g = ctx.createRadialGradient(x, y, 0, x, y, R);
