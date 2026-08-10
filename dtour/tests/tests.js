@@ -644,7 +644,11 @@ if (D){
   verifier("la pizza est retrouvée", !!D.Enquete.pizza);
   D.Enquete.ouvrirAccusation();
   verifier("l'accusation s'ouvre", D.Enquete.accusation);
-  const noms = D.SUSPECTS.map(s => s.id).concat(["personne"]);
+  /* La distribution change à chaque partie : on relit la liste après
+     chaque lancement au lieu de la garder de côté. */
+  const listeNoms = () => D.SUSPECTS.map(s => s.id).concat(["personne"]);
+  let noms = listeNoms();
+  noms = listeNoms();
   D.Enquete.choixAcc = noms.indexOf(D.Affaire.bonneReponse());
   D.Enquete.valider();
   egal("la bonne accusation classe l'affaire", D.Jeu.phase, "fin");
@@ -701,6 +705,35 @@ if (D){
     verifier("elle ne tombe qu'une fois", D.Enquete.fileDial.length === 0);
   } else ok("scénario sans coupable : rien à contredire");
 
+  titre("Les gens dans la pièce");
+  verifier("six têtes en banque", D.SUSPECTS_BANQUE.length === 6, D.SUSPECTS_BANQUE.length);
+  verifier("chacune a un innocent, un évasif et des absurdités",
+    D.SUSPECTS_BANQUE.every(s => s.innocent.length && s.evasif.length && s.absurde.length));
+  verifier("tous les discours font trois répliques",
+    D.SUSPECTS_BANQUE.every(s => s.innocent.concat(s.evasif).every(j => j.length === 3)));
+  verifier("chaque tête a son sprite",
+    D.SUSPECTS_BANQUE.every(s => /^susp_/.test(s.sprite)));
+  (() => {
+    const dist = new Set(), roles = new Set();
+    let coupablePresent = true, chatPresent = true, places = true;
+    for (let n = 0; n < 300; n++){
+      D.Jeu.demarrer(2); D.Intro.finir();
+      dist.add(D.SUSPECTS.map(s => s.id).sort().join(","));
+      roles.add(D.SUSPECTS.map(s => s.dires[0]).join("|"));
+      if (D.Affaire.bonneReponse() !== "personne" &&
+          !D.SUSPECTS.some(s => s.id === D.Affaire.bonneReponse())) coupablePresent = false;
+      if (!D.SUSPECTS.some(s => s.id === "chat")) chatPresent = false;
+      const xs = D.SUSPECTS.map(s => s.x);
+      if (new Set(xs).size !== xs.length) places = false;
+    }
+    verifier("la distribution change d'une partie à l'autre", dist.size >= 6, dist.size + " distributions");
+    verifier("et les discours aussi", roles.size >= 12, roles.size + " jeux de répliques");
+    verifier("le coupable est toujours présent", coupablePresent,
+      "on ne peut pas accuser quelqu'un qui n'est pas là");
+    verifier("le chat est toujours là", chatPresent);
+    verifier("personne ne se tient au même endroit", places);
+  })();
+
   verifier("chaque suspect a un nom affichable, le chat compris",
     D.SUSPECTS.every(s => s.nom && s.nom.length > 2) &&
     D.SUSPECTS.some(s => s.id === "chat" && s.nom === "RISOTO"));
@@ -728,7 +761,7 @@ if (D){
   egal("un toucher choisit la ligne visée", D.Enquete.choixAcc, 2);
   D.Enquete.viserAccusation(yLigne(0));
   egal("un autre toucher change de ligne", D.Enquete.choixAcc, 0);
-  const bonne = D.SUSPECTS.map(s => s.id).concat(["personne"]).indexOf(D.Affaire.bonneReponse());
+  const bonne = listeNoms().indexOf(D.Affaire.bonneReponse());
   D.Enquete.viserAccusation(yLigne(bonne));
   D.Enquete.viserAccusation(yLigne(bonne));
   egal("le second toucher accuse", D.Jeu.phase, "fin");
@@ -738,13 +771,15 @@ if (D){
   D.Enquete.indices = 4;
   D.Enquete.ouvrirAccusation();
   const tAvant = D.Enquete.restant;
-  D.Enquete.choixAcc = noms.indexOf(D.Affaire.bonneReponse()) === 0 ? 1 : 0;
+  noms = listeNoms();
+  const faux = () => { const b = noms.indexOf(D.Affaire.bonneReponse()); return b === 0 ? 1 : 0; };
+  D.Enquete.choixAcc = faux();
   D.Enquete.valider();
   egal("une mauvaise accusation ne termine pas la partie", D.Jeu.phase, "jeu");
   verifier("elle coûte vingt secondes", tAvant - D.Enquete.restant >= 19.5);
   egal("il ne reste qu'une accusation", D.Enquete.accusationsRestantes, D.ENQ_ACCUSATIONS - 1);
   D.Enquete.ouvrirAccusation();
-  D.Enquete.choixAcc = noms.indexOf(D.Affaire.bonneReponse()) === 0 ? 1 : 0;
+  D.Enquete.choixAcc = faux();
   D.Enquete.valider();
   egal("la seconde erreur perd l'affaire", D.Jeu.phase, "fin");
   verifier("et elle est bien perdue", D.Enquete.fini && !D.Enquete.fini.gagne);

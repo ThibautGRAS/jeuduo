@@ -67,9 +67,21 @@ répété. La suite le vérifie sur neuf cents tirages.
 cette limite, on citait tout le monde jusqu'à tomber juste. Le nombre
 restant est écrit sur le bouton.
 
-**Les suspects portent leur nom** dès qu'on les approche, et pour de bon
-dès qu'on leur a parlé — le chat compris. On ne peut pas accuser
-quelqu'un qu'on ne sait pas nommer.
+**Les gens dans la pièce changent.** Six têtes en banque — le voisin du
+dessus, la colocataire, l'amie de passage, le copain du samedi, celui
+qui est toujours là, et Risoto. À chaque partie, trois humains et le
+chat, à des places différentes. Le coupable est toujours présent :
+accuser quelqu'un d'absent n'aurait aucun sens.
+
+**Et ils ne disent pas la même chose.** Chacun a deux jeux de
+déclarations quand il est innocent, deux autres quand c'est lui, et des
+réponses absurdes réservées à Pierre-François, qui ne sait pas parler aux
+gens. Le jeu est tiré au début de la partie : deux enquêtes sur le même
+coupable ne s'entendent pas pareil.
+
+**Ils portent leur nom** dès qu'on les approche, et pour de bon dès qu'on
+leur a parlé — le chat compris. On ne peut pas accuser quelqu'un qu'on
+ne sait pas nommer.
 
 **Les scénarios se voient enfin.** Au quatrième indice, les deux
 inspecteurs formulent la piste — « Rien n'a été volé. Tout a été

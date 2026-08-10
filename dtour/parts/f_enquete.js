@@ -151,21 +151,118 @@ const RIEN = {
 };
 
 
-/* ---------- les suspects ---------- */
-const SUSPECTS = [
-  { id:"gamer", nom:"LE VOISIN DU DESSUS", sprite:"susp_gamer", x:0.310, y:0.66,
-    dires:["J'étais sur un jeu en ligne.", "Toute la soirée.", "Enfin... presque toute."],
-    absurde:"Il propose une partie.", aveu:"Il avait la clé. Et l'appétit." },
-  { id:"blonde", nom:"LA COLOCATAIRE", sprite:"susp_blonde", x:0.665, y:0.62,
-    dires:["Je n'ai rien entendu.", "J'avais mes écouteurs.", "La porte était fermée. Je crois."],
-    absurde:"Elle demande si c'est une caméra cachée.", aveu:"Elle avait faim. Elle a été efficace." },
-  { id:"brune", nom:"L'AMIE DE PASSAGE", sprite:"susp_brune", x:0.880, y:0.62,
-    dires:["Je suis arrivée après.", "On m'a proposé du vin.", "Personne ne m'a parlé de pizza."],
-    absurde:"Elle resservirait bien un verre.", aveu:"Elle est arrivée avant. Le ticket le dit." },
-  { id:"chat", nom:"RISOTO", sprite:"susp_chat", x:0.452, y:0.88,
-    dires:["...", "Refuse de répondre aux questions.", "Se lèche la patte."],
-    absurde:"Refuse de répondre aux questions.", aveu:"Il a poussé la boîte. Le reste s'est fait tout seul." },
+/* ---------- les suspects ----------
+   Six têtes, dont cinq humains et un chat. Chacun a plusieurs jeux de
+   déclarations : un innocent, un évasif quand c'est lui, et des
+   réponses absurdes réservées à Pierre-François, qui ne sait pas parler
+   aux gens. On tire le jeu au début de la partie — deux enquêtes sur le
+   même coupable ne s'entendent donc pas pareil.
+
+   Les places sont des ancrages dans l'appartement ; qui se tient où
+   change aussi d'une partie à l'autre. */
+const PLACES_SUSPECTS = [
+  { x:0.310, y:0.66 },   /* sur le canapé      */
+  { x:0.418, y:0.70 },   /* devant la télé     */
+  { x:0.612, y:0.62 },   /* à la table         */
+  { x:0.700, y:0.60 },   /* contre le plan     */
+  { x:0.878, y:0.62 },   /* dans le couloir    */
 ];
+
+const SUSPECTS_BANQUE = [
+  { id:"gamer", nom:"LE VOISIN DU DESSUS", sprite:"susp_gamer",
+    innocent:[
+      ["J'étais sur un jeu en ligne.", "Toute la soirée.", "Demandez à mon équipe."],
+      ["Je n'ai pas bougé de ce canapé.", "Sauf pour les toilettes.", "Deux fois. Trois."],
+    ],
+    evasif:[
+      ["J'étais sur un jeu en ligne.", "Toute la soirée.", "Enfin... presque toute."],
+      ["Je n'ai rien mangé.", "Pas ici, en tout cas.", "On peut changer de sujet ?"],
+    ],
+    absurde:["Il propose une partie.", "Il me tend une manette.", "Il met le jeu en pause. Enfin."] },
+
+  { id:"blonde", nom:"LA COLOCATAIRE", sprite:"susp_blonde",
+    innocent:[
+      ["Je rentrais du sport.", "La porte était déjà ouverte.", "Ça arrive souvent, ici."],
+      ["Je n'ai rien entendu.", "J'avais mes écouteurs.", "Vous voulez les voir ?"],
+    ],
+    evasif:[
+      ["Je n'ai rien entendu.", "J'avais mes écouteurs.", "La porte était fermée. Je crois."],
+      ["J'ai dîné tôt.", "Toute seule.", "Enfin, tôt, ça dépend de ce qu'on appelle tôt."],
+    ],
+    absurde:["Elle demande si c'est une caméra cachée.", "Elle propose du thé.", "Elle vérifie son téléphone."] },
+
+  { id:"brune", nom:"L'AMIE DE PASSAGE", sprite:"susp_brune",
+    innocent:[
+      ["Je suis arrivée après.", "On m'a servi un verre.", "C'est tout ce que j'ai eu."],
+      ["Je ne connais personne ici.", "Je suis venue avec quelqu'un.", "Il est parti sans moi."],
+    ],
+    evasif:[
+      ["Je suis arrivée après.", "On m'a proposé du vin.", "Personne ne m'a parlé de pizza."],
+      ["Je n'ai pas touché à la cuisine.", "Ni au reste.", "Vous notez tout, là ?"],
+    ],
+    absurde:["Elle resservirait bien un verre.", "Elle demande qui est le grand chauve.", "Elle trinque toute seule."] },
+
+  { id:"casquette", nom:"LE COPAIN DU SAMEDI", sprite:"susp_casquette",
+    innocent:[
+      ["J'ai commandé, oui. Et alors ?", "Une pizza, c'est pas un crime.", "J'ai payé, en plus."],
+      ["J'ai mangé la mienne.", "La mienne. Pas la vôtre.", "Il y en avait deux, au départ."],
+    ],
+    evasif:[
+      ["J'ai commandé, oui. Et alors ?", "J'ai mangé la mienne.", "Enfin, une des deux."],
+      ["Je ne me souviens pas très bien.", "On a beaucoup parlé.", "Et beaucoup mangé."],
+    ],
+    absurde:["Il mâche.", "Il continue de mâcher.", "Il propose une part. D'où ?"] },
+
+  { id:"mug", nom:"CELUI QUI EST TOUJOURS LÀ", sprite:"susp_mug",
+    innocent:[
+      ["Je bois du thé, moi.", "Depuis dix-neuf heures.", "Le thé ne tache pas."],
+      ["J'ai vu passer quelqu'un.", "Vers la cuisine.", "Je n'ai pas regardé qui."],
+    ],
+    evasif:[
+      ["Je bois du thé, moi.", "Regardez mon mug.", "Ne regardez pas mon tee-shirt."],
+      ["Je n'ai fait que ranger.", "Quelqu'un devait le faire.", "Ce n'est pas un aveu."],
+    ],
+    absurde:["Il montre son mug.", "Il propose du thé.", "Il regarde ailleurs."] },
+
+  { id:"chat", nom:"RISOTO", sprite:"susp_chat",
+    innocent:[["...", "Se lèche la patte.", "Refuse de répondre aux questions."]],
+    evasif:[["...", "Détourne la tête.", "Refuse de répondre aux questions."]],
+    absurde:["Refuse de répondre aux questions.", "Ronronne. C'est tout.", "Se frotte contre sa jambe."] },
+];
+
+/* Les suspects présents dans la partie en cours. Le coupable y est
+   toujours — accuser quelqu'un d'absent n'aurait aucun sens — plus deux
+   autres têtes et le chat, qui traîne toujours là. */
+const SUSPECTS = [];
+
+function composerSuspects(){
+  SUSPECTS.length = 0;
+  const chat = SUSPECTS_BANQUE.find(s => s.id === "chat");
+  const humains = SUSPECTS_BANQUE.filter(s => s.id !== "chat");
+  const retenus = [];
+  if (Affaire.scenario && Affaire.scenario.coupable && Affaire.scenario.coupable !== "chat"){
+    retenus.push(humains.find(s => s.id === Affaire.scenario.coupable));
+  }
+  const autres = melangerTableau(humains.filter(s => retenus.indexOf(s) < 0));
+  while (retenus.length < 3 && autres.length) retenus.push(autres.pop());
+  melangerTableau(retenus);
+  retenus.push(chat);
+
+  const places = melangerTableau(PLACES_SUSPECTS.slice());
+  retenus.forEach((s, i) => {
+    const coupable = Affaire.bonneReponse() === s.id;
+    const jeux = coupable ? s.evasif : s.innocent;
+    const p = i === retenus.length - 1 ? { x:0.452, y:0.88 } : places[i];
+    SUSPECTS.push({
+      id:s.id, nom:s.nom, sprite:s.sprite,
+      x:p.x, y:p.y,
+      dires:piocher(jeux).slice(),
+      absurde:piocher(s.absurde),
+      vus:0, coince:false,
+    });
+  });
+  return SUSPECTS;
+}
 
 /* ---------- CaseGenerator -> Affaire ----------
    Dix affaires écrites, tirées au sort au début de la partie et figées
@@ -251,7 +348,7 @@ const Affaire = {
   generer(){
     this.scenario = piocher(SCENARIOS);
     this.coupable = this.scenario.coupable
-      ? SUSPECTS.find(s => s.id === this.scenario.coupable) : null;
+      ? SUSPECTS_BANQUE.find(s => s.id === this.scenario.coupable) : null;
     this.cachette = piocher(this.scenario.cachettes);
 
     const obligatoires = this.scenario.porteurs.slice();
@@ -433,7 +530,7 @@ const Enquete = {
     Affaire.generer();
     Dossier.raz();
     HortenseApp.raz();
-    for (const s of SUSPECTS){ s.vus = 0; s.coince = false; }
+    composerSuspects();
     this.restant = ENQ_DUREE;
     this.indices = 0; this.fouilles = 0; this.fausses = 0;
     this.fini = null; this.secousse = 0; this.message = null;
