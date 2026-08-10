@@ -147,6 +147,16 @@ l'invité**. Les records d'échange et de série ne progressaient donc jamais ch
 lui. Avant d'ajouter une mesure, se demander de quel côté elle est calculée et
 comment elle traverse le réseau.
 
+### Découper sur le grand canevas coûte très cher
+La lentille gravitationnelle découpait trente-six anneaux par image **directement
+sur le terrain de 540 x 880**, soit dix-sept millions de pixels de zone de
+découpe par image. Assez pour faire chuter la fluidité, déclencher le repli
+automatique, et faire disparaître l effet au bout de quelques secondes — le
+symptôme observé était « au début ça marche, ensuite non ». Les anneaux sont
+désormais assemblés dans un tampon de 124 x 124 puis reposés en une seule
+opération : quarante-trois fois moins de surface. Règle générale : composer hors
+écran, poser une fois.
+
 ### Le temps de jeu repose sur des horodatages absolus
 Décompte, durées de bonus, arc d'orage, annonces, immunités : tout est daté en
 temps absolu. Toute suspension du jeu — la pause en v14.0 — doit donc **décaler
