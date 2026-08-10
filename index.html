@@ -539,7 +539,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v14.2 · 2026-08-09</div>
+  <div id="version">DUO v14.3 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -584,12 +584,12 @@ canvas{
       <div class="petit" id="etatLu"></div>
     </div>
 
-    <div id="confirmation" class="panneau cache">
-      <div class="grand" style="font-size:24px">QUITTER ?</div>
-      <div class="petit" id="confirmSous">La partie en cours sera perdue pour vous deux.</div>
+    <div id="pausePanneau" class="panneau cache">
+      <div class="grand" style="font-size:28px">PAUSE</div>
+      <div class="petit" id="pauseSous"></div>
       <div class="rangFin">
-        <button id="btnQuitterOui">Quitter</button>
-        <button id="btnQuitterNon" class="secondaire">Reprendre</button>
+        <button id="btnReprendre">Reprendre</button>
+        <button id="btnQuitterPartie" class="secondaire">Quitter la partie</button>
       </div>
     </div>
 
@@ -670,7 +670,6 @@ canvas{
     <button id="btnMusique" class="icone" aria-label="Musique">♪</button>
     <div id="micEtat" class="cache">REC</div>
     <button id="btnPause" class="icone" aria-label="Pause"><span class="barresPause"></span></button>
-    <button id="btnQuitter" class="icone" aria-label="Quitter la partie">×</button>
     <div class="espace"></div>
     <button id="btnMicToggle" class="icone eteint" aria-label="Micro">🎙</button>
   </div>
@@ -680,7 +679,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "14.2";
+const VERSION = "14.3";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -1290,23 +1289,6 @@ function annoncer(texte, couleur){
   annonce.couleur = couleur || "#FBBF24";
   annonce.fin = performance.now() + 1700;
 }
-/* Pendant la pause on continue de peindre la scène, figée, avec un voile. */
-function dessinerPause(){
-  dessiner();
-  ctx.save();
-  ctx.fillStyle = "rgba(4,6,12,.55)";
-  ctx.fillRect(0, 0, LARG, HAUT);
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillStyle = "#EAF0FF";
-  ctx.font = "700 30px 'JetBrains Mono', monospace";
-  ctx.fillText("PAUSE", LARG/2, HAUT/2 - 8);
-  ctx.font = "400 13px 'JetBrains Mono', monospace";
-  ctx.fillStyle = "rgba(234,240,255,.6)";
-  ctx.fillText(pauseParMoi ? "TOUCHEZ ॥ POUR REPRENDRE"
-                           : "EN ATTENTE DE " + (nomAdverse || "L'ADVERSAIRE"), LARG/2, HAUT/2 + 26);
-  ctx.restore();
-}
-
 function dessinerAnnonce(){
   const reste = annonce.fin - performance.now();
   if (reste <= 0 || !annonce.texte) return;
@@ -1324,7 +1306,7 @@ function dessinerAnnonce(){
   ctx.restore();
 }
 function masquerPanneaux(){
-  const c = document.getElementById("confirmation");
+  const c = document.getElementById("pausePanneau");
   if (c) c.classList.add("cache");
   const r = document.getElementById("recap");
   if (r) r.classList.add("cache");
@@ -3587,20 +3569,18 @@ function montrerVoile(titre, sous, avecBouton){
 /* Retour au menu principal : on coupe proprement les liaisons puis on repart
    d'une page neuve — nom, photo et compteurs de duels sont conservés dans le
    stockage local, et aucun minuteur résiduel ne peut subsister. */
-function montrerConfirmation(){
-  $("confirmSous").textContent = modeSolo
-    ? "Vous reviendrez au menu principal."
-    : "La partie en cours sera perdue pour vous deux.";
-  $("confirmation").classList.remove("cache");
+function majPanneauPause(){
+  const p = document.getElementById("pausePanneau");
+  if (!p) return;
+  if (enPause){
+    $("pauseSous").textContent = pauseParMoi
+      ? (modeSolo ? "Partie suspendue." : "Vous avez suspendu la partie.")
+      : "Suspendue par " + (nomAdverse || "l'adversaire") + ".";
+    p.classList.remove("cache");
+  } else p.classList.add("cache");
 }
-$("btnQuitterNon").addEventListener("click", () => {
-  $("confirmation").classList.add("cache");
-  if (enPause) basculerPause();
-});
-$("btnQuitterOui").addEventListener("click", () => {
-  $("confirmation").classList.add("cache");
-  quitterPartie();
-});
+$("btnReprendre").addEventListener("click", () => { if (enPause) basculerPause(); });
+$("btnQuitterPartie").addEventListener("click", quitterPartie);
 
 function quitterPartie(){
   if (!modeSolo) { try{ envoyerFiable({ t: "qt" }); }catch(e){} }
@@ -3608,11 +3588,6 @@ function quitterPartie(){
   setTimeout(() => $("btnMenu").click(), 140);
 }
 $("btnPause").addEventListener("click", basculerPause);
-$("btnQuitter").addEventListener("click", () => {
-  if (!partieEnCours){ $("btnMenu").click(); return; }
-  if (!enPause) basculerPause();          /* on fige avant de demander */
-  montrerConfirmation();
-});
 
 $("btnMenu").addEventListener("click", () => {
   partieEnCours = false;
@@ -3722,6 +3697,7 @@ function suisJeInverse(){
   return vfx.invVictime === moi && (estHote ? performance.now() < vfx.finInv : true) && vfx.invVictime >= 0;
 }
 function posDepuisEvenement(clientX){
+  if (enPause) return;          /* en pause, la raquette reste où elle est */
   const rect = cv.getBoundingClientRect();
   let x = (clientX - rect.left) / rect.width * LARG;
   if (suisJeInverse()) x = LARG - x;
@@ -3747,6 +3723,7 @@ document.addEventListener("keyup", e => {
   if (k === "ArrowRight" || k === "d" || k === "D") clavierDroite = false;
 });
 function majClavier(dtMs){
+  if (enPause) return;
   if (!clavierGauche && !clavierDroite) return;
   const pas = VIT_CLAVIER * (dtMs / (1000/60));
   const demi = (estHote ? taillesAffichees[0] : taillesAffichees[1]) / 2;
@@ -3794,8 +3771,8 @@ function appliquerPause(actif, parMoi){
     if (musiqueOn) demarrerMusique();
   }
   majIcones();
-  const qui = parMoi ? "" : (nomAdverse ? " PAR " + nomAdverse : "");
-  annoncer(actif ? "PAUSE" + qui : "REPRISE", "#8AB4FF");
+  majPanneauPause();
+  if (!actif) annoncer("REPRISE", "#8AB4FF");
 }
 function basculerPause(){
   if (!partieEnCours || phase === "fin" || phase === "regles") return;
@@ -3852,7 +3829,7 @@ function boucle(){
   if (estHote) chargesAffichees[1] = chargeHaut;
 
   if (enPause){
-    dessinerPause();
+    dessiner();                 /* scène figée sous le panneau */
     if (partieEnCours) requestAnimationFrame(boucle);
     return;
   }
