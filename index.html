@@ -405,6 +405,18 @@ canvas{
 .carteVice .descV{font-size:10.5px;color:var(--sourd);line-height:1.35;margin-top:2px}
 #barreBasse{display:flex;gap:10px;width:var(--terrain);height:38px;flex:0 0 38px;align-items:center;justify-content:space-between}
 .espace{flex:1}
+/* Les deux barres sont dessinées en CSS : le caractère de pause ne s'affiche
+   pas de la même façon d'un téléphone à l'autre, et pouvait rester invisible. */
+.barresPause{
+  display:inline-block;width:11px;height:14px;
+  border-left:4px solid currentColor;border-right:4px solid currentColor;
+}
+#btnPause.reprise .barresPause{
+  width:0;height:0;border:0;
+  border-left:12px solid currentColor;border-top:8px solid transparent;
+  border-bottom:8px solid transparent;margin-left:3px;
+}
+#btnQuitter{font-size:21px;line-height:1}
 .icone{
   width:34px;height:34px;flex:0 0 34px;padding:0;font-size:14px;line-height:34px;
   border-radius:10px;background:rgba(255,255,255,.05);
@@ -527,7 +539,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v14.0 · 2026-08-09</div>
+  <div id="version">DUO v14.1 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -657,8 +669,8 @@ canvas{
   <div id="barreBasse">
     <button id="btnMusique" class="icone" aria-label="Musique">♪</button>
     <div id="micEtat" class="cache">REC</div>
-    <button id="btnPause" class="icone" aria-label="Pause">॥</button>
-    <button id="btnQuitter" class="icone" aria-label="Quitter la partie">⏻</button>
+    <button id="btnPause" class="icone" aria-label="Pause"><span class="barresPause"></span></button>
+    <button id="btnQuitter" class="icone" aria-label="Quitter la partie">×</button>
     <div class="espace"></div>
     <button id="btnMicToggle" class="icone eteint" aria-label="Micro">🎙</button>
   </div>
@@ -668,7 +680,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "14.0";
+const VERSION = "14.1";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -735,10 +747,14 @@ const PUITS_GAIN = 1.22;
    une vitesse tangentielle rappelée vers la valeur orbitale. Tant que le puits
    reste calme ils tournent indéfiniment ; dès qu'on l'agite, ceux qui ne
    suivent plus la rotation finissent au centre. Calibré par simulation. */
-const DEBRIS_ATTIRANCE = 2.6;
+const DEBRIS_ATTIRANCE = 1.9;
 const DEBRIS_GOULOT = 19;
 const ORBITE_GAIN = 0.20;          /* rappel vers la vitesse d'orbite */
 const ORBITE_AMORTI = 0.10;        /* freine les plongées radiales */
+/* Plancher d'orbite : sans lui, les rochers tournaient collés au trou, à une
+   quarantaine de pixels. Une poussée vers l'extérieur en deçà de ce rayon les
+   stabilise à bonne distance, où on les voit tourner. */
+const ORBITE_MIN = 75, ORBITE_POUSSEE = 1.2;
 const cvLentille = document.createElement("canvas");
 cvLentille.width = PUITS_R_VISU * 2; cvLentille.height = PUITS_R_VISU * 2;
 const ctxLentille = cvLentille.getContext("2d");
@@ -1167,9 +1183,8 @@ async function basculerMicro(){
 function majIcones(){
   const bp = document.getElementById("btnPause");
   if (bp){
-    bp.textContent = enPause ? "▶" : "॥";
+    bp.classList.toggle("reprise", enPause);
     bp.classList.toggle("actif", enPause);
-    bp.classList.toggle("eteint", !partieEnCours);
   }
   const bm = document.getElementById("btnMusique");
   const bt = document.getElementById("btnMicToggle");
@@ -2306,7 +2321,7 @@ function erreurLobby(e){
 
 /* ================= CONNEXION ================= */
 /* Relance : sans ce décompte, c'est le moment où l'on repose le téléphone. */
-const RELANCE_DELAI = 6000;
+const RELANCE_DELAI = 14000;   /* six secondes ne laissaient pas le temps de regarder le résultat */
 let relanceMinuteur = 0, relanceFin = 0;
 function lancerDecompteRelance(){
   arreterDecompteRelance();
@@ -2943,6 +2958,10 @@ function physique(){
         const u = 1 - dd / PUITS_PORTEE;
         const f = PUITS_FORCE * DEBRIS_ATTIRANCE * u * u;
         d.vx += rx * f; d.vy += ry * f;
+        if (dd < ORBITE_MIN){
+          const g = ORBITE_POUSSEE * (1 - dd / ORBITE_MIN);
+          d.vx -= rx * g; d.vy -= ry * g;
+        }
         /* mise en orbite : on rappelle la vitesse tangentielle vers la valeur
            qui équilibre l'attraction à cette distance */
         const vt = d.vx * tx + d.vy * ty;
