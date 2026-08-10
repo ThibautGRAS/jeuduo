@@ -3,7 +3,7 @@
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2Dos","introNiv","introTxt","niv2","niv2Cad","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","pupitre2","c2G","c2D","c2A","c2ATxt","c2C","c2Dos","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -53,16 +53,17 @@ const Ecran = {
 };
 
 /* ---------- LevelManager : ce que le joueur a déjà fait ----------
-   Le niveau 2 se déverrouille dès que le niveau 1 a été terminé une
-   fois. C'est enregistré à part du reste : effacer ses records ne doit
-   pas reverrouiller le jeu. */
+   Les deux niveaux sont TOUJOURS jouables. On garde quand même la trace
+   du niveau 1 terminé — c'est une information, pas une serrure : elle
+   sert à afficher un état sur l'écran d'accueil, jamais à interdire. */
 const CLE_PROGRES = "dtour_progres";
 const Progres = {
   lire(){
     try{ return JSON.parse(localStorage.getItem(CLE_PROGRES)) || {}; }catch(e){ return {}; }
   },
   ecrire(p){ try{ localStorage.setItem(CLE_PROGRES, JSON.stringify(p)); }catch(e){} },
-  niveau2Ouvert(){ return !!this.lire().n1; },
+  niveau2Ouvert(){ return true; },
+  n1Termine(){ return !!this.lire().n1; },
   finirNiveau1(){ const p = this.lire(); p.n1 = true; this.ecrire(p); },
 };
 
@@ -143,11 +144,7 @@ const Interface = {
     const r = lireRecords();
     if (E.tRecord) E.tRecord.textContent = r.score ? "MEILLEUR SCORE " + chiffres(r.score) : "";
     if (E.titre) E.titre.classList.remove("parti");
-    const ouvert = Progres.niveau2Ouvert();
-    if (E.niv2) E.niv2.classList.toggle("verrouille", !ouvert);
-    if (E.niv2Sst) E.niv2Sst.textContent = ouvert
-      ? "Six indices, cinq minutes."
-      : "Terminez le niveau 1 pour l'ouvrir.";
+    if (E.niv2Sst) E.niv2Sst.textContent = "Six indices, cinq minutes.";
     if (E.fin) E.fin.classList.remove("on");
     if (E.hud) E.hud.classList.remove("on");
     if (E.pupitre) E.pupitre.classList.remove("on");
@@ -405,10 +402,6 @@ const Entrees = {
     if (E.niveaux) E.niveaux.addEventListener("click", ev => {
       const b = ev.target.closest("button[data-niv]");
       if (!b) return;
-      if (Number(b.dataset.niv) === 2 && !Progres.niveau2Ouvert()){
-        Sons.bip(150, 0.14, "square", 0.1);
-        return;
-      }
       Sons.reveiller(); Sons.clic(); Ecran.demander();
       Jeu.demarrer(Number(b.dataset.niv));
     });

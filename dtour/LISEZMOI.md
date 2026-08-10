@@ -23,9 +23,10 @@ les fichiers de `img/` portent les bons noms.
 
 ## Niveau 2 — l'affaire de la pizza au chorizo
 
-Il s'ouvre quand le niveau 1 a été terminé une fois. La progression est
-gardée sous `dtour_progres`, à part des records : effacer ses scores ne
-doit pas reverrouiller le jeu.
+Les deux niveaux sont **toujours** jouables : on choisit celui qu'on
+veut sur l'écran d'accueil, sans rien avoir à débloquer. Le fait d'avoir
+terminé le niveau 1 reste enregistré sous `dtour_progres` — c'est une
+information, pas une serrure.
 
 Une courte introduction — cinq écrans, six secondes — puis l'enquête :
 seize meubles, six indices à réunir, cinq minutes.

@@ -605,8 +605,13 @@ if (D){
   titre("Progression");
   D.Jeu.retourTitre();
   egal("revenir au titre repasse au niveau 1", D.Jeu.niveau, 1);
-  verifier("le niveau 2 est ouvert une fois le 1 terminé",
-    (() => { D.Jeu.demarrer(1); D.Jeu.terminer(); return D.Progres.niveau2Ouvert(); })());
+  verifier("le niveau 2 est jouable dès le départ", D.Progres.niveau2Ouvert(),
+    "aucune serrure : on doit pouvoir y aller directement");
+  verifier("terminer le niveau 1 reste enregistré",
+    (() => { D.Jeu.demarrer(1); D.Jeu.terminer(); return D.Progres.n1Termine(); })());
+  verifier("et l'accueil n'affiche aucun cadenas",
+    !/id="niv2Cad"/.test(html) && !/\.niv\.verrouille/.test(html),
+    "il reste une serrure dans le balisage ou la feuille de style");
 
   /* ================= 4. simulation ================= */  /* ================= 4. simulation ================= */
   titre("Simulation de parties");
