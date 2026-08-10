@@ -527,7 +527,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v13.0 · 2026-08-09</div>
+  <div id="version">DUO v13.1 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -656,7 +656,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "13.0";
+const VERSION = "13.1";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -721,11 +721,28 @@ const DEBRIS_ATTIRANCE = 2.6;      /* les rochers sont happés bien plus fort */
 const cvLentille = document.createElement("canvas");
 cvLentille.width = PUITS_R_VISU * 2; cvLentille.height = PUITS_R_VISU * 2;
 const ctxLentille = cvLentille.getContext("2d");
+/* Positions de référence, côté hôte : c'est sa physique qui fait autorité. */
 function puitsActifs(){
   if (!cfgMode().puits) return [];
   return [
     { x: etat.raqBas,  y: HAUT * PUITS_HAUTEUR,       j: 0 },
     { x: etat.raqHaut, y: HAUT * (1 - PUITS_HAUTEUR), j: 1 },
+  ];
+}
+
+/* Positions à L'AFFICHAGE. Sur l'appareil de l'invité, etat.raqHaut n'était
+   jamais renseigné — l'hôte le reçoit, mais l'invité ne se le renvoie pas à
+   lui-même — si bien que l'invité voyait son propre puits figé au centre.
+   Chacun se dessine donc à partir de sa position locale, et dessine l'autre à
+   partir de la position lissée reçue. */
+function puitsAffiches(){
+  if (!cfgMode().puits) return [];
+  const moi = estHote ? 0 : 1;
+  const x0 = moi === 0 ? maRaquette : raqAdvAffichee;
+  const x1 = moi === 1 ? maRaquette : raqAdvAffichee;
+  return [
+    { x: x0, y: HAUT * PUITS_HAUTEUR,       j: 0 },
+    { x: x1, y: HAUT * (1 - PUITS_HAUTEUR), j: 1 },
   ];
 }
 function couleurJoueur(j){ return j === (estHote ? 0 : 1) ? CO_MOI : CO_ADV; }
@@ -2455,6 +2472,7 @@ function recevoir(m){
       }
       bonusListe = m.bo.map(o => ({ id: o[0], x: o[1], y: o[2], k: o[3] }));
       etat.raqBas = m.r;
+      etat.raqHaut = maRaquette;   /* l'invité tient son propre état à jour */
       tailles = m.ta; fantome = !!m.fa; bouleFeu = !!m.bf;
       const ao = Array.isArray(m.ao) ? m.ao : [0,0,0,0,0,0];
       arcOrage.actif = ao[0] === 2; arcOrage.preavis = ao[0] === 1;
@@ -4684,7 +4702,7 @@ function assombrir(hex, k){
 function deformerFond(Y, t){
   if (qualite === "minimal") return;          /* passe coûteuse : cran le plus bas exclu */
   const R = PUITS_R_VISU, D = R * 2;
-  for (const p of puitsActifs()){
+  for (const p of puitsAffiches()){
     const cx = p.x, cy = Y(p.y);
     const sx = cx - R, sy = cy - R;
     ctxLentille.clearRect(0, 0, D, D);
@@ -4772,7 +4790,7 @@ function dessinerTrouNoir(x, y, coul, t){
 
 function dessinerPuits(Y, t){
   deformerFond(Y, t);
-  for (const p of puitsActifs()){
+  for (const p of puitsAffiches()){
     const x = p.x, y = Y(p.y);
     const coul = couleurJoueur(p.j);
     ctx.save();
