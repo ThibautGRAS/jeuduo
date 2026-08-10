@@ -155,7 +155,10 @@ const Interface = {
     this.finAffichee = false;
     if (E.titre) E.titre.classList.add("parti");
     if (E.fin) E.fin.classList.remove("on");
-    if (E.hud) E.hud.classList.add("on");
+    /* Le bandeau SCORE / COMBO / FILE appartient au niveau 1. Le niveau 2
+       dessine le sien sur le canevas : les deux ensemble donnaient un
+       compteur de file à zéro au-dessus d'un appartement. */
+    if (E.hud) E.hud.classList.toggle("on", Jeu.niveau !== 2);
     if (E.pupitre) E.pupitre.classList.toggle("on", Jeu.niveau !== 2);
     if (E.pupitre2) E.pupitre2.classList.toggle("on", Jeu.niveau === 2);
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
@@ -618,7 +621,7 @@ globalThis.DTOUR = {
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, SUSPECTS, INDICES, ZONES,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
-  FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, TARTE_DUREE,
+  FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, HORTENSE_ECART, TARTE_DUREE,
   __dessiner:() => dessiner(),
   __ajuster:() => ajusterCanevas(),
 };

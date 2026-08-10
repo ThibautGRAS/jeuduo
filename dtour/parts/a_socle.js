@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "2.2";
+const VERSION = "2.3";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -233,6 +233,64 @@ const Sons = {
   gene(){ this.bip(233, 0.5, "sine", 0.16, 150); this.bip(247, 0.5, "sine", 0.12, 160); },
   fin(){ [392, 349, 294, 233].forEach((f, i) => setTimeout(() => this.bip(f, 0.4, "triangle", 0.24), i * 190)); },
   clic(){ this.bip(660, 0.04, "square", 0.12); },
+  /* ---------- fond sonore de l'enquête ----------
+     Un appartement n'est jamais silencieux : un souffle grave et
+     continu (la ville derrière les fenêtres), une pendule qui bat la
+     seconde, et de loin en loin un craquement de parquet. Rien de tout
+     ça n'est un fichier : c'est du bruit filtré et deux oscillateurs.
+     C'est ce lit qui fait la différence entre « une image » et « un
+     endroit ». */
+  enq:null,
+
+  lancerFondEnquete(){
+    this.init();
+    if (!this.ac || this.enq) return;
+    const n = this.ac.sampleRate * 3;
+    const b = this.ac.createBuffer(1, n, this.ac.sampleRate), d = b.getChannelData(0);
+    let prec = 0;
+    for (let i = 0; i < n; i++){ prec = (prec + (Math.random() * 2 - 1) * 0.05) * 0.992; d[i] = prec; }
+    const src = this.ac.createBufferSource(); src.buffer = b; src.loop = true;
+    const f = this.ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 260;
+    const g = this.ac.createGain(); g.gain.value = 0;
+    src.connect(f); f.connect(g); g.connect(this.maitre);
+    src.start();
+    this.enq = { src, gain:g, prochainTic:this.ac.currentTime + 1, prochainCraquement:this.ac.currentTime + 6 };
+  },
+  arreterFondEnquete(){
+    if (!this.enq) return;
+    try{ this.enq.src.stop(); }catch(e){}
+    this.enq = null;
+  },
+  /* La pendule est calée sur l'horloge audio, pas sur l'affichage :
+     une seconde qui traîne s'entend tout de suite. */
+  fondEnquete(dt){
+    if (!this.ac || !this.enq) return;
+    const g = this.enq.gain.gain;
+    g.value = melange(g.value, 0.55, Math.min(1, dt * 1.2));
+    const t = this.ac.currentTime;
+    while (this.enq.prochainTic < t + 0.4){
+      const q = this.enq.prochainTic;
+      this.percTic(q, 0.030);
+      this.enq.prochainTic += 1;
+    }
+    if (t > this.enq.prochainCraquement){
+      this.enq.prochainCraquement = t + hasard(9, 22);
+      if (this.actif) this.souffle(hasard(0.10, 0.22), 0.035, hasard(120, 320), 3.2);
+    }
+  },
+  percTic(quand, vol){
+    if (!this.ac || !this.actif) return;
+    const n = Math.floor(this.ac.sampleRate * 0.02);
+    const b = this.ac.createBuffer(1, n, this.ac.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 6);
+    const src = this.ac.createBufferSource(); src.buffer = b;
+    const f = this.ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 2600; f.Q.value = 6;
+    const g = this.ac.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(this.maitre);
+    src.start(quand);
+  },
+
+
 
   /* --- Hortense et la tarte ---
      Les sept crochets demandés existent tous ; ils sont synthétisés,
@@ -350,8 +408,25 @@ const SPRITES_HORTENSE = ["h_debout","h_marche","h_sournoise","h_arme","h_lance"
 const SPRITES_TARTE = ["tarte0","tarte1","tarte2","tarte3","tarte_boom","tarte_ecrasee",
                        "debris_meringue","debris_citron","debris_part"];
 
+/* Tout ce que le niveau 2 dessine. Ces noms manquaient à la liste de
+   chargement : les fichiers étaient bien sur le disque, la suite de
+   tests le vérifiait, et l'appartement restait noir à l'écran parce que
+   personne ne les avait jamais demandés. Un test contrôle désormais que
+   img/ et cette liste disent la même chose. */
+const IMAGES_NIVEAU2 = [
+  "appart", "loupe",
+  "enq_pf_marche", "enq_pf_fouille", "enq_pf_splat",
+  "enq_th_marche", "enq_th_fouille", "enq_th_splat",
+  "ind_miettes", "ind_chorizo", "ind_fromage", "ind_serviette",
+  "ind_sauce", "ind_assiette", "ind_ticket", "ind_pattes",
+  "pizza_entiere", "pizza_entamee", "pizza_part", "pizza_boite_ouverte",
+  "susp_gamer", "susp_blonde", "susp_brune", "susp_chat",
+  "badge_indice", "badge_suspect",
+];
+
 function listeImages(){
-  const l = ["logo","face_thibaut","face_pierre"].concat(EFFETS, SPRITES_HORTENSE, SPRITES_TARTE);
+  const l = ["logo","face_thibaut","face_pierre"]
+    .concat(EFFETS, SPRITES_HORTENSE, SPRITES_TARTE, IMAGES_NIVEAU2);
   for (const m of MOMENTS) l.push(m.fond);
   for (const h of ["thibaut","pierre"]) for (const p of POSES_HEROS) l.push(h + "_" + p);
   for (const s of SPRITES_PNJ) l.push(s);

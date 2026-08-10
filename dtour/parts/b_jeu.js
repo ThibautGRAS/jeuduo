@@ -337,7 +337,7 @@ const Jeu = {
       this.temps = 0; this.vies = 1; this.finChrono = 0; this.phase = "jeu";
       Interface.entrerJeu();
       Intro.lancer();
-      Sons.reveiller(); Sons.lancerAmbiance(); Sons.lancerMusique();
+      Sons.reveiller(); Sons.lancerFondEnquete(); Sons.lancerMusique();
       return;
     }
     Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
@@ -383,6 +383,7 @@ const Jeu = {
           this.finChrono += dt;
           if (this.finChrono > 1.2 && !Interface.finAffichee) Interface.afficherFin();
         }
+        Sons.fondEnquete(dt);
         Sons.ordonnerMusique(88);
       }
       return;
@@ -534,6 +535,7 @@ const Jeu = {
   retourTitre(){
     this.phase = "titre";
     this.niveau = 1;
+    Sons.arreterFondEnquete();
     this.ralenti = 1;
     Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
     this.temps = 0; this.gel = 0; this.moment = 0; this.fondu = 1; this.fonduDe = 0; this.demandes = [];

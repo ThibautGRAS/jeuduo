@@ -1,0 +1,192 @@
+# MEMOIRE.md — ce que ce dossier a appris
+
+Mémoire technique de `dtour/`. Complète `LISEZMOI.md`, qui décrit le
+jeu, et `../MEMOIRE.md`, dont les pièges valent ici aussi.
+
+---
+
+## 1. Architecture
+
+### Un fichier livré, cinq morceaux édités
+
+`index.html` est le livrable : HTML, CSS et JavaScript dans un seul
+fichier, aucun outil de compilation chez le joueur. Il est recollé par
+`assembler.py` à partir de `parts/` :
+
+| Morceau | Contenu |
+|---|---|
+| `a_socle.js` | constantes, utilitaires, `Sons`, chargement des images, `Difficulte` |
+| `b_jeu.js` | `Score`, `Pnj`, `File`, `Foule`, `Heros`, `Jeu` — niveau 1 et aiguillage |
+| `c_rendu.js` | `Camera`, `Effets`, rendu du niveau 1 |
+| `e_hortense.js` | Hortense, la tarte, l'esquive (niveau 1) |
+| `f_enquete.js` | `Affaire`, `Dossier`, `HortenseApp`, `Enquete` — logique du niveau 2 |
+| `g_enquete_vue.js` | `EnqVue` — rendu du niveau 2 |
+| `d_pilotage.js` | `Progres`, `Intro`, `Interface`, `Entrees`, `Ecran`, `Debug`, `Boucle`, amorçage |
+
+`d_pilotage.js` passe **en dernier** : il lit des constantes déclarées
+partout ailleurs. La zone morte temporelle a déjà coûté deux écrans
+blancs sur le projet voisin.
+
+`assembler.py` refuse d'écrire s'il ne trouve pas exactement un bloc
+`<script>`.
+
+### Deux niveaux, un seul cadre
+
+`Jeu.niveau` vaut 1 ou 2. `Jeu.pas()` et `dessiner()` aiguillent dès la
+première ligne ; tout le reste — chrono, sons, effets, écran de fin,
+plein écran, blocage portrait — est commun. Les deux niveaux ne
+partagent aucune géométrie.
+
+---
+
+## 2. Réglages calibrés
+
+Réglés par mesure ou par simulation. Les changer demande de relancer la
+suite.
+
+### Niveau 1
+
+| Réglage | Valeur | Justification |
+|---|---|---|
+| Temps de réaction | 2,0 s → 0,55 s | décroissance géométrique : les paliers de 0,2 s se sentaient |
+| Délai entre arrivées | 2,9 s → 0,78 s | |
+| Demandes simultanées | 1, puis 2 à 13 saluts, 3 à 33 | |
+| Points | 50 × combo × bonus de type | donne les ordres de grandeur de la planche |
+| Écart entre deux places | 62 unités | |
+| Recul de celui qui salue | 104 unités | répond à la main tendue des sprites, qui va chercher entre 36 et 45 |
+| Hauteur d'un héros | 46 % de la hauteur d'écran | plafonnée par la largeur en dessous de 4:3 |
+| Plancher de dézoom | 0,72 | en dessous, on ne lisait plus qui tendait la main |
+
+### Niveau 2
+
+| Réglage | Valeur | Justification |
+|---|---|---|
+| Durée | 300 s | |
+| Indices à réunir | 6 sur 10 en banque | |
+| Meubles | 16 | |
+| Portée d'interaction | 0,026 largeur d'image | deux meubles plus proches que 1,5 × cette valeur se voleraient les touchers ; un test le vérifie |
+| Vitesse de marche | 0,20 largeur/s | traverser l'appartement prend cinq secondes |
+| Accusation ratée | −20 s | |
+| Tarte reçue | −10 s | jamais une défaite : l'événement doit être drôle |
+| Hortense | entre 35 % et 65 % du temps | |
+| Fenêtre d'esquive | 450 ms | la même qu'au niveau 1 |
+
+---
+
+## 3. Pièges rencontrés
+
+Chacun a coûté du temps, et chacun est désormais surveillé par la suite.
+
+### Les images étaient sur le disque, jamais chargées
+Le niveau 2 s'ouvrait sur un écran **noir uni**. Les vingt-six images
+étaient bien dans `img/`, la suite le vérifiait, et le jeu n'en
+demandait aucune : elles manquaient à `listeImages()`. Le test
+« les fichiers existent » ne dit rien sur « on les charge ». Deux tests
+confrontent désormais `img/` et la liste de chargement **dans les deux
+sens** : rien sur le disque qui ne soit demandé, rien de demandé qui ne
+soit sur le disque.
+
+### Les deux héros ont été intervertis
+La table de découpe a inversé les panneaux : le repère vert s'allumait
+au-dessus de Pierre-François et le bouton « Thibaut » montrait un
+portrait chauve. Rien dans le jeu ne s'en apercevait. `decoupe2.py`
+mesure maintenant le buste des deux sprites produits et refuse de sortir
+si Thibaut n'est pas en vert et Pierre-François en noir.
+
+### Les prénoms écrits en dur dérivent
+Ils étaient recopiés à cinq endroits — deux boutons, deux lignes de
+légende, deux boutons de debug. Ils viennent tous du tableau `Heros`,
+seule source du prénom, du sprite et du portrait. Échanger les deux
+héros se fait en échangeant deux lignes.
+
+### Le bandeau du niveau 1 s'affichait par-dessus l'appartement
+`entrerJeu()` allumait `#hud` sans regarder le niveau : un compteur de
+file à zéro flottait au-dessus de l'enquête, qui dessine le sien sur le
+canevas.
+
+### `setTimeout` pour une échéance de jeu
+La conclusion de l'enquête était programmée par `setTimeout`. Une
+échéance en temps absolu continue de courir pendant une pause — c'est le
+même piège que les horodatages de DUO. Tout ce qui compte le temps du
+jeu passe par `pas(dt)`.
+
+### La fenêtre d'esquive s'ouvrait après le choc
+La tarte vise **au-delà** du héros pour poursuivre sa route s'il se
+baisse. Le décompte était calculé sur la course entière, donc le repère
+s'allumait une fois la meringue reçue. On repère l'instant du
+croisement, pas la fin de la course.
+
+### Deux tartes en l'air se bloquaient l'une l'autre
+L'esquive visait la première tarte de la liste, répondait « trop tôt »,
+et le verrou anti-martèlement empêchait d'éviter l'autre. Elle vise
+maintenant la plus **pressante**.
+
+### Le bandeau de commandes mangeait la scène
+Un bandeau pleine largeur coupait les héros aux genoux. Les commandes
+sont trois pastilles dans les coins, bornées à 26 % de la largeur — au
+delà, celle de gauche mord sur le héros de gauche.
+
+### Le logo gardait un liseré
+Le détourage général remonte le clair depuis les bords ; l'enseigne
+étant une plaque **sombre**, il lui laissait un cadre gris. Elle est
+découpée à l'envers : on part du noir, on bouche les trous — le lettrage
+blanc est enfermé dedans — et on garde la plus grande pièce.
+
+### Le fond blanc enfermé entre les jambes
+La remontée depuis les bords ne peut pas atteindre l'entrejambe, ceinturé
+par les deux jambes. On le reconnaît à sa position — bas du sprite — et à
+sa clarté ; c'est le critère de hauteur qui le distingue d'un t-shirt
+blanc, tout aussi lumineux mais au milieu du corps.
+
+### Les objets se frôlent sur la planche 2
+Un pont d'un pixel ramenait un bout du voisin **entre les jambes** de
+Pierre-François, en bleu et rouge vifs. On érode de deux pixels avant
+d'isoler la pièce principale, ce qui coupe ces ponts, puis on redilate.
+
+### Le liseré clair autour des sprites
+Les bords sont un mélange du trait et du blanc de la planche. Les étaler
+revenait à peindre le liseré qu'on veut supprimer : la couleur se
+prélève **un pixel à l'intérieur**.
+
+### `${PIPESTATUS[0]}` et le tube
+`node tests/x.js | tail -1` renvoie le code de `tail`. Un `&&` qui suit
+ne verra jamais l'échec — la publication est partie une fois sur une
+suite qu'on n'avait pas lue. Rediriger vers un fichier, puis afficher.
+
+---
+
+## 4. Le harnais d'aperçu
+
+`tests/apercu.js` exécute le script d'`index.html` **hors navigateur**,
+sur un vrai canevas (node-canvas), et écrit dix images : titre, salut
+vers chacun des deux héros, poignée le soir, file très longue la nuit,
+iPhone couché, iPhone debout, malaise, et deux vues du niveau 2.
+
+```
+npm i canvas
+node tests/apercu.js /tmp/apngs /tmp/apercu
+```
+
+Le détour par des PNG est nécessaire : node-canvas ne lit pas le WebP.
+
+Ce harnais a trouvé ce qu'aucun test logique ne pouvait voir : un écran
+noir, un bras en saucisse, une épaule au niveau du visage, des
+personnages trop grands, des bandes blanches aux bords du décor, des
+sprites éclairés en plein jour au milieu d'une rue de nuit, et une tache
+bleue entre les jambes d'un inspecteur.
+
+**Une capture vaut mieux qu'une supposition.** Mais il ne mesure pas la
+fluidité : rien ici ne dit si le jeu tient 60 images par seconde sur un
+téléphone.
+
+---
+
+## 5. Ce qui n'est pas fait
+
+- Le tableau d'enquête et la reconstitution chronologique : l'asset est
+  découpé, la mécanique n'existe pas. L'accusation se fait sur une liste
+  de suspects, sans avoir à désigner les indices qui la soutiennent.
+- Risoto est interrogeable mais ne se déplace pas.
+- Aucune mesure de performance sur appareil réel.
+- L'équilibrage du niveau 2 — cinq minutes, six indices sur seize
+  meubles — est un pari, pas une mesure.

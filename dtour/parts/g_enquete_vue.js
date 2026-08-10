@@ -161,33 +161,35 @@ const EnqVue = {
 
   dessinerHortense(){
     const H = Camera.H;
-    const h = H * 0.44, sol = this.ey(ENQ_LIGNE);
+    const sol = this.ey(ENQ_LIGNE), h = H * 0.46;
     const px = this.ex(HortenseApp.x);
-    /* Hortense n'a pas de sprite propre ici : elle est peinte en ombre
-       chinoise. À contre-jour dans un appartement, son irruption est
-       plus inquiétante que ridicule — et ça reste dans le trait. */
-    ctx.save();
-    ctx.globalAlpha = 0.9;
-    ctx.fillStyle = "#160F1C";
-    ctx.beginPath(); ctx.ellipse(px, sol - h * 0.86, h * 0.15, h * 0.17, 0, 0, 6.2832); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(px, sol - h * 0.36, h * 0.17, h * 0.38, 0, 0, 6.2832); ctx.fill();
-    if (HortenseApp.etat === ETAT_H2.PREPARE || HortenseApp.etat === ETAT_H2.LANCE){
-      const dir = Math.sign(Enquete.actifIns().x - HortenseApp.x) || 1;
-      ctx.lineCap = "round"; ctx.lineWidth = h * 0.075; ctx.strokeStyle = "#160F1C";
-      ctx.beginPath();
-      ctx.moveTo(px, sol - h * 0.62);
-      ctx.lineTo(px + dir * h * 0.27, sol - h * 0.80);
-      ctx.stroke();
+    const table = {
+      ENTREE:HortenseApp.phase % 2 < 1 ? "h_courtA" : "h_courtB",
+      GUET:"h_sournoise", PREPARE:"h_arme", LANCE:"h_lance",
+      RIRE:"h_pointe", SORTIE:"h_marche",
+    };
+    const img = Images.table[table[HortenseApp.etat] || "h_debout"];
+    const versGauche = Enquete.actifIns().x < HortenseApp.x;
+    if (img && img.naturalWidth){
+      const l = h * img.naturalWidth / img.naturalHeight;
+      const g2 = ctx.createRadialGradient(px, sol, 0, px, sol, h * 0.22);
+      g2.addColorStop(0, "rgba(20,14,10,.34)"); g2.addColorStop(1, "rgba(20,14,10,0)");
+      ctx.fillStyle = g2;
+      ctx.beginPath(); ctx.ellipse(px, sol, h * 0.22, h * 0.05, 0, 0, 6.2832); ctx.fill();
+      ctx.save();
+      ctx.translate(px, sol);
+      ctx.scale(versGauche ? -1 : 1, 1);
+      ctx.drawImage(img, -l / 2, -h, l, h);
+      ctx.restore();
     }
-    ctx.restore();
 
     const p = HortenseApp.tarte;
     if (p && p.etat !== "fini"){
-      const im = Images.table.ind_fromage;      /* la meringue, à défaut d'une tarte découpée */
-      const taille = H * 0.11;
-      const px2 = this.ex(p.x), py2 = this.ey(p.y);
+      const cadres = ["tarte0", "tarte1", "tarte2", "tarte3"];
+      const im = Images.table[cadres[Math.floor(p.rot / 0.9) % 4]] || Images.table.tarte0;
+      const taille = H * 0.12;
       ctx.save();
-      ctx.translate(px2, py2);
+      ctx.translate(this.ex(p.x), this.ey(p.y));
       ctx.rotate(p.rot);
       if (im && im.naturalWidth){
         const l = taille * im.naturalWidth / im.naturalHeight;

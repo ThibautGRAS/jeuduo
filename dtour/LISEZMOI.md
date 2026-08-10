@@ -42,6 +42,11 @@ tant que Thibaut les regarde sans comprendre. Thibaut interroge : les
 suspects ne répondent qu'à lui, Pierre-François n'obtient que des
 absurdités.
 
+**Le fond sonore** n'est pas décoratif : c'est lui qui fait la
+différence entre « une image » et « un endroit ». La pendule est calée
+sur l'horloge audio et non sur l'affichage — une seconde qui traîne
+s'entend tout de suite.
+
 **Le générateur d'affaire** tire un scénario sur trois au début de la
 partie, puis en déduit le coupable, la cachette et les six indices —
 jamais l'inverse. Une enquête impossible ne peut donc pas sortir, et la
@@ -87,8 +92,9 @@ outils.
 
 ## Ce qu'il faut savoir avant d'y toucher
 
-Lire d'abord `../CLAUDE.md` et `../MEMOIRE.md` : les règles et les
-pièges du dépôt valent ici aussi, et plusieurs ont déjà été payés.
+Lire d'abord `../CLAUDE.md` et `../MEMOIRE.md` pour les règles du dépôt,
+puis **`MEMOIRE.md`, ici même** : il tient les réglages calibrés, les
+pièges propres à ce jeu et ce qui n'est pas fait.
 
 - **Un seul fichier livré.** Tout le jeu tient dans `index.html`. Les
   seules ressources séparées sont les images de `img/`.
@@ -133,11 +139,12 @@ node tests/apercu.js /tmp/apngs /tmp/apercu
 
 Le détour par des PNG est nécessaire : node-canvas ne lit pas le WebP.
 
-Ce harnais a trouvé huit défauts qu'aucun test logique n'aurait vus :
-un écran entièrement noir, un bras en saucisse, une épaule au niveau du
-visage, des personnages trop grands, des bandes blanches sur les bords
-du décor, et des sprites éclairés en plein jour au milieu d'une rue de
-nuit. Une capture vaut mieux qu'une supposition.
+Ce harnais a trouvé ce qu'aucun test logique ne pouvait voir : un écran
+entièrement noir, un bras en saucisse, une épaule au niveau du visage,
+des personnages trop grands, des bandes blanches aux bords du décor, des
+sprites éclairés en plein jour au milieu d'une rue de nuit, et une tache
+bleue entre les jambes d'un inspecteur. Une capture vaut mieux qu'une
+supposition — le détail des incidents est dans `MEMOIRE.md`.
 
 ## Place à l'écran
 
@@ -305,6 +312,8 @@ blanc du PNJ 09. Les seize PNJ se touchent sur la planche ; ils sont
 séparés par détection des creux d'occupation, vérifiée à l'œil.
 
 ## Ce qui n'est pas fait
+
+Le détail, et les raisons, sont dans `MEMOIRE.md`.
 
 - Pas de tableau des scores partagé : le record est local à l'appareil.
 - Pas de manifeste PWA propre au jeu.

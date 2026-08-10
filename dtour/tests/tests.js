@@ -73,6 +73,34 @@ for (let i = 0; i < 4; i++) citees.add("tarte" + i);
 for (const h of ["thibaut","pierre"]) for (const p of ["idle","attente","marche","regarde","surpris","stress","tendue","victoire"]) citees.add(h + "_" + p);
 for (let i = 1; i <= 16; i++) citees.add("pnj" + String(i).padStart(2, "0"));
 const manquantes = [...citees].filter(n => !presentes.includes(n + ".webp"));
+
+/* Le test précédent ne dit que « le fichier est là ». Il ne dit pas
+   qu'on le CHARGE : les images du niveau 2 étaient sur le disque, la
+   suite était verte, et l'appartement restait noir. On confronte donc
+   img/ à la liste de chargement, dans les deux sens. */
+const chargees = new Set();
+{
+  const blocs = source.match(/const IMAGES_NIVEAU2 = \[([\s\S]*?)\];/);
+  if (blocs) for (const m of blocs[1].matchAll(/"([A-Za-z_0-9]+)"/g)) chargees.add(m[1]);
+  for (const nom of ["logo", "face_thibaut", "face_pierre"]) chargees.add(nom);
+  for (const liste of ["EFFETS", "SPRITES_HORTENSE", "SPRITES_TARTE", "SPRITES_PNJ"]){
+    const b = source.match(new RegExp("const " + liste + " = \\[([\\s\\S]*?)\\]"));
+    if (b) for (const m of b[1].matchAll(/"([A-Za-z_0-9]+)"/g)) chargees.add(m[1]);
+  }
+  for (const m of source.matchAll(/fond:"([a-z_]+)"/g)) chargees.add(m[1]);
+  for (const h of ["thibaut", "pierre"]){
+    const b = source.match(/const POSES_HEROS = \[([\s\S]*?)\]/);
+    if (b) for (const m of b[1].matchAll(/"([a-z]+)"/g)) chargees.add(h + "_" + m[1]);
+  }
+  for (let i = 1; i <= 16; i++) chargees.add("pnj" + String(i).padStart(2, "0"));
+}
+const surDisque = presentes.filter(f => f.endsWith(".webp")).map(f => f.slice(0, -5));
+const jamaisChargees = surDisque.filter(n => !chargees.has(n));
+const introuvables = [...chargees].filter(n => surDisque.indexOf(n) < 0);
+verifier("toutes les images du disque sont chargées au démarrage",
+  jamaisChargees.length === 0, "jamais demandée(s) : " + jamaisChargees.join(", "));
+verifier("aucune image demandée ne manque sur le disque",
+  introuvables.length === 0, "introuvable(s) : " + introuvables.join(", "));
 verifier("toutes les images citées existent dans img/", manquantes.length === 0, "manquant : " + manquantes.join(", "));
 verifier("aucune image inutilisée dans img/",
   presentes.filter(f => f.endsWith(".webp") && !citees.has(f.slice(0, -5))).length === 0,
@@ -706,15 +734,19 @@ if (D){
     D.Jeu.pas(1 / 60);
     if (D.Hortense.visible) vueTot = true;
   }
+  /* Passé le répit, elle DOIT finir par venir. Exiger qu'elle soit déjà
+     autorisée à la seconde près était faux : sa prochaine venue est
+     tirée entre 20 et 40 s, et le test échouait une fois sur six sans
+     que rien ne soit cassé. On avance donc jusqu'à ce qu'elle puisse
+     venir, dans la limite du plus long intervalle possible. */
+  let attente = 0, autorisee = false;
+  while (attente++ < 60 * (D.HORTENSE_ECART[1] + 8)){
+    if (D.Tartes.peutApparaitre() || D.Hortense.visible){ autorisee = true; break; }
+    D.Jeu.pas(1 / 60);
+  }
   D.Jeu.invincible = false;
-  /* Elle peut être en train d'arriver, déjà là, ou déjà repartie : les
-     trois valent, seul le silence total serait un échec. */
-  verifier("passé ce délai, elle peut arriver",
-    D.Tartes.peutApparaitre() || D.Hortense.visible || vueTot);
-
-  /* --- machine à états, du bord de l'écran jusqu'au lancer --- */
-  amenerA(12);
-  D.Jeu.invincible = true;
+  verifier("passé ce délai, elle finit par venir", autorisee || vueTot,
+    "rien au bout de " + (D.HORTENSE_ECART[1] + 8) + " s");
   const h = D.Tartes.apparaitre(true);
   verifier("elle apparaît sur demande", !!h && D.Hortense.visible);
   egal("elle entre en scène", D.Hortense.etat, D.ETAT_H.ENTREE);

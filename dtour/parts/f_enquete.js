@@ -183,7 +183,7 @@ const ETAT_H2 = {
 };
 
 const HortenseApp = {
-  etat:ETAT_H2.CACHEE, x:0, vise:0, chrono:0, cible:0, tarte:null, quand:0, faite:false,
+  etat:ETAT_H2.CACHEE, x:0, vise:0, chrono:0, cible:0, tarte:null, quand:0, faite:false, phase:0,
 
   raz(){
     this.etat = ETAT_H2.CACHEE; this.faite = false; this.tarte = null;
@@ -209,6 +209,7 @@ const HortenseApp = {
     Sons.hortenseEntre();
   },
   majorer(dt){
+    this.phase += dt * 7;
     if (this.etat === ETAT_H2.CACHEE){ if (this.peutVenir()) this.declencher(); return; }
     switch (this.etat){
       case ETAT_H2.ENTREE: {
@@ -551,6 +552,5 @@ const Enquete = {
 
     if (this.restant <= 0){ this.restant = 0; this.terminer(false); }
     Effets.majorer(dt);
-    Sons.ambiancer(0.2, dt, ENQ_DUREE - this.restant);
   },
 };
