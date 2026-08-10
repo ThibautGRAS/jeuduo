@@ -527,7 +527,7 @@ canvas{
   <div id="defiBandeau" class="cache"></div>
   <div id="etatLobby"></div>
   <div id="records"></div>
-  <div id="version">DUO v13.2 · 2026-08-09</div>
+  <div id="version">DUO v14.0 · 2026-08-09</div>
 </div>
 
 <div id="jeu">
@@ -570,6 +570,15 @@ canvas{
         </div>
       <button id="btnLu">LU — JE SUIS PRÊT</button>
       <div class="petit" id="etatLu"></div>
+    </div>
+
+    <div id="confirmation" class="panneau cache">
+      <div class="grand" style="font-size:24px">QUITTER ?</div>
+      <div class="petit" id="confirmSous">La partie en cours sera perdue pour vous deux.</div>
+      <div class="rangFin">
+        <button id="btnQuitterOui">Quitter</button>
+        <button id="btnQuitterNon" class="secondaire">Reprendre</button>
+      </div>
     </div>
 
     <div id="versus" class="panneau cache">
@@ -648,6 +657,8 @@ canvas{
   <div id="barreBasse">
     <button id="btnMusique" class="icone" aria-label="Musique">♪</button>
     <div id="micEtat" class="cache">REC</div>
+    <button id="btnPause" class="icone" aria-label="Pause">॥</button>
+    <button id="btnQuitter" class="icone" aria-label="Quitter la partie">⏻</button>
     <div class="espace"></div>
     <button id="btnMicToggle" class="icone eteint" aria-label="Micro">🎙</button>
   </div>
@@ -657,7 +668,7 @@ canvas{
 "use strict";
 
 /* ================= CONFIG ================= */
-const VERSION = "13.2";
+const VERSION = "14.0";
 const LARG = 540, HAUT = 880;   /* rapport 0,614 : épouse la hauteur réellement
                                    disponible sur un iPhone en Safari, contre
                                    0,75 auparavant où 130 pt restaient inutilisés */
@@ -1154,6 +1165,12 @@ async function basculerMicro(){
   majIcones();
 }
 function majIcones(){
+  const bp = document.getElementById("btnPause");
+  if (bp){
+    bp.textContent = enPause ? "▶" : "॥";
+    bp.classList.toggle("actif", enPause);
+    bp.classList.toggle("eteint", !partieEnCours);
+  }
   const bm = document.getElementById("btnMusique");
   const bt = document.getElementById("btnMicToggle");
   if (bm){ bm.classList.toggle("actif", musiqueOn); bm.classList.toggle("eteint", !musiqueOn); }
@@ -1232,6 +1249,23 @@ function annoncer(texte, couleur){
   annonce.couleur = couleur || "#FBBF24";
   annonce.fin = performance.now() + 1700;
 }
+/* Pendant la pause on continue de peindre la scène, figée, avec un voile. */
+function dessinerPause(){
+  dessiner();
+  ctx.save();
+  ctx.fillStyle = "rgba(4,6,12,.55)";
+  ctx.fillRect(0, 0, LARG, HAUT);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "#EAF0FF";
+  ctx.font = "700 30px 'JetBrains Mono', monospace";
+  ctx.fillText("PAUSE", LARG/2, HAUT/2 - 8);
+  ctx.font = "400 13px 'JetBrains Mono', monospace";
+  ctx.fillStyle = "rgba(234,240,255,.6)";
+  ctx.fillText(pauseParMoi ? "TOUCHEZ ॥ POUR REPRENDRE"
+                           : "EN ATTENTE DE " + (nomAdverse || "L'ADVERSAIRE"), LARG/2, HAUT/2 + 26);
+  ctx.restore();
+}
+
 function dessinerAnnonce(){
   const reste = annonce.fin - performance.now();
   if (reste <= 0 || !annonce.texte) return;
@@ -1249,6 +1283,8 @@ function dessinerAnnonce(){
   ctx.restore();
 }
 function masquerPanneaux(){
+  const c = document.getElementById("confirmation");
+  if (c) c.classList.add("cache");
   const r = document.getElementById("recap");
   if (r) r.classList.add("cache");
   const v = document.getElementById("versus");
@@ -2546,6 +2582,15 @@ function recevoir(m){
       majRecordsVoile();
       afficherPalmares();
       break;
+    case "pz": appliquerPause(!!m.v, false); break;
+    case "qt":
+      /* l'adversaire a quitté : on le dit clairement plutôt que d'attendre */
+      partieEnCours = false;
+      arreterMinuteurs(); arreterDecompteRelance();
+      masquerPanneaux();
+      montrerVoile("—", (nomAdverse || "L'ADVERSAIRE") + " A QUITTÉ LA PARTIE", false);
+      $("btnMenu").classList.remove("cache");
+      break;
     case "ver":
       /* Sans ce contrôle, un adversaire resté sur une version en cache pouvait
          parler un protocole différent et désynchroniser la partie en silence. */
@@ -3486,6 +3531,33 @@ function montrerVoile(titre, sous, avecBouton){
 /* Retour au menu principal : on coupe proprement les liaisons puis on repart
    d'une page neuve — nom, photo et compteurs de duels sont conservés dans le
    stockage local, et aucun minuteur résiduel ne peut subsister. */
+function montrerConfirmation(){
+  $("confirmSous").textContent = modeSolo
+    ? "Vous reviendrez au menu principal."
+    : "La partie en cours sera perdue pour vous deux.";
+  $("confirmation").classList.remove("cache");
+}
+$("btnQuitterNon").addEventListener("click", () => {
+  $("confirmation").classList.add("cache");
+  if (enPause) basculerPause();
+});
+$("btnQuitterOui").addEventListener("click", () => {
+  $("confirmation").classList.add("cache");
+  quitterPartie();
+});
+
+function quitterPartie(){
+  if (!modeSolo) { try{ envoyerFiable({ t: "qt" }); }catch(e){} }
+  /* on laisse au message le temps de partir avant de fermer les canaux */
+  setTimeout(() => $("btnMenu").click(), 140);
+}
+$("btnPause").addEventListener("click", basculerPause);
+$("btnQuitter").addEventListener("click", () => {
+  if (!partieEnCours){ $("btnMenu").click(); return; }
+  if (!enPause) basculerPause();          /* on fige avant de demander */
+  montrerConfirmation();
+});
+
 $("btnMenu").addEventListener("click", () => {
   partieEnCours = false;
   arreterMinuteurs();
@@ -3625,11 +3697,55 @@ function majClavier(dtMs){
   const x = maRaquette + (clavierDroite ? pas : 0) - (clavierGauche ? pas : 0);
   maRaquette = Math.max(murG_() + demi, Math.min(murD_() - demi, x));
 }
+/* ---------- PAUSE PARTAGÉE ----------
+   En réseau, la pause doit valoir pour les deux : le demandeur l'annonce sur le
+   canal fiable, et l'autre l'applique. Comme toute la mécanique repose sur des
+   horodatages absolus — décompte, durées de bonus, arc d'orage, annonces — il
+   faut les décaler du temps écoulé à la reprise, sinon tout expire pendant la
+   pause et le jeu reprend dans un état incohérent. */
+let pauseDebut = 0, pauseParMoi = false;
+function decalerTemps(delta){
+  if (delta <= 0) return;
+  finCompte += delta;
+  relanceFin += delta;
+  annonce.fin += delta;
+  for (const c of ["finBas", "finHaut", "finFantome", "finBouleFeu"])
+    if (effets[c]) effets[c] += delta;
+  if (arcOrage.prochain) arcOrage.prochain += delta;
+  if (arcOrage.debut) arcOrage.debut += delta;
+  for (const b of balles){
+    if (b.tPuits && b.tPuits > -1e8) b.tPuits += delta;
+    if (b.tArc && b.tArc > -1e8) b.tArc += delta;
+  }
+  for (const o of obstacles) if (o.tImpact && o.tImpact > -1e8) o.tImpact += delta;
+  for (const d of debris) if (d.tImpact && d.tImpact > -1e8) d.tImpact += delta;
+  derniereVerifPerf = 0; tempsFrames = [];
+}
+function appliquerPause(actif, parMoi){
+  if (!partieEnCours || enPause === actif) return;
+  enPause = actif;
+  pauseParMoi = !!parMoi;
+  if (actif){
+    pauseDebut = performance.now();
+    /* on baisse le gain plutôt que d'arrêter : la reprise est instantanée */
+    if (gainMusique){
+      gainMusique.gain.cancelScheduledValues(ac ? ac.currentTime : 0);
+      gainMusique.gain.value = 0;
+    }
+  } else {
+    decalerTemps(performance.now() - pauseDebut);
+    if (gainMusique) gainMusique.gain.value = musiqueOn ? 1 : 0;
+    if (musiqueOn) demarrerMusique();
+  }
+  majIcones();
+  const qui = parMoi ? "" : (nomAdverse ? " PAR " + nomAdverse : "");
+  annoncer(actif ? "PAUSE" + qui : "REPRISE", "#8AB4FF");
+}
 function basculerPause(){
-  /* la pause n'a de sens que hors ligne : à deux, elle figerait l'adversaire */
-  if (!partieEnCours || !modeSolo) return;
-  enPause = !enPause;
-  annoncer(enPause ? "PAUSE" : "REPRISE", "#8AB4FF");
+  if (!partieEnCours || phase === "fin" || phase === "regles") return;
+  const nouveau = !enPause;
+  appliquerPause(nouveau, true);
+  if (!modeSolo) envoyerFiable({ t: "pz", v: nouveau ? 1 : 0 });
 }
 
 /* ================= RENDU ================= */
@@ -3679,7 +3795,11 @@ function boucle(){
   chargesAffichees[0] = chargeLocal;
   if (estHote) chargesAffichees[1] = chargeHaut;
 
-  if (enPause){ dessiner(); if (partieEnCours) requestAnimationFrame(boucle); return; }
+  if (enPause){
+    dessinerPause();
+    if (partieEnCours) requestAnimationFrame(boucle);
+    return;
+  }
   if (estHote){
     accumulateur += dtMs;
     let pas = 0;
