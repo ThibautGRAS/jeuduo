@@ -12,17 +12,21 @@ const Camera = {
 
   mesurer(L, H, dpr, basUI){
     this.L = L; this.H = H; this.dpr = dpr;
-    /* Hauteur réellement jouable : le bandeau de commandes mange le bas
-       de l'écran, et les héros s'y cachaient les jambes. On lui réserve
-       sa place au lieu de dessiner dessous. */
-    this.basUI = basUI != null ? basUI : borne(H * 0.13, 46, 74);
-    const hUtile = Math.max(120, H - this.basUI);
+    /* Les commandes ne sont plus un bandeau pleine largeur mais deux
+       pastilles dans les coins : la scène récupère tout le bas, et les
+       personnages posent enfin les pieds sur le trottoir au lieu de
+       flotter au-dessus d'une bande réservée. */
+    /* On laisse voir un peu de trottoir sous les pieds : sans cette
+       marge, les personnages étaient posés sur le bord de l'écran et
+       n'avaient plus l'air d'être sur le sol. */
+    this.basUI = basUI != null ? basUI : Math.max(16, H * 0.08);
+    const hUtile = Math.max(120, H - this.basUI * 0.5);
     /* Le jeu est en paysage : la hauteur commande, la largeur ne sert
        que de garde-fou sur les écrans très plats. Généreux à dessein —
        le décor est une image large, des personnages timides auraient
        l'air posés devant une carte postale. */
-    this.base = borne(Math.min(hUtile * 0.56, L * 0.26), 92, 380);
-    this.sol = H - this.basUI - H * 0.025;
+    this.base = borne(Math.min(hUtile * 0.60, L * 0.26), 92, 380);
+    this.sol = H - this.basUI;
     this.calculerVise();
     this.recentrer();
   },
@@ -63,9 +67,14 @@ const Camera = {
 
 /* ================= effets ================= */
 const Effets = {
-  textes:[], eclats:[], gouttesL:[], alertes:[], bulles:[], etoiles:[],
+  textes:[], eclats:[], gouttesL:[], alertes:[], bulles:[], etoiles:[], paroles:[],
 
-  raz(){ this.textes = []; this.eclats = []; this.gouttesL = []; this.alertes = []; this.bulles = []; this.etoiles = []; },
+  raz(){ this.textes = []; this.eclats = []; this.gouttesL = []; this.alertes = []; this.bulles = []; this.etoiles = []; this.paroles = []; },
+
+  /* Une réplique au-dessus de la tête. `cible` est soit { pnj }, soit
+     { heros:i } : la bulle suit celui qui parle, elle ne reste pas
+     plantée à l'endroit où il se tenait quand il a ouvert la bouche. */
+  parole(cible, txt, duree){ this.paroles.push({ cible, txt, t:0, duree:duree || 1.4 }); },
 
   /* L'étoile COMBO de la planche, avec le multiplicateur écrit dessous. */
   etoile(x, y, combo){ this.etoiles.push({ x, y, combo, t:0, duree:1.25 }); },
@@ -98,6 +107,8 @@ const Effets = {
     this.eclats = this.eclats.filter(e => e.t < e.duree);
     for (const g of this.gouttesL){ g.t += dt; g.x += g.vx * dt; g.y += g.vy * dt; g.vy += 190 * dt; }
     this.gouttesL = this.gouttesL.filter(g => g.t < g.duree);
+    for (const p of this.paroles) p.t += dt;
+    this.paroles = this.paroles.filter(p => p.t < p.duree && !(p.cible.pnj && p.cible.pnj.parti));
     for (const e of this.etoiles) e.t += dt;
     this.etoiles = this.etoiles.filter(e => e.t < e.duree);
     for (const b of this.bulles) b.t += dt;
@@ -121,8 +132,7 @@ function ajusterCanevas(){
   if (cv.width !== lp || cv.height !== hp){ cv.width = lp; cv.height = hp; }
   /* On mesure le bandeau plutôt que de le supposer : sa hauteur dépend
      de clamp() et donc de l'écran. */
-  const bas = (E.pupitre && E.pupitre.offsetHeight) || 0;
-  Camera.mesurer(L, H, dpr, bas > 8 ? bas + 10 : null);
+  Camera.mesurer(L, H, dpr);
 }
 
 /* Un personnage, ancré sur ses pieds. */
@@ -260,6 +270,54 @@ function dessinerAlerte(a){
   ctx.arc(0, 0, r * 1.26, -Math.PI / 2, -Math.PI / 2 + 6.2832 * reste);
   ctx.strokeStyle = reste < 0.34 ? "#E2453D" : "rgba(255,255,255,.92)";
   ctx.lineWidth = Math.max(2.5, r * 0.16); ctx.lineCap = "butt"; ctx.stroke();
+  ctx.restore();
+}
+
+/* Une bulle de bande dessinée : fond craie, cerne sombre, petite queue
+   vers la tête. Elle monte doucement et s'efface. */
+function dessinerParole(p){
+  let px, py, hauteur;
+  if (p.cible.pnj){
+    const n = p.cible.pnj;
+    const range = n.arrive && n.etat === ETAT.ATTENTE;
+    hauteur = H_PERSO * Camera.ech * (range ? 1 : DEVANT_Z);
+    px = Camera.ecran(n.x);
+    py = Camera.sol + (range ? 0 : DEVANT_Y * H_PERSO * Camera.ech) - hauteur;
+  } else {
+    const h = Heros[p.cible.heros];
+    hauteur = H_PERSO * Camera.ech;
+    px = Camera.ecran(xPlace(h.place));
+    py = Camera.sol - hauteur;
+  }
+  const t = p.t / p.duree;
+  const monte = Math.min(1, p.t * 8);
+  py -= hauteur * 0.10 + monte * hauteur * 0.06;
+
+  const taille = Math.max(11, Camera.base * 0.135);
+  ctx.save();
+  ctx.globalAlpha = borne(1 - Math.pow(t, 4), 0, 1) * (0.35 + 0.65 * monte);
+  ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  const l = ctx.measureText(p.txt).width;
+  const pad = taille * 0.62, bh = taille * 1.72, bl = l + pad * 2;
+  const bx = borne(px - bl / 2, 4, Camera.L - bl - 4);
+  const by = py - bh;
+
+  arrondi(bx, by, bl, bh, bh * 0.42);
+  ctx.fillStyle = "rgba(252,253,255,.96)"; ctx.fill();
+  ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1.5, taille * 0.10); ctx.stroke();
+  /* la queue, toujours dirigée vers la tête même si la bulle a glissé */
+  const qx = borne(px, bx + bh * 0.5, bx + bl - bh * 0.5);
+  ctx.beginPath();
+  ctx.moveTo(qx - bh * 0.18, by + bh - 1);
+  ctx.lineTo(qx + bh * 0.18, by + bh - 1);
+  ctx.lineTo(qx, by + bh + bh * 0.36);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(252,253,255,.96)"; ctx.fill();
+  ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1.5, taille * 0.10); ctx.stroke();
+
+  ctx.fillStyle = "#1A1420";
+  ctx.fillText(p.txt, bx + bl / 2, by + bh / 2);
   ctx.restore();
 }
 
@@ -535,6 +593,7 @@ function dessiner(){
 
   /* effets */
   for (const b of Effets.bulles) dessinerBulle(b);
+  for (const p of Effets.paroles) dessinerParole(p);
   for (const a of Effets.alertes) dessinerAlerte(a);
 
   for (const e of Effets.eclats){

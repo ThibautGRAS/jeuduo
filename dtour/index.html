@@ -87,51 +87,58 @@ kbd{
   transition:background .25s ease,transform .25s ease,opacity .25s ease}
 #vies b.perdue{background:var(--craie);opacity:.16;transform:scale(.7)}
 
-/* ---------------- commandes ---------------- */
+/* ---------------- commandes ----------------
+   En paysage, les pouces sont dans les deux coins bas. Les commandes y
+   restent, mais en pastilles : un bandeau pleine largeur mangeait la
+   moitié basse de la scène et coupait les héros aux genoux. Un dégradé
+   discret garde le texte lisible sur n'importe quel décor. */
 #pupitre{
-  position:absolute;left:0;right:0;bottom:0;z-index:20;display:flex;gap:10px;
-  padding:0 10px calc(8px + var(--bas));
+  position:absolute;left:0;right:0;bottom:0;z-index:20;
+  padding:0 10px calc(8px + var(--bas));height:0;
   opacity:0;pointer-events:none;transition:opacity .28s ease;
 }
-#pupitre.on{opacity:1;pointer-events:auto}
+#pupitre.on{opacity:1}
+#pupitre.on .cmd{pointer-events:auto}
+#pupitre::before{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:clamp(70px,20vh,130px);
+  background:linear-gradient(180deg,rgba(8,13,24,0),rgba(8,13,24,.52));
+  pointer-events:none;
+}
 .cmd{
-  flex:1 1 0;min-width:0;height:clamp(40px,10vh,58px);
+  position:absolute;bottom:calc(8px + var(--bas));
+  height:clamp(38px,9.5vh,50px);max-width:26vw;
   display:flex;align-items:center;gap:8px;padding:0 10px;
-  border:1px solid var(--traitFort);border-radius:var(--r2);cursor:pointer;
+  border:1px solid rgba(255,255,255,.30);border-radius:999px;cursor:pointer;
   font-family:inherit;font-weight:800;color:#fff;
-  backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);
-  transition:transform .08s ease,filter .12s ease,box-shadow .12s ease;
-  box-shadow:0 4px 16px rgba(0,0,0,.34);
+  backdrop-filter:blur(12px) saturate(1.3);-webkit-backdrop-filter:blur(12px) saturate(1.3);
+  transition:transform .08s ease,filter .12s ease;
+  box-shadow:0 4px 16px rgba(0,0,0,.38);
 }
 .cmd img{
-  width:clamp(24px,6vh,34px);height:clamp(24px,6vh,34px);border-radius:50%;
-  flex:0 0 auto;border:1.5px solid rgba(255,255,255,.55);background:rgba(0,0,0,.2);
+  width:clamp(26px,6.4vh,34px);height:clamp(26px,6.4vh,34px);border-radius:50%;
+  flex:0 0 auto;border:1.5px solid rgba(255,255,255,.6);background:rgba(0,0,0,.2);
 }
-.cmd .txt{display:flex;flex-direction:column;gap:1px;min-width:0;text-align:left;flex:1 1 auto}
-.cmd .txt small{font-size:8px;font-weight:600;letter-spacing:.16em;opacity:.7;line-height:1}
-/* Sur un écran court — un iPhone couché, barre de Safari comprise — la
-   ligne de service disparaît : c'est elle ou les jambes des héros. */
-@media (max-height:420px){ .cmd .txt small{display:none} }
-.cmd .txt span{font-size:clamp(12px,2.2vw,17px);line-height:1.1;
+.cmd .txt{display:flex;align-items:center;min-width:0}
+.cmd .txt small{display:none}
+.cmd .txt span{font-size:clamp(11px,1.9vw,16px);line-height:1.1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
-.cmd kbd{color:rgba(255,255,255,.88);border-color:rgba(255,255,255,.4);background:rgba(0,0,0,.22)}
-#cmdT{background:linear-gradient(180deg,rgba(55,172,72,.94),rgba(38,132,53,.94))}
-#cmdP{background:linear-gradient(180deg,rgba(42,138,228,.94),rgba(28,98,170,.94));flex-direction:row-reverse}
-/* La commande du milieu : plus étroite, sous le pouce, et d'une couleur
-   qui n'appartient à aucun des deux héros — on n'esquive pas « pour
-   quelqu'un », on esquive tout court. */
+.cmd kbd{color:rgba(255,255,255,.9);border-color:rgba(255,255,255,.42);background:rgba(0,0,0,.24)}
+#cmdT{left:10px;background:linear-gradient(180deg,rgba(55,172,72,.92),rgba(38,132,53,.92))}
+#cmdP{right:10px;flex-direction:row-reverse;background:linear-gradient(180deg,rgba(42,138,228,.92),rgba(28,98,170,.92))}
+/* La commande du milieu ne sert que par intermittence : elle reste
+   petite et discrète tant qu'aucune tarte n'est en l'air. */
 #cmdE{
-  flex:0 1 min(26%,168px);justify-content:center;
-  background:linear-gradient(180deg,rgba(247,179,43,.94),rgba(198,133,14,.94));
-  color:#1A1305;
+  left:50%;transform:translateX(-50%);justify-content:center;
+  background:linear-gradient(180deg,rgba(247,179,43,.92),rgba(198,133,14,.92));
+  color:#1A1305;opacity:.55;
 }
-#cmdE .txt{text-align:center;flex:0 1 auto}
-#cmdE .txt small{opacity:.62}
-#cmdE kbd{color:rgba(26,19,5,.82);border-color:rgba(26,19,5,.32);background:rgba(255,255,255,.22)}
-#cmdE.alerte{animation:tartePrete .5s ease-in-out infinite}
-@keyframes tartePrete{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3)}}
-#cmdP .txt{text-align:right}
-.cmd:active,.cmd.pressee{transform:translateY(2px);filter:brightness(1.14);box-shadow:0 2px 10px rgba(0,0,0,.3)}
+#cmdE .txt span{font-size:clamp(11px,1.9vw,15px)}
+#cmdE kbd{color:rgba(26,19,5,.85);border-color:rgba(26,19,5,.34);background:rgba(255,255,255,.26)}
+#cmdE.alerte{opacity:1;animation:tartePrete .5s ease-in-out infinite}
+@keyframes tartePrete{0%,100%{filter:brightness(1)}50%{filter:brightness(1.32)}}
+.cmd:active,.cmd.pressee{transform:translateY(2px);filter:brightness(1.14)}
+#cmdE:active,#cmdE.pressee{transform:translateX(-50%) translateY(2px);filter:brightness(1.14)}
+@media (max-height:380px){ .cmd kbd{display:none} }
 
 /* ---------------- écran titre ---------------- */
 #titre{
@@ -203,7 +210,7 @@ kbd{
 @media (prefers-reduced-motion:reduce){#pivot .tourne{animation:none;transform:rotate(0)}}
 #outilsBtn.on{display:block}
 #version{
-  position:absolute;left:14px;bottom:calc(clamp(58px,12vh,80px) + 26px + var(--bas));z-index:15;
+  position:absolute;left:14px;top:calc(14px + var(--haut));z-index:15;
   font-family:"JetBrains Mono",monospace;font-weight:500;font-size:9px;letter-spacing:.2em;
   color:rgba(132,150,182,.42);pointer-events:none;
 }
@@ -332,7 +339,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">D'TOUR v1.3</div>
+  <div id="version">D'TOUR v1.4</div>
 
   <div id="pivot">
     <div class="tourne"></div>
@@ -368,7 +375,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "1.3";
+const VERSION = "1.4";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -455,8 +462,20 @@ const NB_PNJ = 16;
 const SPRITES_PNJ = Array.from({ length:NB_PNJ }, (_, i) => "pnj" + String(i + 1).padStart(2, "0"));
 const POSES_HEROS = ["idle","attente","marche","regarde","surpris","stress","tendue","victoire"];
 
-const REPLIQUES_OK = ["SALUT !","BONJOUR !","ENCHANTÉ !","ÇA VA ?","SALUT !","BIEN OU BIEN ?"];
-const REPLIQUES_RATE = ["...","MALAISE","GÊNANT.","..."];
+/* Ce que dit l'arrivant en tendant la main. Il est chaleureux, sûr de
+   lui, et se trompe complètement de personne — c'est tout le sujet. */
+const BONJOURS = [
+  "Salut !", "Bonjour !", "Hé, salut !", "Tiens, salut !", "Ça va ?",
+  "Oh, bonjour !", "Salut, toi !", "Eh bien ça alors !", "Content de te voir !",
+];
+/* Ce que répond le héros quand le joueur a visé juste. Il n'a aucune
+   idée de qui c'est, et ça s'entend. */
+const REPONSES = [
+  "Salut !", "Bonjour !", "Euh... salut !", "Ça va ?", "Ah, salut !",
+  "Bien sûr !", "Mais oui !", "Ça faisait longtemps !", "Enchanté !",
+];
+/* Et quand personne n'a serré la main tendue. */
+const REPLIQUES_RATE = ["...", "Bon.", "Tant pis.", "..."];
 
 /* ================= petits outils ================= */
 const borne = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -875,6 +894,7 @@ class Pnj {
     this.doubleReste = 0;
     this.revenant = false;
     this.viseDemande = false;
+    this.parti = false;
     this.pas = 0;               /* avancement du cycle de marche */
   }
 
@@ -1102,6 +1122,7 @@ const Foule = {
     if (pnj.type === "DOUBLE" && pnj.doubleReste === 0 && cibleForce === undefined) pnj.doubleReste = 1;
     Jeu.demandes.push(pnj);
     Effets.alerte(pnj);
+    Effets.parole({ pnj }, pnj.revenant ? "Re-salut !" : piocher(BONJOURS), 1.5);
     Sons.alerte();
   },
 
@@ -1126,7 +1147,8 @@ const Foule = {
     for (const p of this.tous) p.avancer(dt);
     /* on oublie les passants sortis du cadre */
     const limite = Camera.bordDroit() + 120;
-    this.tous = this.tous.filter(p => !(p.place < 0 && p.x > limite));
+    for (const p of this.tous) if (p.place < 0 && p.x > limite) p.parti = true;
+    this.tous = this.tous.filter(p => !p.parti);
   },
 
   /* PNJ visibles, triés pour que celui de gauche passe devant. */
@@ -1250,8 +1272,8 @@ const Jeu = {
     gesteHeros(pnj.cible, "poignee", 0.5);
     const m = mainHeros(pnj.cible, true);
     Effets.eclat(m.x, m.y, Score.combo);
-    Effets.texte(m.x, m.y - 26, piocher(REPLIQUES_OK), "#FFFFFF", 0.9);
-    Effets.texte(m.x, m.y - 46, "+" + chiffres(gagne), "#F7B32B", 0.8);
+    Effets.parole({ heros:pnj.cible }, piocher(REPONSES), 1.2);
+    Effets.texte(m.x, m.y - 34, "+" + chiffres(gagne), "#F7B32B", 0.85);
     if (pnj.revenant) Effets.texte(pnj.x, -1.28 * H_PERSO, "ENCORE ?!", "#7FC3F5", 0.9);
     Sons.poignee(); Sons.reussite(Math.min(7, Score.combo - 1));
     if (Score.combo > 1 && Score.combo % 5 === 0){
@@ -1277,7 +1299,7 @@ const Jeu = {
       Heros[auteur].sueur = 1.6; Heros[auteur].tremble = 1;
       Heros[pnj.cible].sueur = 1.1;
     } else {
-      Effets.texte(pnj.x, -1.25 * H_PERSO, piocher(REPLIQUES_RATE), "#E2453D", 1.1);
+      Effets.parole({ pnj }, piocher(REPLIQUES_RATE), 1.3);
       Effets.gouttes(xPlace(Heros[pnj.cible].place), -0.92 * H_PERSO, 4);
       Heros[pnj.cible].sueur = 1.8; Heros[pnj.cible].tremble = 0.8;
     }
@@ -1341,17 +1363,21 @@ const Camera = {
 
   mesurer(L, H, dpr, basUI){
     this.L = L; this.H = H; this.dpr = dpr;
-    /* Hauteur réellement jouable : le bandeau de commandes mange le bas
-       de l'écran, et les héros s'y cachaient les jambes. On lui réserve
-       sa place au lieu de dessiner dessous. */
-    this.basUI = basUI != null ? basUI : borne(H * 0.13, 46, 74);
-    const hUtile = Math.max(120, H - this.basUI);
+    /* Les commandes ne sont plus un bandeau pleine largeur mais deux
+       pastilles dans les coins : la scène récupère tout le bas, et les
+       personnages posent enfin les pieds sur le trottoir au lieu de
+       flotter au-dessus d'une bande réservée. */
+    /* On laisse voir un peu de trottoir sous les pieds : sans cette
+       marge, les personnages étaient posés sur le bord de l'écran et
+       n'avaient plus l'air d'être sur le sol. */
+    this.basUI = basUI != null ? basUI : Math.max(16, H * 0.08);
+    const hUtile = Math.max(120, H - this.basUI * 0.5);
     /* Le jeu est en paysage : la hauteur commande, la largeur ne sert
        que de garde-fou sur les écrans très plats. Généreux à dessein —
        le décor est une image large, des personnages timides auraient
        l'air posés devant une carte postale. */
-    this.base = borne(Math.min(hUtile * 0.56, L * 0.26), 92, 380);
-    this.sol = H - this.basUI - H * 0.025;
+    this.base = borne(Math.min(hUtile * 0.60, L * 0.26), 92, 380);
+    this.sol = H - this.basUI;
     this.calculerVise();
     this.recentrer();
   },
@@ -1392,9 +1418,14 @@ const Camera = {
 
 /* ================= effets ================= */
 const Effets = {
-  textes:[], eclats:[], gouttesL:[], alertes:[], bulles:[], etoiles:[],
+  textes:[], eclats:[], gouttesL:[], alertes:[], bulles:[], etoiles:[], paroles:[],
 
-  raz(){ this.textes = []; this.eclats = []; this.gouttesL = []; this.alertes = []; this.bulles = []; this.etoiles = []; },
+  raz(){ this.textes = []; this.eclats = []; this.gouttesL = []; this.alertes = []; this.bulles = []; this.etoiles = []; this.paroles = []; },
+
+  /* Une réplique au-dessus de la tête. `cible` est soit { pnj }, soit
+     { heros:i } : la bulle suit celui qui parle, elle ne reste pas
+     plantée à l'endroit où il se tenait quand il a ouvert la bouche. */
+  parole(cible, txt, duree){ this.paroles.push({ cible, txt, t:0, duree:duree || 1.4 }); },
 
   /* L'étoile COMBO de la planche, avec le multiplicateur écrit dessous. */
   etoile(x, y, combo){ this.etoiles.push({ x, y, combo, t:0, duree:1.25 }); },
@@ -1427,6 +1458,8 @@ const Effets = {
     this.eclats = this.eclats.filter(e => e.t < e.duree);
     for (const g of this.gouttesL){ g.t += dt; g.x += g.vx * dt; g.y += g.vy * dt; g.vy += 190 * dt; }
     this.gouttesL = this.gouttesL.filter(g => g.t < g.duree);
+    for (const p of this.paroles) p.t += dt;
+    this.paroles = this.paroles.filter(p => p.t < p.duree && !(p.cible.pnj && p.cible.pnj.parti));
     for (const e of this.etoiles) e.t += dt;
     this.etoiles = this.etoiles.filter(e => e.t < e.duree);
     for (const b of this.bulles) b.t += dt;
@@ -1450,8 +1483,7 @@ function ajusterCanevas(){
   if (cv.width !== lp || cv.height !== hp){ cv.width = lp; cv.height = hp; }
   /* On mesure le bandeau plutôt que de le supposer : sa hauteur dépend
      de clamp() et donc de l'écran. */
-  const bas = (E.pupitre && E.pupitre.offsetHeight) || 0;
-  Camera.mesurer(L, H, dpr, bas > 8 ? bas + 10 : null);
+  Camera.mesurer(L, H, dpr);
 }
 
 /* Un personnage, ancré sur ses pieds. */
@@ -1589,6 +1621,54 @@ function dessinerAlerte(a){
   ctx.arc(0, 0, r * 1.26, -Math.PI / 2, -Math.PI / 2 + 6.2832 * reste);
   ctx.strokeStyle = reste < 0.34 ? "#E2453D" : "rgba(255,255,255,.92)";
   ctx.lineWidth = Math.max(2.5, r * 0.16); ctx.lineCap = "butt"; ctx.stroke();
+  ctx.restore();
+}
+
+/* Une bulle de bande dessinée : fond craie, cerne sombre, petite queue
+   vers la tête. Elle monte doucement et s'efface. */
+function dessinerParole(p){
+  let px, py, hauteur;
+  if (p.cible.pnj){
+    const n = p.cible.pnj;
+    const range = n.arrive && n.etat === ETAT.ATTENTE;
+    hauteur = H_PERSO * Camera.ech * (range ? 1 : DEVANT_Z);
+    px = Camera.ecran(n.x);
+    py = Camera.sol + (range ? 0 : DEVANT_Y * H_PERSO * Camera.ech) - hauteur;
+  } else {
+    const h = Heros[p.cible.heros];
+    hauteur = H_PERSO * Camera.ech;
+    px = Camera.ecran(xPlace(h.place));
+    py = Camera.sol - hauteur;
+  }
+  const t = p.t / p.duree;
+  const monte = Math.min(1, p.t * 8);
+  py -= hauteur * 0.10 + monte * hauteur * 0.06;
+
+  const taille = Math.max(11, Camera.base * 0.135);
+  ctx.save();
+  ctx.globalAlpha = borne(1 - Math.pow(t, 4), 0, 1) * (0.35 + 0.65 * monte);
+  ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  const l = ctx.measureText(p.txt).width;
+  const pad = taille * 0.62, bh = taille * 1.72, bl = l + pad * 2;
+  const bx = borne(px - bl / 2, 4, Camera.L - bl - 4);
+  const by = py - bh;
+
+  arrondi(bx, by, bl, bh, bh * 0.42);
+  ctx.fillStyle = "rgba(252,253,255,.96)"; ctx.fill();
+  ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1.5, taille * 0.10); ctx.stroke();
+  /* la queue, toujours dirigée vers la tête même si la bulle a glissé */
+  const qx = borne(px, bx + bh * 0.5, bx + bl - bh * 0.5);
+  ctx.beginPath();
+  ctx.moveTo(qx - bh * 0.18, by + bh - 1);
+  ctx.lineTo(qx + bh * 0.18, by + bh - 1);
+  ctx.lineTo(qx, by + bh + bh * 0.36);
+  ctx.closePath();
+  ctx.fillStyle = "rgba(252,253,255,.96)"; ctx.fill();
+  ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1.5, taille * 0.10); ctx.stroke();
+
+  ctx.fillStyle = "#1A1420";
+  ctx.fillText(p.txt, bx + bl / 2, by + bh / 2);
   ctx.restore();
 }
 
@@ -1864,6 +1944,7 @@ function dessiner(){
 
   /* effets */
   for (const b of Effets.bulles) dessinerBulle(b);
+  for (const p of Effets.paroles) dessinerParole(p);
   for (const a of Effets.alertes) dessinerAlerte(a);
 
   for (const e of Effets.eclats){

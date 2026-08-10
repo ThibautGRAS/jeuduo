@@ -44,6 +44,7 @@ class Pnj {
     this.doubleReste = 0;
     this.revenant = false;
     this.viseDemande = false;
+    this.parti = false;
     this.pas = 0;               /* avancement du cycle de marche */
   }
 
@@ -271,6 +272,7 @@ const Foule = {
     if (pnj.type === "DOUBLE" && pnj.doubleReste === 0 && cibleForce === undefined) pnj.doubleReste = 1;
     Jeu.demandes.push(pnj);
     Effets.alerte(pnj);
+    Effets.parole({ pnj }, pnj.revenant ? "Re-salut !" : piocher(BONJOURS), 1.5);
     Sons.alerte();
   },
 
@@ -295,7 +297,8 @@ const Foule = {
     for (const p of this.tous) p.avancer(dt);
     /* on oublie les passants sortis du cadre */
     const limite = Camera.bordDroit() + 120;
-    this.tous = this.tous.filter(p => !(p.place < 0 && p.x > limite));
+    for (const p of this.tous) if (p.place < 0 && p.x > limite) p.parti = true;
+    this.tous = this.tous.filter(p => !p.parti);
   },
 
   /* PNJ visibles, triés pour que celui de gauche passe devant. */
@@ -419,8 +422,8 @@ const Jeu = {
     gesteHeros(pnj.cible, "poignee", 0.5);
     const m = mainHeros(pnj.cible, true);
     Effets.eclat(m.x, m.y, Score.combo);
-    Effets.texte(m.x, m.y - 26, piocher(REPLIQUES_OK), "#FFFFFF", 0.9);
-    Effets.texte(m.x, m.y - 46, "+" + chiffres(gagne), "#F7B32B", 0.8);
+    Effets.parole({ heros:pnj.cible }, piocher(REPONSES), 1.2);
+    Effets.texte(m.x, m.y - 34, "+" + chiffres(gagne), "#F7B32B", 0.85);
     if (pnj.revenant) Effets.texte(pnj.x, -1.28 * H_PERSO, "ENCORE ?!", "#7FC3F5", 0.9);
     Sons.poignee(); Sons.reussite(Math.min(7, Score.combo - 1));
     if (Score.combo > 1 && Score.combo % 5 === 0){
@@ -446,7 +449,7 @@ const Jeu = {
       Heros[auteur].sueur = 1.6; Heros[auteur].tremble = 1;
       Heros[pnj.cible].sueur = 1.1;
     } else {
-      Effets.texte(pnj.x, -1.25 * H_PERSO, piocher(REPLIQUES_RATE), "#E2453D", 1.1);
+      Effets.parole({ pnj }, piocher(REPLIQUES_RATE), 1.3);
       Effets.gouttes(xPlace(Heros[pnj.cible].place), -0.92 * H_PERSO, 4);
       Heros[pnj.cible].sueur = 1.8; Heros[pnj.cible].tremble = 0.8;
     }

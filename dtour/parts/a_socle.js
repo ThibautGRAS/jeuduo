@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "1.3";
+const VERSION = "1.4";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -105,8 +105,20 @@ const NB_PNJ = 16;
 const SPRITES_PNJ = Array.from({ length:NB_PNJ }, (_, i) => "pnj" + String(i + 1).padStart(2, "0"));
 const POSES_HEROS = ["idle","attente","marche","regarde","surpris","stress","tendue","victoire"];
 
-const REPLIQUES_OK = ["SALUT !","BONJOUR !","ENCHANTÉ !","ÇA VA ?","SALUT !","BIEN OU BIEN ?"];
-const REPLIQUES_RATE = ["...","MALAISE","GÊNANT.","..."];
+/* Ce que dit l'arrivant en tendant la main. Il est chaleureux, sûr de
+   lui, et se trompe complètement de personne — c'est tout le sujet. */
+const BONJOURS = [
+  "Salut !", "Bonjour !", "Hé, salut !", "Tiens, salut !", "Ça va ?",
+  "Oh, bonjour !", "Salut, toi !", "Eh bien ça alors !", "Content de te voir !",
+];
+/* Ce que répond le héros quand le joueur a visé juste. Il n'a aucune
+   idée de qui c'est, et ça s'entend. */
+const REPONSES = [
+  "Salut !", "Bonjour !", "Euh... salut !", "Ça va ?", "Ah, salut !",
+  "Bien sûr !", "Mais oui !", "Ça faisait longtemps !", "Enchanté !",
+];
+/* Et quand personne n'a serré la main tendue. */
+const REPLIQUES_RATE = ["...", "Bon.", "Tant pis.", "..."];
 
 /* ================= petits outils ================= */
 const borne = (v, a, b) => v < a ? a : (v > b ? b : v);

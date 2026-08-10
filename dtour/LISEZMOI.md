@@ -96,12 +96,20 @@ nuit. Une capture vaut mieux qu'une supposition.
 
 ## Place à l'écran
 
-Le bandeau de commandes du bas est **mesuré**, pas supposé : sa hauteur
-dépend de `clamp()` et donc de l'écran. La ligne de sol du jeu se cale
-juste au-dessus, si bien que les héros ne se retrouvent jamais coupés
-aux genoux derrière les boutons. Sur un écran de moins de 420 px de
-haut — un iPhone couché, barre de Safari comprise — la ligne « SALUER »
-des boutons disparaît : c'est elle ou les jambes.
+Les commandes ne sont pas un bandeau mais **trois pastilles** : les deux
+héros dans les coins bas, là où tombent les pouces en paysage, et
+l'esquive au centre, discrète tant qu'aucune tarte n'est en l'air. Un
+bandeau pleine largeur mangeait la moitié basse de la scène et coupait
+les héros aux genoux ; les pastilles ne recouvrent que les pieds de deux
+ou trois figurants dans les angles.
+
+Elles sont bornées à 26 % de la largeur, ce qui n'est pas un chiffre
+choisi au hasard : c'est la limite au-delà de laquelle la pastille de
+gauche vient mordre sur Thibaut.
+
+La ligne de sol laisse 8 % de hauteur sous les pieds. Sans cette marge,
+les personnages étaient posés sur le bord de l'écran et n'avaient plus
+l'air d'être sur le trottoir.
 
 L'écran titre se règle sur la HAUTEUR disponible et non sur la largeur.
 Réglé en largeur, le logo poussait le bouton JOUER et la légende hors du
@@ -119,6 +127,19 @@ cadre dès que la barre du navigateur mangeait cent pixels.
 | InputManager | `Entrees` |
 | AudioManager | `Sons` |
 | UIManager | `Interface` |
+
+### Ce qu'ils se disent
+
+L'arrivant lance un « Salut ! », « Tiens, salut ! » ou « Ça va ? » au
+moment où il tend la main — c'est ce qui rend le malentendu audible. Si
+le joueur vise juste, le héros répond, et sa réponse trahit qu'il ne
+sait pas du tout à qui il parle : « Euh... salut ! », « Bien sûr ! »,
+« Ça faisait longtemps ! ». Si personne ne serre, l'arrivant conclut
+tout seul : « Bon. », « Tant pis. »
+
+Les bulles suivent celui qui parle plutôt que de rester plantées à
+l'endroit où il se tenait, et la queue de la bulle reste dirigée vers sa
+tête même quand la bulle glisse pour ne pas sortir de l'écran.
 
 États du PNJ : `ENTREE` → `DEMANDE` → `POIGNEE` ou `MALAISE` → `MARCHE`
 → `ATTENTE`. `REPOS` sert au passant qui traverse sans dire bonjour.
