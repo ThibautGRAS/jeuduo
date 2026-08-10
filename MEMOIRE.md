@@ -147,6 +147,13 @@ l'invité**. Les records d'échange et de série ne progressaient donc jamais ch
 lui. Avant d'ajouter une mesure, se demander de quel côté elle est calculée et
 comment elle traverse le réseau.
 
+### Le temps de jeu repose sur des horodatages absolus
+Décompte, durées de bonus, arc d'orage, annonces, immunités : tout est daté en
+temps absolu. Toute suspension du jeu — la pause en v14.0 — doit donc **décaler
+ces échéances** du temps écoulé, sinon elles expirent pendant l'arrêt et le jeu
+reprend dans un état incohérent. Attention aux sentinelles `-1e9` qui signifient
+« jamais » : elles ne doivent pas être décalées.
+
 ### Zone morte temporelle
 Une initialisation placée plus haut dans le fichier que les `const`/`let`
 qu'elle utilise lève une erreur au chargement — écran blanc, aucun message
