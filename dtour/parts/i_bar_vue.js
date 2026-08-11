@@ -51,6 +51,26 @@ const BarVue = {
     }
     ctx.restore();
 
+    /* Pompette : la salle se dédouble. Pas de ctx.filter — coûteux et
+       inégal selon Safari — on recopie le canevas sur lui-même, décalé
+       et translucide. Le bandeau se dessine APRÈS : lui reste net. */
+    if (T.bourre > 0){
+      const int2 = Math.min(1, T.bourre);
+      const cvs = ctx.canvas;
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 0.26 * int2;
+      const dx = Math.sin(T.temps * 5.3) * 7 * int2;
+      const dy = Math.cos(T.temps * 4.1) * 3 * int2;
+      ctx.drawImage(cvs, dx, dy, cvs.width, cvs.height);
+      ctx.restore();
+      /* et un léger voile chaud, l'œil qui pique */
+      ctx.save();
+      ctx.fillStyle = "rgba(255,140,190," + (0.045 * int2).toFixed(3) + ")";
+      ctx.fillRect(0, 0, L, H);
+      ctx.restore();
+    }
+
     if (T.actif || T.fini) this.dessinerBandeau();
     if (T.message) this.dessinerMessage();
   },
@@ -146,7 +166,8 @@ const BarVue = {
       const sl = sh * spr.naturalWidth / spr.naturalHeight;
       const x = this.ex(v.x), y = this.ey(BAR_COMPTOIR);
       ctx.save();
-      if (v.etat === "RATE") ctx.globalAlpha = Math.max(0, 1 - (v.t - v.vie) / 0.8);
+      /* un verre qui traîne s'éteint : plus de jauge, moins de couleur */
+      if (v.etat === ETAT_VERRE.TRAINE) ctx.globalAlpha = 0.55;
       ctx.drawImage(spr, x - sl / 2, y - sh, sl, sh);
       if (v.etat === "POSE"){
         /* la jauge circulaire de vie du verre */
@@ -176,6 +197,11 @@ const BarVue = {
     /* ombre courte au contact des pieds — même recette qu'au niveau 2 */
     ctx.fillStyle = "rgba(0,0,0,.30)";
     ctx.beginPath(); ctx.ellipse(x, y, sl * 0.30, H * 0.014, 0, 0, 6.283); ctx.fill();
+    if (T.bourre > 0){
+      /* pompette : on tangue autour des pieds */
+      const roulis = Math.sin(T.temps * 3.1) * 0.10 * Math.min(1, T.bourre);
+      ctx.translate(x, y); ctx.rotate(roulis); ctx.translate(-x, -y);
+    }
     if (T.dir < 0){ ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0); }
     ctx.drawImage(spr, x - sl / 2, y - sh - saut, sl, sh);
     ctx.restore();

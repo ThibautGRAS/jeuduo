@@ -371,8 +371,12 @@ Aucun des deux n'est meilleur, un test surveille l'équilibre
 Devant un très long comptoir — le fond mis trois fois bout à bout, une
 seule grande salle —, **Francky sert les cocktails à gauche, Jojo les
 Jägerbombs à droite**. Un verre posé vit sept secondes et demie (cinq
-en plein coup de feu), sa jauge circulaire vire au rouge, puis RATÉ, et
-la série tombe.
+en plein coup de feu), sa jauge circulaire vire au rouge, puis RATÉ, la
+série tombe — **et le verre reste là**. Il traîne, grisé : le boire ne
+donne plus rien (« ÉVENTÉ… »), le JETER débarrasse (+10). À cinq verres
+qui traînent, **LE BAR DÉBORDE** et l'ambiance file tant qu'on ne fait
+pas le ménage. Les verres frais passent toujours avant les traînes sous
+la main.
 
 Deux boutons : **BOIRE** et **JETER**. Quatre issues :
 
@@ -396,6 +400,16 @@ le vérifie sur le pire cas (PF chargé, verre à l'autre bout).
 
 **Boire immobilise.** C'est la faiblesse de Thibaut : pendant sa longue
 descente, il ne bouge plus, et les verres vieillissent.
+
+**Boire trop vite saoule.** Trois verres coup sur coup — moins de neuf
+secondes entre le premier et le troisième — et c'est **POMPETTE !** :
+cinq secondes où la salle se dédouble, où le champion tangue et
+n'avance plus qu'à moitié, avec les jambes qui dérivent toutes seules.
+Le garde-fou le sait : les barmans servent moins loin tant que ça
+tangue. C'est la contrepartie naturelle de PF — il enchaîne vite, il
+titube vite. Et l'eau gagne enfin une vertu : **la boire dessoûle
+instantanément** (elle casse toujours le combo — à chacun de choisir
+son poison).
 
 La soirée monte : un verre à la fois, puis deux après 45 s, puis le
 **🔥 COUP DE FEU 🔥** vers 70 s — vingt secondes où tout accélère, trois

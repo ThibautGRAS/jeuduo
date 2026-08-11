@@ -21,6 +21,8 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
   il corrige les hypothèses farfelues de Thibaut.
 - Au niveau 3 : **boit vite, court lentement** (vitesse 0.82,
   descente 0.65). « Lent. Mais redoutable une fois au comptoir. »
+  Revers de la médaille : il enchaîne si vite qu'il se met POMPETTE
+  plus facilement que Thibaut — l'eau le dessoûle.
 - Sprites : `pierre_*` (n1), `enq_pf_*` (n2), `bar_pf_*` (n3),
   `face_pierre` (commun).
 

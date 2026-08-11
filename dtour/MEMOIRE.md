@@ -63,9 +63,21 @@ queue au niveau 1) — `n1` doit les EXCLURE, ils vivent dans commun/.
 | Eau | après 25 s, p = 0.26 | le piège attend que le réflexe s'installe |
 | Coup de feu | à 70 s, 20 s, une fois | |
 | Dernière tournée | 5 décisions, erreur = on repart à 5 | |
+| Verre raté | il TRAÎNE (grisé) au lieu de disparaître | jeter = +10, boire = « ÉVENTÉ… » |
+| Débordement | 5 traînes → ambiance −1.2/s | le ménage fait partie du service |
+| Pompette | 3 verres bus en < 9 s → 5 s à vitesse ×0.55 | l'eau bue dessoûle instantanément |
 
 Le garde-fou `faisable()` refuse tout verre injouable : distance à la
 vitesse du champion + geste de boire + verres déjà posés < vie × 0.9.
+Il travaille avec la vitesse EFFECTIVE : pompette, on sert moins loin.
+
+### La double vision ne passe pas par ctx.filter
+`ctx.filter = "blur(...)"` est coûteux et inégal selon Safari — même
+famille d'interdit que shadowBlur. L'ivresse recopie le canevas sur
+lui-même, décalé en sinus et translucide (`setTransform(1,0,0,1,0,0)`
+puis `drawImage(ctx.canvas, dx, dy, largeur physique, hauteur
+physique)` — en coordonnées PHYSIQUES, sinon le dpr double l'image).
+Le bandeau et les messages se dessinent APRÈS : ils restent nets.
 
 ### Le raisonnement du niveau 2 (v5.0)
 

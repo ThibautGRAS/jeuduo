@@ -21,6 +21,11 @@ const BAR_AMBIANCE_BUT = 100;
 const BAR_COUP_DE_FEU_A = 70;       /* le coup de feu part vers 70 s */
 const BAR_COUP_DE_FEU_DUREE = 20;
 const BAR_TOURNEE_FINALE = 5;       /* décisions à réussir pour conclure */
+const BAR_DEBORDE = 5;              /* verres qui traînent avant que le bar déborde */
+const BAR_POMPETTE_VERRES = 3;      /* verres bus coup sur coup... */
+const BAR_POMPETTE_FENETRE = 9;     /* ...en moins de neuf secondes... */
+const BAR_POMPETTE_DUREE = 5;       /* ...et on titube cinq secondes */
+const BAR_POMPETTE_FREIN = 0.55;    /* la vitesse qu'il reste quand on titube */
 
 /* Les deux champions. Les chiffres viennent de la commande : PF boit
    vite mais court lentement, Thibaut l'inverse. Aucun des deux ne doit
@@ -57,7 +62,7 @@ const BARMANS = [
     prepare:["bar_jojo_mesure", "bar_jojo_shot", "bar_jojo_verse"] },
 ];
 
-const ETAT_VERRE = { PREPARE:"PREPARE", POSE:"POSE", PRIS:"PRIS", RATE:"RATE" };
+const ETAT_VERRE = { PREPARE:"PREPARE", POSE:"POSE", PRIS:"PRIS", TRAINE:"TRAINE" };
 
 const Tournee = {
   actif:false, champion:null, choixChamp:0, enChoix:false,
@@ -66,6 +71,7 @@ const Tournee = {
   coupDeFeu:false, coupT:0, finale:false, finaleReste:0,
   stats:null, fini:null, message:null, messageT:0, messageDuree:1.6,
   gele:0, secousse:0, invite:null, prochainClin:0,
+  bus:[], bourre:0, deborde:false,
 
   /* --------- montage --------- */
   monter(){
@@ -94,6 +100,7 @@ const Tournee = {
     this.temps = 0; this.gele = 0; this.secousse = 0;
     this.message = null; this.invite = null;
     this.prochainClin = hasard(14, 26);
+    this.bus = []; this.bourre = 0; this.deborde = false;
     this.stats = { cocktails:0, jagers:0, eauxJetees:0, eauxBues:0, sacrileges:0, rates:0 };
     this.barmans = BARMANS.map(b => ({
       ref:b, etat:"repos", t:0, prochaine:0, pose:b.poses.repos, type:null,
@@ -105,6 +112,10 @@ const Tournee = {
 
   dire(txt, duree){ this.message = txt; this.messageT = 0; this.messageDuree = duree || 1.6; },
 
+  vitesseEffective(){
+    return this.champion.vitesse * (this.bourre > 0 ? BAR_POMPETTE_FREIN : 1);
+  },
+
   /* --------- ce que le pattern a le droit de servir ----------
      On ne pose JAMAIS un verre injouable : le temps d'aller le
      chercher — distance à la vitesse du champion, plus le geste de
@@ -112,10 +123,11 @@ const Tournee = {
      garde-fou demandé : difficile, oui ; impossible, jamais. */
   faisable(x, dejaPoses){
     const c = this.champion;
+    const vit = BAR_MARCHE * this.vitesseEffective();
     const vie = this.coupDeFeu ? BAR_EXPIRE[1] : BAR_EXPIRE[0];
-    let cout = Math.abs(x - this.x) / (BAR_MARCHE * c.vitesse);
+    let cout = Math.abs(x - this.x) / vit;
     for (const v of dejaPoses){
-      cout += Math.abs(x - v.x) / (BAR_MARCHE * c.vitesse) + 1.15 * c.boire;
+      cout += Math.abs(x - v.x) / vit + 1.15 * c.boire;
     }
     return cout + 1.15 * c.boire < vie * 0.9;
   },
@@ -182,14 +194,18 @@ const Tournee = {
   },
 
   verreAPortee(){
-    let m = -1, dmin = BAR_PORTEE;
-    for (let i = 0; i < this.verres.length; i++){
-      const v = this.verres[i];
-      if (v.etat !== ETAT_VERRE.POSE) continue;
-      const d = Math.abs(v.x - this.x);
-      if (d < dmin){ dmin = d; m = i; }
+    /* les verres frais d'abord ; à défaut, une traîne à débarrasser */
+    for (const etat of [ETAT_VERRE.POSE, ETAT_VERRE.TRAINE]){
+      let m = -1, dmin = BAR_PORTEE;
+      for (let i = 0; i < this.verres.length; i++){
+        const v = this.verres[i];
+        if (v.etat !== etat) continue;
+        const d = Math.abs(v.x - this.x);
+        if (d < dmin){ dmin = d; m = i; }
+      }
+      if (m >= 0) return m;
     }
-    return m;
+    return -1;
   },
 
   boire(){ return this.decider(true); },
@@ -201,9 +217,27 @@ const Tournee = {
     if (i < 0){ this.dire("PAS DE VERRE ICI", 1.0); return false; }
     const v = this.verres[i];
     const B = BOISSONS[v.type];
+    const trainait = v.etat === ETAT_VERRE.TRAINE;
     v.etat = ETAT_VERRE.PRIS;
     this.marche = 0;
     const c = this.champion;
+
+    if (trainait){
+      /* un verre qui traîne : le jeter débarrasse, le boire déçoit */
+      if (boit){
+        this.boitT = 1.15 * c.boire;
+        this.action = "boit";
+        this.dire("ÉVENTÉ…", 1.2);
+        Sons.bip(240, 0.25, "sine", 0.10, 190);
+      } else {
+        this.boitT = 0.55;
+        this.action = "jette";
+        Score.points += 10;
+        this.dire("DÉBARRASSÉ  +10", 1.0);
+        Sons.clic();
+      }
+      return true;
+    }
 
     if (boit && B.bonne){
       /* la bonne boisson, bue : la durée du geste dépend du champion */
@@ -217,6 +251,16 @@ const Tournee = {
       if (v.type === "cocktail") this.stats.cocktails++; else this.stats.jagers++;
       this.dire("PARFAIT !  +" + gain, 1.1);
       Sons.reussite(Math.min(7, this.combo));
+      /* la gorgée compte : trois verres coup sur coup, et on titube */
+      this.bus.push(this.temps);
+      if (this.bus.length > BAR_POMPETTE_VERRES) this.bus.shift();
+      if (this.bus.length === BAR_POMPETTE_VERRES &&
+          this.temps - this.bus[0] < BAR_POMPETTE_FENETRE){
+        this.bourre = BAR_POMPETTE_DUREE;
+        this.bus = [];
+        this.dire("POMPETTE !", 2.0);
+        Sons.bip(520, 0.3, "triangle", 0.14, 360);
+      }
       if (this.finale) this.avancerFinale();
       return true;
     }
@@ -243,7 +287,9 @@ const Tournee = {
       this.secousse = 0.4;
       this.ambiance = Math.max(0, this.ambiance - 8);
       this.stats.eauxBues++;
-      this.dire("DE L'EAU ?!", 1.6);
+      /* la seule vertu de l'eau : elle dessoûle */
+      this.dire(this.bourre > 0 ? "DE L'EAU ?! …ÇA DESSOÛLE." : "DE L'EAU ?!", 1.6);
+      this.bourre = 0; this.bus = [];
       Sons.bip(180, 0.4, "sine", 0.16, 120);
       if (this.finale) this.raterFinale();
       return true;
@@ -292,23 +338,30 @@ const Tournee = {
     this.secousse = Math.max(0, this.secousse - dt * 2);
     if (this.message){ this.messageT += dt; if (this.messageT > this.messageDuree) this.message = null; }
 
-    /* déplacement — boire cloue sur place */
+    /* l'ivresse retombe toute seule */
+    if (this.bourre > 0) this.bourre = Math.max(0, this.bourre - dt);
+
+    /* déplacement — boire cloue sur place, l'ivresse freine et fait dériver */
     if (this.boitT > 0){
       this.boitT -= dt;
       if (this.boitT <= 0){ this.action = null; }
     } else if (this.marche !== 0){
-      const c = this.champion;
-      this.x = borne(this.x + this.marche * BAR_MARCHE * c.vitesse * dt, 0.02, 0.98);
+      this.x = borne(this.x + this.marche * BAR_MARCHE * this.vitesseEffective() * dt, 0.02, 0.98);
       this.foulee += Math.abs(this.marche) * dt * 10;
       this.dir = this.marche;
     }
+    if (this.bourre > 0 && this.boitT <= 0){
+      /* les jambes ne suivent plus tout à fait */
+      this.x = borne(this.x + Math.sin(this.temps * 2.6) * 0.010 * dt, 0.02, 0.98);
+    }
 
-    /* les verres vieillissent */
+    /* les verres vieillissent — et un verre oublié ne disparaît plus :
+       il TRAÎNE sur le comptoir jusqu'à ce qu'on le débarrasse */
     for (const v of this.verres){
       if (v.etat !== ETAT_VERRE.POSE) continue;
       v.t += dt;
       if (v.t > v.vie){
-        v.etat = ETAT_VERRE.RATE;
+        v.etat = ETAT_VERRE.TRAINE;
         this.combo = 0;
         this.stats.rates++;
         this.ambiance = Math.max(0, this.ambiance - 5);
@@ -317,7 +370,14 @@ const Tournee = {
       }
     }
     this.verres = this.verres.filter(v =>
-      v.etat === ETAT_VERRE.POSE || (v.etat === ETAT_VERRE.RATE && v.t < v.vie + 0.8));
+      v.etat === ETAT_VERRE.POSE || v.etat === ETAT_VERRE.TRAINE);
+
+    /* trop de verres qui traînent : le bar déborde et l'ambiance file */
+    const nTraine = this.verres.filter(v => v.etat === ETAT_VERRE.TRAINE).length;
+    if (nTraine >= BAR_DEBORDE){
+      this.ambiance = Math.max(0, this.ambiance - 1.2 * dt);
+      if (!this.deborde){ this.deborde = true; this.dire("LE BAR DÉBORDE !", 1.8); Sons.erreur(); }
+    } else this.deborde = false;
 
     for (const b of this.barmans) this.majBarman(b, dt);
 

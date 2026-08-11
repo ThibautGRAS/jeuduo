@@ -1691,6 +1691,112 @@ if (D){
   verifier("un verre oublié expire et casse la série",
     vExp.etat !== D.ETAT_VERRE.POSE && D.Tournee.combo === 0 && D.Tournee.stats.rates >= 1);
 
+  /* --- les verres oubliés s'accumulent --- */
+  verifier("un verre oublié reste sur le comptoir, il traîne",
+    (() => {
+      lancer3(0);
+      D.Tournee.x = 0.5;
+      const v = poserVerre("cocktail", 0.9);
+      for (let i = 0; i < 60 * 9; i++) D.Jeu.pas(1 / 60);
+      return v.etat === D.ETAT_VERRE.TRAINE && D.Tournee.verres.indexOf(v) >= 0;
+    })());
+  verifier("JETER débarrasse une traîne, petit merci",
+    (() => {
+      lancer3(0);
+      D.Tournee.x = 0.5;
+      const v = poserVerre("cocktail", 0.5);
+      v.etat = D.ETAT_VERRE.TRAINE;
+      const avant = D.Score.points, comboAvant = D.Tournee.combo;
+      if (!D.Tournee.jeter()) return false;
+      for (let i = 0; i < 60; i++) D.Jeu.pas(1 / 60);
+      return D.Score.points === avant + 10 && D.Tournee.combo === comboAvant &&
+        D.Tournee.verres.indexOf(v) < 0 && D.Tournee.stats.sacrileges === 0;
+    })());
+  verifier("boire une traîne ne rapporte rien : c'est éventé",
+    (() => {
+      lancer3(0);
+      D.Tournee.x = 0.5;
+      const v = poserVerre("jager", 0.5);
+      v.etat = D.ETAT_VERRE.TRAINE;
+      const avant = D.Score.points;
+      if (!D.Tournee.boire()) return false;
+      return D.Score.points === avant && D.Tournee.combo === 0 && D.Tournee.stats.jagers === 0;
+    })());
+  verifier("les verres frais passent avant les traînes sous la main",
+    (() => {
+      lancer3(0);
+      D.Tournee.x = 0.5;
+      const t2 = poserVerre("eau", 0.505); t2.etat = D.ETAT_VERRE.TRAINE;
+      poserVerre("cocktail", 0.51);
+      const i = D.Tournee.verreAPortee();
+      return i >= 0 && D.Tournee.verres[i].etat === D.ETAT_VERRE.POSE;
+    })());
+  verifier("cinq traînes font déborder le bar : l'ambiance file",
+    (() => {
+      lancer3(0);
+      D.Tournee.x = 0.5; D.Tournee.ambiance = 40;
+      for (let k = 0; k < 5; k++){ const v = poserVerre("cocktail", 0.1 + k * 0.05); v.etat = D.ETAT_VERRE.TRAINE; }
+      for (let i = 0; i < 60 * 3; i++) D.Jeu.pas(1 / 60);
+      return D.Tournee.ambiance < 40 - 2.5;
+    })());
+
+  /* --- la pompette --- */
+  verifier("trois verres coup sur coup, et on titube",
+    (() => {
+      lancer3(0);
+      for (let k = 0; k < 3; k++){
+        D.Tournee.boitT = 0;
+        poserVerre("cocktail", D.Tournee.x);
+        D.Tournee.boire();
+        for (let i = 0; i < 30; i++) D.Jeu.pas(1 / 60);
+      }
+      return D.Tournee.bourre > 0;
+    })());
+  verifier("pompette, on n'avance plus qu'à moitié",
+    (() => {
+      lancer3(0);
+      /* sobre : une seconde de course */
+      D.Tournee.x = 0.2; D.Tournee.marcher(1);
+      for (let i = 0; i < 60; i++) D.Jeu.pas(1 / 60);
+      const sobre = D.Tournee.x - 0.2;
+      /* pompette : la même seconde */
+      D.Tournee.bourre = 30; D.Tournee.x = 0.2; D.Tournee.marcher(1);
+      for (let i = 0; i < 60; i++) D.Jeu.pas(1 / 60);
+      const pompette = D.Tournee.x - 0.2;
+      D.Tournee.bourre = 0;
+      return pompette < sobre * 0.75;
+    })(), "l'ivresse doit vraiment freiner");
+  verifier("trois verres étalés dans le temps ne saoulent pas",
+    (() => {
+      lancer3(0);
+      for (let k = 0; k < 3; k++){
+        D.Tournee.boitT = 0;
+        poserVerre("cocktail", D.Tournee.x);
+        D.Tournee.boire();
+        for (let i = 0; i < 60 * 6; i++) D.Jeu.pas(1 / 60);
+      }
+      return D.Tournee.bourre === 0;
+    })());
+  verifier("boire l'eau dessoûle — sa seule vertu",
+    (() => {
+      lancer3(0);
+      D.Tournee.bourre = 4;
+      poserVerre("eau", D.Tournee.x);
+      D.Tournee.boire();
+      return D.Tournee.bourre === 0;
+    })());
+  verifier("le garde-fou sert moins loin quand le champion titube",
+    (() => {
+      lancer3(1);          /* PF, déjà lent */
+      D.Tournee.x = 0.05;
+      const loin = 0.65;
+      const sobre = D.Tournee.faisable(loin, []);
+      D.Tournee.bourre = 30;
+      const pompette = D.Tournee.faisable(loin, []);
+      D.Tournee.bourre = 0;
+      return sobre === true && pompette === false;
+    })());
+
   /* --- l'eau attend son heure --- */
   verifier("pas d'eau dans les premières secondes",
     (() => {

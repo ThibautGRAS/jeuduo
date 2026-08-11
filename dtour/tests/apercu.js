@@ -404,6 +404,25 @@ function jouerJusqua(D, condition, limite){
     dessinerVia(D, canevas);
     ecrire(canevas, "14_bar_tournee_844");
   }
+
+  /* 15. niveau 3 : pompette au milieu des verres qui traînent */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(3);
+    D.Tournee.lancer();
+    D.Tournee.x = 0.42; D.Tournee.temps = 40; D.Tournee.bourre = 4.5;
+    D.Score.points = 2380; D.Tournee.combo = 6; D.Tournee.ambiance = 70;
+    for (const [t, x] of [["cocktail", 0.30], ["jager", 0.36], ["eau", 0.47], ["cocktail", 0.52]]){
+      D.Tournee.verres.push({ type:t, x, etat:D.ETAT_VERRE.TRAINE, t:9, vie:7.5, barman:"francky" });
+    }
+    D.Tournee.verres.push({ type:"jager", x:0.56, etat:D.ETAT_VERRE.POSE, t:2, vie:7.5, barman:"jojo" });
+    D.Tournee.dire("POMPETTE !", 2.0);
+    D.Camera.xBar = 0; 
+    for (let i = 0; i < 30; i++) D.Camera.suivreBar(D.Tournee.x, 1 / 30);
+    dessinerVia(D, canevas);
+    ecrire(canevas, "15_bar_pompette_844");
+  }
 })();
 
 /* dessiner() n'est pas exporté : on le rejoint par la boucle du jeu,
