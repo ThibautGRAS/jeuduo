@@ -184,9 +184,13 @@ const TERRASSE = [
    le sprite et donc le portrait se lisent ICI et nulle part ailleurs —
    écrits en dur dans le HTML, ils avaient fini par désigner l'autre
    bonhomme. Échanger deux prénoms se fait donc sur ces deux lignes. */
+/* Les couleurs suivent les VÊTEMENTS : Thibaut s'habille en vert depuis
+   le premier jour (polo, puis blouson), PF porte du beige sur un sweat
+   bleu marine. L'inverse était en place et se voyait sur l'écran de
+   choix du champion : un liseré bleu autour d'un personnage vert. */
 const Heros = [
-  { nom:"PIERRE-FRANÇOIS", court:"P-F", sprite:"pierre", place:PLACE_G, couleur:"#37AC48" },
-  { nom:"THIBAUT", court:"Thibaut", sprite:"thibaut", place:PLACE_D, couleur:"#2A8AE4" },
+  { nom:"PIERRE-FRANÇOIS", court:"P-F", sprite:"pierre", place:PLACE_G, couleur:"#2A8AE4" },
+  { nom:"THIBAUT", court:"Thibaut", sprite:"thibaut", place:PLACE_D, couleur:"#37AC48" },
 ];
 
 /* Point d'arrêt de l'arrivant selon le héros qu'il vient saluer. */

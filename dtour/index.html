@@ -227,8 +227,10 @@ kbd{
 @media (max-height:400px){ #legende{font-size:10px;gap:10px} #titre .sous{display:none} }
 #legende span{display:inline-flex;align-items:center;gap:6px}
 #legende i{width:8px;height:8px;border-radius:2px;font-style:normal;display:inline-block}
-#legende .pt{background:var(--vert)}
-#legende .pp{background:var(--bleu)}
+/* Les deux pastilles de la légende ne sont plus colorées en dur : elles
+   lisent Heros[].couleur. Coder la couleur à deux endroits, c'est se
+   garantir qu'ils finiront par se contredire — c'est ce qui est arrivé. */
+#legende #legPtG,#legende #legPtD{background:rgba(255,255,255,.3)}
 #legende .pe{background:var(--ambre)}
 
 /* ---------------- choix du niveau ----------------
@@ -537,8 +539,8 @@ kbd{
       </button>
     </div>
     <div id="legende">
-      <span><i class="pt"></i><b id="legG">…</b> <kbd>A</kbd><kbd>←</kbd></span>
-      <span><i class="pp"></i><b id="legD">…</b> <kbd>L</kbd><kbd>→</kbd></span>
+      <span><i id="legPtG"></i><b id="legG">…</b> <kbd>A</kbd><kbd>←</kbd></span>
+      <span><i id="legPtD"></i><b id="legD">…</b> <kbd>L</kbd><kbd>→</kbd></span>
       <span><i class="pe"></i>Esquiver <kbd>ESPACE</kbd></span>
     </div>
   </div>
@@ -625,7 +627,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.9</div>
+  <div id="version">CALLAGHAN v6.10</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -697,7 +699,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.9";
+const VERSION = "6.10";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1232,6 +1234,8 @@ const IMAGES_NIVEAU3 = [
   "bar_martin_idle", "bar_martin_marche1", "bar_martin_marche2",
   "bar_mathilde_idle", "bar_mathilde_marche1", "bar_mathilde_marche2",
   "bar_mathilde_attrape", "bar_mathilde_boit", "bar_mathilde_vide",
+  "bar_charles_idle", "bar_charles_marche1", "bar_charles_marche2",
+  "bar_charles_attrape", "bar_charles_boit", "bar_charles_vide",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 
@@ -1596,9 +1600,13 @@ const TERRASSE = [
    le sprite et donc le portrait se lisent ICI et nulle part ailleurs —
    écrits en dur dans le HTML, ils avaient fini par désigner l'autre
    bonhomme. Échanger deux prénoms se fait donc sur ces deux lignes. */
+/* Les couleurs suivent les VÊTEMENTS : Thibaut s'habille en vert depuis
+   le premier jour (polo, puis blouson), PF porte du beige sur un sweat
+   bleu marine. L'inverse était en place et se voyait sur l'écran de
+   choix du champion : un liseré bleu autour d'un personnage vert. */
 const Heros = [
-  { nom:"PIERRE-FRANÇOIS", court:"P-F", sprite:"pierre", place:PLACE_G, couleur:"#37AC48" },
-  { nom:"THIBAUT", court:"Thibaut", sprite:"thibaut", place:PLACE_D, couleur:"#2A8AE4" },
+  { nom:"PIERRE-FRANÇOIS", court:"P-F", sprite:"pierre", place:PLACE_G, couleur:"#2A8AE4" },
+  { nom:"THIBAUT", court:"Thibaut", sprite:"thibaut", place:PLACE_D, couleur:"#37AC48" },
 ];
 
 /* Point d'arrêt de l'arrivant selon le héros qu'il vient saluer. */
@@ -6285,6 +6293,11 @@ const BAR_CLIENTS = [
     prefixe:"bar_martin", gestes:false },
   { id:"mathilde", sprite:"pers_mathilde", nom:"MATHILDE", taille:0.88,
     prefixe:"bar_mathilde", gestes:true },
+  /* Charles ne pouvait pas marcher : son sprite du niveau 2 est assis à
+     la table, sans jambes. Sa planche lui en a donné — il descend donc
+     au bar, lunettes noires comprises. */
+  { id:"charles", sprite:"pers_charles", nom:"CHARLES", taille:0.90,
+    prefixe:"bar_charles", gestes:true },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;
@@ -7427,7 +7440,7 @@ const BarVue = {
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","titreFond","titreVoile","titreHaut","titreEnseigne","titreSst","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","c3E","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","legPtG","legPtD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","titreFond","titreVoile","titreHaut","titreEnseigne","titreSst","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","c3E","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -7635,8 +7648,8 @@ const Interface = {
        leurs vieilles lettres T et P, qui désignent désormais la place
        et non la personne. */
     const cases = [
-      { img:[E.visageT, E.miniT], nom:E.nomG, leg:E.legG, cible:E.cibleG, bouton:E.cmdT },
-      { img:[E.visageP, E.miniP], nom:E.nomD, leg:E.legD, cible:E.cibleD, bouton:E.cmdP },
+      { img:[E.visageT, E.miniT], nom:E.nomG, leg:E.legG, pt:E.legPtG, cible:E.cibleG, bouton:E.cmdT },
+      { img:[E.visageP, E.miniP], nom:E.nomD, leg:E.legD, pt:E.legPtD, cible:E.cibleD, bouton:E.cmdP },
     ];
     for (let i = 0; i < Heros.length; i++){
       const h = Heros[i], c = cases[i];
@@ -7644,6 +7657,7 @@ const Interface = {
       for (const el of c.img) if (el && face){ el.src = face.src; el.alt = h.court; }
       if (c.nom) c.nom.textContent = h.court;
       if (c.leg) c.leg.textContent = h.court;
+      if (c.pt && c.pt.style) c.pt.style.background = h.couleur;
       if (c.cible) c.cible.textContent = "Cible : " + h.court;
       if (c.bouton && c.bouton.setAttribute) c.bouton.setAttribute("aria-label", "Saluer " + h.court);
     }
@@ -8363,7 +8377,7 @@ globalThis.DTOUR = {
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
-  ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
+  Heros, Interface, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
   POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE, BAR_TAILLE_BARMAN, BAR_COPIES,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, ENQ_ESQUIVE_FENETRE, SUJETS, Progres, Intro,

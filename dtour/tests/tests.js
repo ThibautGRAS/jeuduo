@@ -2365,6 +2365,29 @@ if (D){
       return calme < chaud && chaud < finale;
     })());
 
+  /* --- la couleur d'un héros ne se code qu'à un seul endroit --- */
+  verifier("les pastilles de la légende suivent la couleur des héros",
+    (() => {
+      /* Le vert était sur PF et le bleu sur Thibaut, alors que c'est
+         Thibaut qui s'habille en vert : sur l'écran de choix du
+         champion, un liseré bleu entourait un personnage vert. La
+         couleur était écrite dans le CSS ET dans le code — deux
+         sources finissent toujours par se contredire. */
+      /* preparer() est ce qui remplit le bandeau et la légende : dans le
+         jeu elle tourne à l'amorçage, une fois les images chargées. */
+      D.Interface.preparer();
+      const g = domBac.getElementById("legPtG"), d2 = domBac.getElementById("legPtD");
+      return !!g && !!d2 &&
+        g.style.background === D.Heros[0].couleur &&
+        d2.style.background === D.Heros[1].couleur;
+    })());
+  verifier("Thibaut est vert, PF est bleu, comme leurs vêtements",
+    D.Heros.find(h => h.court === "Thibaut").couleur === "#37AC48" &&
+    D.Heros.find(h => h.court === "P-F").couleur === "#2A8AE4");
+  verifier("aucune couleur de héros n'est écrite en dur dans la légende",
+    !/#legende \.(pt|pp)\{background/.test(html),
+    "la pastille reprendrait sa vie propre");
+
   /* --- revenir au menu ne doit rien laisser traîner --- */
   titre("Retour au menu");
   (() => {

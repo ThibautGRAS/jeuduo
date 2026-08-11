@@ -13,8 +13,9 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 ### PIERRE-FRANÇOIS (« PF »)
 - **Physique : chauve, lunettes.** C'est LE point à ne jamais rater —
   deux planches de sprites ont déjà tenté l'inversion (voir MEMOIRE.md).
-- Couleur d'interface : **vert `#37AC48`**, `Heros[0]`, il tient la
-  **droite** de l'écran au niveau 1.
+- Couleur d'interface : **bleu `#2A8AE4`**, `Heros[0]`, il tient la
+  **gauche** de l'écran au niveau 1. Le bleu vient de son sweat à
+  capuche marine — le vert appartient à Thibaut, qui le porte.
 - Voussoie Charles, tutoie Teo et sa belle-sœur. La sœur d'Hortense est
   sa belle-sœur.
 - Au niveau 2, c'est **l'inspecteur qui inspecte** : posé, méthodique,
@@ -31,8 +32,8 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 
 ### THIBAUT
 - **Physique : brun, polo vert, sac à dos.**
-- Couleur d'interface : **bleu `#2A8AE4`**, `Heros[1]`, il tient la
-  **gauche** de l'écran au niveau 1.
+- Couleur d'interface : **vert `#37AC48`**, `Heros[1]`, il tient la
+  **droite** de l'écran au niveau 1 — la couleur de ses vêtements.
 - Au niveau 2, c'est **l'inspecteur qui interroge** : il propose des
   théories absurdes (« Le tabouret a mangé la pizza. Non ? Bon. ») et
   oppose le dossier aux témoins.
@@ -89,11 +90,17 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 - Sprite : `pers_teo` (commun).
 
 ### CHARLES
-- Attablé, lunettes noires **à l'intérieur**, parie sur tout — y
-  compris avec le chat (« Il ne compte pas. »). Assis à la table, sans
-  jambes sur son sprite : lui aussi tient la terrasse au niveau 1.
-  PF le vouvoie.
-- Sprite : `pers_charles` (commun).
+- Lunettes noires **à l'intérieur**, parie sur tout — y compris avec le
+  chat (« Il ne compte pas. »). PF le vouvoie.
+- Au niveau 2 il est **assis à la table** : son sprite `pers_charles`
+  n'a pas de jambes, il ne peut donc pas faire la queue au niveau 1.
+- Sa planche de v6.10 lui a donné des jambes : il est **habitué du bar
+  au niveau 3**, entièrement animé —
+  `bar_charles_{idle,marche1,marche2,attrape,boit,vide}`.
+- Son allure a été rajeunie à cette occasion (jeune homme, chemise
+  rayée pastel sur t-shirt crème) ; les lunettes noires portées à
+  l'intérieur restent, et c'est tout ce qui compte pour le personnage.
+- Sprites : `pers_charles` (commun, assis), `bar_charles_*` (n3).
 
 ---
 
@@ -179,7 +186,7 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 | Gabi | fait la queue | habitante | habituée du bar (animée) |
 | Mathilde | fait la queue | visiteuse | habituée du bar |
 | Teo | terrasse | habitant | — |
-| Charles | terrasse | habitant | — |
+| Charles | terrasse | habitant (assis) | habitué du bar (animé) |
 | Risoto | — | suspect | traverse, clin d'œil |
 | Francky | fait la queue | visiteur | barman (cocktails) |
 | Jojo | fait la queue | visiteur | barman (Jägerbombs) |

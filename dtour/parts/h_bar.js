@@ -69,6 +69,11 @@ const BAR_CLIENTS = [
     prefixe:"bar_martin", gestes:false },
   { id:"mathilde", sprite:"pers_mathilde", nom:"MATHILDE", taille:0.88,
     prefixe:"bar_mathilde", gestes:true },
+  /* Charles ne pouvait pas marcher : son sprite du niveau 2 est assis à
+     la table, sans jambes. Sa planche lui en a donné — il descend donc
+     au bar, lunettes noires comprises. */
+  { id:"charles", sprite:"pers_charles", nom:"CHARLES", taille:0.90,
+    prefixe:"bar_charles", gestes:true },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;

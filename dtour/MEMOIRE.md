@@ -199,6 +199,16 @@ donc le rythme d'Hortense se mesurait dans un appartement — zéro
 apparition. Tout test qui change de niveau le rend avant de sortir
 (`Jeu.retourTitre()`).
 
+### Une couleur ne s'écrit qu'à un seul endroit
+Les pastilles de la légende étaient colorées dans le CSS (`.pt` vert,
+`.pp` bleu) et les héros portaient leur couleur dans `Heros[]`. Deux
+sources pour la même information : elles ont fini par se contredire, et
+c'est le vert de PF autour d'un Thibaut vert qui l'a révélé. Les
+pastilles lisent maintenant `Heros[].couleur`, et un test compare le
+style calculé à la donnée. Au passage, la convention est remise droite :
+**Thibaut est vert** (polo, puis blouson), **PF est bleu** (son sweat à
+capuche marine).
+
 ### Une contradiction n'est pas forcément un bug
 La planche de Martin montrait un jeune homme mince au sac à dos, là où
 sa fiche décrivait un boxeur agent de sécurité. J'ai failli « réparer »
