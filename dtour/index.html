@@ -691,7 +691,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.28</div>
+  <div id="version">CALLAGHAN v6.29</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -763,7 +763,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.28";
+const VERSION = "6.29";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1273,7 +1273,7 @@ const ECHELLE_PERSO = { jojo:0.74 };
 function echellePerso(id){ return ECHELLE_PERSO[id] || 1; }
 
 const PERSONNAGES_MAISON = [
-  "pers_gabi", "pers_francky", "pers_jojo",
+  "pers_gabi", "pers_francky", "pers_jojo", "pers_solene",
   "pers_marini", "pers_martin", "pers_mathilde", "susp_chat",
 ];
 
@@ -3719,6 +3719,141 @@ const BAVARDAGES = [
    ne connaît pas. Thibaut vouvoie tout le monde : c'est un inconnu, et
    c'est précisément ce qui le rend efficace. */
 const SUJETS = {
+  mathilde:[
+    { qPF:"Vous étiez où quand la porte a sonné ?", qTH:"Vous étiez dans quelle pièce ?",
+      pf:"Elle répond comme on récite. Ça ne veut pas dire qu'elle ment.",
+      ok:"Dans la cuisine. J'ai regardé l'heure, par réflexe. 21 h 12.",
+      ko:"Quelque part par là. On ne note pas ces choses-là. Enfin, si, mais pas moi." },
+    { qPF:"Vous reconstituez souvent les soirées ?", qTH:"Vous faites ça pour tout le monde ?",
+      pf:"Elle enseigne. Elle ne peut pas s'en empêcher.",
+      ok:"C'est mon métier. Une soirée, c'est une source. On la recoupe.",
+      ko:"Je ne reconstitue rien du tout. J'observe. C'est différent. Très différent." },
+    { qPF:"Qui avait faim, ce soir ?", qTH:"Qui parlait de manger avant la livraison ?",
+      pf:"Elle a une liste. Bien sûr qu'elle a une liste.",
+      ok:"Kevin, depuis huit heures et quart. Il donne l'heure exacte, demandez-lui.",
+      ko:"Tout le monde avait faim. C'est une soirée. On a tous faim. Moi non." },
+  ],
+
+  tristan:[
+    { qPF:"Vous êtes arrivé quand ?", qTH:"Vous êtes arrivé à quelle heure ?",
+      pf:"Il répond avant qu'on ait fini. Ça peut être de l'honnêteté.",
+      ok:"En courant, vers 21 h. Je viens toujours en courant, c'est plus rapide.",
+      ko:"Juste avant vous. Enfin, bien avant. Le temps passe vite, non ?" },
+    { qPF:"Vous avez bougé de la pièce ?", qTH:"Vous êtes resté assis un moment ?",
+      pf:"Lui, rester assis. On aura tout entendu.",
+      ok:"Jamais plus de deux minutes. Demandez à n'importe qui ici.",
+      ko:"Je n'ai pas bougé. Pas une seule fois. C'est bien ça qui est étrange." },
+    { qPF:"Solène était avec vous ?", qTH:"Vous étiez avec quelqu'un ?",
+      pf:"Il cherche son nom avant de répondre. Ça se voit.",
+      ok:"Elle nourrissait le chat. Elle fait ça dès qu'elle entre.",
+      ko:"Solène ? Elle était là, oui. Enfin, dans l'appartement. Quelque part." },
+  ],
+
+  solene:[
+    { qPF:"Ce chat est à vous ?", qTH:"Il est à qui, ce chat ?",
+      pf:"Elle a répondu trop vite. Retenez ça.",
+      ok:"Il est à moi le soir. Le reste du temps, il est à Gabi.",
+      ko:"Bien sûr qu'il est à moi. Enfin. Il me choisit. C'est pareil." },
+    { qPF:"Vous êtes venue comment ?", qTH:"Vous avez pris le vélo ?",
+      pf:"À vélo. Elle vient toujours à vélo. Même sous la pluie.",
+      ok:"À vélo, et j'ai crevé en arrivant. Vingt minutes dans le couloir.",
+      ko:"En métro. Enfin, à vélo. Le vélo était en panne, alors le métro. Non, le vélo." },
+    { qPF:"Vous l'avez nourri à quelle heure ?", qTH:"Vous avez nourri le chat ce soir ?",
+      pf:"Elle sait où sont les croquettes. Pas où sont les assiettes.",
+      ok:"Vers neuf heures. Il réclamait. Il réclame toujours à cette heure-là.",
+      ko:"Je ne l'ai pas nourri. Enfin, un peu. Deux croquettes. Trois." },
+  ],
+
+  kevin:[
+    { qPF:"Vous avez faim depuis quand ?", qTH:"Vous avez mangé, vous ?",
+      pf:"Il donne l'heure à la minute. C'est un professeur de mathématiques.",
+      ok:"20 h 15. J'ai badgé à la salle en sortant. Vous pouvez vérifier.",
+      ko:"Depuis longtemps. Très longtemps. Je ne compte pas ces choses-là." },
+    { qPF:"Vous avez compté les gens ?", qTH:"Vous avez compté combien de personnes ?",
+      pf:"Il compte. Deux fois. Puis il recommence.",
+      ok:"Six en comptant le chat. Et il en manquait une pendant dix minutes.",
+      ko:"Je ne compte pas les gens. Je ne suis pas cet homme-là. Enfin, si, mais pas ce soir." },
+    { qPF:"Vous êtes venu voir qui ?", qTH:"Vous êtes venu pour qui ?",
+      pf:"Il ne dit jamais qu'il vient pour quelqu'un. Il vient, c'est tout.",
+      ok:"Pour Tristan. Et pour manger. Dans cet ordre, ou l'inverse.",
+      ko:"Pour personne. Je passais. On passe, dans ce quartier." },
+  ],
+
+  remy:[
+    { qPF:"Vous avez regardé le match ?", qTH:"Tu as regardé le match ?",
+      pf:"Il a répondu à la seconde. Trop vite pour quelqu'un qui cherche.",
+      ok:"Jusqu'à la 87e. Après, j'ai éteint. Comme tout le monde.",
+      ko:"Quel match ? Ah, ce match. Non. Enfin, un peu. La fin." },
+    { qPF:"Vous avez parié combien ?", qTH:"Tu paries souvent ?",
+      pf:"Il connaît tout le monde ici, et tout le monde connaît ses paris.",
+      ok:"Douze euros. J'ai perdu. Ça arrive quatre fois par semaine.",
+      ko:"Je ne parie plus. J'ai arrêté. Enfin, j'arrête. Depuis deux ans." },
+    { qPF:"Vous connaissez qui, dans cette pièce ?", qTH:"Tu connais qui, ici ?",
+      pf:"Il va tous les nommer. C'est un carrefour, ce type.",
+      ok:"Tout le monde. C'est un problème quand on cherche un menteur, non ?",
+      ko:"Personne, en fait. Je les croise. Ce n'est pas connaître." },
+  ],
+
+  marini:[
+    { qPF:"On vous a invité ?", qTH:"Qui vous a fait entrer ?",
+      pf:"Il porte son écharpe. Dans une cuisine.",
+      ok:"On m'invite partout. C'est le principe d'un maire.",
+      ko:"Bien sûr. Enfin, j'étais attendu. Enfin, j'étais dans l'immeuble." },
+    { qPF:"Vous connaissez ces gens ?", qTH:"Vous les connaissez comment ?",
+      pf:"Il serre des mains qu'on ne lui tend pas.",
+      ok:"Ce sont mes administrés. Je les connais tous. Individuellement.",
+      ko:"Ce sont des jeunes. Des jeunes très bien. Comment s'appellent-ils, déjà ?" },
+    { qPF:"Vous avez vu la pizza arriver ?", qTH:"Vous étiez là à la livraison ?",
+      pf:"Il parle de l'appartement comme d'un dossier municipal.",
+      ok:"J'ai vu le livreur. Je lui ai serré la main. Il n'a pas compris.",
+      ko:"Une pizza ? Il y avait une pizza ? On ne m'a rien proposé." },
+  ],
+
+  martin:[
+    { qPF:"Vous avez noté les entrées ?", qTH:"Vous avez compté les allées et venues ?",
+      pf:"Il tient un carnet qu'il ne montre à personne.",
+      ok:"Vingt-deux entrées, dix-neuf sorties. Ça ne tombe jamais juste.",
+      ko:"Je ne note rien. C'est un carnet personnel. Très personnel." },
+    { qPF:"Vous faites la sécurité ici ?", qTH:"C'est vous, la sécurité ?",
+      pf:"Personne ne le croit jamais. Il a l'habitude.",
+      ok:"Oui, c'est moi la sécurité. Non, je ne vais pas grandir.",
+      ko:"Je suis un ami. Un ami de quelqu'un. Ça ne vous regarde pas." },
+    { qPF:"Quelle heure était-il ?", qTH:"Vous avez l'heure ?",
+      pf:"Il annonce l'heure sans qu'on la lui demande. Toujours.",
+      ok:"21 h 12 à la sonnerie. 21 h 47 quand ça a crié dans la cuisine.",
+      ko:"Je n'ai pas de montre. Enfin, si. Mais elle retarde. Beaucoup." },
+  ],
+
+  francky:[
+    { qPF:"Vous êtes monté pourquoi ?", qTH:"Qu'est-ce que vous montiez faire ?",
+      pf:"Personne n'avait demandé de glaçons. Personne.",
+      ok:"J'apportais des glaçons. On m'a remercié une fois sur deux.",
+      ko:"Pour voir du monde. Un patron de bar, ça monte voir du monde." },
+    { qPF:"Vous connaissez Mathilde ?", qTH:"Mathilde, vous la connaissez comment ?",
+      pf:"Il la regarde chaque fois qu'elle parle. Chaque fois.",
+      ok:"Je la sers depuis trois ans. C'est ma meilleure cliente. De loin.",
+      ko:"Comme les autres. Exactement comme les autres. Pas plus." },
+    { qPF:"Jojo était avec vous ?", qTH:"Vous êtes monté avec quelqu'un ?",
+      pf:"Ils sont montés ensemble. Ils n'ont pas dit un mot dans l'escalier.",
+      ok:"On est montés ensemble. Il n'a pas ouvert la bouche.",
+      ko:"Jojo ? Il était en bas. Ou en haut. On ne se suit pas, nous deux." },
+  ],
+
+  jojo:[
+    { qPF:"Vous connaissez Mathilde ?", qTH:"Mathilde, vous la connaissez comment ?",
+      pf:"Personne ne dit non trois fois pour dire non une.",
+      ok:"Je la sers. Ça ne veut pas dire que je l'apprécie.",
+      ko:"Pas du tout. Enfin si, je la sers. Mais je ne la connais pas." },
+    { qPF:"Vous avez rangé quelque chose ?", qTH:"Vous avez touché à quelque chose ?",
+      pf:"Il a rangé quelque chose en nous voyant entrer. On l'a tous vu.",
+      ok:"J'ai rangé un shaker. C'est le mien, je le reprends.",
+      ko:"Je n'ai rien rangé. Je rangeais. Ce n'est pas la même chose." },
+    { qPF:"Vous êtes resté dans quelle pièce ?", qTH:"Vous avez bougé dans l'appartement ?",
+      pf:"Il change de pièce quand Mathilde parle. À chaque fois.",
+      ok:"Je bouge quand elle parle. Ce n'est pas un crime, ça.",
+      ko:"Je n'ai pas bougé. J'étais assis. Debout. Enfin, j'étais là." },
+  ],
+
   gabi:[
     { qPF:"Tu étais où à {heure} ?", qTH:"Vous étiez où à {heure} ?",
       pf:"Chez moi. Comme tous les soirs. Passe dimanche.",
@@ -3822,6 +3957,27 @@ const RIEN = {
    le sol du couloir à 90 %, celui du salon à 92,5 %. Poser tout le monde
    sur la même ligne mettait Charles debout devant sa table et faisait
    flotter Teo au-dessus du canapé. */
+/* ---------- les cinq places de l'appartement ----------
+   Elles ne sont plus taillées pour une personne : n'importe qui peut
+   occuper n'importe laquelle, à ceci près qu'une place ASSISE exige une
+   pose assise. `bas` est la ligne du SOL, pas le meuble qui cache. */
+const PLACES = [
+  { id:"entree",  x:0.818, bas:0.900, taille:0.575, assise:false },
+  { id:"cuisine", x:0.512, bas:0.905, taille:0.560, assise:false },
+  { id:"chambre", x:0.930, bas:0.885, taille:0.520, assise:false },
+  { id:"canape",  x:0.300, bas:0.860, taille:0.500, assise:true  },
+  { id:"table",   x:0.632, bas:0.892, taille:0.505, assise:true  },
+];
+function spriteAssis(id){ return "assis_" + id; }
+/* Se tenir DEBOUT demande une silhouette dans commun/ : les sprites du
+   bar vivent dans n3, qui n'est pas garanti chargé au niveau 2. */
+const DEBOUT_APPART = ["gabi", "marini", "martin", "mathilde", "francky", "jojo", "solene"];
+/* Et s'ASSEOIR demande une pose assise. Solène n'en a pas : elle ne
+   prendra que des places debout. */
+const ASSIS_APPART = ["teo", "charles", "gabi", "marini", "martin",
+                      "mathilde", "tristan", "francky", "jojo", "kevin", "remy"];
+function spriteDebout(id){ return "pers_" + id; }
+
 const PLACES_FIXES = {
   /* Les poses assises de la v6.21 sont des figures ENTIÈRES, pieds
      compris, dans une toile plus haute : la taille et la ligne du bas
@@ -3870,6 +4026,78 @@ function conseilInspecteur(id){
 }
 
 const SUSPECTS_BANQUE = [
+  { id:"mathilde", nom:"MATHILDE", sprite:"assis_mathilde",
+    role:"Petite amie de Thibaut. Professeure d'histoire.",
+    fond:[
+      "Elle reconstitue la soirée à voix haute, comme une bataille.",
+      "Elle regarde l'heure sans regarder sa montre.",
+      "Elle a rangé trois choses depuis qu'on est entrés.",
+    ] },
+
+  { id:"tristan", nom:"TRISTAN", sprite:"assis_tristan",
+    role:"Ami de Thibaut. Boxe, court, sort.",
+    fond:[
+      "Il n'a pas cessé de bouger depuis notre arrivée.",
+      "Il propose de refaire le trajet du livreur. En courant.",
+      "Il répond avant qu'on ait fini la question.",
+    ] },
+
+  { id:"kevin", nom:"KEVIN", sprite:"assis_kevin",
+    role:"Ami de Thibaut. Professeur de mathématiques.",
+    fond:[
+      "Il est en survêtement. Il est toujours en survêtement.",
+      "Il compte les gens dans la pièce. Deux fois.",
+      "Il dit qu'il a faim depuis 20 h 15. Il donne l'heure exacte.",
+    ] },
+
+  { id:"remy", nom:"RÉMY", sprite:"assis_remy",
+    role:"Ami de Thibaut. Il connaît Pierre-François. Il parie.",
+    fond:[
+      "Il regarde son téléphone toutes les vingt secondes.",
+      "Il connaît tout le monde ici. Vraiment tout le monde.",
+      "Il a proposé un pari sur l'issue de l'enquête.",
+    ] },
+
+  { id:"marini", nom:"LE MAIRE", sprite:"assis_marini",
+    role:"Maire de Compiègne. Personne ne l'a invité.",
+    fond:[
+      "Il porte son écharpe. Dans une cuisine.",
+      "Il serre des mains qu'on ne lui tend pas.",
+      "Il parle de l'appartement comme d'un dossier municipal.",
+    ] },
+
+  { id:"martin", nom:"MARTIN", sprite:"assis_martin",
+    role:"Agent de sécurité. Il note tout.",
+    fond:[
+      "Il a compté les entrées et les sorties. Ça ne tombe pas juste.",
+      "Il tient un carnet qu'il ne montre à personne.",
+      "Il annonce l'heure sans qu'on la lui demande.",
+    ] },
+
+  { id:"francky", nom:"FRANCKY", sprite:"assis_francky",
+    role:"Patron du D'Tour. Il adore Mathilde.",
+    fond:[
+      "Il est monté avec des glaçons. Personne n'a demandé de glaçons.",
+      "Il regarde Mathilde chaque fois qu'elle parle.",
+      "Il dit du mal de Jojo à voix basse. Puis à voix haute.",
+    ] },
+
+  { id:"jojo", nom:"JOJO", sprite:"assis_jojo",
+    role:"Patron du D'Tour. Il ne supporte pas Mathilde.",
+    fond:[
+      "Il est monté avec Francky. Il n'a pas dit un mot dans l'escalier.",
+      "Il change de pièce quand Mathilde parle.",
+      "Il a rangé quelque chose en nous voyant entrer.",
+    ] },
+
+  { id:"solene", nom:"SOLÈNE", sprite:"pers_solene",
+    role:"Amie de Mathilde. Elle nourrit le chat.",
+    fond:[
+      "Elle appelle le chat par un autre nom que Gabi.",
+      "Elle sait où sont les croquettes. Pas où sont les assiettes.",
+      "Elle rit à des choses qui ne sont pas drôles. Ou si.",
+    ] },
+
   { id:"teo", nom:"TEOPEDO", sprite:"assis_teo",
     role:"Ami de Pierre-François. Professeur d'histoire.",
     fond:[
@@ -3909,21 +4137,59 @@ const SUSPECTS = [];
 
 function composerSuspects(){
   SUSPECTS.length = 0;
-  for (const s of SUSPECTS_BANQUE){
-    const p = PLACES_FIXES[s.id];
-    const coupable = Affaire.bonneReponse() === s.id;
-    /* Les sujets de l'entretien : ceux de la personne, plus l'anecdote
-       propre à l'affaire en cours si elle la concerne. L'anecdote passe
-       en premier — c'est elle qui porte le scénario. */
-    const sujets = (SUJETS[s.id] || []).slice();
+  const parId = id => SUSPECTS_BANQUE.find(b => b.id === id);
+  const sc = Affaire.scenario || {};
+
+  /* 1. Le noyau : le coupable de l'affaire et son témoin clé. Sans eux
+        l'affaire ne peut pas se résoudre — c'est cette règle qui permet
+        de tirer le reste au sort sans réécrire un seul scénario. */
+  const noyau = [];
+  for (const id of [Affaire.bonneReponse(), sc.temoinCle].concat(sc.requis || [])){
+    if (id && id !== "personne" && id !== "chat" && parId(id) && noyau.indexOf(id) < 0) noyau.push(id);
+  }
+
+  /* 2. On complète jusqu'à cinq, en préférant les PROCHES du noyau :
+        une pièce doit ressembler à un groupe, pas à un tirage. */
+  const eviter = sc.eviter || [];
+  const reste = SUSPECTS_BANQUE.map(b => b.id)
+    .filter(id => id !== "chat" && noyau.indexOf(id) < 0 && eviter.indexOf(id) < 0);
+  melangerTableau(reste);
+  const proche = id => noyau.some(n => LIENS[n] && LIENS[n].amis.indexOf(id) >= 0);
+  reste.sort((a, b) => (proche(b) ? 1 : 0) - (proche(a) ? 1 : 0));
+  const choisis = noyau.concat(reste).slice(0, PLACES.length);
+
+  /* 3. Les places. On sert D'ABORD ceux qui ne peuvent pas rester
+        debout, sinon ils se retrouvent sans place utilisable. */
+  const places = PLACES.slice();
+  melangerTableau(places);
+  const assises = places.filter(p => p.assise);
+  const debouts = places.filter(p => !p.assise);
+  const paires = [];
+  const prendre = (id, liste, secours, assis) => {
+    const pl = liste.shift() || secours.shift();
+    if (pl) paires.push([id, pl, !!pl.assise]);
+  };
+  for (const id of choisis) if (DEBOUT_APPART.indexOf(id) < 0) prendre(id, assises, debouts);
+  for (const id of choisis) if (DEBOUT_APPART.indexOf(id) >= 0){
+    /* qui ne sait pas s'asseoir ne prend qu'une place debout */
+    prendre(id, debouts, ASSIS_APPART.indexOf(id) >= 0 ? assises : []);
+  }
+  paires.push(["chat", PLACES_FIXES.chat, false]);
+
+  for (const [id, pl, assis] of paires){
+    const b = parId(id);
+    if (!b) continue;
+    const coupable = Affaire.bonneReponse() === id;
+    const sujets = (SUJETS[id] || []).slice();
     melangerTableau(sujets);
-    const an = Affaire.scenario && Affaire.scenario.anecdote;
-    if (an && an.suspect === s.id) sujets.unshift(an);
+    const an = sc.anecdote;
+    if (an && an.suspect === id) sujets.unshift(an);
     SUSPECTS.push({
-      id:s.id, nom:s.nom, sprite:s.sprite, role:s.role,
-      x:p.x, bas:p.bas, taille:p.taille,
+      id, nom:b.nom, role:b.role,
+      sprite:id === "chat" ? b.sprite : (assis ? spriteAssis(id) : spriteDebout(id)),
+      x:pl.x, bas:pl.bas, taille:pl.taille,
       sujets, coupable,
-      fond:piocher(s.fond),
+      fond:piocher(b.fond),
       tour:0, vus:0, vusPF:0, coince:false,
     });
   }
@@ -5600,6 +5866,9 @@ const Enquete = {
 
   interroger(is){
     const s = SUSPECTS[is];
+    /* Le casting change à chaque partie : un indice de suspect gardé
+       d'une partie à l'autre peut ne plus désigner personne. */
+    if (!s) return false;
     const ins = this.actifIns();
     const pf = this.estPF(ins);
     const cle = s.id === Affaire.temoinCle();
@@ -8948,7 +9217,7 @@ globalThis.DTOUR = {
   xPlace, borne, melange, chiffres, doux, SPRITES_PNJ, PERSOS_DEBOUT, PERSOS_ASSIS,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
-  Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
+  Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
   POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE, BAR_TAILLE_BARMAN, BAR_COPIES,

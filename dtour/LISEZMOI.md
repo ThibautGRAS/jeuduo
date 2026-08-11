@@ -264,6 +264,19 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**L'appartement change de monde** (v6.29). Treize habitants possibles,
+**cinq tirés à chaque partie** plus le chat, sur cinq places — entrée,
+cuisine, chambre, canapé, table. Le tirage garde toujours le coupable de
+l'affaire et son témoin clé, puis complète en **préférant leurs proches** :
+une pièce doit ressembler à un groupe, pas à un tirage. Deux places sont
+assises et n'acceptent que ceux qui ont une pose assise ; trois sont
+debout et demandent une silhouette dans `commun/`.
+
+Chacun des neuf nouveaux a ses **trois sujets d'entretien** — Kevin qui
+donne l'heure exacte de sa faim, Martin qui annonce « oui, c'est moi la
+sécurité, non je ne vais pas grandir », Francky qui monte des glaçons que
+personne n'a demandés, Jojo qui change de pièce quand Mathilde parle.
+
 **La carte des liens** (v6.26). Le jeu sait qui connaît qui, et une
 **pastille à la couleur d'un inspecteur** apparaît sur la plaque de nom
 de ceux sur qui il a une prise : PF pour Teopedo, Gabi et Charles ;

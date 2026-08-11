@@ -1038,7 +1038,7 @@ if (D){
 
   titre("Les gens dans la pièce");
   verifier("chacun pose sur une ligne mesurée sur le décor",
-    D.SUSPECTS_BANQUE.every(x => { const p = D.PLACES_FIXES[x.id]; return p.bas > 0.6 && p.bas <= 0.95; }),
+    D.PLACES.every(p => p.bas > 0.6 && p.bas <= 0.95) && D.PLACES_FIXES.chat.bas > 0.6,
     Object.entries(D.PLACES_FIXES).map(([k, p]) => k + ":" + p.bas).join(" "));
   /* Ce test datait des BUSTES : la ligne du bas était alors celle du
      meuble qui cachait la coupe — plateau de table pour l'un, assise
@@ -1061,9 +1061,23 @@ if (D){
     D.PLACES_FIXES.teo.taille < D.PLACES_FIXES.gabi.taille * 0.92 &&
     D.PLACES_FIXES.charles.taille < D.PLACES_FIXES.gabi.taille * 0.92 &&
     D.PLACES_FIXES.gabi.taille < D.ENQ_TAILLE);
-  verifier("quatre habitants, dont le chat", D.SUSPECTS_BANQUE.length === 4, D.SUSPECTS_BANQUE.length);
-  verifier("chacun a une place fixe et une taille",
-    D.SUSPECTS_BANQUE.every(s => D.PLACES_FIXES[s.id] && D.PLACES_FIXES[s.id].taille > 0));
+  /* La banque compte treize personnes depuis la v6.29 ; l'appartement
+     n'en accueille que cinq, tirées à chaque partie. */
+  verifier("une banque assez large pour que l'appartement change",
+    D.SUSPECTS_BANQUE.length >= 12, D.SUSPECTS_BANQUE.length);
+  verifier("cinq places, plus celle du chat",
+    D.PLACES.length === 5 && !!D.PLACES_FIXES.chat);
+  verifier("deux places assises, trois debout",
+    D.PLACES.filter(p => p.assise).length === 2 &&
+    D.PLACES.filter(p => !p.assise).length === 3);
+  verifier("chaque habitant possible sait tenir au moins une place",
+    D.SUSPECTS_BANQUE.every(b => b.id === "chat" ||
+      D.DEBOUT_APPART.indexOf(b.id) >= 0 || D.ASSIS_APPART.indexOf(b.id) >= 0),
+    D.SUSPECTS_BANQUE.filter(b => b.id !== "chat" &&
+      D.DEBOUT_APPART.indexOf(b.id) < 0 && D.ASSIS_APPART.indexOf(b.id) < 0)
+      .map(b => b.id).join(", "));
+  verifier("chaque place a une taille utilisable",
+    D.PLACES.every(p => p.taille > 0.3 && p.taille < 0.7));
   verifier("chacun a un rôle écrit", D.SUSPECTS_BANQUE.every(s => s.role && s.role.length > 12),
     D.SUSPECTS_BANQUE.filter(s => !s.role || s.role.length <= 12).map(s => s.id).join(", "));
   verifier("chacun répond autrement selon qui demande et selon sa culpabilité",
@@ -1075,8 +1089,8 @@ if (D){
 
   verifier("chacun a des remarques de fond",
     D.SUSPECTS_BANQUE.every(s => s.fond.length >= 3));
-  verifier("les trois humains ont leur propre sprite",
-    new Set(D.SUSPECTS_BANQUE.map(s => s.sprite)).size === 4);
+  verifier("chacun a son propre sprite",
+    new Set(D.SUSPECTS_BANQUE.map(s => s.sprite)).size === D.SUSPECTS_BANQUE.length);
   (() => {
     const voix = new Set();
     let coupablePresent = true, tousLa = true;
@@ -1087,7 +1101,12 @@ if (D){
       if (D.Affaire.bonneReponse() !== "personne" &&
           !D.SUSPECTS.some(s => s.id === D.Affaire.bonneReponse())) coupablePresent = false;
     }
-    verifier("les quatre sont toujours là", tousLa, "ce sont les habitants, pas une distribution");
+    /* L'appartement change de casting à chaque partie depuis la v6.29 :
+       ce qui doit rester vrai, c'est que le chat est là et que le
+       coupable est interrogeable. */
+    void tousLa;
+    verifier("le chat est de toutes les parties",
+      D.SUSPECTS.some(s => s.id === "chat"));
     verifier("mais ils ne disent pas la même chose d'une partie à l'autre",
       voix.size >= 10, voix.size + " combinaisons de répliques");
     verifier("le coupable est toujours interrogeable", coupablePresent);
@@ -1109,7 +1128,7 @@ if (D){
   /* on se place à un endroit où les deux sont possibles */
   D.Enquete.actifIns().x = D.ZONES[zTable].pied;
   const versSuspect = D.Enquete.suspectProche();
-  D.Enquete.actifIns().x = D.SUSPECTS.find(s => s.id === "charles").x;
+  D.Enquete.actifIns().x = D.SUSPECTS.find(s => s.id !== "chat").x;
   verifier("un habitant peut être à portée d'un meuble", D.Enquete.suspectProche() >= 0);
   void versSuspect;
   /* INSPECTER ne parle jamais à personne */
@@ -1119,7 +1138,7 @@ if (D){
   egal("inspecter n'interroge personne", D.SUSPECTS.reduce((a, s) => a + s.vus + s.vusPF, 0), avantVus);
   /* INTERROGER ne fouille jamais rien */
   const avantF = D.Enquete.fouilles;
-  D.Enquete.actifIns().x = D.SUSPECTS.find(s => s.id === "charles").x;
+  D.Enquete.actifIns().x = D.SUSPECTS.find(s => s.id !== "chat").x;
   D.Enquete.parler();
   egal("interroger ne fouille rien", D.Enquete.fouilles, avantF);
   verifier("et fait bien parler quelqu'un",
@@ -1410,6 +1429,7 @@ if (D){
         D.Jeu.demarrer(2); D.Intro.finir();
         const avant = D.HortenseApp.quand;
         const is = D.SUSPECTS.findIndex(x => x.id === "gabi");
+        if (is < 0) continue;          /* Gabi n'est pas de cette distribution */
         D.Enquete.actifIdx = D.Heros.findIndex(h => h.sprite === "thibaut");
         D.Enquete.interroger(is);
         essais++;

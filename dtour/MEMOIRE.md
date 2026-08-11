@@ -533,6 +533,16 @@ ne peuvent pas tourner tant que le casting de l'appartement est figé sur
 quatre habitants. Le tirage de distribution n'est pas un raffinement à
 ajouter après les scénarios, c'est ce qui les rend possibles.
 
+### Un casting variable casse tout ce qui nommait quelqu'un
+En rendant l'appartement tirable, six tests et une fonction de jeu se
+sont cassés — tous parce qu'ils désignaient une personne par son nom :
+`SUSPECTS.find(id === "charles")`, `PLACES_FIXES[s.id]`, « les quatre
+sont toujours là », et `interroger(is)` avec un indice gardé d'une partie
+à l'autre. Rien de subtil, mais il faut les chercher : dès qu'une donnée
+devient aléatoire, **tout ce qui la nommait devient faux**. Les tests
+prennent maintenant « un habitant humain quelconque » ou passent leur
+tour quand la personne visée n'est pas de la distribution.
+
 ### `expert` et `social` sont des SERRURES, pas des étiquettes
 Elles ne disent pas « cet objet est technique » ou « cet objet parle des
 gens » : elles disent **qui peut ramasser l'indice**. Un indice `expert`

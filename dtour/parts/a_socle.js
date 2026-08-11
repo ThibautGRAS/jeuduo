@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.28";
+const VERSION = "6.29";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -528,7 +528,7 @@ const ECHELLE_PERSO = { jojo:0.74 };
 function echellePerso(id){ return ECHELLE_PERSO[id] || 1; }
 
 const PERSONNAGES_MAISON = [
-  "pers_gabi", "pers_francky", "pers_jojo",
+  "pers_gabi", "pers_francky", "pers_jojo", "pers_solene",
   "pers_marini", "pers_martin", "pers_mathilde", "susp_chat",
 ];
 
