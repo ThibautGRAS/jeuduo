@@ -280,8 +280,12 @@ const PLACES_FIXES = {
   /* Les poses assises de la v6.21 sont des figures ENTIÈRES, pieds
      compris, dans une toile plus haute : la taille et la ligne du bas
      ont dû être reprises. L'ancien sprite était recadré au bassin. */
-  teo:     { x:0.300, bas:0.845, taille:0.450 },  /* assis sur le canapé  */
-  charles: { x:0.660, bas:0.815, taille:0.430 },  /* attablé, place du fond */
+  /* Les personnages assis paraissaient petits, et Charles se retrouvait
+     ASSIS SUR la table au lieu d'être attablé : sa ligne du bas était
+     calée sur le plateau et non sur le sol. Les deux descendent au sol,
+     et leur taille monte d'un cran. */
+  teo:     { x:0.300, bas:0.860, taille:0.500 },  /* assis sur le canapé  */
+  charles: { x:0.632, bas:0.892, taille:0.505 },  /* attablé, pieds au sol */
   gabi:   { x:0.818, bas:0.900, taille:0.575 },  /* debout dans le couloir */
   chat:    { x:0.452, bas:0.925, taille:0.170 },  /* par terre            */
 };

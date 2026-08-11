@@ -1040,9 +1040,14 @@ if (D){
   verifier("chacun pose sur une ligne mesurée sur le décor",
     D.SUSPECTS_BANQUE.every(x => { const p = D.PLACES_FIXES[x.id]; return p.bas > 0.6 && p.bas <= 0.95; }),
     Object.entries(D.PLACES_FIXES).map(([k, p]) => k + ":" + p.bas).join(" "));
-  verifier("celui de la table est posé plus haut que celui du canapé",
-    D.PLACES_FIXES.charles.bas < D.PLACES_FIXES.teo.bas,
-    "un plateau de table est plus haut qu'une assise");
+  /* Ce test datait des BUSTES : la ligne du bas était alors celle du
+     meuble qui cachait la coupe — plateau de table pour l'un, assise
+     pour l'autre. Avec des figures entières, la ligne du bas est le SOL
+     pour tout le monde, et Charles se retrouvait assis SUR la table. */
+  verifier("tout le monde a les pieds au sol, sous la ligne des meubles",
+    D.PLACES_FIXES.charles.bas > 0.86 && D.PLACES_FIXES.teo.bas > 0.84 &&
+    Math.abs(D.PLACES_FIXES.charles.bas - D.PLACES_FIXES.gabi.bas) < 0.05,
+    "une figure entière se pose au sol, pas sur le meuble qui la cache");
   verifier("la personne debout est la plus grande",
     D.PLACES_FIXES.gabi.taille > D.PLACES_FIXES.teo.taille &&
     D.PLACES_FIXES.gabi.taille > D.PLACES_FIXES.charles.taille);
@@ -1053,8 +1058,8 @@ if (D){
      égale. Ce qui doit rester vrai, c'est qu'une personne assise reste
      nettement plus petite qu'une personne debout. */
   verifier("une personne assise reste nettement plus petite que debout",
-    D.PLACES_FIXES.teo.taille < D.PLACES_FIXES.gabi.taille * 0.85 &&
-    D.PLACES_FIXES.charles.taille < D.PLACES_FIXES.gabi.taille * 0.85 &&
+    D.PLACES_FIXES.teo.taille < D.PLACES_FIXES.gabi.taille * 0.92 &&
+    D.PLACES_FIXES.charles.taille < D.PLACES_FIXES.gabi.taille * 0.92 &&
     D.PLACES_FIXES.gabi.taille < D.ENQ_TAILLE);
   verifier("quatre habitants, dont le chat", D.SUSPECTS_BANQUE.length === 4, D.SUSPECTS_BANQUE.length);
   verifier("chacun a une place fixe et une taille",

@@ -170,6 +170,10 @@ const EnqVue = {
            dessinerParoleLibre la rabat d'elle-même dans la bulle. */
         /* Cinq rangées pleines : la plus récente passe devant, faute de mieux. */
       }
+      /* Garde-fou d'écran : une bulle calée près d'un bord pouvait
+         sortir à gauche et se faire couper. On la ramène AVANT de
+         mémoriser sa place, sinon elle reste coupée toute sa vie. */
+      b.x0 = borne(b.x0, 4, Math.max(4, Camera.L - b.bl - 4));
       posees.push(b);
       b.p._x0 = b.x0; b.p._y = b.y;
       dessinerParoleLibre(b.p, b.px, b.y, b.style, b.x0);

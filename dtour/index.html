@@ -691,7 +691,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.23</div>
+  <div id="version">CALLAGHAN v6.24</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -763,7 +763,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.23";
+const VERSION = "6.24";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -3594,8 +3594,12 @@ const PLACES_FIXES = {
   /* Les poses assises de la v6.21 sont des figures ENTIÈRES, pieds
      compris, dans une toile plus haute : la taille et la ligne du bas
      ont dû être reprises. L'ancien sprite était recadré au bassin. */
-  teo:     { x:0.300, bas:0.845, taille:0.450 },  /* assis sur le canapé  */
-  charles: { x:0.660, bas:0.815, taille:0.430 },  /* attablé, place du fond */
+  /* Les personnages assis paraissaient petits, et Charles se retrouvait
+     ASSIS SUR la table au lieu d'être attablé : sa ligne du bas était
+     calée sur le plateau et non sur le sol. Les deux descendent au sol,
+     et leur taille monte d'un cran. */
+  teo:     { x:0.300, bas:0.860, taille:0.500 },  /* assis sur le canapé  */
+  charles: { x:0.632, bas:0.892, taille:0.505 },  /* attablé, pieds au sol */
   gabi:   { x:0.818, bas:0.900, taille:0.575 },  /* debout dans le couloir */
   chat:    { x:0.452, bas:0.925, taille:0.170 },  /* par terre            */
 };
@@ -5768,6 +5772,10 @@ const EnqVue = {
            dessinerParoleLibre la rabat d'elle-même dans la bulle. */
         /* Cinq rangées pleines : la plus récente passe devant, faute de mieux. */
       }
+      /* Garde-fou d'écran : une bulle calée près d'un bord pouvait
+         sortir à gauche et se faire couper. On la ramène AVANT de
+         mémoriser sa place, sinon elle reste coupée toute sa vie. */
+      b.x0 = borne(b.x0, 4, Math.max(4, Camera.L - b.bl - 4));
       posees.push(b);
       b.p._x0 = b.x0; b.p._y = b.y;
       dessinerParoleLibre(b.p, b.px, b.y, b.style, b.x0);
