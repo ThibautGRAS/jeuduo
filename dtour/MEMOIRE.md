@@ -533,6 +533,17 @@ ne peuvent pas tourner tant que le casting de l'appartement est figé sur
 quatre habitants. Le tirage de distribution n'est pas un raffinement à
 ajouter après les scénarios, c'est ce qui les rend possibles.
 
+### `expert` et `social` sont des SERRURES, pas des étiquettes
+Elles ne disent pas « cet objet est technique » ou « cet objet parle des
+gens » : elles disent **qui peut ramasser l'indice**. Un indice `expert`
+est invisible pour Thibaut, un indice `social` l'est pour PF. D'où la
+règle absolue : **un indice porte au plus un trait**. En posant
+`social:true` sur des indices déjà `expert:true`, j'en ai créé que
+PERSONNE ne pouvait ramasser — d'où les affaires qui ne réunissaient
+que cinq indices sur six, une fois sur trois. Onze indices neutres sont
+devenus sociaux, sans jamais toucher à un expert, et la suite tient sur
+huit passes.
+
 ### Marquer un indice `social` ne se fait pas à la légère
 Vingt et un nouveaux indices passés en `social` d'un coup : la suite est
 devenue intermittente sur DEUX tests distincts, dont la lecture d'un
