@@ -71,6 +71,29 @@ Le garde-fou `faisable()` refuse tout verre injouable : distance à la
 vitesse du champion + geste de boire + verres déjà posés < vie × 0.9.
 Il travaille avec la vitesse EFFECTIVE : pompette, on sert moins loin.
 
+### Un pupitre centré masque ce qu'on joue
+Le pupitre du niveau 3 avait été copié de celui du niveau 2 —
+`justify-content:center`. Au niveau 2 les sept touches bordent un
+décor qu'on regarde de haut ; au niveau 3 le champion est **au centre
+de l'écran**, et les quatre touches se sont posées sur lui. Deux
+groupes, `space-between`, `pointer-events:none` sur le conteneur et
+`auto` sur les groupes : le milieu redevient du décor cliquable. Un
+style hérité d'un autre niveau se revérifie sur l'écran du niveau, pas
+sur le papier.
+
+### Éteint ne veut pas dire invisible
+`opacity:.40; filter:grayscale(.5)` sur une pastille translucide, sur
+un fond de bar en néons : les touches BOIRE et JETER avaient
+littéralement disparu de la photo d'écran. Un bouton momentanément
+inutile doit rester **repérable** — fond opaque, `opacity:.62` et
+désaturation. Un test refuse toute opacité éteinte sous 0,5.
+
+### Le filigrane de version squatte le coin haut gauche
+`#version` est en absolu à 14 px du bord ; le bandeau du niveau 3
+écrivait le score au même endroit — « 1030 » par-dessus « CALLAGHAN
+v6 ». Le score et le combo sont descendus d'une ligne, chacun sur sa
+plaque arrondie : au-dessus des bouteilles, un chiffre nu se perd.
+
 ### La double vision ne passe pas par ctx.filter
 `ctx.filter = "blur(...)"` est coûteux et inégal selon Safari — même
 famille d'interdit que shadowBlur. L'ivresse recopie le canevas sur

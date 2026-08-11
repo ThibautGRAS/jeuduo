@@ -238,15 +238,26 @@ const BarVue = {
     ctx.font = "800 " + Math.round(taille * 0.62) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.textAlign = "center"; ctx.fillStyle = "#FFF";
     ctx.fillText("AMBIANCE", L / 2, jy + jh / 2);
-    /* score et combo aux coins */
-    ctx.textAlign = "left";
-    ctx.font = "800 " + Math.round(taille * 0.9) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillStyle = "#F7B32B";
-    ctx.fillText(String(Score.points), L * 0.03, jy + jh / 2);
+
+    /* Score et combo une ligne PLUS BAS : sur la ligne du haut ils
+       tombaient derrière le filigrane de version, coin supérieur
+       gauche — « 1030 » et « CALLAGHAN v6 » se chevauchaient. Chacun
+       sur sa plaque : au-dessus des bouteilles, un chiffre nu se perd. */
+    const ly = jy + jh * 1.9;
+    const plaque = (texte, aDroite, couleur) => {
+      ctx.font = "800 " + Math.round(taille * 0.9) + "px 'Baloo 2', system-ui, sans-serif";
+      const lt = ctx.measureText(texte).width;
+      const ph = taille * 1.25, pl = lt + taille * 0.7;
+      const px = aDroite ? L * 0.97 - pl : L * 0.03;
+      arrondi(px, ly - ph / 2, pl, ph, ph / 2);
+      ctx.fillStyle = "rgba(10,8,16,.62)"; ctx.fill();
+      ctx.textAlign = "center"; ctx.fillStyle = couleur;
+      ctx.fillText(texte, px + pl / 2, ly);
+    };
+    plaque(String(Score.points), false, "#F7B32B");
     if (T.combo >= 2){
-      ctx.textAlign = "right";
-      ctx.fillStyle = T.combo >= 10 ? "#E8574B" : T.combo >= 5 ? "#F7B32B" : "#8FD79B";
-      ctx.fillText("COMBO x" + T.combo, L * 0.97, jy + jh / 2);
+      plaque("COMBO x" + T.combo, true,
+        T.combo >= 10 ? "#E8574B" : T.combo >= 5 ? "#F7B32B" : "#8FD79B");
     }
     ctx.restore();
   },

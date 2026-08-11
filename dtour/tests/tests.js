@@ -128,6 +128,54 @@ const horsDossier = presentes.filter(f => f.endsWith(".webp") && !dossierParNom[
 verifier("aucune image en vrac à la racine d'img/",
   horsDossier.length === 0, horsDossier.join(", "));
 
+titre("Le pupitre du niveau 3");
+/* Ces touches se jouent au pouce, sur un décor chargé : leur
+   disposition et leur taille sont du gameplay, pas de la décoration.
+   Le premier jet les avait centrées — elles masquaient le champion. */
+{
+  const pup = html.match(/<div id="pupitre3">([\s\S]*?)\n  <\/div>/);
+  verifier("le pupitre 3 existe et groupe ses touches en deux côtés",
+    !!pup && (pup[1].match(/class="cote"/g) || []).length === 2);
+  const cotes = pup ? pup[1].split('class="cote"') : [];
+  verifier("marcher à gauche, agir à droite",
+    cotes.length === 3 &&
+    /id="c3G"/.test(cotes[1]) && /id="c3D"/.test(cotes[1]) &&
+    /id="c3B"/.test(cotes[2]) && /id="c3J"/.test(cotes[2]));
+  verifier("BOIRE est la touche la plus au bord, sous le pouce",
+    !!pup && pup[1].indexOf('id="c3J"') < pup[1].indexOf('id="c3B"'),
+    "JETER doit précéder BOIRE : le coin revient à la touche la plus utilisée");
+  const regle = html.match(/#pupitre3\{([^}]*)\}/);
+  verifier("les deux côtés sont poussés aux coins",
+    !!regle && /justify-content:space-between/.test(regle[1]) &&
+    !/justify-content:center/.test(regle[1]),
+    "un pupitre centré retombe sous le personnage");
+  verifier("le milieu du pupitre laisse passer les touches",
+    !!regle && /pointer-events:none/.test(regle[1]) &&
+    /#pupitre3 \.cote\{[^}]*pointer-events:auto/.test(html));
+  const fleche = html.match(/\.cmd3\.fleche\{([^}]*)\}/);
+  const mini = fleche && fleche[1].match(/width:clamp\((\d+)px/);
+  verifier("les flèches font au moins 44 px : c'est une cible de pouce",
+    !!mini && Number(mini[1]) >= 44, mini ? mini[1] + "px" : "règle introuvable");
+  const acte = html.match(/\.cmd3\.acte\{([^}]*)\}/);
+  const miniA = acte && acte[1].match(/height:clamp\((\d+)px/);
+  verifier("BOIRE et JETER aussi", !!miniA && Number(miniA[1]) >= 44,
+    miniA ? miniA[1] + "px" : "règle introuvable");
+  const eteint = html.match(/\.cmd3\.eteint\{([^}]*)\}/);
+  const op = eteint && eteint[1].match(/opacity:\.?(\d+)/);
+  verifier("éteint reste lisible : le pouce doit savoir où se poser",
+    !!op && Number("0." + op[1]) >= 0.5,
+    op ? "opacité 0." + op[1] : "règle introuvable");
+  verifier("BOIRE et JETER ne se confondent pas au premier coup d'œil",
+    /#c3B\{background:linear-gradient/.test(html) &&
+    /#c3J\{background:linear-gradient/.test(html));
+  verifier("le pupitre 3 ne s'affiche qu'allumé",
+    /#pupitre3\.on\{display:flex\}/.test(html) && /#pupitre3\{[^}]*display:none/.test(html));
+  verifier("les bords latéraux tiennent compte de l'encoche",
+    /--gauche:env\(safe-area-inset-left/.test(html) &&
+    /--droite:env\(safe-area-inset-right/.test(html) &&
+    !!regle && /var\(--gauche\)/.test(regle[1]) && /var\(--droite\)/.test(regle[1]));
+}
+
 /* ================= 2. références =================
    L'analyse porte sur le code SEUL. Les commentaires et les chaînes
    sont d'abord blanchis : sans ça, le mot « rue » d'un commentaire

@@ -37,6 +37,8 @@
   --r1:12px; --r2:18px;
   --bas:env(safe-area-inset-bottom,0px);
   --haut:env(safe-area-inset-top,0px);
+  --gauche:env(safe-area-inset-left,0px);
+  --droite:env(safe-area-inset-right,0px);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none}
@@ -212,12 +214,47 @@ kbd{
   align-items:flex-end;justify-content:center;gap:6px;
   padding:0 10px calc(7px + var(--bas));
 }
+/* Le niveau 3 se joue à deux pouces : marcher à gauche, agir à droite,
+   et RIEN au milieu — les quatre touches centrées se retrouvaient sous
+   le personnage, qu'elles masquaient. `space-between` colle chaque
+   groupe à son coin, et le conteneur est transparent aux touches pour
+   laisser passer les appuis sur le décor. */
 #pupitre3{
   position:absolute;left:0;right:0;bottom:0;z-index:20;display:none;
-  align-items:flex-end;justify-content:center;gap:6px;
-  padding:0 10px calc(7px + var(--bas));
+  align-items:flex-end;justify-content:space-between;
+  padding:0 calc(12px + var(--droite)) calc(9px + var(--bas)) calc(12px + var(--gauche));
+  pointer-events:none;
 }
-#pupitre2.on{display:flex}#pupitre3.on{display:flex}
+#pupitre3 .cote{display:flex;align-items:flex-end;gap:10px;pointer-events:auto}
+/* Des touches de pouce : nettement plus grandes que celles du niveau 2,
+   et un fond bien à elles — sur un décor de bar aussi chargé, une
+   pastille translucide disparaît. */
+.cmd3{
+  display:flex;align-items:center;justify-content:center;
+  border:1.5px solid rgba(255,255,255,.34);border-radius:999px;cursor:pointer;
+  font-family:inherit;font-weight:800;color:#fff;letter-spacing:.04em;
+  background:rgba(10,14,26,.80);
+  backdrop-filter:blur(10px) saturate(1.25);-webkit-backdrop-filter:blur(10px) saturate(1.25);
+  box-shadow:0 6px 20px rgba(0,0,0,.50);
+  transition:transform .07s ease,filter .12s ease,opacity .12s ease;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+}
+.cmd3.fleche{
+  width:clamp(50px,13vh,72px);height:clamp(50px,13vh,72px);
+  font-size:clamp(17px,4.4vh,26px);padding:0;
+}
+.cmd3.acte{
+  height:clamp(46px,11.5vh,64px);min-width:clamp(88px,21vw,132px);padding:0 14px;
+  font-size:clamp(13px,2.4vh,17px);
+}
+#c3B{background:linear-gradient(180deg,rgba(55,172,72,.95),rgba(32,120,48,.95))}
+#c3J{background:linear-gradient(180deg,rgba(232,87,75,.95),rgba(168,52,42,.95))}
+.cmd3.pressee,.cmd3:active{transform:scale(.93);filter:brightness(1.15)}
+/* Éteint veut dire « rien à portée », pas « bouton absent » : on garde
+   la pastille lisible, sinon le pouce ne sait plus où se poser. */
+.cmd3.eteint{opacity:.62;filter:saturate(.30) brightness(.85)}
+#pupitre2.on{display:flex}
+#pupitre3.on{display:flex}
 .cmd2{
   height:clamp(32px,7.6vh,44px);min-width:clamp(36px,7.4vh,48px);
   display:flex;align-items:center;justify-content:center;padding:0 9px;
@@ -237,7 +274,6 @@ kbd{
 #c2Int{background:linear-gradient(180deg,rgba(126,92,196,.94),rgba(88,60,150,.94))}
 #c2Int.eteint{opacity:.34;filter:grayscale(.6)}
 #c2A.eteint{opacity:.40;filter:grayscale(.5)}
-#c3B.eteint,#c3J.eteint{opacity:.40;filter:grayscale(.5)}
 #c2A{background:linear-gradient(180deg,rgba(247,179,43,.94),rgba(198,133,14,.94));color:#1A1305}
 #c2A.esquive{animation:tartePrete .45s ease-in-out infinite}
 #c2C{background:linear-gradient(180deg,rgba(42,138,228,.9),rgba(28,98,170,.9))}
@@ -494,7 +530,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.1</div>
+  <div id="version">CALLAGHAN v6.2</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -507,10 +543,14 @@ kbd{
   </div>
 
   <div id="pupitre3">
-    <button class="cmd2" id="c3G" aria-label="Aller à gauche">◀</button>
-    <button class="cmd2" id="c3D" aria-label="Aller à droite">▶</button>
-    <button class="cmd2 large" id="c3B">BOIRE</button>
-    <button class="cmd2 large" id="c3J">JETER</button>
+    <div class="cote">
+      <button class="cmd3 fleche" id="c3G" aria-label="Aller à gauche">◀</button>
+      <button class="cmd3 fleche" id="c3D" aria-label="Aller à droite">▶</button>
+    </div>
+    <div class="cote">
+      <button class="cmd3 acte" id="c3J">JETER</button>
+      <button class="cmd3 acte" id="c3B">BOIRE</button>
+    </div>
   </div>
 
   <div id="introNiv">
@@ -561,7 +601,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.1";
+const VERSION = "6.2";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -6605,15 +6645,26 @@ const BarVue = {
     ctx.font = "800 " + Math.round(taille * 0.62) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.textAlign = "center"; ctx.fillStyle = "#FFF";
     ctx.fillText("AMBIANCE", L / 2, jy + jh / 2);
-    /* score et combo aux coins */
-    ctx.textAlign = "left";
-    ctx.font = "800 " + Math.round(taille * 0.9) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillStyle = "#F7B32B";
-    ctx.fillText(String(Score.points), L * 0.03, jy + jh / 2);
+
+    /* Score et combo une ligne PLUS BAS : sur la ligne du haut ils
+       tombaient derrière le filigrane de version, coin supérieur
+       gauche — « 1030 » et « CALLAGHAN v6 » se chevauchaient. Chacun
+       sur sa plaque : au-dessus des bouteilles, un chiffre nu se perd. */
+    const ly = jy + jh * 1.9;
+    const plaque = (texte, aDroite, couleur) => {
+      ctx.font = "800 " + Math.round(taille * 0.9) + "px 'Baloo 2', system-ui, sans-serif";
+      const lt = ctx.measureText(texte).width;
+      const ph = taille * 1.25, pl = lt + taille * 0.7;
+      const px = aDroite ? L * 0.97 - pl : L * 0.03;
+      arrondi(px, ly - ph / 2, pl, ph, ph / 2);
+      ctx.fillStyle = "rgba(10,8,16,.62)"; ctx.fill();
+      ctx.textAlign = "center"; ctx.fillStyle = couleur;
+      ctx.fillText(texte, px + pl / 2, ly);
+    };
+    plaque(String(Score.points), false, "#F7B32B");
     if (T.combo >= 2){
-      ctx.textAlign = "right";
-      ctx.fillStyle = T.combo >= 10 ? "#E8574B" : T.combo >= 5 ? "#F7B32B" : "#8FD79B";
-      ctx.fillText("COMBO x" + T.combo, L * 0.97, jy + jh / 2);
+      plaque("COMBO x" + T.combo, true,
+        T.combo >= 10 ? "#E8574B" : T.combo >= 5 ? "#F7B32B" : "#8FD79B");
     }
     ctx.restore();
   },

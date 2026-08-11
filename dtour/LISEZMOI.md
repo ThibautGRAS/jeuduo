@@ -420,6 +420,15 @@ compteur à cinq, la cinquième valide la soirée.
 Risoto traverse parfois le bas de l'écran. Hortense peut passer, tarte
 en main, regarder le joueur… et repartir. La menace suffit.
 
+**Au doigt** : les deux flèches dans le coin bas gauche, JETER puis
+BOIRE dans le coin bas droit — BOIRE le plus au bord, c'est la touche
+la plus utilisée. Rien au milieu : le champion se joue au centre de
+l'écran, des touches centrées le masquaient. Cibles de 50 px minimum,
+fond opaque (une pastille translucide disparaît sur un décor de bar),
+vert pour BOIRE, rouge pour JETER. Quand aucun verre n'est à portée
+elles se ternissent **sans s'effacer** — le pouce doit savoir où se
+poser. Onze tests verrouillent cette disposition.
+
 Clavier : flèches ou Q pour courir, E / ENTRÉE / ESPACE pour BOIRE,
 J pour JETER. En debug (`?debug=1` + O) : 1 cocktail, 2 eau Francky,
 3 Jägerbomb, 4 eau Jojo, R coup de feu, C combo ×10.
