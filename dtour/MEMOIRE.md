@@ -533,6 +533,15 @@ ne peuvent pas tourner tant que le casting de l'appartement est figé sur
 quatre habitants. Le tirage de distribution n'est pas un raffinement à
 ajouter après les scénarios, c'est ce qui les rend possibles.
 
+### Un identifiant en double fait disparaître une affaire
+« Trente-cinq scénarios sortent sur trente-six » : j'ai cherché un
+scénario structurellement exclu pendant plusieurs essais, alors que la
+liste des manquants était VIDE. Deux affaires portaient le même
+identifiant — le compteur de distincts en voyait donc une de moins. Le
+symptôme désignait le tirage, la cause était dans les données. Un test
+vérifie maintenant l'unicité directement, ce qui donne un message qui
+nomme le coupable au lieu de faire soupçonner l'aléatoire.
+
 ### Un casting variable casse tout ce qui nommait quelqu'un
 En rendant l'appartement tirable, six tests et une fonction de jeu se
 sont cassés — tous parce qu'ils désignaient une personne par son nom :

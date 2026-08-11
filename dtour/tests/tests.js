@@ -623,7 +623,10 @@ if (D){
   /* --- le générateur ne peut pas sortir d'enquête impossible --- */
   titre("Générateur d'affaire");
   let genOk = true, scenarios = new Set(), detail = "";
-  for (let n = 0; n < 900; n++){
+  /* 2000 tirages, pas 900 : avec trente-six affaires, neuf cents
+     tirages laissaient parfois la plus rare de côté et le test criait au
+     loup. C'est une mesure de COUVERTURE, elle a besoin de marge. */
+  for (let n = 0; n < 2000; n++){
     D.Affaire.generer();
     scenarios.add(D.Affaire.scenario.id);
     if (D.Affaire.reels.length !== D.ENQ_OBJECTIF){ genOk = false; detail = "indices " + D.Affaire.reels.length; break; }
@@ -638,7 +641,7 @@ if (D){
       genOk = false; detail = "un indice porteur manque"; break;
     }
   }
-  verifier("neuf cents tirages sans enquête impossible", genOk, detail);
+  verifier("deux mille tirages sans enquête impossible", genOk, detail);
   /* Une affaire dont les étiquettes n'admettent aucun indice d'expert ou
      aucun indice social se jouerait avec un seul inspecteur. */
   verifier("chaque affaire admet un indice pour chacun des deux",
@@ -692,6 +695,15 @@ if (D){
       return true;
     })(), "un tirage se bouclait avec un seul inspecteur");
   egal("tous les scénarios sortent", scenarios.size, D.SCENARIOS.length);
+  /* Deux affaires qui partagent un identifiant en font disparaître une :
+     le test de couverture criait au scénario manquant alors qu'aucun ne
+     l'était. On vérifie donc l'unicité directement. */
+  verifier("aucune affaire ne partage l'identifiant d'une autre",
+    new Set(D.SCENARIOS.map(sc => sc.id)).size === D.SCENARIOS.length,
+    (() => {
+      const c = {}; for (const sc of D.SCENARIOS) c[sc.id] = (c[sc.id] || 0) + 1;
+      return Object.keys(c).filter(k => c[k] > 1).join(", ");
+    })());
   verifier("chaque affaire sait dire son dénouement",
     D.SCENARIOS.every(sc => { D.Affaire.scenario = sc; return !!D.Affaire.chute() && !!D.Affaire.contradiction(); }));
 
