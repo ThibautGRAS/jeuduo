@@ -2415,6 +2415,50 @@ if (D){
     !/#legende \.(pt|pp)\{background/.test(html),
     "la pastille reprendrait sa vie propre");
 
+  /* --- les dix poses d'inspecteur --- */
+  verifier("chaque pose d'inspecteur déduite existe sur le disque",
+    (() => {
+      /* Avant, trois poses : l'inspecteur marchait sur place pendant
+         qu'il interrogeait quelqu'un. */
+      const n2 = new Set(D.IMG_PAR_DOSSIER.n2);
+      D.Jeu.demarrer(2); D.Intro.finir();
+      const E = D.Enquete, vues = new Set();
+      const etats = [
+        () => {},
+        () => { E.inspecteurs[0].fouille = 1; },
+        () => { E.inspecteurs[0].fouille = 0; E.accusation = true; },
+        () => { E.accusation = false; E.dossierOuvert = true; },
+        () => { E.dossierOuvert = false; E.badge = "indice"; },
+        () => { E.badge = null; E.inspecteurs[0].marche = 1; E.inspecteurs[0].pas = 0; },
+        () => { E.inspecteurs[0].pas = 1.4; },
+        () => { E.inspecteurs[0].marche = 0; E.esquiveOuverte = true; },
+        () => { E.esquiveOuverte = false; E.inspecteurs[0].sale = 1; },
+      ];
+      for (const poser of etats){ poser(); vues.add(E.poseIns(0)); }
+      E.inspecteurs[0].sale = 0;
+      const manque = [...vues].filter(po => !n2.has("enq_th_" + po) || !n2.has("enq_pf_" + po));
+      messageDetail = "poses vues : " + [...vues].join(", ") + (manque.length ? " | manque " + manque.join(", ") : "");
+      return vues.size >= 8 && manque.length === 0;
+    })());
+  verifier("les dix poses d'un inspecteur ont la même taille d'image",
+    (() => {
+      const dims = nom => {
+        const buf = fs.readFileSync(path.join(RACINE, "img", "n2", nom + ".webp"));
+        const tag = buf.toString("ascii", 12, 16);
+        if (tag === "VP8 ") return buf.readUInt16LE(26) + "x" + buf.readUInt16LE(28);
+        return "?";
+      };
+      const poses = ["idle", "marche1", "marche2", "fouille", "examine",
+                     "interroge", "ecoute", "carnet", "accuse", "esquive"];
+      const soucis = [];
+      for (const pre of ["enq_th_", "enq_pf_"]){
+        const t = poses.map(po => dims(pre + po));
+        if (new Set(t).size !== 1) soucis.push(pre + " : " + [...new Set(t)].join(" / "));
+      }
+      messageDetail = soucis.join(" | ");
+      return soucis.length === 0;
+    })(), "splat vient d'une autre planche : il est volontairement hors du lot");
+
   /* --- revenir au menu ne doit rien laisser traîner --- */
   titre("Retour au menu");
   (() => {

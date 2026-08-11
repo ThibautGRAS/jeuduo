@@ -1841,6 +1841,28 @@ const Enquete = {
     return meilleur;
   },
 
+  /* --------- la pose d'un inspecteur ---------
+     Elle se DÉDUIT de l'état, comme au niveau 3. Avant, trois poses
+     seulement : marcher, fouiller, recevoir une tarte — et l'inspecteur
+     était dessiné en train de marcher pendant qu'il interrogeait
+     quelqu'un, immobile. */
+  poseIns(i){
+    const ins = this.inspecteurs[i];
+    if (!ins) return "idle";
+    if (ins.sale > 0) return "splat";
+    if (this.esquiveOuverte) return "esquive";
+    if (ins.fouille > 0) return "fouille";
+    if (this.accusation) return "accuse";
+    if (this.dossierOuvert) return "carnet";
+    if (this.badge === "indice" && i === this.actifIdx) return "examine";
+    /* qui parle prend la parole, l'autre écoute */
+    const moi = Effets.paroles.some(p => p.cible.heros === ins.heros);
+    if (moi) return "interroge";
+    if (Effets.paroles.length) return "ecoute";
+    if (ins.marche !== 0) return (Math.floor((ins.pas || 0) * 0.9) % 2) ? "marche2" : "marche1";
+    return "idle";
+  },
+
   /* --------- action contextuelle --------- */
   action(){
     if (this.esquiveOuverte) return this.esquiver();

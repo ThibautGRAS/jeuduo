@@ -203,6 +203,14 @@ appartient à l'affaire, pas à l'indice :
   PENSE » suit le raisonnement : l'hypothèse, puis la piste, puis la
   contradiction. On sait toujours où en sont les têtes.
 
+**Les inspecteurs jouent la scène** (v6.13). Dix poses chacun, choisies
+par la logique et pas par le rendu : debout, deux temps de marche,
+accroupi à fouiller, en train d'examiner un objet, la main ouverte quand
+il interroge, la main au menton quand c'est l'autre qui parle, le carnet
+quand le dossier est ouvert, le doigt tendu quand il accuse, et les bras
+levés quand une tarte arrive. Avant : trois poses, et l'inspecteur
+marchait sur place pendant qu'il interrogeait quelqu'un.
+
 **Le dialogue se joue au doigt** (v6.12). Une seule bulle à l'écran, on
 **tape pour la suivante** — un chevron clignotant l'annonce — et **rien
 ne s'invite tant que la file n'est pas vide** : un visiteur qui débarquait

@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.12";
+const VERSION = "6.13";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -515,8 +515,16 @@ const PERSONNAGES_MAISON = [
 
 const IMAGES_NIVEAU2 = [
   "appart", "loupe",
-  "enq_pf_marche", "enq_pf_fouille", "enq_pf_splat",
-  "enq_th_marche", "enq_th_fouille", "enq_th_splat",
+  /* Dix poses par inspecteur, découpées dans une seule planche : même
+     taille d'image, pieds sur la même ligne. `splat` vient d'une planche
+     plus ancienne — c'est la seule qui n'a pas encore été refaite, et
+     elle ne s'affiche qu'une seconde quand on prend la tarte. */
+  "enq_pf_idle", "enq_pf_marche1", "enq_pf_marche2", "enq_pf_fouille", "enq_pf_examine",
+  "enq_pf_interroge", "enq_pf_ecoute", "enq_pf_carnet", "enq_pf_accuse", "enq_pf_esquive",
+  "enq_pf_splat",
+  "enq_th_idle", "enq_th_marche1", "enq_th_marche2", "enq_th_fouille", "enq_th_examine",
+  "enq_th_interroge", "enq_th_ecoute", "enq_th_carnet", "enq_th_accuse", "enq_th_esquive",
+  "enq_th_splat",
   "ind_miettes", "ind_chorizo", "ind_fromage", "ind_serviette",
   "ind_sauce", "ind_assiette", "ind_ticket", "ind_pattes", "ind_billet",
   "pizza_entiere", "pizza_entamee", "pizza_part", "pizza_boite_ouverte",

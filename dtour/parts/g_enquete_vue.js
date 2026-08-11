@@ -394,9 +394,8 @@ const EnqVue = {
       const ins = Enquete.inspecteurs[i];
       const pf = Enquete.estPF(ins);
       let nom;
-      if (ins.sale > 0) nom = pf ? "enq_pf_splat" : "enq_th_splat";
-      else if (ins.fouille > 0) nom = pf ? "enq_pf_fouille" : "enq_th_fouille";
-      else nom = pf ? "enq_pf_marche" : "enq_th_marche";
+      /* Dix poses, choisies par la logique : le rendu ne décide de rien. */
+      nom = (pf ? "enq_pf_" : "enq_th_") + Enquete.poseIns(Enquete.inspecteurs.indexOf(ins));
       const img = Images.table[nom];
       if (!img || !img.naturalWidth) continue;
 

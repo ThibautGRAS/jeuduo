@@ -479,6 +479,21 @@ inspecteur seul ne peut pas réunir tous les indices. Quand la place
 manque, on raccourcit un libellé ou on passe en pastille ; on ne retire
 pas la commande. Un test refuse désormais toute règle qui masque `#c2C`.
 
+### Le harnais visuel voit ce que la suite ne voit pas
+`Enquete.poseIns(E2.inspecteurs.indexOf(ins))` : `E2` est un alias LOCAL
+de `dessiner()`, pas une variable de module. Les 449 tests passaient —
+ils n'appellent jamais le rendu — et le jeu plantait à la première image.
+C'est `apercu.js` qui l'a dit. Toute modification du rendu passe par un
+aperçu, sans exception.
+
+### Deux poses côte à côte peuvent se toucher
+Sur la planche des inspecteurs, le bras tendu de « accuse » entre dans la
+case de « esquive » : aucun détecteur ne peut les séparer. On coupe à la
+colonne la plus creuse, MESURÉE sur le profil d'occupation (22 px de
+contenu contre 200 ailleurs), et on assume que le bout du doigt de l'un
+entre chez l'autre. Le nettoyage par composante principale enlève ensuite
+le morceau de chaussure emporté au passage.
+
 ### Le meilleur calage ne remplace pas un tour de parole
 Trois versions passées à perfectionner l'empilement des bulles — remontée,
 plafond, repli par rangées, obstacles — et l'écran restait confus. La
