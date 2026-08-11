@@ -3,7 +3,7 @@
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -147,7 +147,7 @@ const Intro = {
    suspension. */
 const Pause = {
   active:false,
-  NOMS:["", "01 · La file du D'Tour", "02 · L'enquête de la pizza"],
+  NOMS:["", "01 · La file du D'Tour", "02 · L'enquête de la pizza", "03 · La tournée du D'Tour"],
 
   peut(){ return Jeu.phase === "jeu" && !Intro.actif; },
   basculer(){ this.active ? this.reprendre() : this.mettre(); },
@@ -197,6 +197,9 @@ const Interface = {
     if (E.vign2 && Images.table.pizza_boite_ouverte){
       E.vign2.src = Images.table.pizza_boite_ouverte.src; E.vign2.alt = "L'enquête de la pizza";
     }
+    if (E.vign3 && Images.table.bar_cocktail && Images.table.bar_cocktail.naturalWidth){
+      E.vign3.src = Images.table.bar_cocktail.src; E.vign3.alt = "La tournée du D'Tour";
+    }
     /* Prénoms, portraits et libellés : tout se déduit du tableau Heros,
        dans l'ordre gauche puis droite. Les identifiants HTML gardent
        leurs vieilles lettres T et P, qui désignent désormais la place
@@ -244,9 +247,10 @@ const Interface = {
     /* Le bandeau SCORE / COMBO / FILE appartient au niveau 1. Le niveau 2
        dessine le sien sur le canevas : les deux ensemble donnaient un
        compteur de file à zéro au-dessus d'un appartement. */
-    if (E.hud) E.hud.classList.toggle("on", Jeu.niveau !== 2);
-    if (E.pupitre) E.pupitre.classList.toggle("on", Jeu.niveau !== 2);
+    if (E.hud) E.hud.classList.toggle("on", Jeu.niveau === 1);
+    if (E.pupitre) E.pupitre.classList.toggle("on", Jeu.niveau === 1);
     if (E.pupitre2) E.pupitre2.classList.toggle("on", Jeu.niveau === 2);
+    if (E.pupitre3) E.pupitre3.classList.toggle("on", Jeu.niveau === 3);
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
     if (E.pleinBtn) E.pleinBtn.classList.add("on");
     if (E.pauseBtn) E.pauseBtn.classList.add("on");
@@ -255,6 +259,7 @@ const Interface = {
   sortirJeu(){
     if (E.pupitre) E.pupitre.classList.remove("on");
     if (E.pupitre2) E.pupitre2.classList.remove("on");
+    if (E.pupitre3) E.pupitre3.classList.remove("on");
   },
 
   /* Niveau 1 : le bouton d'esquive s'allume dès qu'une tarte est en
@@ -318,8 +323,39 @@ const Interface = {
     b.classList.add("pressee");
     setTimeout(() => b.classList.remove("pressee"), 90);
   },
+  /* Niveau 3 : BOIRE et JETER ne s'allument que devant un verre. Ils
+     restent cliquables — un appui à vide répond « PAS DE VERRE ICI ». */
+  majActionBar(){
+    if (Jeu.niveau !== 3) return;
+    const pret = !Tournee.enChoix && Tournee.actif && Tournee.verreAPortee() >= 0 && Tournee.boitT <= 0;
+    if (E.c3B) E.c3B.classList.toggle("eteint", !pret && !Tournee.enChoix);
+    if (E.c3J) E.c3J.classList.toggle("eteint", !pret);
+  },
+
+  afficherFinBar(){
+    const gagne = Tournee.fini && Tournee.fini.gagne;
+    if (E.finTitre){
+      E.finTitre.innerHTML = gagne ? "SOIRÉE<em>VALIDÉE.</em>" : "SOIRÉE<em>ÉCOURTÉE.</em>";
+    }
+    if (E.releve) E.releve.style.display = "none";
+    if (E.releveEnq) E.releveEnq.classList.remove("on");
+    if (E.releveBar) E.releveBar.classList.add("on");
+    const st = Tournee.stats || {};
+    if (E.bScore) E.bScore.textContent = chiffres(Score.points);
+    if (E.bCombo) E.bCombo.textContent = "\u00D7" + Tournee.meilleurCombo;
+    if (E.bCocktails) E.bCocktails.textContent = chiffres(st.cocktails || 0);
+    if (E.bJagers) E.bJagers.textContent = chiffres(st.jagers || 0);
+    if (E.bEaux) E.bEaux.textContent = chiffres(st.eauxJetees || 0);
+    if (E.bErreurs) E.bErreurs.textContent = chiffres((st.eauxBues || 0) + (st.sacrileges || 0) + (st.rates || 0));
+    if (E.eCoupable){ E.eCoupable.textContent = "CHAMPION : " + (Tournee.champion ? Tournee.champion.nom : ""); E.eCoupable.classList.add("on"); }
+    if (E.eChute) E.eChute.textContent = "";
+    if (E.fin) E.fin.classList.add("on");
+    if (E.btnRejouer) E.btnRejouer.focus({ preventScroll:true });
+  },
+
   afficherFin(){
     this.finAffichee = true;
+    if (Jeu.niveau === 3) return this.afficherFinBar();
     if (Jeu.niveau === 2) return this.afficherFinEnquete();
     const neuf = ecrireRecord({ score:Score.points, combo:Score.meilleurCombo,
                                 saluts:Score.saluts, file:Score.fileMax });
@@ -340,6 +376,7 @@ const Interface = {
   /* Le relevé du niveau 2 n'a rien à voir avec celui du niveau 1 : on
      montre l'autre tableau plutôt que de tordre le premier. */
   afficherFinEnquete(){
+    if (E.releveBar) E.releveBar.classList.remove("on");
     const gagne = Enquete.fini && Enquete.fini.gagne;
     if (E.finTitre){
       E.finTitre.innerHTML = gagne
@@ -432,6 +469,13 @@ const Entrees = {
        à l'écran : Thibaut à gauche, l'esquive au milieu sous le pouce,
        Pierre-François à droite. Le pouce n'a jamais à traverser. */
     if (E.cv) E.cv.addEventListener("pointerdown", e => {
+      if (Jeu.niveau === 3){
+        if (Jeu.phase !== "jeu" || !Tournee.enChoix) return;
+        e.preventDefault(); Sons.reveiller();
+        const r3 = E.cv.getBoundingClientRect ? E.cv.getBoundingClientRect() : { left:0, top:0 };
+        BarVue.toucherChoix((e.clientX - r3.left) / Camera.L);
+        return;
+      }
       if (Jeu.niveau === 2){
         if (Jeu.phase !== "jeu") return;
         e.preventDefault();
@@ -497,8 +541,43 @@ const Entrees = {
       if (t === "arrowleft" || t === "arrowright" || t === "q") Enquete.marcher(0);
     });
 
+    /* Le clavier du niveau 3 : flèches pour courir, E pour BOIRE,
+       J pour JETER. En choix de champion, les flèches choisissent et
+       E ou ESPACE lancent. */
     globalThis.addEventListener("keydown", e => {
-      if (Jeu.niveau === 2 && Jeu.phase === "jeu") return;
+      if (Jeu.niveau !== 3 || Jeu.phase !== "jeu") return;
+      const t = e.key.toLowerCase();
+      if (t === "f" || t === "escape" || t === "p" || t === "s" || t === "o") return;
+      if (e.repeat && t !== "arrowleft" && t !== "arrowright" && t !== "q") return;
+      if (t === "arrowleft" || t === "q"){
+        e.preventDefault();
+        if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp - 1); else Tournee.marcher(-1);
+      } else if (t === "arrowright"){
+        e.preventDefault();
+        if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp + 1); else Tournee.marcher(1);
+      } else if (t === "e" || t === "enter" || t === " "){
+        e.preventDefault(); Sons.reveiller();
+        if (Tournee.enChoix) Tournee.lancer(); else Tournee.boire();
+      } else if (t === "j"){
+        e.preventDefault(); Sons.reveiller(); Tournee.jeter();
+      } else if (Debug.autorise && Debug.ouvert){
+        /* les quatre commandes de service du mode debug */
+        if (t === "1") Debug.servirBar("francky", "cocktail");
+        if (t === "2") Debug.servirBar("francky", "eau");
+        if (t === "3") Debug.servirBar("jojo", "jager");
+        if (t === "4") Debug.servirBar("jojo", "eau");
+        if (t === "r"){ Tournee.coupFait = true; Tournee.coupDeFeu = true; Tournee.coupT = 0; }
+        if (t === "c") Tournee.combo = 10;
+      }
+    }, { passive:false });
+    globalThis.addEventListener("keyup", e => {
+      if (Jeu.niveau !== 3) return;
+      const t = e.key.toLowerCase();
+      if (t === "arrowleft" || t === "arrowright" || t === "q") Tournee.marcher(0);
+    });
+
+    globalThis.addEventListener("keydown", e => {
+      if ((Jeu.niveau === 2 || Jeu.niveau === 3) && Jeu.phase === "jeu") return;
       if (e.repeat) return;
       const t = e.key.toLowerCase();
       if (t === "a" || t === "q" || t === "arrowleft"){ presser(0, e); return; }
@@ -566,6 +645,32 @@ const Entrees = {
     };
     tenir(E.c2G, -1);
     tenir(E.c2D, 1);
+    /* Le pupitre du niveau 3 : marcher se tient, BOIRE valide aussi le
+       choix du champion — c'est le geste qu'on a déjà sous le pouce. */
+    const tenir3 = (el, d) => {
+      if (!el) return;
+      el.addEventListener("pointerdown", ev => {
+        ev.preventDefault(); Sons.reveiller();
+        if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp + d);
+        else Tournee.marcher(d);
+        el.classList.add("pressee");
+      });
+      const rel3 = () => { Tournee.marcher(0); el.classList.remove("pressee"); };
+      el.addEventListener("pointerup", rel3);
+      el.addEventListener("pointercancel", rel3);
+      el.addEventListener("pointerleave", rel3);
+    };
+    tenir3(E.c3G, -1);
+    tenir3(E.c3D, 1);
+    if (E.c3B) E.c3B.addEventListener("pointerdown", ev => {
+      ev.preventDefault(); Sons.reveiller();
+      if (Tournee.enChoix) Tournee.lancer(); else Tournee.boire();
+    });
+    if (E.c3J) E.c3J.addEventListener("pointerdown", ev => {
+      ev.preventDefault(); Sons.reveiller();
+      if (!Tournee.enChoix) Tournee.jeter();
+    });
+    for (const b of [E.c3G, E.c3D, E.c3B, E.c3J]) if (b) b.addEventListener("click", ev => ev.preventDefault());
     if (E.c2A) E.c2A.addEventListener("pointerdown", ev => {
       ev.preventDefault(); Sons.reveiller();
       if (Intro.actif) Intro.passer(); else Enquete.action();
@@ -593,6 +698,15 @@ const Entrees = {
 /* ================= mode DEBUG ================= */
 const Debug = {
   ouvert:false, autorise:false, cible:null,
+
+  /* Niveau 3 : forcer un service précis, pour éprouver chaque cas. */
+  servirBar(id, type){
+    const b = Tournee.barmans.find(x => x.ref.id === id);
+    if (!b || b.etat !== "repos") return;
+    b.type = type; b.etat = "prepare"; b.t = 0;
+    b.xPose = borne(b.ref.x + hasard(-0.08, 0.08), 0.06, 0.94);
+    b.duree = 0.8;
+  },
 
   init(){
     try{
@@ -774,7 +888,8 @@ globalThis.DTOUR = {
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
-  ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes,
+  ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
+  Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, SUJETS, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, HORTENSE_ECART, TARTE_DUREE,

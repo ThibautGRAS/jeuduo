@@ -21,6 +21,14 @@ const Camera = {
     const vise = borne(fx * larg - this.L * 0.42, 0, Math.max(0, larg - this.L));
     this.xEnq = melange(this.xEnq, vise, Math.min(1, dt * 2.2));
   }, secousse:0,
+  xBar:0,
+  suivreBar(fx, dt){
+    const img = Images.table.fond_bar;
+    if (!img || !img.naturalWidth) return;
+    const larg = BAR_COPIES * img.naturalWidth * (this.H / img.naturalHeight);
+    const vise = borne(fx * larg - this.L * 0.5, 0, Math.max(0, larg - this.L));
+    this.xBar = melange(this.xBar, vise, Math.min(1, dt * 2.6));
+  },
 
   mesurer(L, H, dpr, basUI){
     this.L = L; this.H = H; this.dpr = dpr;
@@ -583,6 +591,16 @@ function dessinerPnj(p, voile){
 /* --- boucle de dessin --- */
 function dessiner(){
   if (!ctx) return;
+  if (Jeu.niveau === 3 && Jeu.phase !== "titre"){
+    const dpr3 = Math.min(2, globalThis.devicePixelRatio || 1);
+    ctx.setTransform(dpr3, 0, 0, dpr3, 0, 0);
+    BarVue.dessiner();
+    if (Jeu.phase === "fin"){
+      ctx.fillStyle = "rgba(7,11,22," + borne(Jeu.finChrono * 0.35, 0, 0.5) + ")";
+      ctx.fillRect(0, 0, Camera.L, Camera.H);
+    }
+    return;
+  }
   if (Jeu.niveau === 2 && Jeu.phase !== "titre"){
     const dpr2 = Math.min(2, globalThis.devicePixelRatio || 1);
     ctx.setTransform(dpr2, 0, 0, dpr2, 0, 0);

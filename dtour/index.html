@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CALLAGHAN">
 <meta name="theme-color" content="#080D18">
-<meta name="description" content="Les enquêtes de Callaghan — deux niveaux : la file du D'Tour, puis l'enquête de la pizza.">
+<meta name="description" content="Les enquêtes de Callaghan — trois niveaux : la file du D'Tour, l'enquête de la pizza, la tournée du bar.">
 <title>Les enquêtes de Callaghan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -212,7 +212,12 @@ kbd{
   align-items:flex-end;justify-content:center;gap:6px;
   padding:0 10px calc(7px + var(--bas));
 }
-#pupitre2.on{display:flex}
+#pupitre3{
+  position:absolute;left:0;right:0;bottom:0;z-index:20;display:none;
+  align-items:flex-end;justify-content:center;gap:6px;
+  padding:0 10px calc(7px + var(--bas));
+}
+#pupitre2.on{display:flex}#pupitre3.on{display:flex}
 .cmd2{
   height:clamp(32px,7.6vh,44px);min-width:clamp(36px,7.4vh,48px);
   display:flex;align-items:center;justify-content:center;padding:0 9px;
@@ -232,6 +237,7 @@ kbd{
 #c2Int{background:linear-gradient(180deg,rgba(126,92,196,.94),rgba(88,60,150,.94))}
 #c2Int.eteint{opacity:.34;filter:grayscale(.6)}
 #c2A.eteint{opacity:.40;filter:grayscale(.5)}
+#c3B.eteint,#c3J.eteint{opacity:.40;filter:grayscale(.5)}
 #c2A{background:linear-gradient(180deg,rgba(247,179,43,.94),rgba(198,133,14,.94));color:#1A1305}
 #c2A.esquive{animation:tartePrete .45s ease-in-out infinite}
 #c2C{background:linear-gradient(180deg,rgba(42,138,228,.9),rgba(28,98,170,.9))}
@@ -297,8 +303,8 @@ kbd{
 #releve .lib{font-size:9px;font-weight:600;letter-spacing:.16em;color:var(--sourd);line-height:1.4}
 #releve .val{font-size:clamp(18px,3.6vw,26px);line-height:1.15}
 #fRecord{font-size:10px;letter-spacing:.12em;color:var(--ambre);font-weight:600}
-#releveEnq{display:none;grid-template-columns:1fr 1fr;width:min(420px,92vw);overflow:hidden}
-#releveEnq.on{display:grid}
+#releveEnq{display:none;grid-template-columns:1fr 1fr;width:min(420px,92vw);overflow:hidden}#releveBar{display:none;grid-template-columns:1fr 1fr;width:min(420px,92vw);overflow:hidden}
+#releveEnq.on{display:grid}#releveBar.on{display:grid}
 #releveEnq div{padding:12px 16px;text-align:left;position:relative}
 #releveEnq div:nth-child(odd)::after{content:"";position:absolute;right:0;top:16%;bottom:16%;width:1px;background:var(--trait)}
 #releveEnq div:nth-child(-n+2)::before{content:"";position:absolute;left:12px;right:12px;bottom:0;height:1px;background:var(--trait)}
@@ -395,6 +401,10 @@ kbd{
         <img class="vign" id="vign2" alt="">
         <span class="txt"><b>02 · L'enquête de la pizza</b><i id="niv2Sst">Six indices, cinq minutes.</i></span>
       </button>
+      <button class="niv" data-niv="3" id="niv3">
+        <img class="vign" id="vign3" alt="">
+        <span class="txt"><b>03 · La tournée du D'Tour</b><i>Boire ou jeter, il faut choisir.</i></span>
+      </button>
     </div>
     <div id="legende">
       <span><i class="pt"></i><b id="legG">…</b> <kbd>A</kbd><kbd>←</kbd></span>
@@ -412,6 +422,14 @@ kbd{
       <div><span class="lib">FILE LA PLUS LONGUE</span><div class="val chiffre" id="fFile">0</div></div>
       <div><span class="lib">TARTES ESQUIVÉES</span><div class="val chiffre" id="fEsquives">0</div></div>
       <div><span class="lib">TARTES REÇUES</span><div class="val chiffre" id="fRecues">0</div></div>
+    </div>
+    <div id="releveBar" class="verre">
+      <div><span class="lib">SCORE</span><div class="val chiffre" id="bScore">0</div></div>
+      <div><span class="lib">MEILLEUR COMBO</span><div class="val chiffre" id="bCombo">×0</div></div>
+      <div><span class="lib">COCKTAILS</span><div class="val chiffre" id="bCocktails">0</div></div>
+      <div><span class="lib">JÄGERBOMBS</span><div class="val chiffre" id="bJagers">0</div></div>
+      <div><span class="lib">EAUX ÉVITÉES</span><div class="val chiffre" id="bEaux">0</div></div>
+      <div><span class="lib">ERREURS</span><div class="val chiffre" id="bErreurs">0</div></div>
     </div>
     <div id="releveEnq" class="verre">
       <div><span class="lib">TEMPS</span><div class="val chiffre" id="eTemps">0</div></div>
@@ -476,7 +494,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v5.0</div>
+  <div id="version">CALLAGHAN v6.0</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -486,6 +504,13 @@ kbd{
     <button class="cmd2" id="c2C" aria-label="Changer d'inspecteur"><img id="c2CImg" alt="">⇄</button>
     <button class="cmd2" id="c2Acc">ACCUSER<b id="c2AccN">2</b></button>
     <button class="cmd2" id="c2Dos" aria-label="Dossier d'enquête">🗂<b id="c2DosN">0</b></button>
+  </div>
+
+  <div id="pupitre3">
+    <button class="cmd2" id="c3G" aria-label="Aller à gauche">◀</button>
+    <button class="cmd2" id="c3D" aria-label="Aller à droite">▶</button>
+    <button class="cmd2 large" id="c3B">BOIRE</button>
+    <button class="cmd2 large" id="c3J">JETER</button>
   </div>
 
   <div id="introNiv">
@@ -536,7 +561,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "5.0";
+const VERSION = "6.0";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -938,6 +963,13 @@ const SPRITES_TARTE = ["tarte0","tarte1","tarte2","tarte3","tarte_boom","tarte_e
    tests le vérifiait, et l'appartement restait noir à l'écran parce que
    personne ne les avait jamais demandés. Un test contrôle désormais que
    img/ et cette liste disent la même chose. */
+/* Les habitants et le chat servent aux niveaux 1 ET 2 : ils vivent
+   dans le dossier commun, pas dans celui d'un niveau. */
+const PERSONNAGES_MAISON = [
+  "pers_teo", "pers_charles", "pers_soeur", "pers_francky", "pers_jojo",
+  "pers_marini", "pers_martin", "susp_chat",
+];
+
 const IMAGES_NIVEAU2 = [
   "appart", "loupe",
   "enq_pf_marche", "enq_pf_fouille", "enq_pf_splat",
@@ -945,17 +977,51 @@ const IMAGES_NIVEAU2 = [
   "ind_miettes", "ind_chorizo", "ind_fromage", "ind_serviette",
   "ind_sauce", "ind_assiette", "ind_ticket", "ind_pattes", "ind_billet",
   "pizza_entiere", "pizza_entamee", "pizza_part", "pizza_boite_ouverte",
-  "susp_chat", "pers_teo", "pers_charles", "pers_soeur", "pers_francky", "pers_jojo", "pers_marini", "pers_martin",
   "badge_indice", "badge_suspect",
 ];
 
+/* Niveau 3 — la tournée du D'Tour. Le fond, les deux héros en tenue de
+   bar, les deux barmans au travail et les trois boissons. La planche
+   fournie glissait un Thibaut en polo vert dans la rangée de PF — le
+   même piège que la première fois — il a été écarté à la découpe.
+   Thibaut n'a qu'une pose d'action (il boit ET jette dans la même
+   image) : elle sert aux deux gestes, c'est dans le personnage. */
+const IMAGES_NIVEAU3 = [
+  "fond_bar",
+  "bar_th_idle", "bar_th_course", "bar_th_marche", "bar_th_frein", "bar_th_action",
+  "bar_pf_idle", "bar_pf_marche", "bar_pf_boit", "bar_pf_jette",
+  "bar_francky_idle", "bar_francky_shake", "bar_francky_verse", "bar_francky_sert", "bar_francky_touille",
+  "bar_jojo_idle", "bar_jojo_mesure", "bar_jojo_shot", "bar_jojo_verse", "bar_jojo_montre", "bar_jojo_attend", "bar_jojo_essuie",
+  "bar_cocktail", "bar_jager", "bar_eau",
+];
+
+/* ---------- où vit chaque image ----------
+   img/ est rangé par niveau : commun/ pour ce qui sert partout, n1/,
+   n2/, n3/ pour ce qui n'appartient qu'à un niveau. Le classement est
+   déclaré ICI, une seule fois ; le chargeur et la suite de tests le
+   lisent tous les deux — un fichier déplacé sans mise à jour se voit
+   au premier lancement. */
+const IMG_PAR_DOSSIER = {
+  commun: ["logo", "face_thibaut", "face_pierre"]
+    .concat(EFFETS, SPRITES_HORTENSE, SPRITES_TARTE, PERSONNAGES_MAISON),
+  n1: MOMENTS.map(m => m.fond)
+    /* SPRITES_PNJ embarque aussi les habitants debout — ils font la
+       queue au niveau 1 mais vivent dans commun/, on les écarte ici */
+    .concat(SPRITES_PNJ.filter(n => PERSONNAGES_MAISON.indexOf(n) < 0))
+    .concat(["thibaut", "pierre"].flatMap(h => POSES_HEROS.map(p => h + "_" + p))),
+  n2: IMAGES_NIVEAU2,
+  n3: IMAGES_NIVEAU3,
+};
+const IMG_CHEMIN = {};
+for (const d of Object.keys(IMG_PAR_DOSSIER))
+  for (const n of IMG_PAR_DOSSIER[d]) IMG_CHEMIN[n] = d;
+
+function cheminImage(nom){
+  return "img/" + (IMG_CHEMIN[nom] || "commun") + "/" + nom + ".webp";
+}
+
 function listeImages(){
-  const l = ["logo","face_thibaut","face_pierre"]
-    .concat(EFFETS, SPRITES_HORTENSE, SPRITES_TARTE, IMAGES_NIVEAU2);
-  for (const m of MOMENTS) l.push(m.fond);
-  for (const h of ["thibaut","pierre"]) for (const p of POSES_HEROS) l.push(h + "_" + p);
-  for (const s of SPRITES_PNJ) l.push(s);
-  return l;
+  return [].concat(...Object.values(IMG_PAR_DOSSIER));
 }
 
 /* Les bras tendus des PNJ sont dessinés, pas photographiés : la
@@ -1068,7 +1134,7 @@ function charger(surAvance){
        définition et de prénom sans changer de nom de fichier, et Safari
        aurait resservi les anciennes depuis son cache — boutons neufs sur
        sprites périmés. */
-    img.src = "img/" + nom + ".webp?v=" + VERSION;
+    img.src = cheminImage(nom) + "?v=" + VERSION;
   }))).then(() => { Images.pret = true; });
 }
 
@@ -1475,6 +1541,14 @@ const Jeu = {
 
   demarrer(niveau){
     if (niveau) this.niveau = niveau;
+    if (this.niveau === 3){
+      Score.raz(); Effets.raz(); razHeros(); File.raz(); Foule.raz();
+      this.temps = 0; this.vies = 1; this.finChrono = 0; this.phase = "jeu";
+      Tournee.monter();
+      Interface.entrerJeu();
+      Sons.reveiller(); Sons.lancerMusique();
+      return;
+    }
     if (this.niveau === 2){
       Score.raz(); Effets.raz(); razHeros(); File.raz(); Foule.raz();
       this.temps = 0; this.vies = 1; this.finChrono = 0; this.phase = "jeu";
@@ -1519,6 +1593,19 @@ const Jeu = {
 
   /* --------- boucle logique, pas fixe --------- */
   pas(dt){
+    if (this.niveau === 3){
+      if (this.phase === "jeu" || this.phase === "fin"){
+        this.temps += dt;
+        Tournee.pas(dt);
+        Interface.majActionBar();
+        if (this.phase === "fin"){
+          this.finChrono += dt;
+          if (this.finChrono > 1.2 && !Interface.finAffichee) Interface.afficherFin();
+        }
+        Sons.ordonnerMusique(Tournee.coupDeFeu ? 118 : 96);
+      }
+      return;
+    }
     if (this.niveau === 2){
       if (this.phase === "jeu" || this.phase === "fin"){
         this.temps += dt;
@@ -1727,6 +1814,14 @@ const Camera = {
     const vise = borne(fx * larg - this.L * 0.42, 0, Math.max(0, larg - this.L));
     this.xEnq = melange(this.xEnq, vise, Math.min(1, dt * 2.2));
   }, secousse:0,
+  xBar:0,
+  suivreBar(fx, dt){
+    const img = Images.table.fond_bar;
+    if (!img || !img.naturalWidth) return;
+    const larg = BAR_COPIES * img.naturalWidth * (this.H / img.naturalHeight);
+    const vise = borne(fx * larg - this.L * 0.5, 0, Math.max(0, larg - this.L));
+    this.xBar = melange(this.xBar, vise, Math.min(1, dt * 2.6));
+  },
 
   mesurer(L, H, dpr, basUI){
     this.L = L; this.H = H; this.dpr = dpr;
@@ -2289,6 +2384,16 @@ function dessinerPnj(p, voile){
 /* --- boucle de dessin --- */
 function dessiner(){
   if (!ctx) return;
+  if (Jeu.niveau === 3 && Jeu.phase !== "titre"){
+    const dpr3 = Math.min(2, globalThis.devicePixelRatio || 1);
+    ctx.setTransform(dpr3, 0, 0, dpr3, 0, 0);
+    BarVue.dessiner();
+    if (Jeu.phase === "fin"){
+      ctx.fillStyle = "rgba(7,11,22," + borne(Jeu.finChrono * 0.35, 0, 0.5) + ")";
+      ctx.fillRect(0, 0, Camera.L, Camera.H);
+    }
+    return;
+  }
   if (Jeu.niveau === 2 && Jeu.phase !== "titre"){
     const dpr2 = Math.min(2, globalThis.devicePixelRatio || 1);
     ctx.setTransform(dpr2, 0, 0, dpr2, 0, 0);
@@ -5842,12 +5947,613 @@ function dessinerParoleLibre(p, px, pyBas, style, x0){
                  by + hNom + taille * 0.86 + i * m.interligne);
   ctx.restore();
 }
+"use strict";
+/* ============================================================
+   NIVEAU 3 — LA TOURNÉE DU D'TOUR
+   Un seul héros au choix, un très long comptoir, deux barmans.
+   Francky pose des cocktails, Jojo des Jägerbombs, les deux
+   glissent parfois un verre d'eau. On court, on identifie, on
+   BOIT ou on JETTE — et on repart aussitôt.
+
+   Tout le temps passe par pas(dt), jamais par setTimeout.
+   ============================================================ */
+
+/* ---------- réglages ---------- */
+const BAR_COPIES = 3;               /* le monde = trois fois le fond mis bout à bout : un seul grand bar */
+const BAR_SOL = 0.965;              /* ligne de sol du joueur, en fraction de la hauteur du fond */
+const BAR_COMPTOIR = 0.555;         /* le plateau du comptoir, mesuré sur le fond (bois clair : 0.55-0.57) */
+const BAR_TAILLE_HEROS = 0.52;      /* hauteur du héros, en fraction de l'écran */
+const BAR_PORTEE = 0.030;           /* portée de prise d'un verre, en fraction du monde */
+const BAR_MARCHE = 0.135;           /* fraction du monde parcourue par seconde, à vitesse 1.0 */
+const BAR_EXPIRE = [7.5, 5.2];      /* vie d'un verre posé : début, puis en plein coup de feu */
+const BAR_AMBIANCE_BUT = 100;
+const BAR_COUP_DE_FEU_A = 70;       /* le coup de feu part vers 70 s */
+const BAR_COUP_DE_FEU_DUREE = 20;
+const BAR_TOURNEE_FINALE = 5;       /* décisions à réussir pour conclure */
+
+/* Les deux champions. Les chiffres viennent de la commande : PF boit
+   vite mais court lentement, Thibaut l'inverse. Aucun des deux ne doit
+   être objectivement meilleur — c'est ce que le test d'équilibre
+   surveille. */
+const BAR_CHAMPIONS = [
+  { heros:1, nom:"THIBAUT", vitesse:1.00, boire:1.00, jauges:{ vitesse:5, descente:3 },
+    idle:"bar_th_idle", marche:"bar_th_marche", course:"bar_th_course",
+    boit:"bar_th_action", jette:"bar_th_action",
+    devise:"Rapide. Mais quand il boit, il ne fait que ça." },
+  { heros:0, nom:"PF", vitesse:0.82, boire:0.65, jauges:{ vitesse:3, descente:5 },
+    idle:"bar_pf_idle", marche:"bar_pf_marche", course:"bar_pf_marche",
+    boit:"bar_pf_boit", jette:"bar_pf_jette",
+    devise:"Lent. Mais redoutable une fois au comptoir." },
+];
+
+/* Les boissons. `bonne` dit s'il faut la boire ; l'eau se jette. */
+const BOISSONS = {
+  cocktail:{ sprite:"bar_cocktail", nom:"COCKTAIL",  bonne:true,  points:100 },
+  jager:   { sprite:"bar_jager",    nom:"JÄGERBOMB", bonne:true,  points:120 },
+  eau:     { sprite:"bar_eau",      nom:"EAU",       bonne:false, points:150 },
+};
+
+/* Les deux barmans : leur poste, leur spécialité, et la petite
+   chorégraphie qui TÉLÉGRAPHIE ce qui arrive. Un bon joueur lit le
+   geste avant que le verre soit posé. L'eau a sa préparation à part,
+   plus posée — c'est l'indice. */
+const BARMANS = [
+  { id:"francky", nom:"FRANCKY", x:0.24, sert:"cocktail",
+    poses:{ repos:"bar_francky_idle", eau:"bar_francky_touille", sert:"bar_francky_sert" },
+    prepare:["bar_francky_shake", "bar_francky_verse"] },
+  { id:"jojo", nom:"JOJO", x:0.76, sert:"jager",
+    poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_montre" },
+    prepare:["bar_jojo_mesure", "bar_jojo_shot", "bar_jojo_verse"] },
+];
+
+const ETAT_VERRE = { PREPARE:"PREPARE", POSE:"POSE", PRIS:"PRIS", RATE:"RATE" };
+
+const Tournee = {
+  actif:false, champion:null, choixChamp:0, enChoix:false,
+  x:0.5, dir:1, marche:0, foulee:0, boitT:0, jetteT:0, action:null,
+  verres:[], barmans:[], ambiance:0, combo:0, meilleurCombo:0,
+  coupDeFeu:false, coupT:0, finale:false, finaleReste:0,
+  stats:null, fini:null, message:null, messageT:0, messageDuree:1.6,
+  gele:0, secousse:0, invite:null, prochainClin:0,
+
+  /* --------- montage --------- */
+  monter(){
+    this.enChoix = true;
+    this.choixChamp = 0;
+    this.champion = null;
+    this.fini = null;
+    this.actif = false;
+  },
+
+  choisir(k){
+    this.choixChamp = (k + BAR_CHAMPIONS.length) % BAR_CHAMPIONS.length;
+    Sons.clic();
+  },
+
+  lancer(){
+    this.champion = BAR_CHAMPIONS[this.choixChamp];
+    this.enChoix = false;
+    this.actif = true;
+    this.x = 0.5; this.dir = 1; this.marche = 0; this.foulee = 0;
+    this.boitT = 0; this.jetteT = 0; this.action = null;
+    this.verres = [];
+    this.ambiance = 0; this.combo = 0; this.meilleurCombo = 0;
+    this.coupDeFeu = false; this.coupT = 0; this.coupFait = false;
+    this.finale = false; this.finaleReste = 0;
+    this.temps = 0; this.gele = 0; this.secousse = 0;
+    this.message = null; this.invite = null;
+    this.prochainClin = hasard(14, 26);
+    this.stats = { cocktails:0, jagers:0, eauxJetees:0, eauxBues:0, sacrileges:0, rates:0 };
+    this.barmans = BARMANS.map(b => ({
+      ref:b, etat:"repos", t:0, prochaine:0, pose:b.poses.repos, type:null,
+    }));
+    this.barmans[0].prochaine = 1.6;
+    this.barmans[1].prochaine = 5.5;
+    Sons.reveiller();
+  },
+
+  dire(txt, duree){ this.message = txt; this.messageT = 0; this.messageDuree = duree || 1.6; },
+
+  /* --------- ce que le pattern a le droit de servir ----------
+     On ne pose JAMAIS un verre injouable : le temps d'aller le
+     chercher — distance à la vitesse du champion, plus le geste de
+     boire — doit tenir dans la vie du verre, avec une marge. C'est le
+     garde-fou demandé : difficile, oui ; impossible, jamais. */
+  faisable(x, dejaPoses){
+    const c = this.champion;
+    const vie = this.coupDeFeu ? BAR_EXPIRE[1] : BAR_EXPIRE[0];
+    let cout = Math.abs(x - this.x) / (BAR_MARCHE * c.vitesse);
+    for (const v of dejaPoses){
+      cout += Math.abs(x - v.x) / (BAR_MARCHE * c.vitesse) + 1.15 * c.boire;
+    }
+    return cout + 1.15 * c.boire < vie * 0.9;
+  },
+
+  nbSimultanes(){
+    if (this.finale) return 2;
+    if (this.coupDeFeu) return 3;
+    if (this.temps > 45) return 2;
+    return 1;
+  },
+
+  /* Le barman choisit quoi préparer. L'eau n'apparaît qu'après 25 s,
+     puis une fois sur quatre environ. */
+  servirQuoi(b){
+    if (this.temps > 25 && Math.random() < 0.26) return "eau";
+    return b.ref.sert;
+  },
+
+  majBarman(b, dt){
+    b.t += dt;
+    const enJeu = this.verres.filter(v => v.etat === ETAT_VERRE.POSE || v.etat === ETAT_VERRE.PREPARE);
+    if (b.etat === "repos"){
+      b.prochaine -= dt * (this.coupDeFeu ? 2.1 : 1) * (this.finale ? 2.4 : 1);
+      if (b.prochaine > 0 || enJeu.length >= this.nbSimultanes()) return;
+      /* où poser : devant soi, avec un peu de jeu */
+      const x = borne(b.ref.x + hasard(-0.10, 0.10), 0.06, 0.94);
+      if (!this.faisable(x, enJeu.filter(v => v.etat === ETAT_VERRE.POSE))) { b.prochaine = 0.7; return; }
+      b.type = this.servirQuoi(b);
+      b.etat = "prepare"; b.t = 0; b.xPose = x;
+      b.duree = (b.type === "eau" ? 1.35 : hasard(1.5, 2.1)) / (this.coupDeFeu ? 1.35 : 1);
+      return;
+    }
+    if (b.etat === "prepare"){
+      /* la pose télégraphie : shake pour un cocktail, shot pour un
+         Jägerbomb, chiffon tranquille pour l'eau */
+      const seq = b.type === "eau" ? [b.ref.poses.eau] : b.ref.prepare;
+      b.pose = seq[Math.min(seq.length - 1, Math.floor(b.t / b.duree * seq.length))];
+      if (b.t < b.duree) return;
+      /* CLAC : le verre est posé */
+      this.verres.push({
+        type:b.type, x:b.xPose, etat:ETAT_VERRE.POSE, t:0,
+        vie:this.coupDeFeu ? BAR_EXPIRE[1] : BAR_EXPIRE[0],
+        barman:b.ref.id,
+      });
+      Sons.clic(); Sons.bip(720, 0.05, "triangle", 0.14);
+      b.etat = "sert"; b.pose = b.ref.poses.sert; b.t = 0;
+      return;
+    }
+    if (b.etat === "sert"){
+      if (b.t < 0.55) return;
+      b.etat = "repos"; b.pose = b.ref.poses.repos;
+      b.prochaine = this.finale ? hasard(0.7, 1.3)
+                  : this.coupDeFeu ? hasard(1.2, 2.4)
+                  : this.temps < 20 ? hasard(3.4, 5.2)
+                  : hasard(2.2, 4.0);
+    }
+  },
+
+  /* --------- le joueur --------- */
+  marcher(d){
+    if (!this.actif || this.fini) return;
+    if (this.boitT > 0) return;           /* boire immobilise — c'est la faiblesse de Thibaut */
+    this.marche = d;
+  },
+
+  verreAPortee(){
+    let m = -1, dmin = BAR_PORTEE;
+    for (let i = 0; i < this.verres.length; i++){
+      const v = this.verres[i];
+      if (v.etat !== ETAT_VERRE.POSE) continue;
+      const d = Math.abs(v.x - this.x);
+      if (d < dmin){ dmin = d; m = i; }
+    }
+    return m;
+  },
+
+  boire(){ return this.decider(true); },
+  jeter(){ return this.decider(false); },
+
+  decider(boit){
+    if (!this.actif || this.fini || this.boitT > 0) return false;
+    const i = this.verreAPortee();
+    if (i < 0){ this.dire("PAS DE VERRE ICI", 1.0); return false; }
+    const v = this.verres[i];
+    const B = BOISSONS[v.type];
+    v.etat = ETAT_VERRE.PRIS;
+    this.marche = 0;
+    const c = this.champion;
+
+    if (boit && B.bonne){
+      /* la bonne boisson, bue : la durée du geste dépend du champion */
+      this.boitT = 1.15 * c.boire;
+      this.action = "boit";
+      this.combo++;
+      this.meilleurCombo = Math.max(this.meilleurCombo, this.combo);
+      const gain = B.points * Math.min(4, 1 + Math.floor(this.combo / 3));
+      Score.points += gain;
+      this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + (this.finale ? 0 : 7));
+      if (v.type === "cocktail") this.stats.cocktails++; else this.stats.jagers++;
+      this.dire("PARFAIT !  +" + gain, 1.1);
+      Sons.reussite(Math.min(7, this.combo));
+      if (this.finale) this.avancerFinale();
+      return true;
+    }
+    if (!boit && !B.bonne){
+      /* l'eau, jetée : le réflexe du soir */
+      this.boitT = 0.55;
+      this.action = "jette";
+      this.combo++;
+      this.meilleurCombo = Math.max(this.meilleurCombo, this.combo);
+      Score.points += B.points;
+      this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + (this.finale ? 0 : 7));
+      this.stats.eauxJetees++;
+      this.dire("PAS DUPE !  +" + B.points, 1.1);
+      Sons.tarteEsquive();
+      if (this.finale) this.avancerFinale();
+      return true;
+    }
+    if (boit && !B.bonne){
+      /* il a bu l'eau. Silence. */
+      this.boitT = 1.15 * c.boire;
+      this.action = "boit";
+      this.combo = 0;
+      this.gele = 0.35;
+      this.secousse = 0.4;
+      this.ambiance = Math.max(0, this.ambiance - 8);
+      this.stats.eauxBues++;
+      this.dire("DE L'EAU ?!", 1.6);
+      Sons.bip(180, 0.4, "sine", 0.16, 120);
+      if (this.finale) this.raterFinale();
+      return true;
+    }
+    /* il a jeté une bonne boisson : sacrilège */
+    this.boitT = 0.55;
+    this.action = "jette";
+    this.combo = 0;
+    this.secousse = 0.5;
+    this.ambiance = Math.max(0, this.ambiance - 8);
+    Score.points = Math.max(0, Score.points - 80);
+    this.stats.sacrileges++;
+    this.dire("SACRILÈGE !", 1.6);
+    Sons.erreur();
+    if (this.finale) this.raterFinale();
+    return true;
+  },
+
+  /* --------- coup de feu et tournée finale --------- */
+  avancerFinale(){
+    this.finaleReste--;
+    if (this.finaleReste <= 0) this.terminer(true);
+    else this.dire("ENCORE " + this.finaleReste + " !", 1.2);
+  },
+  raterFinale(){
+    this.finaleReste = BAR_TOURNEE_FINALE;
+    this.dire("ON REPREND LA TOURNÉE !", 1.6);
+  },
+
+  terminer(gagne){
+    this.fini = { gagne, t:0 };
+    this.actif = false;
+    Score.points += this.meilleurCombo * 40;
+    if (gagne) Sons.palier(); else Sons.fin();
+    Jeu.phase = "fin";
+    Jeu.finChrono = 0;
+    Interface.sortirJeu();
+  },
+
+  /* --------- boucle --------- */
+  pas(dt){
+    if (this.fini){ this.fini.t += dt; return; }
+    if (this.enChoix || !this.actif) return;
+    this.temps += dt;
+    if (this.gele > 0){ this.gele -= dt; return; }
+    this.secousse = Math.max(0, this.secousse - dt * 2);
+    if (this.message){ this.messageT += dt; if (this.messageT > this.messageDuree) this.message = null; }
+
+    /* déplacement — boire cloue sur place */
+    if (this.boitT > 0){
+      this.boitT -= dt;
+      if (this.boitT <= 0){ this.action = null; }
+    } else if (this.marche !== 0){
+      const c = this.champion;
+      this.x = borne(this.x + this.marche * BAR_MARCHE * c.vitesse * dt, 0.02, 0.98);
+      this.foulee += Math.abs(this.marche) * dt * 10;
+      this.dir = this.marche;
+    }
+
+    /* les verres vieillissent */
+    for (const v of this.verres){
+      if (v.etat !== ETAT_VERRE.POSE) continue;
+      v.t += dt;
+      if (v.t > v.vie){
+        v.etat = ETAT_VERRE.RATE;
+        this.combo = 0;
+        this.stats.rates++;
+        this.ambiance = Math.max(0, this.ambiance - 5);
+        this.dire("RATÉ !", 1.2);
+        Sons.bip(200, 0.2, "sine", 0.12, 150);
+      }
+    }
+    this.verres = this.verres.filter(v =>
+      v.etat === ETAT_VERRE.POSE || (v.etat === ETAT_VERRE.RATE && v.t < v.vie + 0.8));
+
+    for (const b of this.barmans) this.majBarman(b, dt);
+
+    /* le coup de feu, une fois par soirée */
+    if (!this.coupFait && this.temps > BAR_COUP_DE_FEU_A){
+      this.coupFait = true; this.coupDeFeu = true; this.coupT = 0;
+      this.dire("🔥 COUP DE FEU 🔥", 2.2);
+      Sons.palier();
+    }
+    if (this.coupDeFeu){
+      this.coupT += dt;
+      if (this.coupT > BAR_COUP_DE_FEU_DUREE) this.coupDeFeu = false;
+    }
+
+    /* la jauge pleine déclenche la dernière tournée */
+    if (!this.finale && this.ambiance >= BAR_AMBIANCE_BUT){
+      this.finale = true;
+      this.finaleReste = BAR_TOURNEE_FINALE;
+      this.dire("DERNIÈRE TOURNÉE !", 2.4);
+      Sons.palier();
+    }
+
+    /* clins d'œil : Risoto traverse, Hortense passe et regarde */
+    this.prochainClin -= dt;
+    if (this.prochainClin <= 0 && !this.invite){
+      this.prochainClin = hasard(24, 44);
+      this.invite = { qui:Math.random() < 0.72 ? "chat" : "hortense",
+                      x:-0.06, dir:1, t:0 };
+    }
+    if (this.invite){
+      this.invite.t += dt;
+      this.invite.x += this.invite.dir * dt * (this.invite.qui === "chat" ? 0.16 : 0.085);
+      if (this.invite.x > 1.08) this.invite = null;
+    }
+
+    Camera.suivreBar(this.x, dt);
+  },
+};
+"use strict";
+/* ==================================================================
+   NIVEAU 3 — RENDU
+   ------------------------------------------------------------------
+   Même partage des rôles qu'au niveau 2 : h_bar.js ne connaît que des
+   fractions du monde, ce fichier les convertit en pixels.
+================================================================== */
+
+const BarVue = {
+  larg(){
+    const img = Images.table.fond_bar;
+    if (!img || !img.naturalWidth) return Camera.L;
+    return BAR_COPIES * img.naturalWidth * (Camera.H / img.naturalHeight);
+  },
+  origine(){ return -borne(Camera.xBar, 0, Math.max(0, this.larg() - Camera.L)); },
+  ex(fx){ return this.origine() + fx * this.larg(); },
+  ey(fy){ return fy * Camera.H; },
+
+  dessiner(){
+    const L = Camera.L, H = Camera.H;
+    const T = Tournee;
+    const img = Images.table.fond_bar;
+    if (!img || !img.naturalWidth){ ctx.fillStyle = "#120A18"; ctx.fillRect(0, 0, L, H); return; }
+
+    if (T.enChoix){ this.dessinerChoix(); return; }
+
+    const trem = T.secousse > 0 ? Math.sin(T.secousse * 62) * 5 * T.secousse : 0;
+    ctx.clearRect(0, 0, L, H);
+    ctx.imageSmoothingEnabled = true;
+    if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+    ctx.save();
+    ctx.translate(trem, 0);
+    /* le monde = le fond répété : un seul très long comptoir */
+    const lUne = this.larg() / BAR_COPIES;
+    for (let k = 0; k < BAR_COPIES; k++){
+      const x0 = this.origine() + k * lUne;
+      if (x0 > L || x0 + lUne < 0) continue;
+      ctx.drawImage(img, x0, 0, lUne + 1, H);
+    }
+
+    this.dessinerBarmans();
+    this.dessinerVerres();
+    if (T.invite) this.dessinerInvite();
+    this.dessinerHeros();
+
+    /* Le coup de feu réchauffe la salle. */
+    if (T.coupDeFeu){
+      const p = 0.5 + 0.5 * Math.sin(T.coupT * 6);
+      ctx.fillStyle = "rgba(255,120,40," + (0.05 + 0.05 * p).toFixed(3) + ")";
+      ctx.fillRect(-trem, 0, L + Math.abs(trem) * 2, H);
+    }
+    ctx.restore();
+
+    if (T.actif || T.fini) this.dessinerBandeau();
+    if (T.message) this.dessinerMessage();
+  },
+
+  /* --------- choix du champion --------- */
+  dessinerChoix(){
+    const L = Camera.L, H = Camera.H;
+    ctx.clearRect(0, 0, L, H);
+    ctx.fillStyle = "#120A18"; ctx.fillRect(0, 0, L, H);
+    const taille = Math.max(12, H * 0.055);
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillStyle = "#F7B32B";
+    ctx.fillText("CHOISIS TON CHAMPION", L / 2, H * 0.10);
+
+    const T = Tournee;
+    BAR_CHAMPIONS.forEach((c, k) => {
+      const cx = L * (0.28 + k * 0.44);
+      const choisi = k === T.choixChamp;
+      const cadreL = L * 0.36, cadreH = H * 0.66, cy = H * 0.46;
+      ctx.save();
+      ctx.globalAlpha = choisi ? 1 : 0.55;
+      arrondi(cx - cadreL / 2, cy - cadreH / 2, cadreL, cadreH, 12);
+      ctx.fillStyle = "rgba(28,20,36,.92)"; ctx.fill();
+      ctx.lineWidth = choisi ? 4 : 2;
+      ctx.strokeStyle = choisi ? Heros[c.heros].couleur : "rgba(255,255,255,.25)";
+      ctx.stroke();
+      const spr = Images.table[c.idle];
+      if (spr && spr.naturalWidth){
+        const sh = cadreH * 0.52, sl = sh * spr.naturalWidth / spr.naturalHeight;
+        ctx.drawImage(spr, cx - sl / 2, cy - cadreH * 0.44, sl, sh);
+      }
+      ctx.font = "800 " + Math.round(taille * 0.8) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.fillStyle = "#FFF";
+      ctx.fillText(c.nom, cx, cy + cadreH * 0.14);
+      /* les deux jauges, en carrés pleins et vides comme sur l'ardoise */
+      const jauges = [["VITESSE", c.jauges.vitesse], ["DESCENTE", c.jauges.descente]];
+      ctx.font = "700 " + Math.round(taille * 0.46) + "px 'Baloo 2', system-ui, sans-serif";
+      jauges.forEach(([nom, n], j) => {
+        const y = cy + cadreH * (0.24 + j * 0.10);
+        ctx.fillStyle = "#8496B6"; ctx.textAlign = "right";
+        ctx.fillText(nom, cx - cadreL * 0.04, y);
+        ctx.textAlign = "left"; ctx.fillStyle = "#F7B32B";
+        ctx.fillText("■".repeat(n) + "□".repeat(5 - n), cx + cadreL * 0.02, y);
+        ctx.textAlign = "center";
+      });
+      ctx.font = "600 " + Math.round(taille * 0.40) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.fillStyle = "#B9AFC6";
+      ctx.fillText(c.devise, cx, cy + cadreH * 0.44, cadreL * 0.92);
+      ctx.restore();
+    });
+    const t2 = Math.max(10, H * 0.036);
+    ctx.font = "700 " + Math.round(t2) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillStyle = "#8FD79B";
+    ctx.fillText("Touchez un champion, puis BOIRE pour lancer la tournée", L / 2, H * 0.90);
+  },
+
+  /* La zone touchée sur l'écran de choix : gauche, droite, ou validation. */
+  toucherChoix(fx){
+    const T = Tournee;
+    const k = fx < 0.5 ? 0 : 1;
+    if (k === T.choixChamp) T.lancer();
+    else T.choisir(k);
+  },
+
+  /* --------- la scène --------- */
+  dessinerBarmans(){
+    const H = Camera.H;
+    for (const b of Tournee.barmans){
+      const spr = Images.table[b.pose];
+      if (!spr || !spr.naturalWidth) continue;
+      const sh = H * 0.30, sl = sh * spr.naturalWidth / spr.naturalHeight;
+      const x = this.ex(b.ref.x);
+      /* derrière le comptoir : le bas du buste passe dessous */
+      ctx.drawImage(spr, x - sl / 2, this.ey(BAR_COMPTOIR) - sh * 0.94, sl, sh);
+      if (b.etat === "prepare"){
+        /* petit indicateur au-dessus : quelque chose arrive */
+        const p = borne(b.t / b.duree, 0, 1);
+        const y = this.ey(BAR_COMPTOIR) - sh * 1.04;
+        ctx.beginPath(); ctx.arc(x, y, H * 0.016, -Math.PI / 2, -Math.PI / 2 + p * 6.283);
+        ctx.strokeStyle = "#F7B32B"; ctx.lineWidth = Math.max(2, H * 0.008); ctx.stroke();
+      }
+    }
+  },
+
+  dessinerVerres(){
+    const H = Camera.H;
+    for (const v of Tournee.verres){
+      const B = BOISSONS[v.type];
+      const spr = Images.table[B.sprite];
+      if (!spr || !spr.naturalWidth) continue;
+      const sh = H * (v.type === "cocktail" ? 0.135 : 0.105);
+      const sl = sh * spr.naturalWidth / spr.naturalHeight;
+      const x = this.ex(v.x), y = this.ey(BAR_COMPTOIR);
+      ctx.save();
+      if (v.etat === "RATE") ctx.globalAlpha = Math.max(0, 1 - (v.t - v.vie) / 0.8);
+      ctx.drawImage(spr, x - sl / 2, y - sh, sl, sh);
+      if (v.etat === "POSE"){
+        /* la jauge circulaire de vie du verre */
+        const p = 1 - v.t / v.vie;
+        ctx.beginPath(); ctx.arc(x, y - sh - H * 0.028, H * 0.015, -Math.PI / 2, -Math.PI / 2 + p * 6.283);
+        ctx.strokeStyle = p > 0.35 ? "#8FD79B" : "#E8574B";
+        ctx.lineWidth = Math.max(2, H * 0.008); ctx.stroke();
+      }
+      ctx.restore();
+    }
+  },
+
+  dessinerHeros(){
+    const T = Tournee, H = Camera.H;
+    const c = T.champion;
+    if (!c) return;
+    let nomSpr = c.idle;
+    if (T.boitT > 0) nomSpr = T.action === "jette" ? c.jette : c.boit;
+    else if (T.marche !== 0) nomSpr = (c.vitesse >= 1 ? c.course : c.marche);
+    const spr = Images.table[nomSpr];
+    if (!spr || !spr.naturalWidth) return;
+    const sh = H * BAR_TAILLE_HEROS, sl = sh * spr.naturalWidth / spr.naturalHeight;
+    const x = this.ex(T.x);
+    const y = this.ey(BAR_SOL);
+    const saut = (T.marche !== 0 && T.boitT <= 0) ? Math.abs(Math.sin(T.foulee * 1.4)) * H * 0.008 : 0;
+    ctx.save();
+    /* ombre courte au contact des pieds — même recette qu'au niveau 2 */
+    ctx.fillStyle = "rgba(0,0,0,.30)";
+    ctx.beginPath(); ctx.ellipse(x, y, sl * 0.30, H * 0.014, 0, 0, 6.283); ctx.fill();
+    if (T.dir < 0){ ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0); }
+    ctx.drawImage(spr, x - sl / 2, y - sh - saut, sl, sh);
+    ctx.restore();
+  },
+
+  dessinerInvite(){
+    const T = Tournee, H = Camera.H;
+    const inv = T.invite;
+    const spr = Images.table[inv.qui === "chat" ? "susp_chat" : "h_marche"];
+    if (!spr || !spr.naturalWidth) return;
+    const sh = H * (inv.qui === "chat" ? 0.11 : 0.42);
+    const sl = sh * spr.naturalWidth / spr.naturalHeight;
+    const x = this.ex(inv.x), y = this.ey(BAR_SOL);
+    ctx.save();
+    ctx.globalAlpha = 0.96;
+    ctx.drawImage(spr, x - sl / 2, y - sh, sl, sh);
+    ctx.restore();
+  },
+
+  /* --------- habillage --------- */
+  dessinerBandeau(){
+    const L = Camera.L, H = Camera.H, T = Tournee;
+    const taille = Math.max(11, H * 0.045);
+    ctx.save();
+    ctx.textBaseline = "middle";
+    /* la jauge AMBIANCE, en haut au centre */
+    const jl = L * 0.34, jh = Math.max(8, H * 0.030), jx = L / 2 - jl / 2, jy = H * 0.030;
+    arrondi(jx, jy, jl, jh, jh / 2); ctx.fillStyle = "rgba(10,8,16,.66)"; ctx.fill();
+    const p = borne(T.ambiance / BAR_AMBIANCE_BUT, 0, 1);
+    if (p > 0){
+      arrondi(jx + 2, jy + 2, Math.max(jh - 4, (jl - 4) * p), jh - 4, (jh - 4) / 2);
+      ctx.fillStyle = T.finale ? "#F7B32B" : "#8FD79B"; ctx.fill();
+    }
+    ctx.font = "800 " + Math.round(taille * 0.62) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.fillStyle = "#FFF";
+    ctx.fillText("AMBIANCE", L / 2, jy + jh / 2);
+    /* score et combo aux coins */
+    ctx.textAlign = "left";
+    ctx.font = "800 " + Math.round(taille * 0.9) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillStyle = "#F7B32B";
+    ctx.fillText(String(Score.points), L * 0.03, jy + jh / 2);
+    if (T.combo >= 2){
+      ctx.textAlign = "right";
+      ctx.fillStyle = T.combo >= 10 ? "#E8574B" : T.combo >= 5 ? "#F7B32B" : "#8FD79B";
+      ctx.fillText("COMBO x" + T.combo, L * 0.97, jy + jh / 2);
+    }
+    ctx.restore();
+  },
+
+  dessinerMessage(){
+    const L = Camera.L, H = Camera.H, T = Tournee;
+    const t = T.messageT / T.messageDuree;
+    const taille = Math.max(13, H * 0.072);
+    ctx.save();
+    ctx.globalAlpha = borne(1 - Math.pow(t, 3), 0, 1);
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.lineWidth = Math.max(3, taille * 0.16);
+    ctx.strokeStyle = "rgba(10,6,14,.85)";
+    ctx.strokeText(T.message, L / 2, H * 0.20);
+    ctx.fillStyle = "#FFE9B0";
+    ctx.fillText(T.message, L / 2, H * 0.20);
+    ctx.restore();
+  },
+};
 
 /* ================= UIManager -> Interface ================= */
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -5991,7 +6697,7 @@ const Intro = {
    suspension. */
 const Pause = {
   active:false,
-  NOMS:["", "01 · La file du D'Tour", "02 · L'enquête de la pizza"],
+  NOMS:["", "01 · La file du D'Tour", "02 · L'enquête de la pizza", "03 · La tournée du D'Tour"],
 
   peut(){ return Jeu.phase === "jeu" && !Intro.actif; },
   basculer(){ this.active ? this.reprendre() : this.mettre(); },
@@ -6041,6 +6747,9 @@ const Interface = {
     if (E.vign2 && Images.table.pizza_boite_ouverte){
       E.vign2.src = Images.table.pizza_boite_ouverte.src; E.vign2.alt = "L'enquête de la pizza";
     }
+    if (E.vign3 && Images.table.bar_cocktail && Images.table.bar_cocktail.naturalWidth){
+      E.vign3.src = Images.table.bar_cocktail.src; E.vign3.alt = "La tournée du D'Tour";
+    }
     /* Prénoms, portraits et libellés : tout se déduit du tableau Heros,
        dans l'ordre gauche puis droite. Les identifiants HTML gardent
        leurs vieilles lettres T et P, qui désignent désormais la place
@@ -6088,9 +6797,10 @@ const Interface = {
     /* Le bandeau SCORE / COMBO / FILE appartient au niveau 1. Le niveau 2
        dessine le sien sur le canevas : les deux ensemble donnaient un
        compteur de file à zéro au-dessus d'un appartement. */
-    if (E.hud) E.hud.classList.toggle("on", Jeu.niveau !== 2);
-    if (E.pupitre) E.pupitre.classList.toggle("on", Jeu.niveau !== 2);
+    if (E.hud) E.hud.classList.toggle("on", Jeu.niveau === 1);
+    if (E.pupitre) E.pupitre.classList.toggle("on", Jeu.niveau === 1);
     if (E.pupitre2) E.pupitre2.classList.toggle("on", Jeu.niveau === 2);
+    if (E.pupitre3) E.pupitre3.classList.toggle("on", Jeu.niveau === 3);
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
     if (E.pleinBtn) E.pleinBtn.classList.add("on");
     if (E.pauseBtn) E.pauseBtn.classList.add("on");
@@ -6099,6 +6809,7 @@ const Interface = {
   sortirJeu(){
     if (E.pupitre) E.pupitre.classList.remove("on");
     if (E.pupitre2) E.pupitre2.classList.remove("on");
+    if (E.pupitre3) E.pupitre3.classList.remove("on");
   },
 
   /* Niveau 1 : le bouton d'esquive s'allume dès qu'une tarte est en
@@ -6162,8 +6873,39 @@ const Interface = {
     b.classList.add("pressee");
     setTimeout(() => b.classList.remove("pressee"), 90);
   },
+  /* Niveau 3 : BOIRE et JETER ne s'allument que devant un verre. Ils
+     restent cliquables — un appui à vide répond « PAS DE VERRE ICI ». */
+  majActionBar(){
+    if (Jeu.niveau !== 3) return;
+    const pret = !Tournee.enChoix && Tournee.actif && Tournee.verreAPortee() >= 0 && Tournee.boitT <= 0;
+    if (E.c3B) E.c3B.classList.toggle("eteint", !pret && !Tournee.enChoix);
+    if (E.c3J) E.c3J.classList.toggle("eteint", !pret);
+  },
+
+  afficherFinBar(){
+    const gagne = Tournee.fini && Tournee.fini.gagne;
+    if (E.finTitre){
+      E.finTitre.innerHTML = gagne ? "SOIRÉE<em>VALIDÉE.</em>" : "SOIRÉE<em>ÉCOURTÉE.</em>";
+    }
+    if (E.releve) E.releve.style.display = "none";
+    if (E.releveEnq) E.releveEnq.classList.remove("on");
+    if (E.releveBar) E.releveBar.classList.add("on");
+    const st = Tournee.stats || {};
+    if (E.bScore) E.bScore.textContent = chiffres(Score.points);
+    if (E.bCombo) E.bCombo.textContent = "\u00D7" + Tournee.meilleurCombo;
+    if (E.bCocktails) E.bCocktails.textContent = chiffres(st.cocktails || 0);
+    if (E.bJagers) E.bJagers.textContent = chiffres(st.jagers || 0);
+    if (E.bEaux) E.bEaux.textContent = chiffres(st.eauxJetees || 0);
+    if (E.bErreurs) E.bErreurs.textContent = chiffres((st.eauxBues || 0) + (st.sacrileges || 0) + (st.rates || 0));
+    if (E.eCoupable){ E.eCoupable.textContent = "CHAMPION : " + (Tournee.champion ? Tournee.champion.nom : ""); E.eCoupable.classList.add("on"); }
+    if (E.eChute) E.eChute.textContent = "";
+    if (E.fin) E.fin.classList.add("on");
+    if (E.btnRejouer) E.btnRejouer.focus({ preventScroll:true });
+  },
+
   afficherFin(){
     this.finAffichee = true;
+    if (Jeu.niveau === 3) return this.afficherFinBar();
     if (Jeu.niveau === 2) return this.afficherFinEnquete();
     const neuf = ecrireRecord({ score:Score.points, combo:Score.meilleurCombo,
                                 saluts:Score.saluts, file:Score.fileMax });
@@ -6184,6 +6926,7 @@ const Interface = {
   /* Le relevé du niveau 2 n'a rien à voir avec celui du niveau 1 : on
      montre l'autre tableau plutôt que de tordre le premier. */
   afficherFinEnquete(){
+    if (E.releveBar) E.releveBar.classList.remove("on");
     const gagne = Enquete.fini && Enquete.fini.gagne;
     if (E.finTitre){
       E.finTitre.innerHTML = gagne
@@ -6276,6 +7019,13 @@ const Entrees = {
        à l'écran : Thibaut à gauche, l'esquive au milieu sous le pouce,
        Pierre-François à droite. Le pouce n'a jamais à traverser. */
     if (E.cv) E.cv.addEventListener("pointerdown", e => {
+      if (Jeu.niveau === 3){
+        if (Jeu.phase !== "jeu" || !Tournee.enChoix) return;
+        e.preventDefault(); Sons.reveiller();
+        const r3 = E.cv.getBoundingClientRect ? E.cv.getBoundingClientRect() : { left:0, top:0 };
+        BarVue.toucherChoix((e.clientX - r3.left) / Camera.L);
+        return;
+      }
       if (Jeu.niveau === 2){
         if (Jeu.phase !== "jeu") return;
         e.preventDefault();
@@ -6341,8 +7091,43 @@ const Entrees = {
       if (t === "arrowleft" || t === "arrowright" || t === "q") Enquete.marcher(0);
     });
 
+    /* Le clavier du niveau 3 : flèches pour courir, E pour BOIRE,
+       J pour JETER. En choix de champion, les flèches choisissent et
+       E ou ESPACE lancent. */
     globalThis.addEventListener("keydown", e => {
-      if (Jeu.niveau === 2 && Jeu.phase === "jeu") return;
+      if (Jeu.niveau !== 3 || Jeu.phase !== "jeu") return;
+      const t = e.key.toLowerCase();
+      if (t === "f" || t === "escape" || t === "p" || t === "s" || t === "o") return;
+      if (e.repeat && t !== "arrowleft" && t !== "arrowright" && t !== "q") return;
+      if (t === "arrowleft" || t === "q"){
+        e.preventDefault();
+        if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp - 1); else Tournee.marcher(-1);
+      } else if (t === "arrowright"){
+        e.preventDefault();
+        if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp + 1); else Tournee.marcher(1);
+      } else if (t === "e" || t === "enter" || t === " "){
+        e.preventDefault(); Sons.reveiller();
+        if (Tournee.enChoix) Tournee.lancer(); else Tournee.boire();
+      } else if (t === "j"){
+        e.preventDefault(); Sons.reveiller(); Tournee.jeter();
+      } else if (Debug.autorise && Debug.ouvert){
+        /* les quatre commandes de service du mode debug */
+        if (t === "1") Debug.servirBar("francky", "cocktail");
+        if (t === "2") Debug.servirBar("francky", "eau");
+        if (t === "3") Debug.servirBar("jojo", "jager");
+        if (t === "4") Debug.servirBar("jojo", "eau");
+        if (t === "r"){ Tournee.coupFait = true; Tournee.coupDeFeu = true; Tournee.coupT = 0; }
+        if (t === "c") Tournee.combo = 10;
+      }
+    }, { passive:false });
+    globalThis.addEventListener("keyup", e => {
+      if (Jeu.niveau !== 3) return;
+      const t = e.key.toLowerCase();
+      if (t === "arrowleft" || t === "arrowright" || t === "q") Tournee.marcher(0);
+    });
+
+    globalThis.addEventListener("keydown", e => {
+      if ((Jeu.niveau === 2 || Jeu.niveau === 3) && Jeu.phase === "jeu") return;
       if (e.repeat) return;
       const t = e.key.toLowerCase();
       if (t === "a" || t === "q" || t === "arrowleft"){ presser(0, e); return; }
@@ -6410,6 +7195,32 @@ const Entrees = {
     };
     tenir(E.c2G, -1);
     tenir(E.c2D, 1);
+    /* Le pupitre du niveau 3 : marcher se tient, BOIRE valide aussi le
+       choix du champion — c'est le geste qu'on a déjà sous le pouce. */
+    const tenir3 = (el, d) => {
+      if (!el) return;
+      el.addEventListener("pointerdown", ev => {
+        ev.preventDefault(); Sons.reveiller();
+        if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp + d);
+        else Tournee.marcher(d);
+        el.classList.add("pressee");
+      });
+      const rel3 = () => { Tournee.marcher(0); el.classList.remove("pressee"); };
+      el.addEventListener("pointerup", rel3);
+      el.addEventListener("pointercancel", rel3);
+      el.addEventListener("pointerleave", rel3);
+    };
+    tenir3(E.c3G, -1);
+    tenir3(E.c3D, 1);
+    if (E.c3B) E.c3B.addEventListener("pointerdown", ev => {
+      ev.preventDefault(); Sons.reveiller();
+      if (Tournee.enChoix) Tournee.lancer(); else Tournee.boire();
+    });
+    if (E.c3J) E.c3J.addEventListener("pointerdown", ev => {
+      ev.preventDefault(); Sons.reveiller();
+      if (!Tournee.enChoix) Tournee.jeter();
+    });
+    for (const b of [E.c3G, E.c3D, E.c3B, E.c3J]) if (b) b.addEventListener("click", ev => ev.preventDefault());
     if (E.c2A) E.c2A.addEventListener("pointerdown", ev => {
       ev.preventDefault(); Sons.reveiller();
       if (Intro.actif) Intro.passer(); else Enquete.action();
@@ -6437,6 +7248,15 @@ const Entrees = {
 /* ================= mode DEBUG ================= */
 const Debug = {
   ouvert:false, autorise:false, cible:null,
+
+  /* Niveau 3 : forcer un service précis, pour éprouver chaque cas. */
+  servirBar(id, type){
+    const b = Tournee.barmans.find(x => x.ref.id === id);
+    if (!b || b.etat !== "repos") return;
+    b.type = type; b.etat = "prepare"; b.t = 0;
+    b.xPose = borne(b.ref.x + hasard(-0.08, 0.08), 0.06, 0.94);
+    b.duree = 0.8;
+  },
 
   init(){
     try{
@@ -6618,7 +7438,8 @@ globalThis.DTOUR = {
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
-  ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes,
+  ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
+  Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, SUJETS, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, HORTENSE_ECART, TARTE_DUREE,

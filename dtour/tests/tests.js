@@ -59,12 +59,26 @@ try{
 /* Les images citées par le script doivent exister sur le disque. */
 titre("Ressources");
 const dossierImg = path.join(RACINE, "img");
-const presentes = fs.existsSync(dossierImg) ? fs.readdirSync(dossierImg) : [];
+/* img/ est rangé par niveau : commun/, n1/, n2/, n3/. On relève le nom
+   ET le dossier de chaque fichier — le classement fait partie de ce
+   qu'on vérifie. */
+const dossierParNom = {};
+const presentes = [];
+if (fs.existsSync(dossierImg)){
+  for (const d of fs.readdirSync(dossierImg)){
+    const sous = path.join(dossierImg, d);
+    if (!fs.statSync(sous).isDirectory()) { presentes.push(d); continue; }
+    for (const f of fs.readdirSync(sous)){
+      presentes.push(f);
+      if (f.endsWith(".webp")) dossierParNom[f.slice(0, -5)] = d;
+    }
+  }
+}
 const citees = new Set();
 for (const m of source.matchAll(/"(fond_[a-z]+|logo|face_[a-z_]+|fx_[a-z]+|pnj\d\d|(?:thibaut|pierre)_[a-z]+)"/g)) citees.add(m[1]);
 for (const m of source.matchAll(/Images\.table\.(fx_[a-z]+|appart|loupe)/g)) citees.add(m[1]);
 for (const m of source.matchAll(/sprite:"([a-z_0-9]+)"/g)) if (!/^(pierre|thibaut)$/.test(m[1])) citees.add(m[1]);
-for (const m of source.matchAll(/"(enq_[a-z_]+|pizza_[a-z_]+|badge_[a-z]+)"/g)) citees.add(m[1]);
+for (const m of source.matchAll(/"(enq_[a-z_]+|pizza_[a-z_]+|badge_[a-z]+|bar_[a-z_]+)"/g)) citees.add(m[1]);
 citees.add("appart"); citees.add("loupe");
 for (const m of source.matchAll(/"(h_[a-zA-Z]+|tarte[0-9]|tarte_[a-z]+|debris_[a-z]+)"/g)) citees.add(m[1]);
 /* les quatre orientations de la tarte sont composées : "tarte" + n */
@@ -80,8 +94,10 @@ const manquantes = [...citees].filter(n => !presentes.includes(n + ".webp"));
    img/ à la liste de chargement, dans les deux sens. */
 const chargees = new Set();
 {
-  const blocs = source.match(/const IMAGES_NIVEAU2 = \[([\s\S]*?)\];/);
-  if (blocs) for (const m of blocs[1].matchAll(/"([A-Za-z_0-9]+)"/g)) chargees.add(m[1]);
+  for (const liste of ["IMAGES_NIVEAU2", "IMAGES_NIVEAU3", "PERSONNAGES_MAISON"]){
+    const blocs = source.match(new RegExp("const " + liste + " = \\[([\\s\\S]*?)\\];"));
+    if (blocs) for (const m of blocs[1].matchAll(/"([A-Za-z_0-9]+)"/g)) chargees.add(m[1]);
+  }
   for (const nom of ["logo", "face_thibaut", "face_pierre"]) chargees.add(nom);
   for (const liste of ["EFFETS", "SPRITES_HORTENSE", "SPRITES_TARTE", "SPRITES_PNJ"]){
     const b = source.match(new RegExp("const " + liste + " = \\[([\\s\\S]*?)\\]"));
@@ -105,6 +121,12 @@ verifier("toutes les images citées existent dans img/", manquantes.length === 0
 verifier("aucune image inutilisée dans img/",
   presentes.filter(f => f.endsWith(".webp") && !citees.has(f.slice(0, -5))).length === 0,
   "inutilisée : " + presentes.filter(f => f.endsWith(".webp") && !citees.has(f.slice(0, -5))).join(", "));
+/* Le rangement fichier par fichier est vérifié plus bas, sur le code
+   EXÉCUTÉ (section « Rangement des images ») : la table IMG_CHEMIN y
+   est vivante, inutile de la reconstruire par regex ici. */
+const horsDossier = presentes.filter(f => f.endsWith(".webp") && !dossierParNom[f.slice(0, -5)]);
+verifier("aucune image en vrac à la racine d'img/",
+  horsDossier.length === 0, horsDossier.join(", "));
 
 /* ================= 2. références =================
    L'analyse porte sur le code SEUL. Les commentaires et les chaînes
@@ -272,6 +294,24 @@ try{
 }
 
 if (D){
+  titre("Rangement des images");
+  /* IMG_CHEMIN (le code) et le disque doivent dire la même chose,
+     fichier par fichier : un webp déplacé sans mise à jour du code
+     chargerait une URL morte. */
+  (() => {
+    const noms = D.listeImages();
+    const malRanges = noms.filter(n => dossierParNom[n] && D.IMG_CHEMIN[n] !== dossierParNom[n])
+      .map(n => n + " (disque " + dossierParNom[n] + ", code " + D.IMG_CHEMIN[n] + ")");
+    verifier("le rangement du disque suit IMG_PAR_DOSSIER",
+      malRanges.length === 0, malRanges.slice(0, 6).join(", "));
+    verifier("chaque image chargée connaît son dossier",
+      noms.every(n => D.IMG_CHEMIN[n]),
+      noms.filter(n => !D.IMG_CHEMIN[n]).join(", "));
+    verifier("cheminImage compose un chemin par niveau",
+      D.cheminImage("appart") === "img/n2/appart.webp" &&
+      D.cheminImage("logo") === "img/commun/logo.webp");
+  })();
+
   /* --- géométrie --- */
   titre("Géométrie");
   verifier("Thibaut est devant Pierre-François dans la file", D.PLACE_G < D.PLACE_D);
@@ -1562,6 +1602,166 @@ if (D){
   const baissee = D.Esquive.boite(0);
   verifier("elle descend pendant l'esquive", baissee.haut > boite.haut);
   D.Heros[0].esquive = null;
+
+  /* ================= NIVEAU 3 — la tournée ================= */
+  titre("Niveau 3 — la tournée");
+  const lancer3 = (champ) => {
+    D.Jeu.demarrer(3);
+    D.Tournee.choixChamp = champ === undefined ? 0 : champ;
+    D.Tournee.lancer();
+  };
+  verifier("demarrer(3) ouvre le choix du champion",
+    (() => { D.Jeu.demarrer(3); return D.Tournee.enChoix && D.Jeu.phase === "jeu"; })());
+  verifier("les deux champions existent et se distinguent",
+    D.BAR_CHAMPIONS.length === 2 &&
+    D.BAR_CHAMPIONS[0].vitesse !== D.BAR_CHAMPIONS[1].vitesse &&
+    D.BAR_CHAMPIONS[0].boire !== D.BAR_CHAMPIONS[1].boire);
+  verifier("aucun champion n'est objectivement meilleur",
+    (() => {
+      /* vitesse × cadence de descente : les deux produits doivent se
+         tenir — sinon un des deux domine partout */
+      const note = c => c.vitesse * (1 / c.boire);
+      const n0 = note(D.BAR_CHAMPIONS[0]), n1 = note(D.BAR_CHAMPIONS[1]);
+      return Math.max(n0, n1) / Math.min(n0, n1) < 1.35;
+    })(), "l'écart des notes dépasse 35 %");
+  verifier("PF garde ses lunettes et son crâne : heros 0",
+    D.BAR_CHAMPIONS.find(c => c.nom === "PF").heros === 0 &&
+    D.BAR_CHAMPIONS.find(c => c.nom === "THIBAUT").heros === 1,
+    "les champions sont inversés — le vieux piège");
+  verifier("chaque pose citée par les barmans est chargée",
+    (() => {
+      const n3 = new Set(D.IMG_PAR_DOSSIER.n3);
+      return D.BARMANS.every(b =>
+        b.prepare.every(pz => n3.has(pz)) &&
+        Object.values(b.poses).every(pz => n3.has(pz)));
+    })());
+  verifier("chaque champion a ses cinq sprites chargés",
+    (() => {
+      const n3 = new Set(D.IMG_PAR_DOSSIER.n3);
+      return D.BAR_CHAMPIONS.every(c =>
+        [c.idle, c.marche, c.course, c.boit, c.jette].every(pz => n3.has(pz)));
+    })());
+
+  /* --- le garde-fou de faisabilité --- */
+  lancer3(1);           /* PF, le plus lent : le cas le pire */
+  D.Tournee.x = 0.02;
+  verifier("un verre à l'autre bout n'est pas faisable pour PF chargé",
+    (() => {
+      /* deux verres déjà posés + un à l'opposé : le coût dépasse la vie */
+      const deja = [{ x:0.05 }, { x:0.10 }];
+      return D.Tournee.faisable(0.94, deja) === false;
+    })());
+  verifier("un verre proche reste faisable",
+    D.Tournee.faisable(0.10, []) === true);
+
+  /* --- les quatre décisions --- */
+  const poserVerre = (type, x) => {
+    D.Tournee.verres.push({ type, x, etat:D.ETAT_VERRE.POSE, t:0, vie:7.5, barman:"francky" });
+    return D.Tournee.verres[D.Tournee.verres.length - 1];
+  };
+  lancer3(0);
+  D.Tournee.x = 0.5;
+  poserVerre("cocktail", 0.5);
+  const scoreAvant = D.Score.points;
+  verifier("boire un cocktail : PARFAIT", D.Tournee.boire() === true &&
+    D.Score.points > scoreAvant && D.Tournee.combo === 1 && D.Tournee.stats.cocktails === 1);
+  verifier("boire immobilise le champion",
+    (() => { D.Tournee.marcher(1); return D.Tournee.marche === 0; })(),
+    "Thibaut doit être vulnérable quand il boit");
+  for (let i = 0; i < 60 * 3; i++) D.Jeu.pas(1 / 60);
+  poserVerre("eau", D.Tournee.x);
+  verifier("jeter l'eau : PAS DUPE", D.Tournee.jeter() === true &&
+    D.Tournee.combo === 2 && D.Tournee.stats.eauxJetees === 1);
+  for (let i = 0; i < 60 * 2; i++) D.Jeu.pas(1 / 60);
+  poserVerre("eau", D.Tournee.x);
+  verifier("boire l'eau casse le combo", D.Tournee.boire() === true &&
+    D.Tournee.combo === 0 && D.Tournee.stats.eauxBues === 1);
+  for (let i = 0; i < 60 * 3; i++) D.Jeu.pas(1 / 60);
+  const scoreAvant2 = D.Score.points;
+  poserVerre("jager", D.Tournee.x);
+  verifier("jeter un Jägerbomb : sacrilège et amende", D.Tournee.jeter() === true &&
+    D.Tournee.stats.sacrileges === 1 && D.Score.points < scoreAvant2);
+  verifier("l'ambiance a payé les erreurs", D.Tournee.ambiance < 14);
+
+  /* --- l'expiration --- */
+  lancer3(0);
+  D.Tournee.x = 0.5; D.Tournee.combo = 4;
+  const vExp = poserVerre("cocktail", 0.9);
+  for (let i = 0; i < 60 * 9; i++) D.Jeu.pas(1 / 60);
+  verifier("un verre oublié expire et casse la série",
+    vExp.etat !== D.ETAT_VERRE.POSE && D.Tournee.combo === 0 && D.Tournee.stats.rates >= 1);
+
+  /* --- l'eau attend son heure --- */
+  verifier("pas d'eau dans les premières secondes",
+    (() => {
+      lancer3(0);
+      for (let n = 0; n < 400; n++){ D.Tournee.temps = 5; if (D.Tournee.servirQuoi(D.Tournee.barmans[0]) === "eau") return false; }
+      return true;
+    })());
+  verifier("l'eau finit par arriver",
+    (() => {
+      lancer3(0);
+      D.Tournee.temps = 60;
+      for (let n = 0; n < 400; n++) if (D.Tournee.servirQuoi(D.Tournee.barmans[0]) === "eau") return true;
+      return false;
+    })());
+
+  /* --- des barmans qui servent vraiment, sans jamais coincer --- */
+  verifier("la soirée pose des verres et reste jouable",
+    (() => {
+      lancer3(0);
+      let poses = 0;
+      for (let i = 0; i < 60 * 60; i++){
+        const avant = D.Tournee.verres.length;
+        D.Jeu.pas(1 / 60);
+        if (D.Tournee.verres.length > avant) poses++;
+        /* le joueur ne joue pas : les verres expirent, la partie continue */
+      }
+      return poses >= 6 && D.Jeu.phase === "jeu";
+    })(), "en une minute sans jouer, il doit se passer des choses");
+  verifier("le coup de feu part une seule fois, vers 70 s",
+    (() => {
+      lancer3(0);
+      let departs = 0;
+      for (let i = 0; i < 60 * 100; i++){
+        const avant = D.Tournee.coupDeFeu;
+        D.Jeu.pas(1 / 60);
+        if (!avant && D.Tournee.coupDeFeu) departs++;
+      }
+      return departs === 1 && !D.Tournee.coupDeFeu;
+    })());
+
+  /* --- la jauge pleine ouvre la dernière tournée, cinq décisions gagnent --- */
+  verifier("jauge pleine → DERNIÈRE TOURNÉE → victoire en cinq",
+    (() => {
+      lancer3(0);
+      D.Tournee.ambiance = D.BAR_AMBIANCE_BUT;
+      D.Jeu.pas(1 / 60);
+      if (!D.Tournee.finale || D.Tournee.finaleReste !== D.BAR_TOURNEE_FINALE) return false;
+      for (let k = 0; k < D.BAR_TOURNEE_FINALE; k++){
+        D.Tournee.boitT = 0;
+        poserVerre("cocktail", D.Tournee.x);
+        if (!D.Tournee.boire()) return false;
+        for (let i = 0; i < 60 * 2; i++) D.Jeu.pas(1 / 60);
+      }
+      return D.Tournee.fini && D.Tournee.fini.gagne && D.Jeu.phase === "fin";
+    })());
+  verifier("se tromper pendant la finale la fait repartir de cinq",
+    (() => {
+      lancer3(0);
+      D.Tournee.ambiance = D.BAR_AMBIANCE_BUT;
+      D.Jeu.pas(1 / 60);
+      poserVerre("cocktail", D.Tournee.x);
+      D.Tournee.boire();
+      for (let i = 0; i < 60 * 2; i++) D.Jeu.pas(1 / 60);
+      if (D.Tournee.finaleReste !== D.BAR_TOURNEE_FINALE - 1) return false;
+      poserVerre("eau", D.Tournee.x);
+      D.Tournee.boire();
+      return D.Tournee.finaleReste === D.BAR_TOURNEE_FINALE;
+    })());
+
+  /* --- retour au calme pour la suite de la suite --- */
+  D.Jeu.retourTitre();
 
   /* --- Hortense ne doit jamais devenir une routine --- */
   titre("Rythme d'Hortense");

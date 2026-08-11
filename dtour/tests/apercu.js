@@ -374,6 +374,36 @@ function jouerJusqua(D, condition, limite){
     dessinerVia(D, canevas);
     ecrire(canevas, "8_malaise_1280");
   }
+
+  /* 13. niveau 3 : le choix du champion */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(3);
+    D.Jeu.pas(1 / 60);
+    dessinerVia(D, canevas);
+    ecrire(canevas, "13_bar_choix_844");
+  }
+
+  /* 14. niveau 3 : en pleine tournée — un cocktail servi, une eau posée */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(3);
+    D.Tournee.lancer();
+    D.Tournee.x = 0.42; D.Tournee.combo = 4; D.Tournee.ambiance = 55;
+    D.Score.points = 1240;
+    D.Tournee.verres.push({ type:"cocktail", x:0.34, etat:D.ETAT_VERRE.POSE, t:1.4, vie:7.5, barman:"francky" });
+    D.Tournee.verres.push({ type:"eau", x:0.60, etat:D.ETAT_VERRE.POSE, t:4.8, vie:7.5, barman:"jojo" });
+    D.Tournee.barmans[0].etat = "prepare"; D.Tournee.barmans[0].t = 0.9;
+    D.Tournee.barmans[0].duree = 1.8; D.Tournee.barmans[0].type = "cocktail";
+    D.Tournee.barmans[0].pose = "bar_francky_shake";
+    D.Tournee.marche = 1; D.Tournee.dir = 1;
+    for (let i = 0; i < 8; i++) D.Jeu.pas(1 / 60);
+    D.Tournee.dire("PARFAIT !  +200", 1.4);
+    dessinerVia(D, canevas);
+    ecrire(canevas, "14_bar_tournee_844");
+  }
 })();
 
 /* dessiner() n'est pas exporté : on le rejoint par la boucle du jeu,

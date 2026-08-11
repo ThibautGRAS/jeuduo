@@ -7,7 +7,7 @@ jeu, et `../MEMOIRE.md`, dont les pièges valent ici aussi.
 
 ## 1. Architecture
 
-### Un fichier livré, sept morceaux édités
+### Un fichier livré, neuf morceaux édités
 
 `index.html` est le livrable : HTML, CSS et JavaScript dans un seul
 fichier, aucun outil de compilation chez le joueur. Il est recollé par
@@ -21,6 +21,8 @@ fichier, aucun outil de compilation chez le joueur. Il est recollé par
 | `e_hortense.js` | Hortense, la tarte, l'esquive (niveau 1) |
 | `f_enquete.js` | `Affaire`, `Dossier`, `HortenseApp`, `Enquete` — logique du niveau 2 |
 | `g_enquete_vue.js` | `EnqVue` — rendu du niveau 2 |
+| `h_bar.js` | `Tournee`, champions, barmans, boissons — logique du niveau 3 |
+| `i_bar_vue.js` | `BarVue` — rendu du niveau 3 |
 | `d_pilotage.js` | `Progres`, `Intro`, `Interface`, `Entrees`, `Ecran`, `Debug`, `Boucle`, amorçage |
 
 `d_pilotage.js` passe **en dernier** : il lit des constantes déclarées
@@ -30,12 +32,40 @@ blancs sur le projet voisin.
 `assembler.py` refuse d'écrire s'il ne trouve pas exactement un bloc
 `<script>`.
 
-### Deux niveaux, un seul cadre
+### Trois niveaux, un seul cadre
 
-`Jeu.niveau` vaut 1 ou 2. `Jeu.pas()` et `dessiner()` aiguillent dès la
-première ligne ; tout le reste — chrono, sons, effets, écran de fin,
-plein écran, blocage portrait — est commun. Les deux niveaux ne
-partagent aucune géométrie.
+`Jeu.niveau` vaut 1, 2 ou 3. `Jeu.pas()` et `dessiner()` aiguillent dès
+la première ligne ; tout le reste — chrono, sons, effets, écran de fin,
+plein écran, blocage portrait — est commun. Les niveaux ne partagent
+aucune géométrie. Ajouter un niveau = un morceau logique + un morceau
+vue, une branche dans `demarrer/pas/dessiner`, une carte sur l'écran
+titre, un pupitre HTML, une liste `IMAGES_NIVEAUX` et son dossier
+`img/nX/` — le niveau 3 est le modèle du geste.
+
+### img/ est rangé par niveau
+
+`img/commun/` (héros, Hortense, tarte, habitants, effets), `img/n1/`,
+`img/n2/`, `img/n3/`. Le classement est déclaré UNE fois, dans
+`IMG_PAR_DOSSIER` (a_socle) ; `cheminImage(nom)` compose l'URL, la
+suite compare la table au disque fichier par fichier — un webp déplacé
+sans mise à jour du code se voit au premier lancement. Piège rencontré
+le jour même : `SPRITES_PNJ` embarque les habitants debout (ils font la
+queue au niveau 1) — `n1` doit les EXCLURE, ils vivent dans commun/.
+
+### Réglages du niveau 3
+
+| Réglage | Valeur | Pourquoi |
+|---|---|---|
+| Monde | 3 × le fond bout à bout | le fond seul (650 px à H=318) est plus étroit que l'écran |
+| Plateau du comptoir | 0.555 | mesuré sur le fond (bande de bois clair : 0.55-0.57) |
+| Vie d'un verre | 7.5 s, 5.2 s en coup de feu | |
+| Thibaut / PF | vitesse 1.00 / 0.82, boire 1.00 / 0.65 | produits comparables, test < 35 % d'écart |
+| Eau | après 25 s, p = 0.26 | le piège attend que le réflexe s'installe |
+| Coup de feu | à 70 s, 20 s, une fois | |
+| Dernière tournée | 5 décisions, erreur = on repart à 5 | |
+
+Le garde-fou `faisable()` refuse tout verre injouable : distance à la
+vitesse du champion + geste de boire + verres déjà posés < vie × 0.9.
 
 ### Le raisonnement du niveau 2 (v5.0)
 
@@ -225,6 +255,21 @@ soit leur longueur : les longues disparaissaient avant la fin de la
 lecture. `dureeLecture()` étire la durée ET l'espacement dans une même
 salve — entre salves, chacune garde son départ, une réponse de témoin
 n'attend pas un vieux bavardage, les bulles s'empilent pour ça.
+
+### Une propriété qui écrase une méthode
+`Tournee` avait un compteur `pas:0` (les foulées) ET une méthode
+`pas(dt)`. Dans le littéral, la méthode gagnait ; mais `lancer()`
+faisait `this.pas = 0` et **remplaçait la méthode par un nombre** au
+premier lancement — `Tournee.pas is not a function`, au premier test.
+Le compteur s'appelle `foulee`. Dans un objet-module dont la boucle
+s'appelle `pas`, aucun état ne doit s'appeler `pas`.
+
+### La planche de sprites reglisse un faux PF
+Deuxième fois : la rangée « PF » de la planche du bar contenait un
+Thibaut en polo vert (cheveux bruns, sac à dos). Écarté à la découpe,
+et un test verrouille `BAR_CHAMPIONS` : PF = heros 0, THIBAUT =
+heros 1. Toute nouvelle planche se relit sprite par sprite AVANT de
+nommer — la planche contact numérotée sert à ça.
 
 ### Un test statistique au seuil trop proche de la moyenne
 « On préfère envoyer celui qui a quelque chose à dire » : taux réel

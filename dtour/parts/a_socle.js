@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "5.0";
+const VERSION = "6.0";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -420,6 +420,13 @@ const SPRITES_TARTE = ["tarte0","tarte1","tarte2","tarte3","tarte_boom","tarte_e
    tests le vérifiait, et l'appartement restait noir à l'écran parce que
    personne ne les avait jamais demandés. Un test contrôle désormais que
    img/ et cette liste disent la même chose. */
+/* Les habitants et le chat servent aux niveaux 1 ET 2 : ils vivent
+   dans le dossier commun, pas dans celui d'un niveau. */
+const PERSONNAGES_MAISON = [
+  "pers_teo", "pers_charles", "pers_soeur", "pers_francky", "pers_jojo",
+  "pers_marini", "pers_martin", "susp_chat",
+];
+
 const IMAGES_NIVEAU2 = [
   "appart", "loupe",
   "enq_pf_marche", "enq_pf_fouille", "enq_pf_splat",
@@ -427,17 +434,51 @@ const IMAGES_NIVEAU2 = [
   "ind_miettes", "ind_chorizo", "ind_fromage", "ind_serviette",
   "ind_sauce", "ind_assiette", "ind_ticket", "ind_pattes", "ind_billet",
   "pizza_entiere", "pizza_entamee", "pizza_part", "pizza_boite_ouverte",
-  "susp_chat", "pers_teo", "pers_charles", "pers_soeur", "pers_francky", "pers_jojo", "pers_marini", "pers_martin",
   "badge_indice", "badge_suspect",
 ];
 
+/* Niveau 3 — la tournée du D'Tour. Le fond, les deux héros en tenue de
+   bar, les deux barmans au travail et les trois boissons. La planche
+   fournie glissait un Thibaut en polo vert dans la rangée de PF — le
+   même piège que la première fois — il a été écarté à la découpe.
+   Thibaut n'a qu'une pose d'action (il boit ET jette dans la même
+   image) : elle sert aux deux gestes, c'est dans le personnage. */
+const IMAGES_NIVEAU3 = [
+  "fond_bar",
+  "bar_th_idle", "bar_th_course", "bar_th_marche", "bar_th_frein", "bar_th_action",
+  "bar_pf_idle", "bar_pf_marche", "bar_pf_boit", "bar_pf_jette",
+  "bar_francky_idle", "bar_francky_shake", "bar_francky_verse", "bar_francky_sert", "bar_francky_touille",
+  "bar_jojo_idle", "bar_jojo_mesure", "bar_jojo_shot", "bar_jojo_verse", "bar_jojo_montre", "bar_jojo_attend", "bar_jojo_essuie",
+  "bar_cocktail", "bar_jager", "bar_eau",
+];
+
+/* ---------- où vit chaque image ----------
+   img/ est rangé par niveau : commun/ pour ce qui sert partout, n1/,
+   n2/, n3/ pour ce qui n'appartient qu'à un niveau. Le classement est
+   déclaré ICI, une seule fois ; le chargeur et la suite de tests le
+   lisent tous les deux — un fichier déplacé sans mise à jour se voit
+   au premier lancement. */
+const IMG_PAR_DOSSIER = {
+  commun: ["logo", "face_thibaut", "face_pierre"]
+    .concat(EFFETS, SPRITES_HORTENSE, SPRITES_TARTE, PERSONNAGES_MAISON),
+  n1: MOMENTS.map(m => m.fond)
+    /* SPRITES_PNJ embarque aussi les habitants debout — ils font la
+       queue au niveau 1 mais vivent dans commun/, on les écarte ici */
+    .concat(SPRITES_PNJ.filter(n => PERSONNAGES_MAISON.indexOf(n) < 0))
+    .concat(["thibaut", "pierre"].flatMap(h => POSES_HEROS.map(p => h + "_" + p))),
+  n2: IMAGES_NIVEAU2,
+  n3: IMAGES_NIVEAU3,
+};
+const IMG_CHEMIN = {};
+for (const d of Object.keys(IMG_PAR_DOSSIER))
+  for (const n of IMG_PAR_DOSSIER[d]) IMG_CHEMIN[n] = d;
+
+function cheminImage(nom){
+  return "img/" + (IMG_CHEMIN[nom] || "commun") + "/" + nom + ".webp";
+}
+
 function listeImages(){
-  const l = ["logo","face_thibaut","face_pierre"]
-    .concat(EFFETS, SPRITES_HORTENSE, SPRITES_TARTE, IMAGES_NIVEAU2);
-  for (const m of MOMENTS) l.push(m.fond);
-  for (const h of ["thibaut","pierre"]) for (const p of POSES_HEROS) l.push(h + "_" + p);
-  for (const s of SPRITES_PNJ) l.push(s);
-  return l;
+  return [].concat(...Object.values(IMG_PAR_DOSSIER));
 }
 
 /* Les bras tendus des PNJ sont dessinés, pas photographiés : la
@@ -550,7 +591,7 @@ function charger(surAvance){
        définition et de prénom sans changer de nom de fichier, et Safari
        aurait resservi les anciennes depuis son cache — boutons neufs sur
        sprites périmés. */
-    img.src = "img/" + nom + ".webp?v=" + VERSION;
+    img.src = cheminImage(nom) + "?v=" + VERSION;
   }))).then(() => { Images.pret = true; });
 }
 

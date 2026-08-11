@@ -1,6 +1,10 @@
 # LES ENQUÊTES DE CALLAGHAN
 
-Deux niveaux, un seul fichier, jouables au doigt.
+Trois niveaux, un seul fichier, jouables au doigt.
+
+Qui est qui ? Les fiches complètes des personnages — traits, liens,
+sprites, apparitions — sont dans **PERSONNAGES.md** : c'est la
+référence à consulter avant d'écrire un niveau ou une réplique.
 
 | | |
 |---|---|
@@ -25,7 +29,7 @@ les fichiers de `img/` portent les bons noms.
 
 ## Niveau 2 — l'enquête de la pizza
 
-Les deux niveaux sont **toujours** jouables : on choisit celui qu'on
+Les trois niveaux sont **toujours** jouables : on choisit celui qu'on
 veut sur l'écran d'accueil, sans rien avoir à débloquer. Le fait d'avoir
 terminé le niveau 1 reste enregistré sous `dtour_progres` — c'est une
 information, pas une serrure.
@@ -357,6 +361,55 @@ Ces conditions sont écrites à l'écran — en haut de la liste et au bas du
 dossier — parce que la première version les gardait pour elle et qu'on
 pouvait réunir six indices sans voir comment conclure.
 
+## Niveau 3 — la tournée du D'Tour
+
+PF et Thibaut sont de retour au bar — mais un seul y va. **CHOISIS TON
+CHAMPION** : Thibaut court vite et boit lentement, PF, c'est l'inverse.
+Aucun des deux n'est meilleur, un test surveille l'équilibre
+(vitesse × cadence de descente : moins de 35 % d'écart).
+
+Devant un très long comptoir — le fond mis trois fois bout à bout, une
+seule grande salle —, **Francky sert les cocktails à gauche, Jojo les
+Jägerbombs à droite**. Un verre posé vit sept secondes et demie (cinq
+en plein coup de feu), sa jauge circulaire vire au rouge, puis RATÉ, et
+la série tombe.
+
+Deux boutons : **BOIRE** et **JETER**. Quatre issues :
+
+| On fait | Sur | Résultat |
+|---|---|---|
+| BOIRE | cocktail / Jäger | **PARFAIT !** — points × combo, ambiance +7 |
+| JETER | eau | **PAS DUPE !** — +150, la série continue |
+| BOIRE | eau | **DE L'EAU ?!** — gel, combo perdu, ambiance −8 |
+| JETER | cocktail / Jäger | **SACRILÈGE !** — −80, combo perdu |
+
+**Les barmans télégraphient.** Le shaker annonce un cocktail, le doseur
+puis le shot un Jägerbomb — et le chiffon tranquille, l'eau. L'eau
+n'apparaît qu'après vingt-cinq secondes, puis environ une fois sur
+quatre. Un bon joueur lit le geste avant que le verre touche le bois.
+
+**Jamais d'injouable.** Avant de servir, le pattern vérifie que le
+verre est atteignable : distance à la vitesse du champion, plus le
+geste de boire, plus les verres déjà posés, le tout dans la vie du
+verre avec une marge. Difficile, oui ; impossible, jamais — un test
+le vérifie sur le pire cas (PF chargé, verre à l'autre bout).
+
+**Boire immobilise.** C'est la faiblesse de Thibaut : pendant sa longue
+descente, il ne bouge plus, et les verres vieillissent.
+
+La soirée monte : un verre à la fois, puis deux après 45 s, puis le
+**🔥 COUP DE FEU 🔥** vers 70 s — vingt secondes où tout accélère, trois
+verres possibles, musique à 118. La jauge **AMBIANCE** pleine déclenche
+la **DERNIÈRE TOURNÉE** : cinq décisions d'affilée, une erreur remet le
+compteur à cinq, la cinquième valide la soirée.
+
+Risoto traverse parfois le bas de l'écran. Hortense peut passer, tarte
+en main, regarder le joueur… et repartir. La menace suffit.
+
+Clavier : flèches ou Q pour courir, E / ENTRÉE / ESPACE pour BOIRE,
+J pour JETER. En debug (`?debug=1` + O) : 1 cocktail, 2 eau Francky,
+3 Jägerbomb, 4 eau Jojo, R coup de feu, C combo ×10.
+
 ## Format
 
 Le jeu est **verrouillé en paysage** et demande le **plein écran** au
@@ -411,7 +464,7 @@ pièges propres à ce jeu et ce qui n'est pas fait.
 
 ## Travailler dessus
 
-Le script d'`index.html` est découpé en sept morceaux dans `parts/`,
+Le script d'`index.html` est découpé en neuf morceaux dans `parts/`,
 recollés par `assembler.py`. C'est un confort de rédaction : le livrable
 reste le fichier unique, et l'assemblage a lieu ici, pas chez le joueur.
 

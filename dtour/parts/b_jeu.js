@@ -369,6 +369,14 @@ const Jeu = {
 
   demarrer(niveau){
     if (niveau) this.niveau = niveau;
+    if (this.niveau === 3){
+      Score.raz(); Effets.raz(); razHeros(); File.raz(); Foule.raz();
+      this.temps = 0; this.vies = 1; this.finChrono = 0; this.phase = "jeu";
+      Tournee.monter();
+      Interface.entrerJeu();
+      Sons.reveiller(); Sons.lancerMusique();
+      return;
+    }
     if (this.niveau === 2){
       Score.raz(); Effets.raz(); razHeros(); File.raz(); Foule.raz();
       this.temps = 0; this.vies = 1; this.finChrono = 0; this.phase = "jeu";
@@ -413,6 +421,19 @@ const Jeu = {
 
   /* --------- boucle logique, pas fixe --------- */
   pas(dt){
+    if (this.niveau === 3){
+      if (this.phase === "jeu" || this.phase === "fin"){
+        this.temps += dt;
+        Tournee.pas(dt);
+        Interface.majActionBar();
+        if (this.phase === "fin"){
+          this.finChrono += dt;
+          if (this.finChrono > 1.2 && !Interface.finAffichee) Interface.afficherFin();
+        }
+        Sons.ordonnerMusique(Tournee.coupDeFeu ? 118 : 96);
+      }
+      return;
+    }
     if (this.niveau === 2){
       if (this.phase === "jeu" || this.phase === "fin"){
         this.temps += dt;
