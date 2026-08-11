@@ -264,6 +264,17 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Cinquante indices** (v6.25) au lieu de treize. Ils ne parlent plus
+seulement de la pizza : le chat de Solène et Gabi, les paris de Rémy,
+le sport de Kevin et Tristan, la soirée elle-même, et les objets qui
+désignent quelqu'un — le rouleau de papier toilette de Gabi, les
+lunettes noires de Charles, l'écharpe grise de Rémy, l'écharpe
+tricolore du maire. Chacun porte son analyse, sa version brute, sa
+question de confrontation, la réponse de l'innocent, celle du coupable,
+et l'écho de l'autre inspecteur. Deux sont volontairement ambigus — la
+chaussure boueuse et la chaussette peuvent être de Kevin comme de
+Tristan.
+
 **Les inspecteurs jouent la scène** (v6.13). Dix poses chacun, choisies
 par la logique et pas par le rendu : debout, deux temps de marche,
 accroupi à fouiller, en train d'examiner un objet, la main ouverte quand

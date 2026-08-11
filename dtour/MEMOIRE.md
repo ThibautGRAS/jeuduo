@@ -516,6 +516,22 @@ régulière a retiré une déclaration en laissant son usage
 passait, le jeu plantait à la première image, et c'est le harnais visuel
 qui l'a dit. Après toute chirurgie mécanique, on lance l'aperçu.
 
+### Lire la structure AVANT d'écrire cinquante entrées
+Premier essai des nouveaux indices : trente-sept entrées écrites d'un
+trait, puis trois échecs de suite. Trois identifiants existaient déjà
+(serviette, ticket, billet), un champ obligatoire manquait — l'**écho de
+l'autre inspecteur**, dans `ECHOS`, une paire de répliques par indice —
+et la liste d'images se recoupait avec celle du niveau 3. Deux minutes
+de lecture de la structure et des identifiants pris auraient évité de
+tout réécrire. Règle : avant d'ajouter en masse dans une table, on lit
+UNE entrée complète, on liste les clés obligatoires, et on vérifie les
+identifiants déjà pris.
+
+Corollaire rencontré dans la foulée : compléter une liste d'images en
+comparant aux seuls noms `ind_*` laisse passer les sprites partagés
+(`pizza_part` servait déjà d'indice et de décor). On compare à TOUS les
+noms déjà présents.
+
 ### Une couleur écrite en dur se cache à plusieurs endroits
 J'avais corrigé les pastilles de légende en v6.10 en écrivant « une
 couleur ne s'écrit qu'à un seul endroit » — et j'en avais laissé une

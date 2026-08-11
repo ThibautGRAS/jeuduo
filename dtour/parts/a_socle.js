@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.24";
+const VERSION = "6.25";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -546,6 +546,16 @@ const IMAGES_NIVEAU2 = [
   "enq_th_splat",
   "ind_miettes", "ind_chorizo", "ind_fromage", "ind_serviette",
   "ind_sauce", "ind_assiette", "ind_ticket", "ind_pattes", "ind_billet",
+  "ind_poils", "ind_gamelle", "ind_collier", "ind_croquettes",
+  "ind_griffures", "ind_souris", "ind_pari", "ind_loto", "ind_de",
+  "ind_cartes", "ind_badge_gym", "ind_shaker_prot", "ind_chaussure",
+  "ind_chaussette", "ind_casque", "ind_rustine", "ind_montre",
+  "ind_verre_renverse", "ind_bouteille_vin", "ind_tirebouchon",
+  "ind_bouchon", "ind_capsule", "ind_shaker_bar", "ind_citron",
+  "ind_tarte_part", "ind_cendrier", "ind_pieces", "ind_cles",
+  "ind_telephone", "ind_carnet", "ind_stylo", "ind_lunettes_noires",
+  "ind_echarpe_grise", "ind_pq", "ind_brassard", "ind_echarpe_tri",
+  "ind_carton_pizza",
   "pizza_entiere", "pizza_entamee", "pizza_part", "pizza_boite_ouverte",
   "badge_indice", "badge_suspect",
   /* Poses assises, à échelle commune : leur pose debout figurait sur la
