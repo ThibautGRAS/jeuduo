@@ -1472,9 +1472,16 @@ const VISITEURS = [
             "Suivez les poils. Un animal laisse toujours son passage."],
     } },
   { id:"martin", nom:"MARTIN, AGENT DE SÉCURITÉ", sprite:"pers_martin", cote:1, taille:1.0,
+    /* Tout le personnage tient dans l'écart entre ce qu'il dit et ce
+       qu'il a l'air : un gamin mince au sac à dos qui annonce
+       calmement qu'il fait la sécurité et qu'il a boxé. On ne corrige
+       pas la contradiction, on l'écrit. */
     banal:["Je ne bois pas. Je ne mange pas en service. Je note.",
            "Vingt-deux entrées, dix-neuf sorties. Ça ne tombe jamais juste.",
-           "J'ai boxé en amateur. Ça sert pour rester debout huit heures."],
+           "J'ai boxé en amateur. Ça sert pour rester debout huit heures.",
+           "Oui, c'est moi la sécurité. Non, je ne vais pas grandir.",
+           "On me demande souvent ma carte d'identité. Je la sors avec le badge.",
+           "Dans le sac ? Un carnet, deux stylos. Le reste, je le retiens."],
     lie:{
       securite:["J'étais en bas. J'ai noté tout le monde. Vous voulez le registre ?",
                 "Une personne est descendue avec un carton plat. Je peux dire l'heure.",

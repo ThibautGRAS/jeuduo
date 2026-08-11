@@ -157,6 +157,14 @@ donc le rythme d'Hortense se mesurait dans un appartement — zéro
 apparition. Tout test qui change de niveau le rend avant de sortir
 (`Jeu.retourTitre()`).
 
+### Une contradiction n'est pas forcément un bug
+La planche de Martin montrait un jeune homme mince au sac à dos, là où
+sa fiche décrivait un boxeur agent de sécurité. J'ai failli « réparer »
+l'un ou l'autre : c'était le personnage. Le décalage entre ce qu'un
+personnage dit et ce qu'il a l'air EST le comique du jeu. Signaler
+l'écart, oui ; trancher tout seul, non — et quand il est confirmé, il
+s'écrit dans la fiche et dans les répliques pour qu'il existe en jeu.
+
 ### Renommer un personnage : le nom oui, la parenté non
 « La sœur d'Hortense » devient Gabi : l'identifiant, le sprite et le nom
 affiché changent, mais « ma sœur », « belle-sœur de Pierre-François »

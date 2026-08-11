@@ -156,12 +156,15 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 - Boxeur, ancien comptable : **il compte tout**. Thèmes `securite`,
   `porte`, `argent`.
 - « Vingt-deux entrées, dix-neuf sorties. Ça ne tombe jamais juste. »
+- **Le décalage EST le personnage** : il a l'air d'un étudiant mince au
+  sac à dos, et il annonce calmement qu'il fait la sécurité, qu'il a
+  boxé, qu'il a été comptable. Personne ne le croit ; il note quand
+  même. Ne jamais « corriger » cet écart entre le sprite et la fiche —
+  c'est de là que vient le comique. Trois de ses répliques jouent
+  dessus : « Oui, c'est moi la sécurité. Non, je ne vais pas grandir. »
 - Habitué du bar au niveau 3 : `bar_martin_{idle,marche1,marche2}`. Sa
   planche n'a pas de pose de consommation, il se sert donc sans changer
   d'expression — ce qui lui va bien.
-- **À trancher** : la planche livrée en v6.5 montre un jeune homme mince
-  au sac à dos, là où cette fiche décrit un boxeur agent de sécurité.
-  Soit la fiche se réécrit, soit c'est un autre personnage.
 - Sprite : `pers_martin` (commun). Fait la queue au niveau 1.
 
 ---
