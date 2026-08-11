@@ -63,7 +63,7 @@ chaque pièce, une fois par partie. Et de loin en loin, quand on les
 laisse tranquilles, ils bavardent. Tout est cadencé par le chrono du
 jeu, jamais par `setTimeout`.
 
-**Vingt-sept affaires écrites** qui se servent de ces liens : la pizza mise de
+**Trente-trois affaires écrites** qui se servent de ces liens : la pizza mise de
 côté pour Hortense, Charles qui efface sa visite, le prof d'histoire qui
 date la soirée à la minute parce qu'il en faisait partie, la chaîne
 Risoto-puis-Charles, le troc contre une tarte au citron, la reconstitution du prof
@@ -216,6 +216,16 @@ jamais l'inverse. Une enquête impossible ne peut donc pas sortir, et la
 suite de tests le vérifie sur trois cents tirages : six indices sans
 doublon, six meubles distincts, jamais d'indice sur la cachette, et les
 deux indices porteurs toujours présents.
+
+**Marini, maire de Compiègne**, quatre-vingts ans, véreux et galant.
+Thèmes `officiel` — il signe, il tamponne, il saisit — et `argent`.
+« Un buffet non déclaré, c'est un buffet saisi. La loi, c'est la loi. »
+« Je ne me souviens pas de la pizza. Je me souviens très bien d'elle. »
+
+**Martin, agent de sécurité**, boxeur, ancien comptable. Thèmes
+`securite`, `porte` et `argent`. C'est le témoin qu'on rêve d'avoir :
+« Vingt-deux entrées, dix-neuf sorties. Ça ne tombe jamais juste. »
+« Il manque exactement trois parts. J'ai recompté. »
 
 **Des gens passent.** Toutes les 42 à 78 secondes, quelqu'un entre par
 un bord, s'arrête près des inspecteurs, dit une phrase et repart.

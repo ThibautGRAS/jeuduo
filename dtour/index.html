@@ -471,7 +471,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v4.5</div>
+  <div id="version">CALLAGHAN v4.6</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -531,7 +531,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "4.5";
+const VERSION = "4.6";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -940,7 +940,7 @@ const IMAGES_NIVEAU2 = [
   "ind_miettes", "ind_chorizo", "ind_fromage", "ind_serviette",
   "ind_sauce", "ind_assiette", "ind_ticket", "ind_pattes", "ind_billet",
   "pizza_entiere", "pizza_entamee", "pizza_part", "pizza_boite_ouverte",
-  "susp_chat", "pers_teo", "pers_charles", "pers_soeur", "pers_francky", "pers_jojo", "pers_marini", "pers_martin",
+  "susp_chat", "pers_teo", "pers_charles", "pers_soeur", "pers_francky", "pers_jojo", "pers_marini", "pers_martin", "pers_marini", "pers_martin",
   "badge_indice", "badge_suspect",
 ];
 
@@ -3557,6 +3557,86 @@ const SCENARIOS = [
       ok:"Deux. Peut-être trois.", ko:"Je ne compte pas. C'est le principe d'une tournée.",
       pf:"Tu ne comptes jamais, et c'est bien le problème." } },
 
+  /* --- le maire --- */
+  { id:"inauguration", temoinCle:"soeur", tags:["officiel", "porte"], coupable:null,
+    cachettes:["commode", "manteaux"],
+    porteurs:["ticket", "menu", "serviette"],
+    piste:[[0, "Un papier officiel signé ce soir, à cette adresse."],
+           [1, "Il n'y avait rien à inaugurer ici."]],
+    trouvaille:[[0, "{Ou}. Sous un parapheur de la mairie."],
+                [1, "Personne ne l'a volée. Elle a été classée."]],
+    contradiction:"On n'inaugure pas un dîner. Vous avez pourtant signé quelque chose.",
+    chute:"Marini est monté serrer des mains, a fait signer un registre à tout le monde, a posé son parapheur sur la boîte et l'a oubliée là. Le document, lui, est parfaitement en règle.",
+    anecdote:{ suspect:"soeur", qTH:"Qui vous a fait signer quelque chose ?", qPF:"Tu as signé un truc, toi ?",
+      ok:"Le maire. Il fait signer tout le monde.", ko:"J'ai signé sans lire. Comme d'habitude.",
+      pf:"Tu signes vraiment n'importe quoi." } },
+
+  { id:"piece_a_conviction", temoinCle:"teo", tags:["officiel", "salon"], coupable:null,
+    cachettes:["placards", "tv"],
+    porteurs:["ticket", "assiette", "miettes"],
+    piste:[[0, "La boîte porte un tampon. Un vrai tampon."],
+           [1, "Quelqu'un a considéré cette pizza comme une affaire d'État."]],
+    trouvaille:[[0, "{Ou}. Avec une étiquette collée dessus."],
+                [1, "« Pièce à conviction ». Écrit à la main."]],
+    contradiction:"Personne n'a volé. Quelqu'un a saisi. Ce n'est pas la même paperasse.",
+    chute:"Le maire a déclaré le buffet non conforme, a saisi la pizza comme pièce à conviction municipale, l'a étiquetée, rangée — puis il est parti serrer d'autres mains.",
+    anecdote:{ suspect:"teo", qTH:"Quelqu'un a-t-il étiqueté quelque chose ici ?", qPF:"Tu as vu ce tampon ?",
+      ok:"Il étiquette tout. C'est plus fort que lui.", ko:"J'ai laissé faire. On ne discute pas avec un maire.",
+      pf:"Tu aurais pu dire quelque chose." } },
+
+  { id:"la_charmante", tags:["officiel", "porte"], coupable:"charles",
+    cachettes:["manteaux", "sac", "commode"],
+    porteurs:["ticket", "serviette", "menu"],
+    piste:[[0, "Quelqu'un a monopolisé l'attention pendant vingt minutes."],
+           [1, "Et pendant ce temps, personne ne regardait la cuisine."]],
+    trouvaille:[[0, "{Ou}. Pendant que tout le monde écoutait poliment."],
+                [1, "Il a profité d'un discours. C'est presque élégant."]],
+    contradiction:"Vous n'écoutiez pas le maire. Vous étiez le seul.",
+    chute:"Marini a passé vingt minutes à parler à la colocataire. Tout le monde regardait ailleurs. Charles a mis la pizza à l'abri sans que personne ne s'en aperçoive.",
+    anecdote:{ suspect:"charles", qTH:"Vous écoutiez le discours ?", qPF:"Vous aimez les discours, vous ?",
+      ok:"Comme tout le monde. On ne coupe pas un maire.", ko:"J'écoutais d'une oreille. J'avais à faire.",
+      pf:"Vous aviez à faire quoi, exactement ?" } },
+
+  /* --- l'agent de sécurité --- */
+  { id:"le_registre", tags:["securite", "porte"], coupable:"soeur",
+    cachettes:["commode", "portant", "lit"],
+    porteurs:["ticket", "menu", "assiette"],
+    piste:[[0, "Vingt-deux entrées, dix-neuf sorties."],
+           [1, "Trois personnes sont restées. Une seule n'a jamais bougé."]],
+    trouvaille:[[0, "{Ou}. Sans jamais avoir quitté l'étage."],
+                [1, "Le registre ne se trompe pas. Les gens, si."]],
+    contradiction:"Vous n'êtes jamais descendue. Le registre est formel.",
+    chute:"Martin note tout, en bas, depuis neuf ans de comptabilité et trois ans de sécurité. Le registre disait qui était encore là. Il ne restait qu'une personne à qui poser la question.",
+    anecdote:{ suspect:"soeur", qTH:"Vous êtes descendue à un moment ?", qPF:"Tu es sortie, toi ?",
+      ok:"Deux fois. Le gardien vous le dira.", ko:"Pas une fois. Pourquoi je serais descendue ?",
+      pf:"Tu n'aimes pas les escaliers, je sais." } },
+
+  { id:"la_ronde", tags:["securite", "salon"], coupable:"charles",
+    cachettes:["sac", "manteaux", "poubelle"],
+    porteurs:["ticket", "miettes", "part"],
+    piste:[[0, "Une ronde à {heure}, à la minute près."],
+           [1, "Et quelqu'un est descendu avec un carton plat juste après."]],
+    trouvaille:[[0, "{Ou}. Prête à sortir de l'immeuble."],
+                [1, "Il n'a pas eu le temps. La ronde est passée."]],
+    contradiction:"Vous êtes descendu avec un carton plat. On vous a vu.",
+    chute:"Il comptait l'emporter. La ronde de Martin est tombée au mauvais moment, il est remonté en vitesse et l'a laissée là où il a pu.",
+    anecdote:{ suspect:"charles", qTH:"Vous êtes descendu vers {heure} ?", qPF:"Vous prenez souvent les escaliers ?",
+      ok:"Non. Je suis resté à cet étage.", ko:"Une minute. J'ai fait demi-tour.",
+      pf:"Vous faites beaucoup de demi-tours." } },
+
+  { id:"le_comptage", tags:["securite", "argent", "salon"], coupable:"teo",
+    cachettes:["canape", "basse", "tv"],
+    porteurs:["ticket", "part", "billet"],
+    piste:[[0, "Une pizza de {parts} parts. Il en manque exactement trois."],
+           [1, "Trois. Pas deux, pas quatre."]],
+    trouvaille:[[0, "{Ou}. Avec ce qu'il en reste, compté."],
+                [1, "Quelqu'un ici sait compter aussi bien que Martin."]],
+    contradiction:"Trois parts. Une toutes les vingt minutes. Vous n'avez pas bougé de là.",
+    chute:"Il n'a pas volé une pizza : il en a mangé trois parts, régulièrement, sans se lever. Un ancien comptable a recompté et le total ne pardonne pas.",
+    anecdote:{ suspect:"teo", qTH:"Combien de parts avez-vous mangées ?", qPF:"Tu en as pris combien ?",
+      ok:"Une. Peut-être une et demie.", ko:"Je n'ai pas compté. Ça se compte, une pizza ?",
+      pf:"Ça se compte très bien, figure-toi." } },
+
   { id:"la_tarte", temoinCle:"soeur", tags:["porte", "chat"], coupable:null, cachettes:["placards", "evier"],
     porteurs:["ticket", "chorizo", "assiette"],
     piste:[[0, "Quelqu'un est venu, a échangé quelque chose, et est reparti."],
@@ -3839,33 +3919,35 @@ const VISITEUR_UTILE = 0.45;        /* part de visites qui apprennent quelque ch
    histoire ne vaut pas la peine d'interrompre une enquête. */
 const VISITEURS = [
   { id:"marini", nom:"MARINI, MAIRE DE COMPIÈGNE", sprite:"pers_marini", cote:-1, taille:0.98,
-    banal:["J'inaugure quelque chose dans le quartier. Je ne sais plus quoi.",
-           "Vous voterez pour moi. Vous ne le savez pas encore.",
-           "Il y a une jeune femme charmante en bas. Elle m'a dit de monter.",
-           "Quatre-vingts ans, et toutes mes dents. Enfin, presque toutes."],
+    banal:["Je passais serrer des mains. J'en ai serré deux cent quatorze aujourd'hui.",
+           "Vous voterez, j'espère. On vote toujours, dans cet immeuble.",
+           "Quatre-vingts ans et toutes mes dents. Enfin, la plupart."],
     lie:{
-      porte:["J'ai le double des clés de tout l'immeuble. C'est le protocole.",
-             "Quelqu'un est monté juste avant moi. Je tiens les portes, moi.",
-             "Vers {heure}, l'interphone n'arrêtait pas. Je l'ai noté."],
-      argent:["Cinq euros. À mon époque on appelait ça une facture.",
-              "Tout se règle. Même une pizza. Surtout une pizza.",
-              "Je peux faire disparaître cette affaire. Contre un service."],
+      officiel:["J'ai signé un papier ici, ce soir. Je signe beaucoup de papiers.",
+                "Tout ce qui traîne dans un logement communal appartient un peu à la commune.",
+                "Un buffet non déclaré, c'est un buffet saisi. La loi, c'est la loi.",
+                "La demoiselle du couloir m'a ouvert. Charmante. Très charmante.",
+                "J'ai passé un long moment à parler à la jeune femme. Un très long moment.",
+                "Je ne me souviens pas de la pizza. Je me souviens très bien d'elle."],
+
+      argent:["Cinq euros ? Dans ma commune, on ne se déplace pas pour moins.",
+              "L'argent laisse toujours une trace. C'est bien le problème.",
+              "Regardez qui a payé. Vous saurez qui a mangé."],
     } },
   { id:"martin", nom:"MARTIN, AGENT DE SÉCURITÉ", sprite:"pers_martin", cote:1, taille:1.0,
-    banal:["J'ai fait le tour du bâtiment. Quatorze minutes. Comme d'habitude.",
-           "J'ai été comptable avant. J'ai gardé les chiffres.",
-           "Je ne bois pas, je ne fume pas, je compte.",
-           "Trois personnes sont montées, deux sont redescendues."],
+    banal:["Je ne bois pas. Je ne mange pas en service. Je note.",
+           "Vingt-deux entrées, dix-neuf sorties. Ça ne tombe jamais juste.",
+           "J'ai boxé en amateur. Ça sert pour rester debout huit heures."],
     lie:{
-      salon:["De ma position, je vois le canapé. Quelqu'un ne s'est pas levé de la soirée.",
-             "Il y a eu six allers-retours vers la cuisine. J'ai compté.",
-             "La télévision est restée éteinte. Personne ne regardait rien."],
-      argent:["Cinq euros, ce n'est pas rien : c'est exactement le prix d'une part.",
-              "Un billet posé à plat, ce n'est pas un billet tombé. C'est un billet déposé.",
-              "J'ai vérifié : il manque une pizza et il reste cinq euros. Ça s'équilibre."],
-      chat:["Le chat est passé quatre fois. Toujours dans le même sens.",
-            "J'ai suivi les traces. Elles s'arrêtent net.",
-            "Le chat ne monte pas sur les meubles hauts. J'ai regardé."],
+      securite:["J'étais en bas. J'ai noté tout le monde. Vous voulez le registre ?",
+                "Une personne est descendue avec un carton plat. Je peux dire l'heure.",
+                "Ma ronde est à {heure}, à la minute. Il n'y a pas eu d'exception ce soir."],
+      porte:["La porte du bas ne se ferme pas seule. Quelqu'un l'a tenue.",
+             "J'ai vu monter deux personnes. Je n'en ai vu redescendre qu'une.",
+             "Les portes, c'est mon métier. Celle-ci a été ouverte de l'intérieur."],
+      argent:["J'ai été comptable neuf ans. Un compte faux, ça se voit tout de suite.",
+              "Il manque exactement trois parts. J'ai recompté.",
+              "Cinq euros, c'est le prix d'une part et demie. C'est un remboursement partiel."],
     } },
   { id:"jojo", nom:"JOJO LE NAIN", sprite:"pers_jojo", cote:1, taille:1.0,
     banal:["Je tenais le bar de l'Entrepotes. Ce soir, c'est relâche.",
@@ -3894,17 +3976,18 @@ const VISITEURS = [
               "Un cocktail comme le mien, ça efface une soirée entière.",
               "Vous voulez la vérité ? Demandez à quelqu'un qui n'a pas bu."],
     } },
+
 ];
 
 const ETAT_V = { ABSENT:"ABSENT", ENTREE:"ENTREE", PARLE:"PARLE", SORTIE:"SORTIE" };
 
 const Visiteurs = {
   etat:ETAT_V.ABSENT, qui:null, x:0, vise:0, dir:1, pas:0, chrono:0,
-  prochain:0, comptes:0, utiles:0, dernier:null, vus:null,
+  prochain:0, comptes:0, utiles:0, dernier:null, dejaVus:[], vus:null,
 
   raz(){
     this.etat = ETAT_V.ABSENT; this.qui = null;
-    this.comptes = 0; this.utiles = 0; this.dernier = null;
+    this.comptes = 0; this.utiles = 0; this.dernier = null; this.dejaVus = [];
     /* Chacun ne passe QU'UNE FOIS par partie : leur venue doit être un
        événement, pas une ronde. Quand ils sont tous passés, on n'en
        invente pas d'autres. */
