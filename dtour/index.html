@@ -691,7 +691,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.17</div>
+  <div id="version">CALLAGHAN v6.18</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -763,7 +763,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.17";
+const VERSION = "6.18";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -2113,13 +2113,10 @@ const Camera = {
        le décor est une image large, des personnages timides auraient
        l'air posés devant une carte postale. */
     this.base = borne(Math.min(hUtile * 0.60, L * 0.26), 92, 380);
-    /* La ligne de sol était calée sur la RÉSERVE d'interface (8 % du
-       bas). Ça laissait une bande de trottoir sous les pieds : les gens
-       de la file avaient l'air de flotter. La réserve reste entière pour
-       le calcul de la hauteur utile, mais le sol descend nettement plus
-       bas — les commandes du niveau 1 sont des pastilles dans les coins,
-       elles ne cachent pas le centre. */
-    this.sol = H - this.basUI * 0.45;
+    /* Le sol garde la réserve d'interface : c'est ANCRE_FOND_Y qui aligne
+       le trottoir du décor sur cette ligne, et non l'inverse. Mon
+       rafistolage de la v6.16 (0,45) traitait le symptôme. */
+    this.sol = H - this.basUI;
     this.calculerVise();
     this.recentrer();
   },
@@ -2390,7 +2387,12 @@ function dessinerBulle(b){
 /* Où se trouve le sol DANS l'image de décor : c'est une propriété du
    dessin, pas un réglage. Il reste très peu de trottoir en dessous, donc
    la ligne de sol du jeu doit rester basse à l'écran. */
-const ANCRE_FOND_Y = 0.86;
+/* Où se trouve la ligne de sol DANS l'image de fond : c'est elle qui
+   pose les pieds sur le trottoir. Les décors de la v6.18 ont leur
+   trottoir dégagé à 88 % de leur hauteur — mesuré, pas deviné. Une
+   valeur fausse ici et toute la file paraît flotter, quoi qu'on fasse
+   par ailleurs : c'est ce que je cherchais au mauvais endroit en v6.16. */
+const ANCRE_FOND_Y = 0.88;
 
 /* Le cadrage horizontal, en revanche, dépend du format. Le décor fait
    2,3 fois plus large que haut : sur un téléphone debout, on n'en voit
@@ -8122,19 +8124,16 @@ const Entrees = {
         Sons.reveiller();
         if (Intro.actif){ Intro.passer(); return; }
         if (Enquete.dossierOuvert){ Enquete.basculerDossier(); return; }
+        /* Taper dans le décor passe la bulle en cours. C'est le geste le
+           plus fréquent du niveau : il passe avant tout le reste, sauf
+           l'intro et le dossier qui sont des écrans pleins. */
+        if (Enquete.avancerDialogue()) return;
         if (Enquete.accusation){
           const r2 = E.cv.getBoundingClientRect
             ? E.cv.getBoundingClientRect() : { left:0, top:0 };
           Enquete.viserAccusation((e.clientY - r2.top) / Camera.H);
           return;
         }
-        return;
-        const r = E.cv.getBoundingClientRect ? E.cv.getBoundingClientRect() : { left:0, top:0, width:Camera.L, height:Camera.H };
-        const img = Images.table.appart;
-        if (!img || !img.naturalWidth) return;
-        const larg = img.naturalWidth * (Camera.H / img.naturalHeight);
-        const x0 = -borne(Camera.xEnq, 0, Math.max(0, larg - Camera.L));
-        Enquete.viser(((e.clientX - r.left) - x0) / larg, (e.clientY - r.top) / Camera.H);
         return;
       }
       if (Jeu.phase !== "jeu") return;
@@ -8161,10 +8160,12 @@ const Entrees = {
         e.preventDefault();
         if (Enquete.accusation) Enquete.deplacerAccusation(1); else Enquete.marcher(1);
       } else if (t === "e" || t === "enter"){
-        e.preventDefault(); Sons.reveiller(); Enquete.action();
+        e.preventDefault(); Sons.reveiller();
+        if (!Enquete.avancerDialogue()) Enquete.action();
       } else if (t === " "){
         e.preventDefault(); Sons.reveiller();
-        if (Enquete.esquiveOuverte) Enquete.esquiver(); else Enquete.action();
+        if (Enquete.esquiveOuverte) Enquete.esquiver();
+        else if (!Enquete.avancerDialogue()) Enquete.action();
       } else if (t === "i"){
         e.preventDefault(); Sons.reveiller(); Enquete.parler();
       } else if (t === "tab"){

@@ -46,13 +46,10 @@ const Camera = {
        le décor est une image large, des personnages timides auraient
        l'air posés devant une carte postale. */
     this.base = borne(Math.min(hUtile * 0.60, L * 0.26), 92, 380);
-    /* La ligne de sol était calée sur la RÉSERVE d'interface (8 % du
-       bas). Ça laissait une bande de trottoir sous les pieds : les gens
-       de la file avaient l'air de flotter. La réserve reste entière pour
-       le calcul de la hauteur utile, mais le sol descend nettement plus
-       bas — les commandes du niveau 1 sont des pastilles dans les coins,
-       elles ne cachent pas le centre. */
-    this.sol = H - this.basUI * 0.45;
+    /* Le sol garde la réserve d'interface : c'est ANCRE_FOND_Y qui aligne
+       le trottoir du décor sur cette ligne, et non l'inverse. Mon
+       rafistolage de la v6.16 (0,45) traitait le symptôme. */
+    this.sol = H - this.basUI;
     this.calculerVise();
     this.recentrer();
   },
@@ -323,7 +320,12 @@ function dessinerBulle(b){
 /* Où se trouve le sol DANS l'image de décor : c'est une propriété du
    dessin, pas un réglage. Il reste très peu de trottoir en dessous, donc
    la ligne de sol du jeu doit rester basse à l'écran. */
-const ANCRE_FOND_Y = 0.86;
+/* Où se trouve la ligne de sol DANS l'image de fond : c'est elle qui
+   pose les pieds sur le trottoir. Les décors de la v6.18 ont leur
+   trottoir dégagé à 88 % de leur hauteur — mesuré, pas deviné. Une
+   valeur fausse ici et toute la file paraît flotter, quoi qu'on fasse
+   par ailleurs : c'est ce que je cherchais au mauvais endroit en v6.16. */
+const ANCRE_FOND_Y = 0.88;
 
 /* Le cadrage horizontal, en revanche, dépend du format. Le décor fait
    2,3 fois plus large que haut : sur un téléphone debout, on n'en voit

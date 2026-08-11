@@ -2435,6 +2435,20 @@ if (D){
     !/#legende \.(pt|pp)\{background/.test(html),
     "la pastille reprendrait sa vie propre");
 
+  /* --- le geste le plus fréquent du niveau doit être BRANCHÉ --- */
+  verifier("taper dans le décor passe la bulle : l'appel est bien câblé",
+    (() => {
+      /* La fonction existait, les tests l'appelaient, et RIEN dans le jeu
+         ne l'appelait : un script d'édition avait abandonné avant ce
+         fichier. Un test qui appelle la logique directement ne prouve
+         jamais qu'elle est reliée à un geste. */
+      const bloc = source.match(/E\.cv\.addEventListener\("pointerdown"[\s\S]*?\n    \}\);/);
+      return !!bloc && /Enquete\.avancerDialogue\(\)/.test(bloc[1] || bloc[0]);
+    })(), "le canevas ne fait pas avancer le dialogue");
+  verifier("et le clavier aussi",
+    (source.match(/Enquete\.avancerDialogue\(\)/g) || []).length >= 3,
+    "canevas + touche E + ESPACE");
+
   /* --- la pause doit être atteignable, et visible --- */
   titre("La pause");
   (() => {

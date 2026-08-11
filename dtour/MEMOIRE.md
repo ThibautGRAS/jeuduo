@@ -523,6 +523,30 @@ La réserve sert au calcul de la hauteur utile, pas à poser les pieds —
 le sol descend à `H - basUI * 0,45`. Les commandes du niveau 1 sont des
 pastilles dans les coins, elles ne cachent pas le centre.
 
+### Un script d'édition qui abandonne laisse le travail à moitié fait
+Le pire de la série, et il a survécu cinq versions. À la v6.12 j'ai
+annoncé « taper dans le décor passe la bulle » : le script éditait trois
+fichiers, il a **abandonné sur le deuxième** (motif ambigu, deux
+occurrences) et le troisième — le pilotage — n'a jamais été touché. La
+fonction existait, les tests l'appelaient, et **rien dans le jeu ne
+l'appelait**. Deux règles en sortent :
+1. Après un ABANDON, on relit ce qui a DÉJÀ été appliqué avant l'arrêt.
+   L'abandon protège du demi-changement dans un fichier, pas entre
+   plusieurs fichiers.
+2. Un test qui appelle la logique directement ne prouve jamais qu'elle
+   est reliée à un geste. Pour tout geste du joueur, un test doit
+   vérifier le CÂBLAGE — chercher l'appel dans le gestionnaire — et pas
+   seulement le comportement de la fonction.
+
+### La ligne de sol est déclarée dans le DÉCOR, pas dans l'interface
+Deux versions passées à déplacer `Camera.sol` alors que le réglage juste
+était `ANCRE_FOND_Y` : la fraction de l'IMAGE de fond où se trouve le
+trottoir. Le décor s'aligne sur la ligne de sol, pas l'inverse. Elle
+valait 0,86 pour des décors dont le trottoir dégagé est à 0,88 — d'où la
+file qui flottait. La bonne méthode : mesurer sur l'image (l'écart-type
+par ligne montre où le trottoir est uniforme), et le décor livré avec le
+niveau doit annoncer sa ligne de sol.
+
 ### Une fonctionnalité sans CSS n'existe pas
 `#pauseBtn`, `#pause`, `.secondaire`, `.choix` : le bouton de pause et son
 panneau étaient dans le HTML, câblés dans le code, avec `Pause.mettre()`,

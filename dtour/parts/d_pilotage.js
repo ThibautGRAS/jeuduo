@@ -539,19 +539,16 @@ const Entrees = {
         Sons.reveiller();
         if (Intro.actif){ Intro.passer(); return; }
         if (Enquete.dossierOuvert){ Enquete.basculerDossier(); return; }
+        /* Taper dans le décor passe la bulle en cours. C'est le geste le
+           plus fréquent du niveau : il passe avant tout le reste, sauf
+           l'intro et le dossier qui sont des écrans pleins. */
+        if (Enquete.avancerDialogue()) return;
         if (Enquete.accusation){
           const r2 = E.cv.getBoundingClientRect
             ? E.cv.getBoundingClientRect() : { left:0, top:0 };
           Enquete.viserAccusation((e.clientY - r2.top) / Camera.H);
           return;
         }
-        return;
-        const r = E.cv.getBoundingClientRect ? E.cv.getBoundingClientRect() : { left:0, top:0, width:Camera.L, height:Camera.H };
-        const img = Images.table.appart;
-        if (!img || !img.naturalWidth) return;
-        const larg = img.naturalWidth * (Camera.H / img.naturalHeight);
-        const x0 = -borne(Camera.xEnq, 0, Math.max(0, larg - Camera.L));
-        Enquete.viser(((e.clientX - r.left) - x0) / larg, (e.clientY - r.top) / Camera.H);
         return;
       }
       if (Jeu.phase !== "jeu") return;
@@ -578,10 +575,12 @@ const Entrees = {
         e.preventDefault();
         if (Enquete.accusation) Enquete.deplacerAccusation(1); else Enquete.marcher(1);
       } else if (t === "e" || t === "enter"){
-        e.preventDefault(); Sons.reveiller(); Enquete.action();
+        e.preventDefault(); Sons.reveiller();
+        if (!Enquete.avancerDialogue()) Enquete.action();
       } else if (t === " "){
         e.preventDefault(); Sons.reveiller();
-        if (Enquete.esquiveOuverte) Enquete.esquiver(); else Enquete.action();
+        if (Enquete.esquiveOuverte) Enquete.esquiver();
+        else if (!Enquete.avancerDialogue()) Enquete.action();
       } else if (t === "i"){
         e.preventDefault(); Sons.reveiller(); Enquete.parler();
       } else if (t === "tab"){

@@ -203,6 +203,15 @@ appartient à l'affaire, pas à l'indice :
   PENSE » suit le raisonnement : l'hypothèse, puis la piste, puis la
   contradiction. On sait toujours où en sont les têtes.
 
+**Le décor du niveau 1 annonce sa ligne de sol** (v6.18) : le trottoir
+dégagé est à 88 % de la hauteur de l'image, et `ANCRE_FOND_Y` l'aligne
+sur la ligne où marchent les gens. Les trois moments — jour, soir, nuit —
+partagent le même cadrage au pixel et sèment des clins d'œil aux autres
+niveaux : l'ardoise des cocktails de Francky, l'affiche de LA CHORIZO,
+la règle n°1 sur Hortense, l'avis du maire Marini, la gamelle de Risoto,
+le carton à pizza dans la poubelle et le chat roux endormi au premier
+étage.
+
 **Le bras peint n'existe plus** (v6.15). Vingt-huit clients dans la file,
 les deux héros redessinés en huit poses, et **plus personne n'a besoin
 d'un bras tracé au code** : `releverTeintes()` et `dessinerBras()` sont
