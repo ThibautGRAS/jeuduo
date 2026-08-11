@@ -203,6 +203,9 @@ appartient à l'affaire, pas à l'indice :
   PENSE » suit le raisonnement : l'hypothèse, puis la piste, puis la
   contradiction. On sait toujours où en sont les têtes.
 
+Les prompts qui servent à fabriquer toutes ces images sont réunis dans
+****, avec les règles apprises à chaque planche ratée.
+
 **Les champions du bar ont quatorze poses** (v6.23) : marche à quatre
 temps, course à deux, et la descente en quatre gestes — il attrape, il
 regarde ce qu'il tient, il boit, il reste avec le verre vide. C'est ce
