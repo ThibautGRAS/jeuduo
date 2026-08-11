@@ -476,7 +476,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v4.8</div>
+  <div id="version">CALLAGHAN v5.0</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -536,7 +536,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "4.8";
+const VERSION = "5.0";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -945,7 +945,7 @@ const IMAGES_NIVEAU2 = [
   "ind_miettes", "ind_chorizo", "ind_fromage", "ind_serviette",
   "ind_sauce", "ind_assiette", "ind_ticket", "ind_pattes", "ind_billet",
   "pizza_entiere", "pizza_entamee", "pizza_part", "pizza_boite_ouverte",
-  "susp_chat", "pers_teo", "pers_charles", "pers_soeur", "pers_francky", "pers_jojo", "pers_marini", "pers_martin", "pers_marini", "pers_martin",
+  "susp_chat", "pers_teo", "pers_charles", "pers_soeur", "pers_francky", "pers_jojo", "pers_marini", "pers_martin",
   "badge_indice", "badge_suspect",
 ];
 
@@ -3004,36 +3004,49 @@ const ZONES = [
    reste sur place, à récupérer avec le bon inspecteur. */
 const INDICES = [
   { id:"sauce",     sprite:"ind_sauce",     nom:"Sauce tomate",
-    analyse:"Sauce tomate. Encore tiède.", brut:"C'est rouge.", expert:true },
+    analyse:"Sauce tomate. Encore tiède.", brut:"C'est rouge.", expert:true,
+    q:"On a trouvé de la sauce tomate. Encore tiède.", okR:"Alors c'était récent. Moi, ça fait une heure que je n'ai pas bougé.", koR:"Tiède ? Vous êtes sûrs ? Enfin, je veux dire : et alors ?" },
   { id:"chorizo",   sprite:"ind_chorizo",   nom:"Rondelle de chorizo",
-    analyse:"Chorizo. Coupé fin, à la main.", brut:"Une rondelle. De quelque chose." },
+    analyse:"Chorizo. Coupé fin, à la main.", brut:"Une rondelle. De quelque chose.",
+    q:"Une rondelle de chorizo traînait. Coupée à la main.", okR:"Coupé à la main ? Alors ce n'est pas moi. Je déchire, je ne coupe pas.", koR:"À la main, oui... certains aiment le geste. Paraît-il." },
   { id:"miettes",   sprite:"ind_miettes",   nom:"Miettes de pâte",
-    analyse:"Miettes de pâte. Semées vers la droite.", brut:"Des miettes. Partout.", expert:true },
+    analyse:"Miettes de pâte. Semées vers la droite.", brut:"Des miettes. Partout.", expert:true,
+    q:"Des miettes, semées en chemin. Ça vous parle ?", okR:"Je balaie derrière moi. Toujours. Demandez à qui vous voulez.", koR:"Des miettes, des miettes... tout le monde sème des miettes. C'est humain." },
   { id:"fromage",   sprite:"ind_fromage",   nom:"Fromage refroidi",
-    analyse:"Fromage refroidi. {froid}, pas plus.", brut:"C'est collant." },
+    analyse:"Fromage refroidi. {froid}, pas plus.", brut:"C'est collant.",
+    q:"Le fromage a refroidi en {froid}. Le calcul est simple.", okR:"Alors comptez. À cette heure-là, on sait où j'étais.", koR:"{froid} ? C'est très... précis. On peut contester une durée ?" },
   /* `exige` limite un indice aux affaires qui le rendent lisible : des
      traces de pattes dans une affaire sans chat, c'est une piste qu'on
      ne peut jamais refermer. Les autres indices vont partout. */
   { id:"pattes",    sprite:"ind_pattes",    nom:"Traces de pattes", exige:"chat",
-    analyse:"Empreintes. Quatre coussinets. Un félin.", brut:"Quelqu'un a marché dedans.", expert:true },
+    analyse:"Empreintes. Quatre coussinets. Un félin.", brut:"Quelqu'un a marché dedans.", expert:true,
+    q:"Des traces de pattes. Le chat a suivi quelqu'un.", okR:"Il ne me suit jamais, moi. Je ne sens rien d'intéressant.", koR:"Ce chat suit tout le monde ! Enfin... surtout ceux qui portent à manger." },
   { id:"serviette", sprite:"ind_serviette", nom:"Serviette froissée",
-    analyse:"Serviette froissée. Quelqu'un s'est essuyé vite.", brut:"Un mouchoir. Bof." },
+    analyse:"Serviette froissée. Quelqu'un s'est essuyé vite.", brut:"Un mouchoir. Bof.",
+    q:"Une serviette froissée. On s'est essuyé en vitesse.", okR:"Je m'essuie lentement. C'est toute une éducation.", koR:"S'essuyer n'est pas un aveu. C'est de l'hygiène. Enfin, il me semble." },
   { id:"ticket",    sprite:"ind_ticket",    nom:"Ticket de livraison",
-    analyse:"Ticket de livraison. {heure}. Une pizza chorizo.", brut:"Un papier. Avec des chiffres." },
+    analyse:"Ticket de livraison. {heure}. Une pizza chorizo.", brut:"Un papier. Avec des chiffres.",
+    q:"Le ticket de livraison indique {heure}. Une chorizo.", okR:"Je n'ai rien entendu sonner. Ou alors j'ai le sommeil lourd.", koR:"{heure}... déjà ? Le temps passe vite quand... quand il passe." },
   { id:"menu",      sprite:"ind_ticket",    nom:"Menu du livreur", exige:"porte",
     analyse:"Un menu. Papier ordinaire, encre fraîche.",
-    brut:"{livreur} ? Je le connais. Il ne monte jamais au {etage}.", social:true },
+    brut:"{livreur} ? Je le connais. Il ne monte jamais au {etage}.", social:true,
+    q:"{livreur} ne monte jamais au {etage}. Quelqu'un est descendu.", okR:"Pas moi. Je ne descends jamais accueillir qui que ce soit.", koR:"Quelqu'un devait bien réceptionner. C'est du civisme." },
   { id:"assiette",  sprite:"ind_assiette",  nom:"Assiette utilisée",
-    analyse:"Assiette utilisée. Jamais rapportée à l'évier.", brut:"Une assiette. Sale." },
+    analyse:"Assiette utilisée. Jamais rapportée à l'évier.", brut:"Une assiette. Sale.",
+    q:"Une assiette utilisée, jamais rapportée à l'évier.", okR:"Je rapporte toujours la mienne. C'est une question de principe.", koR:"Rapporter, ne pas rapporter... on refait le procès de la vaisselle ?" },
   { id:"boite",     sprite:"pizza_boite_ouverte", nom:"Boîte ouverte",
-    analyse:"La boîte. Ouverte ici, pas à la cuisine.", brut:"La boîte ! Enfin, vide." },
+    analyse:"La boîte. Ouverte ici, pas à la cuisine.", brut:"La boîte ! Enfin, vide.",
+    q:"On a la boîte. Ouverte au salon, pas à la cuisine.", okR:"Au salon ? Les gens ne respectent plus rien.", koR:"On ouvre où on peut ! Où on veut. Où c'était... pratique." },
   { id:"part",      sprite:"pizza_part",    nom:"Part abandonnée",
-    analyse:"Une part sur {parts}, entamée puis reposée. Quelqu'un a été dérangé.", brut:"Une part ! On peut la manger ?" },
+    analyse:"Une part sur {parts}, entamée puis reposée. Quelqu'un a été dérangé.", brut:"Une part ! On peut la manger ?",
+    q:"Une part entamée, puis reposée. On a dérangé quelqu'un.", okR:"Reposer une part ? Quel gâchis. Ce n'est pas mon genre.", koR:"On peut être... interrompu. La vie interrompt. Ce soir-là, notamment." },
   { id:"billet",    sprite:"ind_billet",    nom:"Billet de cinq euros", exige:"argent",
     analyse:"Cinq euros. Posé bien à plat, pas tombé de poche.",
-    brut:"Cinq euros ! On rachète une pizza ?" },
+    brut:"Cinq euros ! On rachète une pizza ?",
+    q:"Cinq euros, posés à plat. Quelqu'un a payé quelque chose.", okR:"Ce n'est pas à moi. Je ne paie qu'en pièces, demandez au D'Tour.", koR:"Payer n'est pas avouer ! Payer, c'est le contraire de voler, justement !" },
   { id:"manette",   sprite:"ind_serviette", nom:"Manette grasse", exige:"salon",
-    analyse:"Une manette. Sale.", brut:"Des traces de doigts gras. Il a joué en mangeant.", social:true },
+    analyse:"Une manette. Sale.", brut:"Des traces de doigts gras. Il a joué en mangeant.", social:true,
+    q:"La manette est grasse. On a joué en mangeant.", okR:"Je ne touche pas à cette console. Elle me résiste.", koR:"On peut jouer ET manger. Le multitâche n'est pas un crime. Le gras non plus." },
 ];
 
 /* ---------- ce que l'autre en dit ----------
@@ -3272,6 +3285,18 @@ const SCENARIOS = [
   /* --- la sœur --- */
   { id:"pour_hortense", tags:["porte"], coupable:"soeur", cachettes:["frigo", "placards"],
     porteurs:["ticket", "assiette", "serviette"],
+    deduc:{
+      ticket:[[1, "Une pizza chorizo, livrée à {heure}. La préférée d'Hortense, non ?"],
+              [0, "La préférée d'Hortense. Note ça."]],
+      assiette:[[0, "Assiette utilisée, mais pas une trace de gras de pizza."],
+              [1, "Donc la pizza n'a pas été mangée. Elle a été déplacée."]],
+      serviette:[[0, "Serviette pliée, pas jetée. On a essuyé quelque chose de propre."],
+              [1, "On n'essuie pas ses mains. On essuie un plat qu'on range."]],
+    },
+    hypothese:[[1, "Je dis : le livreur. Il livre, il reprend, il revend."],
+               [0, "Le livreur ne revend rien. Mais quelqu'un a manipulé cette pizza sans la manger."]],
+    nerfs:["Vous comptez fouiller le frigo aussi ? Il y a un ordre, dans une maison.",
+           "Si vous la trouvez, ne la touchez pas. Elle... elle est à quelqu'un."],
     piste:[[0, "Elle n'a pas été volée. Elle a été mise de côté."],
            [1, "Mise de côté pour qui ?"]],
     trouvaille:[[0, "{Ou}. Emballée. Étiquetée, presque."],
@@ -3283,6 +3308,18 @@ const SCENARIOS = [
 
   { id:"la_porte", tags:["porte", "chat"], coupable:"soeur", cachettes:["commode", "portant"],
     porteurs:["ticket", "boite", "pattes"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. La porte a sonné une fois."],
+              [1, "Teo dit deux. La seconde, plus discrète."]],
+      boite:[[0, "La boîte a voyagé. Ouverte ici, refermée ailleurs."],
+              [1, "On ne promène pas une boîte. On la fait disparaître."]],
+      pattes:[[0, "Des empreintes, de la porte au couloir."],
+              [1, "Le chat a suivi quelqu'un. Les chats ne suivent que la nourriture."]],
+    },
+    hypothese:[[1, "C'est le chat. Il a ouvert la porte, mangé la pizza et refermé."],
+               [0, "Les chats ne referment pas. Quelqu'un d'autre est entré ce soir."]],
+    nerfs:["Vous vérifiez toutes les portes comme ça ?",
+           "D'accord, quelqu'un est venu. Mais ce n'est pas ce que vous croyez."],
     piste:[[0, "Quelqu'un est entré sans sonner."],
            [1, "Donc quelqu'un lui a ouvert."]],
     trouvaille:[[0, "{Ou}. Sous du linge propre."],
@@ -3294,6 +3331,18 @@ const SCENARIOS = [
 
   { id:"la_dette", tags:["argent", "salon"], coupable:"soeur", cachettes:["poubelle", "evier"],
     porteurs:["billet", "miettes", "boite"],
+    deduc:{
+      billet:[[0, "Cinq euros. Posé bien à plat, en évidence."],
+              [1, "Ce n'est pas un oubli. C'est un paiement."]],
+      miettes:[[0, "Des miettes en ligne droite. On a mangé en marchant."],
+              [1, "Chez soi, on mange en marchant. Un invité s'assoit."]],
+      boite:[[0, "Pliée, rangée. On a fait le tri après."],
+              [1, "Un voleur ne trie pas ses déchets."]],
+    },
+    hypothese:[[1, "Un cambrioleur honnête. Il vole, il paie, il recycle."],
+               [0, "Ce n'est pas un cambrioleur. C'est quelqu'un d'ici qui s'excuse."]],
+    nerfs:["Cinq euros, c'est le prix d'une pizza, non ? Je demande.",
+           "Bon. Le billet est à moi. Mais ce n'est pas un vol si on paie."],
     piste:[[0, "Des miettes, et cinq euros posés à côté."],
            [1, "Personne ne paie pour un vol."]],
     trouvaille:[[0, "{Ou}. La boîte, vide, pliée, rangée."],
@@ -3306,6 +3355,18 @@ const SCENARIOS = [
   /* --- Charles --- */
   { id:"amant", tags:["porte"], coupable:"charles", cachettes:["manteaux", "sac"],
     porteurs:["ticket", "serviette", "fromage"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Personne n'admet l'avoir réceptionnée."],
+              [1, "Quelqu'un l'a bien prise. Quelqu'un qui n'était pas censé être là."]],
+      serviette:[[0, "On s'est essuyé vite. Debout."],
+              [1, "On mange debout quand on guette la porte."]],
+      fromage:[[0, "Refroidi en {froid}. Elle a été mangée tout de suite."],
+              [1, "Tout de suite, et en silence. Personne n'a entendu de dîner."]],
+    },
+    hypothese:[[1, "Quelqu'un avait très faim et très peur. Un jogger ?"],
+               [0, "Un jogger ne monte pas au {etage}. Quelqu'un connaissait l'appartement."]],
+    nerfs:["Je peux partir ? J'ai... un rendez-vous.",
+           "Je n'étais pas là. Enfin, pas longtemps. Enfin, pas officiellement."],
     piste:[[0, "Il a mangé vite. Debout. Sans s'asseoir."],
            [1, "Quelqu'un qui ne voulait pas être vu."]],
     trouvaille:[[0, "{Ou}. Encore chaude."],
@@ -3317,6 +3378,18 @@ const SCENARIOS = [
 
   { id:"effacer", tags:["salon"], coupable:"charles", cachettes:["poubelle"],
     porteurs:["boite", "sauce", "assiette"],
+    deduc:{
+      boite:[[0, "Ouverte ici, pas à la cuisine."],
+              [1, "Et pourtant tout le reste est impeccable. Trop."]],
+      sauce:[[0, "Sauce tomate, encore tiède. La seule trace qu'on ait ratée."],
+              [1, "Quand on efface tout sauf une tache, c'est qu'on était pressé."]],
+      assiette:[[0, "Deux assiettes lavées, une seule utilisée."],
+              [1, "On ne lave pas l'assiette d'un fantôme. Sauf si le fantôme dînait."]],
+    },
+    hypothese:[[1, "L'appartement s'est nettoyé tout seul. Ça existe, les femmes de ménage de nuit ?"],
+               [0, "Personne ne nettoie ce qu'il n'a pas sali. Le ménage EST l'indice."]],
+    nerfs:["Vous trouvez ça propre ? Moi je trouve ça normal.",
+           "J'ai peut-être rangé deux ou trois choses. C'est un tort d'être ordonné ?"],
     piste:[[0, "Deux assiettes lavées. Une seule utilisée."],
            [1, "Quelqu'un a fait le ménage de sa propre présence."]],
     trouvaille:[[0, "{Ou}. Entière, sous le sac-poubelle."],
@@ -3328,6 +3401,18 @@ const SCENARIOS = [
 
   { id:"le_couloir", tags:["salon"], coupable:"charles", cachettes:["lit", "commode"],
     porteurs:["ticket", "miettes", "part"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Et aussitôt disparue du salon."],
+              [1, "Une pizza ne traverse pas un appartement toute seule."]],
+      miettes:[[0, "Des miettes jusqu'au couloir."],
+              [1, "Elles vont vers la chambre. Personne ne mange une pizza dans une chambre."]],
+      part:[[0, "Entamée, puis reposée. En plein milieu."],
+              [1, "On ne repose pas une part. Sauf si on frappe à la porte."]],
+    },
+    hypothese:[[1, "Un somnambule. Il mange, il marche, il ignore tout."],
+               [0, "Un somnambule ne s'interrompt pas. Quelqu'un a été dérangé, et il était réveillé."]],
+    nerfs:["Ce couloir... il mène où, déjà ? Je demande pour un ami.",
+           "On a frappé, d'accord ? On a frappé et j'ai paniqué."],
     piste:[[0, "Des miettes jusqu'au couloir."],
            [1, "Personne ne mange une pizza dans une chambre."]],
     trouvaille:[[0, "{Ou}. Avec une part entamée."],
@@ -3340,6 +3425,18 @@ const SCENARIOS = [
   /* --- TeoPedo --- */
   { id:"vieux_reflexe", tags:["porte"], coupable:"teo", cachettes:["frigo", "four"],
     porteurs:["ticket", "fromage", "serviette"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}, rangée aussitôt. Quelqu'un savait où."],
+              [1, "Quelqu'un qui connaît la maison. Ou qui l'a étudiée."]],
+      fromage:[[0, "Refroidi en {froid}. Mangée bien après la livraison."],
+              [1, "On a attendu. Un amateur n'attend pas."]],
+      serviette:[[0, "Pas une trace de doigt nulle part. Même pas sur la poignée."],
+              [1, "S'essuyer avant de toucher. Qui fait ça ?"]],
+    },
+    hypothese:[[1, "Personne n'a rien touché, donc personne n'est venu, donc la pizza s'est enfuie."],
+               [0, "Pas de traces, ce n'est pas personne. C'est quelqu'un de très entraîné."]],
+    nerfs:["Vous relevez les empreintes ? Vous n'en trouverez pas. Enfin, je suppose.",
+           "Il y a des choses que je faisais avant d'enseigner. L'histoire retient ce qu'elle veut."],
     piste:[[0, "Aucune trace sur la poignée. Aucune."],
            [1, "Ça s'apprend, ça ?"]],
     trouvaille:[[0, "{Ou}. Refermé proprement. Trop proprement."],
@@ -3351,6 +3448,18 @@ const SCENARIOS = [
 
   { id:"le_prof", tags:["salon"], coupable:"teo", cachettes:["biblio", "tv"],
     porteurs:["ticket", "boite", "miettes"],
+    deduc:{
+      ticket:[[0, "{heure}. Teo nous l'a dit avant qu'on trouve le ticket."],
+              [1, "Il connaissait l'heure avant nous. C'est ennuyeux."]],
+      boite:[[0, "Rangée à plat, méthodiquement. Un geste de collectionneur."],
+              [1, "Ou de professeur. Quelqu'un qui archive."]],
+      miettes:[[0, "Semées vers la droite. Vers le canapé."],
+              [1, "Le canapé où quelqu'un jure n'avoir pas bougé."]],
+    },
+    hypothese:[[1, "La pizza s'est archivée elle-même. Classement vertical."],
+               [0, "Quelqu'un de méthodique l'a traitée comme un document. Ça réduit la liste."]],
+    nerfs:["Vous datez les miettes, maintenant ? C'est... c'est de la bonne méthode.",
+           "La chronologie exacte ? Je peux vous la donner. Trop exactement, oui, je sais."],
     piste:[[0, "Il connaît l'heure de la livraison à la minute."],
            [1, "Il connaît beaucoup de choses à la minute."]],
     trouvaille:[[0, "{Ou}. Rangée par taille."],
@@ -3363,6 +3472,18 @@ const SCENARIOS = [
   /* --- Risoto, et les chaînes --- */
   { id:"le_chat_seul", tags:["chat", "salon"], coupable:"chat", cachettes:["canape", "lit"],
     porteurs:["pattes", "boite", "chorizo"],
+    deduc:{
+      pattes:[[0, "Quatre coussinets. Un félin, seul."],
+              [1, "Il nous regarde depuis tout à l'heure. Sans ciller."]],
+      boite:[[0, "Tombée du plan de travail, puis poussée. Deux chutes."],
+              [1, "On ne pousse pas une boîte avec des mains. On la porte."]],
+      chorizo:[[0, "Une rondelle, léchée sur une seule face."],
+              [1, "Léchée ? Les gens ne lèchent pas le chorizo. Enfin, pas en public."]],
+    },
+    hypothese:[[1, "Charles. Il a des lunettes noires, il est louche, c'est lui."],
+               [0, "Les lunettes ne mangent pas de pizza. Les traces sont plus basses. Beaucoup plus basses."]],
+    nerfs:["Il s'étire. Longuement. Comme quelqu'un qui gagne du temps.",
+           "Il a du rouge sur le poitrail et il ne se lave plus. Il a abandonné."],
     piste:[[0, "Ce n'est pas une main qui a fait ça."],
            [1, "Ne me dis pas que c'est le chat."]],
     trouvaille:[[0, "{Ou}. Poussée jusque là. Regarde les traces."],
@@ -3374,6 +3495,18 @@ const SCENARIOS = [
 
   { id:"la_chaine", tags:["chat", "salon"], coupable:"charles", cachettes:["sac", "poubelle"],
     porteurs:["pattes", "sauce", "boite"],
+    deduc:{
+      pattes:[[0, "Des empreintes autour du point de chute."],
+              [1, "Le chat a fait tomber quelque chose. Ça, c'est sûr."]],
+      sauce:[[0, "Une éclaboussure au sol. Nettoyée à moitié."],
+              [1, "Le chat ne nettoie pas. Quelqu'un est passé derrière lui."]],
+      boite:[[0, "Ramassée, puis cachée. Deux gestes, deux intentions."],
+              [1, "On ramasse par réflexe. On cache par peur."]],
+    },
+    hypothese:[[1, "Le chat a un complice. Un gang. Le milieu féin... félin."],
+               [0, "Pas un gang. Un témoin. Quelqu'un a vu la chute et n'a rien dit."]],
+    nerfs:["Le chat, là. Il me fixe. Dites-lui d'arrêter.",
+           "J'ai ramassé, c'est tout ! Être là, c'était déjà trop."],
     piste:[[0, "Le chat a renversé. Quelqu'un a ramassé."],
            [1, "Et n'a rien dit. C'est ça qui compte."]],
     trouvaille:[[0, "{Ou}. Emballée à la hâte."],
@@ -3386,6 +3519,18 @@ const SCENARIOS = [
   /* --- les invraisemblables --- */
   { id:"la_reconstitution", tags:["salon"], coupable:"teo", cachettes:["biblio", "tv", "commode"],
     porteurs:["ticket", "miettes", "assiette"],
+    deduc:{
+      ticket:[[0, "Le ticket a été défroissé. Repassé, presque."],
+              [1, "Quelqu'un l'a relu. Plusieurs fois."]],
+      miettes:[[0, "Deux couches de miettes. Deux repas au même endroit."],
+              [1, "On a mangé cette pizza deux fois ? Ce n'est pas possible. Si ?"]],
+      assiette:[[0, "Utilisée, replacée exactement sur sa marque."],
+              [1, "Exactement. Qui replace une assiette exactement ?"]],
+    },
+    hypothese:[[1, "Deux pizzas. Des jumelles. Séparées à la naissance."],
+               [0, "Une seule pizza, mangée deux fois. Quelqu'un a rejoué la scène."]],
+    nerfs:["La disposition vous paraît correcte ? On a fait au mieux.",
+           "Reconstituer, ce n'est pas voler. C'est de la méthode. J'ai peut-être remangé un peu."],
     piste:[[0, "Tout est disposé exactement comme au moment des faits."],
            [1, "Trop exactement."]],
     trouvaille:[[0, "{Ou}. Ce qu'il en reste est rangé par ordre de taille."],
@@ -3398,6 +3543,18 @@ const SCENARIOS = [
 
   { id:"le_pari", tags:["chat", "salon"], coupable:"charles", cachettes:["basse", "sac"],
     porteurs:["chorizo", "serviette", "part"],
+    deduc:{
+      chorizo:[[0, "Des rondelles éjectées. On a mangé à toute vitesse."],
+              [1, "On ne perd pas de chorizo en mangeant. Sauf en compétition."]],
+      serviette:[[0, "Trempée. On a transpiré."],
+              [1, "Transpirer en mangeant. Il y avait un enjeu."]],
+      part:[[0, "La dernière part, abandonnée à deux bouchées de la fin."],
+              [1, "Si près du but. Le temps a manqué."]],
+    },
+    hypothese:[[1, "Un concours de vitesse. Contre qui ? Le frigo ?"],
+               [0, "Contre quelqu'un qui n'a pas mangé sa moitié. Regarde qui n'a pas faim."]],
+    nerfs:["Quatre minutes, c'est jouable, non ? Pour une pizza entière. Je demande.",
+           "Le chat n'a jamais dit oui. Mais il n'a pas dit non. Un pari est un pari."],
     piste:[[0, "Il a mangé vite. Très vite."],
            [1, "Trop vite pour quelqu'un qui avait faim."]],
     trouvaille:[[0, "{Ou}. Ce qu'il en reste tient dans une main."],
@@ -3410,6 +3567,18 @@ const SCENARIOS = [
 
   { id:"le_congelateur", temoinCle:"teo", tags:["porte"], coupable:null, cachettes:["frigo"],
     porteurs:["ticket", "fromage", "boite"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}, chaude. Et introuvable dix minutes plus tard."],
+              [1, "Dix minutes. Personne ne mange en dix minutes. Enfin, presque personne."]],
+      fromage:[[0, "Ce fromage a gelé, puis dégelé. Les cristaux le disent."],
+              [1, "Gelé ? Dans un salon ?"]],
+      boite:[[0, "Le carton a pris le froid. Il est rigide."],
+              [1, "Une pizza qui a eu froid. L'affaire prend un tour météorologique."]],
+    },
+    hypothese:[[1, "Elle a été enlevée par un courant d'air très organisé."],
+               [0, "Elle n'a pas quitté l'appartement. Elle a juste changé de température."]],
+    nerfs:["Le congélateur conserve, c'est un fait scientifique. Je dis ça en passant.",
+           "Bon. J'ai peut-être conseillé le froid. Conseiller n'est pas voler."],
     piste:[[0, "Elle est passée du chaud au froid en dix minutes."],
            [1, "Personne ne fait ça par accident."]],
     trouvaille:[[0, "{Ou}. Dure comme un carreau."],
@@ -3422,6 +3591,18 @@ const SCENARIOS = [
 
   { id:"le_regime", tags:["argent", "salon"], coupable:"soeur", cachettes:["portant", "lit", "commode"],
     porteurs:["billet", "serviette", "chorizo"],
+    deduc:{
+      billet:[[0, "Cinq euros dans un pot de farine. On paie sa conscience."],
+              [1, "On se rembourse soi-même ? C'est de la comptabilité intime."]],
+      serviette:[[0, "Nouée. On a fermé quelque chose avec."],
+              [1, "On emballe une pizza pour ne plus la voir. Ça n'a pas suffi."]],
+      chorizo:[[0, "Une rondelle isolée, à mi-chemin de la cachette."],
+              [1, "Le chemin du retour. On a craqué en route."]],
+    },
+    hypothese:[[1, "Quelqu'un protège cette pizza. Un garde du corps ?"],
+               [0, "On la protège de quelqu'un. Peut-être de soi-même."]],
+    nerfs:["Le régime commence demain. Ça n'a aucun rapport, mais je le dis.",
+           "Quarante minutes ! J'ai tenu quarante minutes. Vous, vous auriez tenu combien ?"],
     piste:[[0, "Elle l'a cachée. Puis elle l'a retrouvée."],
            [1, "Se cacher quelque chose à soi-même, ça se paie."]],
     trouvaille:[[0, "{Ou}. Bien enfouie."],
@@ -3434,6 +3615,18 @@ const SCENARIOS = [
 
   { id:"la_sieste", temoinCle:"teo", tags:["salon", "dodo"], coupable:null, cachettes:["four", "evier"],
     porteurs:["ticket", "assiette", "miettes"],
+    deduc:{
+      ticket:[[0, "Livrée avant notre départ. J'étais encore là."],
+              [1, "Tu étais là. C'est noté."]],
+      assiette:[[0, "Utilisée avant notre départ. Elle est sèche depuis."],
+              [1, "Quelqu'un a mangé AVANT. L'enquête remonte le temps."]],
+      miettes:[[0, "Ces miettes... elles vont vers la porte d'entrée."],
+              [1, "Vers la sortie. Quelqu'un a mangé en partant. Qui est parti ?"]],
+    },
+    hypothese:[[1, "Le voleur nous a précédés. Un professionnel. Il connaissait nos horaires."],
+               [0, "Il connaissait surtout la pizza. Ce demi-souvenir me chiffonne."]],
+    nerfs:["Tu avais de la sauce sur le col en partant, Pierre-François. Je n'ai rien dit.",
+           "La sieste efface tout, chez certains. Je ne vise personne. Si : toi."],
     piste:[[0, "Une assiette utilisée avant notre départ."],
            [1, "Avant notre départ ?"]],
     trouvaille:[[0, "{Ou}. Et ce qu'il en reste était déjà là quand nous sommes partis."],
@@ -3446,6 +3639,18 @@ const SCENARIOS = [
 
   { id:"le_double", tags:["argent", "porte"], coupable:"charles", cachettes:["sac", "manteaux", "poubelle"],
     porteurs:["ticket", "boite", "billet"],
+    deduc:{
+      ticket:[[0, "Deux tickets. Deux heures différentes."],
+              [1, "Deux pizzas dans la même soirée. Le budget explose."]],
+      boite:[[0, "Deux cartons. Un gras, un neuf."],
+              [1, "On remplace une pizza comme on remplace un vase cassé."]],
+      billet:[[0, "Un billet préparé pour le second livreur."],
+              [1, "Payer en liquide, c'est ne pas laisser de trace. En théorie."]],
+    },
+    hypothese:[[1, "Le livreur est passé deux fois. Il s'ennuyait ?"],
+               [0, "On ne commande pas deux fois par ennui. On commande pour couvrir la première."]],
+    nerfs:["Deux pizzas, c'est une offre, parfois. Un menu duo. Ça existe.",
+           "J'ai recommandé la même, d'accord ? À l'identique. Personne ne devait voir la différence."],
     piste:[[0, "Deux tickets. Une seule livraison enregistrée."],
            [1, "Il y en avait deux, donc."]],
     trouvaille:[[0, "{Ou}. La première. Intacte, jamais ouverte."],
@@ -3458,6 +3663,18 @@ const SCENARIOS = [
 
   { id:"bonne_nuit", tags:["dodo", "salon", "argent"], coupable:"soeur", cachettes:["frigo", "placards"],
     porteurs:["ticket", "assiette", "billet"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Juste après la tournée de Francky."],
+              [1, "La tournée « bonne nuit les petits ». Après ça, plus personne n'a rien vu."]],
+      assiette:[[0, "Une seule assiette, couverts posés droits. On a mangé tranquillement."],
+              [1, "Dans le calme. Le calme de tout un appartement endormi."]],
+      billet:[[0, "Cinq euros, posés en évidence."],
+              [1, "Payer des gens qui dorment. C'est délicat, au fond."]],
+    },
+    hypothese:[[1, "Tout le monde dormait, donc personne n'a mangé, donc la pizza dort aussi."],
+               [0, "Quelqu'un ne dormait pas. Cherche qui a refusé le verre."]],
+    nerfs:["Je ne bois jamais. C'est un choix de santé. Sans rapport.",
+           "Ils ronflaient tous ! Qu'est-ce que vous vouliez que je fasse ? Qu'elle refroidisse ?"],
     piste:[[0, "Tout le monde dormait à {heure}. Tout le monde sauf une personne."],
            [1, "Celle qui n'avait rien bu."]],
     trouvaille:[[0, "{Ou}. Rangée pendant que les autres ronflaient."],
@@ -3471,6 +3688,18 @@ const SCENARIOS = [
   { id:"le_reveil", tags:["dodo", "alcool", "porte"], coupable:null, temoinCle:"teo",
     cachettes:["four", "evier", "placards"],
     porteurs:["ticket", "fromage", "menu"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Signée d'une main qui tremblait déjà."],
+              [1, "La tournée de Francky était passée par là."]],
+      fromage:[[0, "Refroidi sur place, longtemps. Personne ne l'a mangée chaude."],
+              [1, "Une pizza qu'on paie et qu'on ne mange pas. Le crime parfait, sans criminel."]],
+      menu:[[1, "{livreur} m'a dit avoir livré à des gens « très détendus »."],
+              [0, "Détendus. C'est un mot pour endormis."]],
+    },
+    hypothese:[[1, "Un voleur les a endormis au gaz ! C'est un coup de professionnel."],
+               [0, "Le gaz sentait le rhum. Cherche plutôt du côté du bar."]],
+    nerfs:["Après le deuxième verre, mes souvenirs sont... des hypothèses.",
+           "Je me souviens l'avoir posée quelque part de sûr. C'est le « où » qui manque."],
     piste:[[0, "Personne ne se souvient de rien après {heure}."],
            [1, "Ce n'est pas un alibi. C'est un cocktail."]],
     trouvaille:[[0, "{Ou}. Personne ne l'a bougée depuis."],
@@ -3484,6 +3713,18 @@ const SCENARIOS = [
   { id:"la_fuite", temoinCle:"teo", tags:["plomberie", "salon"], coupable:null,
     cachettes:["evier"],
     porteurs:["ticket", "sauce", "assiette"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. La soirée était encore sèche, à ce moment-là."],
+              [1, "Sèche ? Tu prépares quelque chose, toi."]],
+      sauce:[[0, "De la sauce diluée. Il y avait de l'eau par terre."],
+              [1, "De l'eau. Dans une affaire de pizza. Ça se complique."]],
+      assiette:[[0, "Rangée dans le mauvais placard. Avec la vaisselle d'urgence."],
+              [1, "La vaisselle d'urgence. Cet appartement a des procédures."]],
+    },
+    hypothese:[[1, "La pizza est tombée dans l'évier et a pris la fuite. Littéralement."],
+               [0, "Personne n'a fui. On a déménagé un placard en catastrophe, et elle a suivi."]],
+    nerfs:["Le siphon de Jojo tient très bien. Je tiens à le dire. Très bien.",
+           "On a tout vidé en urgence ! Dans le noir ! La pizza était... quelque part dans le tas."],
     piste:[[0, "Le sol est humide sous le placard du bas."],
            [1, "On a vidé ce placard en urgence. Et tout remis dedans."]],
     trouvaille:[[0, "{Ou}. Entre une bassine et une clé de douze."],
@@ -3497,6 +3738,18 @@ const SCENARIOS = [
   { id:"le_placard_haut", tags:["hauteur", "porte"], coupable:"soeur",
     cachettes:["placards"],
     porteurs:["ticket", "menu", "miettes"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Réceptionnée en bas, dit le ticket."],
+              [1, "En bas ? Quelqu'un attendait en bas. Quelqu'un de patient."]],
+      menu:[[1, "{livreur} m'a dit avoir croisé « une dame très grande » dans l'escalier."],
+              [0, "Très grande. Voilà un signalement qui restreint."]],
+      miettes:[[0, "Aucune miette au sol. Mais une, une seule, sur le haut du frigo."],
+              [1, "En haut ? Personne ici n'atteint ça sans tabouret."]],
+    },
+    hypothese:[[1, "Un géant est entré, a mangé une miette, et est reparti. Sobre, le géant."],
+               [0, "Pas un géant. Deux personnes : une qui demande, une qui atteint."]],
+    nerfs:["Vous avez regardé en haut ? Non, rien. Continuez.",
+           "Il m'a fallu de l'aide, d'accord ? On n'a pas tous des échelles dans les bras."],
     piste:[[0, "Elle est en haut. Bien en haut."],
            [1, "Personne ici n'atteint ça sans tabouret."]],
     trouvaille:[[0, "{Ou}. Sans une trace de tabouret par terre."],
@@ -3510,6 +3763,18 @@ const SCENARIOS = [
   { id:"les_deux_bars", tags:["alcool", "porte"], coupable:"charles",
     cachettes:["manteaux", "sac"],
     porteurs:["ticket", "serviette", "fromage"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Bien avant la fermeture du D'Tour."],
+              [1, "Donc elle a attendu ici pendant que la soirée continuait ailleurs."]],
+      serviette:[[0, "Une serviette en papier. D'un bar. Pas d'ici."],
+              [1, "L'Entrepotes. Quelqu'un est passé chez Jojo cette nuit."]],
+      fromage:[[0, "Refroidi en {froid}, puis déplacé froid."],
+              [1, "On a emporté une pizza froide. Personne ne fait ça consciemment."]],
+    },
+    hypothese:[[1, "Deux bars, une pizza : c'est un itinéraire de contrebande."],
+               [0, "C'est un itinéraire d'étourdi. Quelqu'un est repassé ici tard, et pas à jeun."]],
+    nerfs:["Le D'Tour ferme à quelle heure, déjà ? Simple curiosité.",
+           "Je suis remonté pour mon manteau ! La pizza... la pizza a dû suivre le manteau."],
     piste:[[0, "Deux additions. Deux bars. La même soirée."],
            [1, "Quelqu'un est rentré bien après les autres."]],
     trouvaille:[[0, "{Ou}. Froide, oubliée là."],
@@ -3523,6 +3788,18 @@ const SCENARIOS = [
   { id:"le_siphon", tags:["plomberie", "salon"], coupable:"teo",
     cachettes:["placards", "commode"],
     porteurs:["ticket", "sauce", "assiette"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Pendant que quelqu'un travaillait sous l'évier."],
+              [1, "Travailler pendant qu'on mange. Il y a plus discret comme alibi."]],
+      sauce:[[0, "De la sauce sur un joint neuf."],
+              [1, "On ne mange pas en bricolant. Enfin, on ne devrait pas."]],
+      assiette:[[0, "Propre, mais avec des traces de mastic sur le bord."],
+              [1, "Du mastic. Le dîneur avait les mains du plombier."]],
+    },
+    hypothese:[[1, "Jojo ! C'est son siphon, c'est sa sauce, c'est son crime."],
+               [0, "Jojo a posé le siphon il y a un mois. Le mastic frais est d'un autre. Un amateur appliqué."]],
+    nerfs:["Ce joint est parfaitement posé. Regardez ce travail. Regardez-le.",
+           "J'avais les mains libres, elle était là... Le corps décide, parfois. Le siphon, lui, tient."],
     piste:[[0, "Des outils sortis, un joint neuf, et les mains propres."],
            [1, "Quelqu'un a travaillé, puis s'est lavé les mains. Avant ou après ?"]],
     trouvaille:[[0, "{Ou}. Posée là le temps de finir le chantier."],
@@ -3536,6 +3813,18 @@ const SCENARIOS = [
   { id:"la_bassine", temoinCle:"soeur", tags:["plomberie", "porte"], coupable:null,
     cachettes:["evier", "poubelle"],
     porteurs:["ticket", "boite", "serviette"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Vingt minutes avant le début de la fuite."],
+              [1, "Cette pizza a connu une soirée difficile."]],
+      boite:[[0, "Le carton est gondolé. Il a pris l'eau par-dessous."],
+              [1, "Une boîte à pizza qui prend l'eau. On aura tout vu."]],
+      serviette:[[0, "Trempée, essorée, retrempée. Elle a servi de serpillière."],
+              [1, "L'appartement entier a lutté contre quelque chose d'humide."]],
+    },
+    hypothese:[[1, "La pizza a été noyée. C'est un règlement de comptes."],
+               [0, "Personne n'a noyé personne. On a improvisé avec ce qu'on avait sous la main."]],
+    nerfs:["Ça gouttait, je précise. Beaucoup. Il fallait un récipient plat.",
+           "La boîte était PLATE et ÉTANCHE. Enfin, étanche... plate."],
     piste:[[0, "Le carton est gondolé. Il a pris l'eau."],
            [1, "On s'est servi de la boîte comme d'une bassine."]],
     trouvaille:[[0, "{Ou}. Le carton a servi à autre chose qu'à transporter."],
@@ -3549,6 +3838,18 @@ const SCENARIOS = [
   { id:"le_tabouret", tags:["hauteur", "salon"], coupable:"charles",
     cachettes:["placards", "portant"],
     porteurs:["ticket", "miettes", "part"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Mangée en partie, aussitôt."],
+              [1, "En partie. Quelqu'un s'est arrêté en route. Par prudence ?"]],
+      miettes:[[0, "Des miettes au pied du tabouret. Et le tabouret a bougé."],
+              [1, "Trente centimètres. On remet mal ce qu'on remet vite."]],
+      part:[[0, "Une part entamée, emportée à moitié."],
+              [1, "On garde une part pour plus tard quand on compte revenir."]],
+    },
+    hypothese:[[1, "Le tabouret a mangé la pizza. Non ? Bon."],
+               [0, "Quelqu'un est monté dessus. On ne monte pas pour manger, on monte pour cacher."]],
+    nerfs:["Ce tabouret a toujours été là. Enfin, par là. Dans cette zone.",
+           "Je comptais revenir la chercher ! C'était une cachette, pas un vol. Une consigne."],
     piste:[[0, "Le tabouret de la cuisine a changé de place."],
            [1, "Quelqu'un est monté dessus. Puis l'a remis. Presque."]],
     trouvaille:[[0, "{Ou}. Il a fallu grimper."],
@@ -3562,6 +3863,18 @@ const SCENARIOS = [
   { id:"hors_de_portee", temoinCle:"teo", tags:["hauteur", "porte"], coupable:null,
     cachettes:["placards", "portant"],
     porteurs:["ticket", "fromage", "assiette"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Et rangée dans la minute."],
+              [1, "Rangée. Pas volée, pas mangée : rangée. C'est presque décevant."]],
+      fromage:[[0, "Refroidi lentement, à l'air libre. En hauteur, l'air circule."],
+              [1, "En hauteur ? Pourquoi tu regardes le plafond ?"]],
+      assiette:[[0, "Propre. Personne n'a mangé quoi que ce soit."],
+              [1, "Une affaire de pizza sans consommation de pizza. On touche à l'absurde."]],
+    },
+    hypothese:[[1, "Elle s'est volatilisée. Littéralement. Vers le haut."],
+               [0, "Tu plaisantes, mais les indices montent. Nous, on regarde à hauteur d'homme."]],
+    nerfs:["Vous avez le cou raide, vous deux ? Vous ne levez jamais la tête ?",
+           "Quelqu'un de grand a rangé. Point. La taille n'est pas un délit."],
     piste:[[0, "Nous avons regardé partout. À hauteur d'homme."],
            [1, "Personne n'a levé la tête."]],
     trouvaille:[[0, "{Ou}. À trente centimètres au-dessus de nos regards."],
@@ -3575,6 +3888,18 @@ const SCENARIOS = [
   { id:"la_tournee", tags:["alcool", "salon"], coupable:"teo",
     cachettes:["tv", "basse", "canape"],
     porteurs:["ticket", "part", "serviette"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. En pleine tournée générale."],
+              [1, "Une tournée, ça se termine toujours par quelqu'un qui a faim."]],
+      part:[[0, "Une part tombée à côté du canapé."],
+              [1, "On lui a apporté la pizza. Au canapé. Comme un room service."]],
+      serviette:[[0, "Coincée entre deux coussins."],
+              [1, "Le dîneur n'a pas quitté sa place. Pas une fois."]],
+    },
+    hypothese:[[1, "Le canapé est le centre de cette affaire. Arrêtons le canapé."],
+               [0, "Arrête plutôt celui qui n'en a pas bougé de la soirée."]],
+    nerfs:["On m'a APPORTÉ des choses. Je n'ai rien demandé. Enfin, pas clairement.",
+           "J'aimerais savoir qui me l'a apportée. Pour le remercier. Puis m'excuser."],
     piste:[[0, "Personne n'a compté les verres. Ni les parts."],
            [1, "Une tournée, ça se termine toujours par quelqu'un qui a faim."]],
     trouvaille:[[0, "{Ou}. Ce qu'il en reste a été mangé assis."],
@@ -3589,6 +3914,18 @@ const SCENARIOS = [
   { id:"inauguration", temoinCle:"soeur", tags:["officiel", "porte"], coupable:null,
     cachettes:["commode", "manteaux"],
     porteurs:["ticket", "menu", "serviette"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Le soir même d'une visite officielle."],
+              [1, "Une visite officielle ? Ici ? Il n'y avait rien à inaugurer."]],
+      menu:[[1, "{livreur} dit avoir serré la main d'un monsieur « très élu »."],
+              [0, "Très élu. Marini est monté jusqu'ici."]],
+      serviette:[[0, "Une serviette avec un tampon de la mairie."],
+              [1, "On tamponne les serviettes, maintenant. L'administration ne recule devant rien."]],
+    },
+    hypothese:[[1, "L'État a saisi la pizza. C'est fiscal."],
+               [0, "Pas saisi : recouvert. Cherche sous quelque chose d'officiel."]],
+    nerfs:["Le maire est resté longtemps. Il parlait, il signait, il posait des choses partout.",
+           "Son parapheur ! Il l'a posé sur quelque chose de plat et il est parti serrer d'autres mains."],
     piste:[[0, "Un papier officiel signé ce soir, à cette adresse."],
            [1, "Il n'y avait rien à inaugurer ici."]],
     trouvaille:[[0, "{Ou}. Sous un parapheur de la mairie."],
@@ -3602,6 +3939,18 @@ const SCENARIOS = [
   { id:"piece_a_conviction", temoinCle:"teo", tags:["officiel", "salon"], coupable:null,
     cachettes:["placards", "tv"],
     porteurs:["ticket", "assiette", "miettes"],
+    deduc:{
+      ticket:[[0, "Le ticket porte une annotation au stylo officiel : « NON CONFORME »."],
+              [1, "On a contrôlé cette pizza. Administrativement."]],
+      assiette:[[0, "Étiquetée. Il y a un numéro de scellé dessous."],
+              [1, "Un scellé. Quelqu'un a pris cette soirée très au sérieux."]],
+      miettes:[[0, "Alignées. On dirait qu'elles ont été... inventoriées."],
+              [1, "Des miettes numérotées. Je ne sais plus si on enquête ou si on audite."]],
+    },
+    hypothese:[[1, "La pizza a été arrêtée. Il lui faut un avocat."],
+               [0, "Saisie, plutôt. Cherche un document, un tampon, une procédure."]],
+    nerfs:["Le maire a dit « buffet non conforme ». J'ai cru à une blague. Il avait le tampon.",
+           "Elle est quelque part sous scellé municipal. Techniquement, la toucher est un délit."],
     piste:[[0, "La boîte porte un tampon. Un vrai tampon."],
            [1, "Quelqu'un a considéré cette pizza comme une affaire d'État."]],
     trouvaille:[[0, "{Ou}. Avec une étiquette collée dessus."],
@@ -3615,6 +3964,18 @@ const SCENARIOS = [
   { id:"la_charmante", tags:["officiel", "porte"], coupable:"charles",
     cachettes:["manteaux", "sac", "commode"],
     porteurs:["ticket", "serviette", "menu"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Pile au début d'une conversation très longue."],
+              [1, "Vingt minutes de conversation. Vingt minutes sans témoin côté cuisine."]],
+      serviette:[[0, "Pliée en éventail. Quelqu'un a voulu faire bonne impression."],
+              [1, "On ne plie pas en éventail pour un chat. Il y avait du beau monde."]],
+      menu:[[1, "{livreur} dit qu'un vieux monsieur galant occupait tout le salon."],
+              [0, "Galant et sonore. La diversion parfaite. Involontaire, mais parfaite."]],
+    },
+    hypothese:[[1, "Marini a hypnotisé l'appartement et mangé la pizza. À quatre-vingts ans."],
+               [0, "Marini a hypnotisé, oui. Mais quelqu'un d'autre en a profité, en silence."]],
+    nerfs:["Ce monsieur parlait fort, non ? On ne s'entendait plus penser.",
+           "Tout le monde le regardait LUI. C'était... c'était le moment ou jamais."],
     piste:[[0, "Quelqu'un a monopolisé l'attention pendant vingt minutes."],
            [1, "Et pendant ce temps, personne ne regardait la cuisine."]],
     trouvaille:[[0, "{Ou}. Pendant que tout le monde écoutait poliment."],
@@ -3629,6 +3990,18 @@ const SCENARIOS = [
   { id:"le_registre", tags:["securite", "porte"], coupable:"soeur",
     cachettes:["commode", "portant", "lit"],
     porteurs:["ticket", "menu", "assiette"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Entrée numéro vingt-et-un du registre de Martin."],
+              [1, "Martin compte les pizzas aussi ? Cet homme est un trésor."]],
+      menu:[[1, "{livreur} confirme : Martin l'a fait signer en bas. À l'entrée ET à la sortie."],
+              [0, "Un livreur tracé. Il ne nous manque que les habitants."]],
+      assiette:[[0, "Utilisée entre deux rondes. La fenêtre est étroite."],
+              [1, "Étroite, et à l'intérieur. Quelqu'un qui n'est jamais sorti."]],
+    },
+    hypothese:[[1, "Vingt-deux moins dix-neuf : trois suspects. Voire trois complices !"],
+               [0, "Ou trois personnes restées, dont deux endormies. Le registre réduit tout."]],
+    nerfs:["Martin note vraiment TOUT ? Les heures ? Les... allées et venues ?",
+           "Je ne suis pas sortie, c'est vrai. Mais rester chez soi n'est pas un crime !"],
     piste:[[0, "Vingt-deux entrées, dix-neuf sorties."],
            [1, "Trois personnes sont restées. Une seule n'a jamais bougé."]],
     trouvaille:[[0, "{Ou}. Sans jamais avoir quitté l'étage."],
@@ -3642,6 +4015,18 @@ const SCENARIOS = [
   { id:"la_ronde", tags:["securite", "salon"], coupable:"charles",
     cachettes:["sac", "manteaux", "poubelle"],
     porteurs:["ticket", "miettes", "part"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Quelques minutes avant la ronde de Martin."],
+              [1, "Une ronde à la minute près. Difficile de sortir un carton discrètement."]],
+      miettes:[[0, "Des miettes dans l'escalier de service. Puis plus rien."],
+              [1, "On est descendu, puis remonté. Vite."]],
+      part:[[0, "Une part écrasée. On a posé le carton dessus, en catastrophe."],
+              [1, "La catastrophe a une heure : celle de la ronde."]],
+    },
+    hypothese:[[1, "Martin a confisqué la pizza pendant sa ronde. Zèle professionnel."],
+               [0, "Martin note, il ne confisque pas. Quelqu'un a croisé sa ronde et paniqué."]],
+    nerfs:["Ce Martin... il est ponctuel comment, exactement ? À la minute ? À la seconde ?",
+           "Je l'ai entendu monter ! Vous auriez fait quoi, vous, avec un carton dans les bras ?"],
     piste:[[0, "Une ronde à {heure}, à la minute près."],
            [1, "Et quelqu'un est descendu avec un carton plat juste après."]],
     trouvaille:[[0, "{Ou}. Prête à sortir de l'immeuble."],
@@ -3655,6 +4040,18 @@ const SCENARIOS = [
   { id:"le_comptage", tags:["securite", "argent", "salon"], coupable:"teo",
     cachettes:["canape", "basse", "tv"],
     porteurs:["ticket", "part", "billet"],
+    deduc:{
+      ticket:[[0, "Une pizza de {parts} parts, dit le ticket."],
+              [1, "Martin dit qu'il en manque trois. Il a recompté. Deux fois."]],
+      part:[[0, "Les parts restantes sont intactes. Découpe nette, aucune hésitation."],
+              [1, "On a prélevé. Régulièrement. Trois fois exactement."]],
+      billet:[[0, "Cinq euros. Le prix de trois parts, au prorata."],
+              [1, "Quelqu'un a payé SA part. Au centime. C'est un comptable ou un maniaque."]],
+    },
+    hypothese:[[1, "Trois voleurs, une part chacun. Un gang discipliné."],
+               [0, "Un seul, en trois services. La régularité est une signature."]],
+    nerfs:["Trois parts, ce n'est pas une pizza. C'est une dégustation prolongée.",
+           "J'ai payé au prorata ! Qui paie au prorata, à part un honnête homme ?"],
     piste:[[0, "Une pizza de {parts} parts. Il en manque exactement trois."],
            [1, "Trois. Pas deux, pas quatre."]],
     trouvaille:[[0, "{Ou}. Avec ce qu'il en reste, compté."],
@@ -3667,6 +4064,18 @@ const SCENARIOS = [
 
   { id:"la_tarte", temoinCle:"soeur", tags:["porte", "chat"], coupable:null, cachettes:["placards", "evier"],
     porteurs:["ticket", "chorizo", "assiette"],
+    deduc:{
+      ticket:[[0, "Livrée à {heure}. Et pourtant, une odeur de citron flotte encore."],
+              [1, "Du citron dans une affaire de chorizo. Quelqu'un est venu avec autre chose."]],
+      chorizo:[[0, "Une rondelle. Posée SUR une trace de meringue."],
+              [1, "De la meringue. Elle est passée. ELLE."]],
+      assiette:[[0, "Deux assiettes : une grasse, une sucrée."],
+              [1, "Un échange. On a troqué quelque chose contre quelque chose."]],
+    },
+    hypothese:[[1, "Hortense a volé la pizza et laissé une bombe. Une tarte. Pareil."],
+               [0, "Hortense ne vole pas. Elle échange, elle marque, elle repart. Cherche la tarte, tu trouveras la pizza."]],
+    nerfs:["Ma sœur est passée, oui. En coup de vent. Un coup de vent au citron.",
+           "Elle a laissé une tarte « en échange ». La pizza n'a pas bougé, je vous dis !"],
     piste:[[0, "Quelqu'un est venu, a échangé quelque chose, et est reparti."],
            [1, "Échangé ?"]],
     trouvaille:[[0, "{Ou}. À la place d'autre chose."],
@@ -3743,6 +4152,24 @@ const Affaire = {
   },
 
   bonneReponse(){ return this.coupable ? this.coupable.id : "personne"; },
+  /* La lecture de CET indice dans CETTE affaire : c'est elle qui fait
+     avancer l'histoire. L'écho générique ne sert plus qu'au garnissage. */
+  deduc(id){
+    const d = this.scenario && this.scenario.deduc && this.scenario.deduc[id];
+    return d ? d.map(p => [p[0], remplir(p[1])]) : null;
+  },
+  /* La première théorie, à deux indices : Thibaut propose l'absurde,
+     Pierre-François corrige. Elle est fausse exprès — c'est le chemin
+     qui est drôle, pas l'arrivée. */
+  hypothese(){
+    const h = this.scenario && this.scenario.hypothese;
+    return h ? h.map(p => [p[0], remplir(p[1])]) : null;
+  },
+  /* Ce que le témoin clé lâche sous la pression du dossier. */
+  nerfs(n){
+    const t = this.scenario && this.scenario.nerfs;
+    return t && t[n] ? remplir(t[n]) : null;
+  },
   /* Qui craque. Dans les affaires où personne n'a rien volé, il n'y a
      pas de coupable à confondre : c'est le témoin clé qui lâche la
      phrase qui change tout. Sans lui, trois affaires sur dix-sept
@@ -4213,18 +4640,35 @@ const Enquete = {
   /* `qui` est soit l'indice d'un inspecteur, soit { temoin:i } : la file
      sert aux deux, sinon la réponse d'un témoin aurait dû passer par un
      minuteur séparé. */
+  /* Le temps de lire une réplique dépend de sa longueur : une cadence
+     fixe faisait disparaître les longues avant qu'on les ait finies, et
+     traîner les courtes. */
+  dureeLecture(txt){ return borne(1.4 + (txt ? txt.length : 0) * 0.055, 2.2, 5.2); },
   dialogue(paires, delai){
-    this.fileDial = (this.fileDial || []).concat(paires.map((p, i) => ({
-      qui:p[0], txt:p[1], quand:(delai || 0) + i * 1.5,
-    })));
+    /* À l'intérieur d'une salve, chaque réplique attend la fin de
+       lecture de la précédente : la salve s'étire d'elle-même quand les
+       textes s'allongent. Entre salves, chacune garde son départ — une
+       réponse de témoin ne doit pas attendre un vieux bavardage, les
+       bulles s'empilent pour ça. */
+    let quand = (delai || 0);
+    this.fileDial = (this.fileDial || []).concat(paires.map(p => {
+      const r = { qui:p[0], txt:p[1], quand, lecture:this.dureeLecture(p[1]) };
+      quand += r.lecture * 0.8;
+      return r;
+    }));
   },
   majDialogue(dt){
     if (!this.fileDial || !this.fileDial.length) return;
     for (const r of this.fileDial) r.quand -= dt;
-    while (this.fileDial.length && this.fileDial[0].quand <= 0){
-      const r = this.fileDial.shift();
-      if (r.qui && r.qui.temoin !== undefined) Effets.parole(r.qui, r.txt, 2.6);
-      else if (this.inspecteurs[r.qui]) Effets.parole({ heros:this.inspecteurs[r.qui].heros }, r.txt, 2.2);
+    /* On tire par échéance, pas par ordre d'insertion : une réponse de
+       témoin insérée après une déduction plus tardive partait APRÈS
+       elle — la question restait sans réponse pendant quatre secondes. */
+    const prets = this.fileDial.filter(r => r.quand <= 0).sort((a, b) => a.quand - b.quand);
+    if (!prets.length) return;
+    this.fileDial = this.fileDial.filter(r => r.quand > 0);
+    for (const r of prets){
+      if (r.qui && r.qui.temoin !== undefined) Effets.parole(r.qui, r.txt, r.lecture);
+      else if (this.inspecteurs[r.qui]) Effets.parole({ heros:this.inspecteurs[r.qui].heros }, r.txt, r.lecture);
     }
   },
   poserBadge(nom){ this.badge = nom; this.badgeT = 0; },
@@ -4324,21 +4768,37 @@ const Enquete = {
       /* On annonce ce qu'on a trouvé et où : sans le lieu, le dossier
          devient une liste d'objets sans enquête. */
       this.dernier = ind.nom + " — " + z.ref.nom;
-      Effets.parole({ heros:ins.heros }, remplir((pf && !ind.social) ? ind.analyse : ind.brut), 2.6);
-      const echo = ECHOS[ind.id];
-      if (echo) this.dialogue([[1 - this.actifIdx, echo[pf ? 0 : 1]]], 1.4);
+      const annonce = remplir((pf && !ind.social) ? ind.analyse : ind.brut);
+      Effets.parole({ heros:ins.heros }, annonce, this.dureeLecture(annonce));
+      /* Les indices porteurs se lisent dans CETTE affaire : les deux
+         voix relient l'objet à l'histoire. Le garnissage garde son écho
+         générique — une fausse piste ne mène nulle part, c'est le but. */
+      const ded = Affaire.deduc(ind.id);
+      if (ded) this.dialogue(ded, 1.2);
+      else {
+        const echo = ECHOS[ind.id];
+        if (echo) this.dialogue([[1 - this.actifIdx, echo[pf ? 0 : 1]]], 1.2);
+      }
       Sons.reussite(Math.min(7, this.indices));
       this.secousse = 0.25;
+      /* Le raisonnement avance à voix haute : théorie de travers à deux
+         indices, piste sérieuse à quatre. Entre les deux, on a le droit
+         de se tromper — c'est même recommandé. */
+      if (this.indices === 2){
+        const h = Affaire.hypothese();
+        if (h) this.dialogue(h, 1.0);
+      }
       if (this.indices === 3) this.dire("Assez pour accuser. Mais où est la pizza ?", 2.8);
       else if (this.indices === 4 && !this.pisteDite){
         this.pisteDite = true;
-        this.dialogue(Affaire.piste(), 3.0);
+        this.dialogue(Affaire.piste(), 1.0);
       }
     } else {
       z.fouillee = true; this.fouilles++;
       this.fausses++;
       const r = RIEN[z.ref.id];
-      Effets.parole({ heros:ins.heros }, remplir(r ? (pf ? r.pf : r.th) : "Rien."), 2.4);
+      const lecture = remplir(r ? (pf ? r.pf : r.th) : "Rien.");
+      Effets.parole({ heros:ins.heros }, lecture, this.dureeLecture(lecture));
       Sons.bip(190, 0.16, "sine", 0.14, 130);
     }
     ins.cible = -1;
@@ -4353,10 +4813,45 @@ const Enquete = {
     return true;
   },
 
+  /* Le premier indice du dossier qu'on n'a pas encore opposé à cette
+     personne. C'est ce qui fait qu'un interrogatoire n'est plus le même
+     avant et après une fouille : on revient VOIR les gens. */
+  confrontation(s){
+    if (!s.confrontes) s.confrontes = {};
+    const porteurs = Affaire.scenario.porteurs;
+    const cartes = Dossier.cartes.map(c => c.id)
+      .sort((a, b) => (porteurs.indexOf(b) >= 0) - (porteurs.indexOf(a) >= 0));
+    for (const id of cartes){
+      if (s.confrontes[id]) continue;
+      const ind = INDICES.find(i => i.id === id);
+      if (ind && ind.q) return ind;
+    }
+    return null;
+  },
+
   interroger(is){
     const s = SUSPECTS[is];
     const ins = this.actifIns();
     const pf = this.estPF(ins);
+    const cle = s.id === Affaire.temoinCle();
+
+    /* Thibaut oppose le dossier aux gens : chaque indice trouvé rouvre
+       les entretiens, une fois par personne. L'innocent referme la
+       piste ; le témoin clé s'enfonce d'un demi-aveu. Le premier
+       passage reste à l'anecdote — c'est elle qui porte l'affaire — et
+       le chat ne répond qu'aux sujets qui le concernent. */
+    const conf = (!pf && s.id !== "chat" && s.tour > 0) ? this.confrontation(s) : null;
+    if (conf){
+      s.confrontes[conf.id] = true;
+      s.vus++;
+      const q = remplir(conf.q);
+      Effets.parole({ heros:ins.heros }, q, this.dureeLecture(q));
+      Sons.bip(540, 0.08, "sine", 0.1);
+      this.dialogue([[{ temoin:is }, remplir(cle ? conf.koR : conf.okR)]], 1.1);
+      this.apresEntretien(s, is, pf, cle);
+      return;
+    }
+
     const sujet = s.sujets[s.tour % s.sujets.length];
     s.tour++;
     if (pf) s.vusPF++; else s.vus++;
@@ -4364,14 +4859,21 @@ const Enquete = {
     /* Question puis réponse, sur le MÊME sujet. Avant, les deux listes
        défilaient séparément : on demandait l'heure et on s'entendait
        répondre qu'il y avait deux pizzas. */
-    Effets.parole({ heros:ins.heros }, remplir(pf ? sujet.qPF : sujet.qTH), 2.0);
+    const q = remplir(pf ? sujet.qPF : sujet.qTH);
+    Effets.parole({ heros:ins.heros }, q, this.dureeLecture(q));
     Sons.bip(pf ? 470 : 540, 0.08, "sine", 0.1);
     const reponse = pf ? sujet.pf : (s.coupable ? sujet.ko : sujet.ok);
-    this.dialogue([[{ temoin:is }, remplir(reponse)]], 1.25);
+    this.dialogue([[{ temoin:is }, remplir(reponse)]], 1.1);
 
+    this.apresEntretien(s, is, pf, cle);
+  },
+
+  /* Tout ce qui suit une réponse, quel que soit le chemin qui y a mené :
+     remarque de fond, provocation d'Hortense, nerfs, contradiction. */
+  apresEntretien(s, is, pf, cle){
     /* Une remarque de fond au premier passage : ce qu'on voit, pas ce
        qu'on entend. Elle vaut pour les deux. */
-    if (s.vus + s.vusPF === 1) this.dialogue([[1 - this.actifIdx, s.fond]], 2.9);
+    if (s.vus + s.vusPF === 1) this.dialogue([[1 - this.actifIdx, s.fond]], 1.0);
 
     /* Parler à la sœur d'Hortense revient à la prévenir. Elle le dit
        elle-même, pour qu'on comprenne ce qui va suivre. */
@@ -4380,7 +4882,22 @@ const Enquete = {
         "Je viens de prévenir ma sœur, au fait.",
         "Ma sœur adore ce genre d'histoires. Je lui envoie un message.",
         "Elle passait justement dans le quartier.",
-      ])]], 2.6);
+      ])]], 1.0);
+    }
+
+    /* Le témoin clé craque par paliers : à trois indices il en dit trop,
+       à cinq il ne tient plus. C'est le dossier qui parle, pas la
+       question — les deux inspecteurs y ont droit. */
+    if (cle){
+      if (this.indices >= 5 && !s.nerf2){
+        s.nerf2 = true; s.nerf1 = true;   /* le palier du dessous ne repassera pas après */
+        const n = Affaire.nerfs(1);
+        if (n) this.dialogue([[{ temoin:is }, n]], 1.2);
+      } else if (this.indices >= 3 && !s.nerf1){
+        s.nerf1 = true;
+        const n = Affaire.nerfs(0);
+        if (n) this.dialogue([[{ temoin:is }, n]], 1.2);
+      }
     }
 
     if (pf){
@@ -4395,9 +4912,9 @@ const Enquete = {
 
     /* Assez d'indices en poche et la bonne personne en face : la
        contradiction saute aux yeux. Une seule fois. */
-    if (this.indices >= 4 && s.id === Affaire.temoinCle() && !s.coince){
+    if (this.indices >= 4 && cle && !s.coince){
       s.coince = true;
-      this.dialogue([[this.actifIdx, Affaire.contradiction()]], 2.9);
+      this.dialogue([[this.actifIdx, Affaire.contradiction()]], 1.2);
       this.poserBadge("suspect");
       Sons.reussite(6);
     }
@@ -4413,6 +4930,20 @@ const Enquete = {
   /* Ce qu'il manque pour conclure, en clair. Le joueur ne doit pas
      avoir à deviner qu'il faut AUSSI avoir retrouvé la pizza. */
   peutConclure(){ return this.indices >= 3; },
+  /* L'état du raisonnement, pour le dossier : la contradiction si elle
+     est tombée, sinon la piste si elle est dite, sinon l'hypothèse de
+     travers — le dossier raconte où en sont les têtes, pas seulement
+     ce qu'il y a dans les poches. */
+  theorie(){
+    const coince = SUSPECTS.find(x => x.coince);
+    if (coince) return ["« " + Affaire.contradiction() + " »", "— " + coince.nom + " n'a pas nié."];
+    if (this.pisteDite) return Affaire.piste().map(p => "« " + p[1] + " »");
+    if (this.indices >= 2){
+      const h = Affaire.hypothese();
+      if (h) return h.map(p => "« " + p[1] + " »");
+    }
+    return this.indices > 0 ? ["Trop tôt pour une théorie."] : [];
+  },
   cePquiManque(){
     if (this.indices < 3) return "Il faut au moins trois indices.";
     if (!this.pizza) return "Il faut encore retrouver la pizza.";
@@ -4681,28 +5212,51 @@ const EnqVue = {
       b.bl = m.bl; b.bh = m.bh;
       b.y = b.base - H * 0.02;
       b.x0 = borne(b.px - b.bl / 2, 4, Math.max(4, Camera.L - b.bl - 4));
-      /* D'abord on remonte, tant qu'il reste de la place. */
-      let garde = 0, libre = false;
-      while (!libre && garde++ < 12){
+      /* D'abord on remonte, tant qu'il reste de la place. Le piège
+         corrigé ici : quand le plafond bloquait la remontée, le drapeau
+         `libre` restait vrai et AUCUN repli ne s'exécutait — les bulles
+         restaient l'une sur l'autre. Le plafond doit déclencher le
+         repli, pas l'annuler. */
+      let garde = 0, libre = false, plafonne = false;
+      while (!libre && !plafonne && garde++ < 12){
         libre = true;
         for (const q of posees){
           if (!chevauche(b, q)) continue;
+          libre = false;
           const remonte = q.y - q.bh - marge;
-          if (remonte - b.bh < plafond) break;      /* plus de place en hauteur */
-          b.y = remonte; libre = false; break;
+          if (remonte - b.bh < plafond) plafonne = true;   /* plus de place en hauteur */
+          else b.y = remonte;
+          break;
         }
       }
-      /* Puis, si le plafond est atteint, on se décale sur le côté. */
-      if (!libre){
-        b.y = Math.max(b.y, plafond + b.bh);
-        for (let essai = 0; essai < 8; essai++){
-          const gene = posees.find(q => chevauche(b, q));
-          if (!gene) break;
-          const versDroite = b.px >= gene.px;
-          b.x0 = versDroite ? gene.x0 + gene.bl + marge : gene.x0 - b.bl - marge;
-          b.x0 = borne(b.x0, 4, Math.max(4, Camera.L - b.bl - 4));
-          b.px = b.x0 + b.bl / 2;
+      /* Puis, si le plafond est atteint, on cherche un TROU dans la
+         rangée : pousser vers un côté puis se faire rabattre par le
+         bord de l'écran re-superposait les bulles larges — c'était la
+         dernière cause de recouvrement. On balaie la rangée de gauche à
+         droite et on prend la première place qui tient. */
+      /* Puis, si le plafond est atteint, on cherche un TROU, rangée par
+         rangée depuis le plafond : une seule rangée ne suffit pas — une
+         bulle centrée la remplit à elle seule, et pousser vers un côté
+         puis se faire rabattre par le bord re-superposait tout. */
+      if (plafonne){
+        let y = plafond + b.bh, cale = false;
+        for (let rang = 0; rang < 5 && !cale; rang++){
+          b.y = y;
+          const bande = posees.filter(q =>
+            (b.y - b.bh) < q.y + marge && (q.y - q.bh) < b.y + marge)
+            .sort((q1, q2) => q1.x0 - q2.x0);
+          let x = 4, place = null;
+          for (const q of bande){
+            if (x + b.bl + marge <= q.x0){ place = x; break; }
+            x = Math.max(x, q.x0 + q.bl + marge);
+          }
+          if (place == null && x + b.bl <= Camera.L - 4) place = x;
+          if (place != null){ b.x0 = place; cale = true; }
+          else y += b.bh + marge;
         }
+        /* b.px ne bouge pas : la queue reste dirigée vers la bouche,
+           dessinerParoleLibre la rabat d'elle-même dans la bulle. */
+        /* Cinq rangées pleines : la plus récente passe devant, faute de mieux. */
       }
       posees.push(b);
       dessinerParoleLibre(b.p, b.px, b.y, b.style, b.x0);
@@ -5135,13 +5689,30 @@ const EnqVue = {
       ctx.fillStyle = "#8496B6";
       ctx.fillText("Rien pour l'instant.", L / 2, H * 0.45);
     }
+    /* Où en sont les têtes : le dossier raconte le raisonnement, pas
+       seulement l'inventaire. */
+    const theorie = Enquete.theorie();
+    if (theorie.length){
+      ctx.font = "800 " + Math.round(taille * 0.50) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.fillStyle = "#F7B32B";
+      ctx.fillText("CE QU'ON EN PENSE", L / 2, H * 0.70);
+      /* Les théories sont des phrases entières : on réduit la police
+         jusqu'à ce que la plus longue tienne, plutôt que de déborder. */
+      let tTh = taille * 0.62;
+      ctx.font = "700 " + Math.round(tTh) + "px 'Baloo 2', system-ui, sans-serif";
+      const plusLarge = Math.max.apply(null, theorie.map(t => ctx.measureText(t).width));
+      if (plusLarge > L * 0.92) tTh *= L * 0.92 / plusLarge;
+      ctx.font = "700 " + Math.round(Math.max(9, tTh)) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.fillStyle = "#E8DFC8";
+      theorie.forEach((t, i) => ctx.fillText(t, L / 2, H * (0.745 + i * 0.048)));
+    }
     ctx.font = "700 " + Math.round(taille * 0.6) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillStyle = "#8496B6";
     const manque2 = Enquete.cePquiManque();
     ctx.fillStyle = manque2 ? "#8496B6" : "#8FD79B";
-    ctx.fillText(manque2 || "Tout y est : ACCUSER.", L / 2, H * 0.80);
+    ctx.fillText(manque2 || "Tout y est : ACCUSER.", L / 2, H * 0.86);
     ctx.fillStyle = "#8496B6";
-    ctx.fillText("Touchez l'écran pour refermer", L / 2, H * 0.88);
+    ctx.fillText("Touchez l'écran pour refermer", L / 2, H * 0.93);
     ctx.restore();
   },
 
@@ -5184,16 +5755,44 @@ const EnqVue = {
 /* Mesure d'une bulle sans la dessiner : le calage en a besoin avant de
    savoir où la poser, et deux calculs séparés auraient fini par
    divorcer. */
+/* Découpe un texte en lignes qui tiennent dans `larg`. Fonction pure :
+   la mesure est passée en paramètre, la suite de tests lui donne une
+   règle factice. Un mot plus long que la ligne part seul — on ne coupe
+   pas les mots, une bulle n'est pas un dictionnaire. */
+function decouperLignes(txt, larg, mesure){
+  const mots = String(txt).split(" ");
+  const lignes = [];
+  let courante = "";
+  for (const mot of mots){
+    const essai = courante ? courante + " " + mot : mot;
+    if (courante && mesure(essai) > larg){ lignes.push(courante); courante = mot; }
+    else courante = essai;
+  }
+  if (courante) lignes.push(courante);
+  return lignes;
+}
+
 function mesurerParole(p, style){
   const st = style || {};
   const taille = Math.max(10, Camera.H * 0.046);
   ctx.save();
   ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
-  const l = ctx.measureText(p.txt).width;
+  /* Largeur plafonnée à 44 % de l'écran : deux bulles côte à côte
+     tiennent toujours, donc le repli latéral du calage ne peut plus
+     échouer — c'était la dernière cause de superposition. */
+  const largMax = Camera.L * 0.42;
+  const cle = p.txt + "|" + Math.round(taille) + "|" + Math.round(largMax);
+  if (p._cleLignes !== cle){
+    p._cleLignes = cle;
+    p._lignes = decouperLignes(p.txt, largMax, t => ctx.measureText(t).width);
+    p._largeur = Math.max.apply(null, p._lignes.map(t => ctx.measureText(t).width));
+  }
   ctx.restore();
   const pad = taille * 0.62;
   const hNom = (st.temoin || st.visiteur) ? taille * 0.86 : 0;
-  return { bl:l + pad * 2, bh:taille * 1.72 + hNom, taille, hNom };
+  const interligne = taille * 1.14;
+  return { bl:p._largeur + pad * 2, bh:taille * 1.72 + hNom + (p._lignes.length - 1) * interligne,
+           taille, hNom, lignes:p._lignes, interligne };
 }
 
 function dessinerParoleLibre(p, px, pyBas, style, x0){
@@ -5237,7 +5836,10 @@ function dessinerParoleLibre(p, px, pyBas, style, x0){
   }
   ctx.font = ((st.temoin || st.visiteur) ? "700 " : "800 ") + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
   ctx.fillStyle = st.visiteur ? "#241C3A" : st.temoin ? "#2A2117" : "#1A1420";
-  ctx.fillText(p.txt, bx + bl / 2 + (st.bord ? taille * 0.12 : 0), by + hNom + taille * 0.86);
+  const lignes = m.lignes || [p.txt];
+  for (let i = 0; i < lignes.length; i++)
+    ctx.fillText(lignes[i], bx + bl / 2 + (st.bord ? taille * 0.12 : 0),
+                 by + hNom + taille * 0.86 + i * m.interligne);
   ctx.restore();
 }
 
@@ -6016,7 +6618,7 @@ globalThis.DTOUR = {
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
-  ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS,
+  ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, SUJETS, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, HORTENSE_ECART, TARTE_DUREE,

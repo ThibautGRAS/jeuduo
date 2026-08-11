@@ -1,0 +1,4 @@
+# outillage local des tests (npm i canvas pour le harnais d'aperçu)
+node_modules/
+package.json
+package-lock.json

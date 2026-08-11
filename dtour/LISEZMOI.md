@@ -166,6 +166,36 @@ interroger la bonne personne avec quatre indices en poche fait sauter
 une contradiction, une seule fois par partie : c'est ce qui donne un
 intérêt à l'interrogatoire au-delà de la réplique amusante.
 
+**Les inspecteurs raisonnent à voix haute** (v5.0), et le raisonnement
+appartient à l'affaire, pas à l'indice :
+
+- **Chaque affaire lit ses trois indices porteurs à sa façon.** Trouver
+  le billet dans « la dette » donne « Ce n'est pas un oubli. C'est un
+  paiement. » ; le trouver dans « le comptage » donne « Quelqu'un a payé
+  SA part. Au centime. » Le garnissage garde son écho générique : une
+  fausse piste ne mène nulle part, c'est le but.
+- **À deux indices, la première théorie** — fausse exprès. Thibaut
+  propose l'absurde (« Le tabouret a mangé la pizza. Non ? Bon. »),
+  Pierre-François corrige et remet l'enquête sur ses rails. La piste
+  sérieuse arrive au quatrième indice, comme avant.
+- **Thibaut oppose le dossier aux gens.** Chaque indice trouvé rouvre
+  les entretiens : une confrontation par personne et par indice, les
+  porteurs d'abord. L'innocent referme la piste (« Je m'essuie
+  lentement. C'est toute une éducation. »), le témoin clé s'enfonce
+  d'un demi-aveu. Le premier passage reste à l'anecdote, et le chat ne
+  répond qu'à ses sujets — il ne parle pas.
+- **Le témoin clé craque par paliers.** À trois indices il en dit trop,
+  à cinq il ne tient plus — quel que soit l'inspecteur : c'est le
+  dossier qui met la pression, pas la question.
+- **Le dossier pense.** Sous les cartes, une ligne « CE QU'ON EN
+  PENSE » suit le raisonnement : l'hypothèse, puis la piste, puis la
+  contradiction. On sait toujours où en sont les têtes.
+
+**Les bulles se lisent** : multi-lignes (42 % de l'écran au plus), une
+durée de vie qui suit la longueur du texte, et un calage qui cherche un
+trou rangée par rangée plutôt que d'empiler au petit bonheur — quatre
+répliques simultanées trouvent quatre places.
+
 **Les deux ne servent pas à la même chose, et il faut les deux.**
 Pierre-François lit les traces : certains indices ne se lisent qu'avec
 lui. Thibaut lit les gens : la manette grasse, le menu du livreur, les
@@ -381,7 +411,7 @@ pièges propres à ce jeu et ce qui n'est pas fait.
 
 ## Travailler dessus
 
-Le script d'`index.html` est découpé en quatre morceaux dans `parts/`,
+Le script d'`index.html` est découpé en sept morceaux dans `parts/`,
 recollés par `assembler.py`. C'est un confort de rédaction : le livrable
 reste le fichier unique, et l'assemblage a lieu ici, pas chez le joueur.
 

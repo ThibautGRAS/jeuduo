@@ -784,6 +784,67 @@ if (D){
       }
       return true;
     })(), "c'est elle qui porte le scénario");
+  /* --- le raisonnement : chaque affaire doit savoir se lire --- */
+  verifier("chaque affaire lit ses trois indices porteurs",
+    D.SCENARIOS.every(sc => sc.deduc && sc.porteurs.every(p =>
+      sc.deduc[p] && sc.deduc[p].length === 2 && sc.deduc[p].every(l => l.length === 2 && l[1].length > 4))),
+    D.SCENARIOS.filter(sc => !sc.deduc || !sc.porteurs.every(p => sc.deduc[p] && sc.deduc[p].length === 2))
+      .map(sc => sc.id).join(", "));
+  verifier("aucune déduction ne vise un indice que l'affaire ne porte pas",
+    D.SCENARIOS.every(sc => Object.keys(sc.deduc || {}).every(k => sc.porteurs.indexOf(k) >= 0)),
+    "elle ne sortirait jamais à l'écran");
+  verifier("chaque affaire a son hypothèse de travers, à deux voix",
+    D.SCENARIOS.every(sc => sc.hypothese && sc.hypothese.length === 2 &&
+      sc.hypothese[0][0] !== sc.hypothese[1][0]),
+    D.SCENARIOS.filter(sc => !sc.hypothese).map(sc => sc.id).join(", "));
+  verifier("c'est Thibaut qui propose l'absurde, Pierre-François qui corrige",
+    D.SCENARIOS.every(sc => sc.hypothese[0][0] === 1 && sc.hypothese[1][0] === 0),
+    "le gag ne marche que dans ce sens");
+  verifier("chaque témoin clé a ses deux paliers de nerfs",
+    D.SCENARIOS.every(sc => sc.nerfs && sc.nerfs.length === 2 &&
+      sc.nerfs.every(t => t && t.length > 8) && sc.nerfs[0] !== sc.nerfs[1]),
+    D.SCENARIOS.filter(sc => !sc.nerfs || sc.nerfs.length !== 2).map(sc => sc.id).join(", "));
+  verifier("chaque indice sait être opposé à quelqu'un",
+    D.INDICES.every(i => i.q && i.okR && i.koR && i.okR !== i.koR),
+    D.INDICES.filter(i => !i.q || !i.okR || !i.koR).map(i => i.id).join(", "));
+  /* Tout texte qui cite un détail tiré au sort doit passer par un
+     marqueur connu : après remplir(), il ne reste pas d'accolades. */
+  (() => {
+    let orphelin = null;
+    for (let n = 0; n < 80 && !orphelin; n++){
+      D.Jeu.demarrer(2); D.Intro.finir();
+      const sc = D.Affaire.scenario;
+      const textes = [];
+      for (const p2 of Object.keys(sc.deduc)) for (const l of sc.deduc[p2]) textes.push(l[1]);
+      for (const l of sc.hypothese) textes.push(l[1]);
+      textes.push(sc.nerfs[0], sc.nerfs[1]);
+      for (const i of D.INDICES) textes.push(i.q, i.okR, i.koR);
+      for (const t2 of textes) if (/\{\w+\}/.test(D.remplir(t2))){ orphelin = sc.id + " : " + t2; break; }
+    }
+    verifier("déductions, hypothèses, nerfs et confrontations sans marqueur orphelin",
+      !orphelin, orphelin || "");
+  })();
+  /* La théorie du dossier suit le raisonnement. */
+  lancer2();
+  egal("dossier vide : pas encore de théorie", D.Enquete.theorie().length, 0);
+  D.Enquete.indices = 2;
+  verifier("à deux indices, le dossier pense déjà quelque chose",
+    D.Enquete.theorie().length === 2);
+  D.Enquete.indices = 4; D.Enquete.pisteDite = true;
+  verifier("à quatre, il tient la piste",
+    D.Enquete.theorie().join(" ").indexOf(D.Affaire.piste()[0][1]) >= 0);
+  /* La découpe des bulles est une fonction pure : on lui donne une
+     règle factice où un caractère vaut un pixel. */
+  (() => {
+    const mesure = t2 => t2.length;
+    egal("un texte court tient sur une ligne",
+      D.decouperLignes("Bonjour", 40, mesure), ["Bonjour"]);
+    egal("un texte long se plie sans couper les mots",
+      D.decouperLignes("aaa bbb ccc ddd", 7, mesure), ["aaa bbb", "ccc ddd"]);
+    verifier("aucun mot n'est coupé en deux",
+      D.decouperLignes("anticonstitutionnellement oui", 10, mesure)[0] === "anticonstitutionnellement",
+      "un mot plus long que la ligne part seul");
+  })();
   verifier("les quatre pièces ont leur réplique d'entrée",
     D.PIECES.length === 4 && D.PIECES.every(p => p.ligne && p.jusqua > 0));
   verifier("le bavardage va par paires", D.BAVARDAGES.length % 2 === 0);
@@ -1027,14 +1088,17 @@ if (D){
     })());
   verifier("on préfère envoyer celui qui a quelque chose à dire",
     (() => {
+      /* Test statistique : le taux réel mesuré est 62 %, le seuil 55 %.
+         À 200 tirages il flottait une fois sur soixante-dix (2,2 σ) ;
+         à 600 le même seuil est à 3,7 σ. */
       let concernes = 0;
-      for (let n = 0; n < 200; n++){
+      for (let n = 0; n < 600; n++){
         D.Jeu.demarrer(2); D.Intro.finir();
         D.Visiteurs.declencher();
         const marques = D.Affaire.scenario.tags || [];
         if (D.Visiteurs.qui.lie && marques.some(t2 => D.Visiteurs.qui.lie[t2])) concernes++;
       }
-      return concernes > 110;
+      return concernes > 330;
     })(), "le premier passage doit compter");
   verifier("Jojo est dans le registre",
     D.VISITEURS.some(v => v.id === "jojo" && v.lie && v.lie.plomberie && v.lie.hauteur));

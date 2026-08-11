@@ -7,7 +7,7 @@ jeu, et `../MEMOIRE.md`, dont les pièges valent ici aussi.
 
 ## 1. Architecture
 
-### Un fichier livré, cinq morceaux édités
+### Un fichier livré, sept morceaux édités
 
 `index.html` est le livrable : HTML, CSS et JavaScript dans un seul
 fichier, aucun outil de compilation chez le joueur. Il est recollé par
@@ -37,6 +37,30 @@ première ligne ; tout le reste — chrono, sons, effets, écran de fin,
 plein écran, blocage portrait — est commun. Les deux niveaux ne
 partagent aucune géométrie.
 
+### Le raisonnement du niveau 2 (v5.0)
+
+Quatre couches, toutes portées par les scénarios eux-mêmes :
+
+- **`deduc`** — chaque affaire lit ses trois indices porteurs à sa
+  façon : trouver l'indice déclenche un échange à deux voix qui relie
+  l'objet à CETTE histoire. Le garnissage garde l'écho générique
+  d'`ECHOS` — une fausse piste ne mène nulle part, c'est le but.
+- **`hypothese`** — à deux indices, la première théorie, fausse exprès :
+  Thibaut [1] propose l'absurde, Pierre-François [0] corrige. Un test
+  refuse le sens inverse, le gag ne marche que dans celui-là. La piste
+  sérieuse reste au quatrième indice.
+- **Confrontations** — chaque indice de la banque porte `q`/`okR`/`koR` :
+  Thibaut oppose le dossier aux gens, une fois par (personne, indice),
+  les porteurs d'abord. L'innocent referme la piste, le témoin clé
+  s'enfonce d'un demi-aveu. Le premier passage reste à l'anecdote, et
+  le chat est exclu — il ne parle pas.
+- **`nerfs`** — le témoin clé craque par paliers, à 3 puis 5 indices,
+  quel que soit l'inspecteur : c'est le dossier qui met la pression,
+  pas la question. Un palier consommé éteint celui du dessous.
+
+Le dossier affiche l'état du raisonnement (`Enquete.theorie()`) :
+hypothèse, puis piste, puis contradiction.
+
 ---
 
 ## 2. Réglages calibrés
@@ -62,7 +86,7 @@ suite.
 | Réglage | Valeur | Justification |
 |---|---|---|
 | Durée | 300 s | |
-| Indices à réunir | 6 sur 10 en banque | |
+| Indices à réunir | 6 sur 13 en banque | |
 | Meubles | 16 | |
 | Portée d'interaction | 0,026 largeur d'image | deux meubles plus proches que 1,5 × cette valeur se voleraient les touchers ; un test le vérifie |
 | Vitesse de marche | 0,20 largeur/s | traverser l'appartement prend cinq secondes |
@@ -169,6 +193,44 @@ de 318 px, la deuxième passait sous le chrono. Le calage résout
 maintenant les recouvrements en hauteur **jusqu'à un plafond**, puis se
 replie latéralement. Et la mesure d'une bulle est une fonction séparée
 du dessin : deux calculs parallèles auraient fini par divorcer.
+
+### Le drapeau qui annulait le repli
+Dans la boucle de remontée, atteindre le plafond faisait `break` en
+laissant `libre` à vrai : le repli latéral, écrit et relu plusieurs
+fois, **ne s'exécutait jamais** — les bulles restaient l'une sur
+l'autre et le bug a survécu à deux corrections. C'est le harnais
+d'aperçu qui l'a montré, pas la relecture. Le plafond lève désormais
+son propre drapeau (`plafonne`), et c'est lui qui déclenche le repli.
+
+### Une rangée ne suffit pas, un côté non plus
+Deux leçons du même repli. Pousser une bulle vers un côté puis la
+rabattre dans l'écran la reposait sur sa voisine : on cherche un TROU
+en balayant la rangée de gauche à droite, on ne pousse plus à
+l'aveugle. Et une bulle centrée remplit sa rangée à elle seule — large
+de 42 % au plus, il en tient deux par rangée, mais pas une troisième :
+le balayage descend de rangée en rangée jusqu'à trouver une place.
+Cinq rangées pleines, cas jamais vu, et la plus récente passe devant.
+
+### Une file de dialogue FIFO retient les réponses
+`majDialogue` tirait les répliques dans l'ordre d'insertion. Une
+réponse de témoin insérée à 1,1 s restait donc coincée **derrière**
+une déduction programmée à 4 s : la question restait sans réponse
+pendant quatre secondes, et le test ne rougissait qu'un tirage sur
+huit — quand la fouille précédente avait laissé traîner sa salve. On
+tire par échéance, pas par ordre d'arrivée.
+
+### Une cadence fixe ne lit pas
+Les répliques partaient toutes les 1,5 s et vivaient 2,2 s, quelle que
+soit leur longueur : les longues disparaissaient avant la fin de la
+lecture. `dureeLecture()` étire la durée ET l'espacement dans une même
+salve — entre salves, chacune garde son départ, une réponse de témoin
+n'attend pas un vieux bavardage, les bulles s'empilent pour ça.
+
+### Un test statistique au seuil trop proche de la moyenne
+« On préfère envoyer celui qui a quelque chose à dire » : taux réel
+62 %, seuil 55 %, 200 tirages — soit 2,2 σ, un échec toutes les
+soixante-dix passes, toujours au mauvais moment. Porté à 600 tirages :
+même seuil, 3,7 σ. Mesurer l'écart-type avant de fixer un seuil.
 
 ### Du texte écrit pour un cas particulier, tiré au sort ensuite
 Les répliques de découverte nommaient un meuble — « Dans un sac » —

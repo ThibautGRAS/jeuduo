@@ -105,28 +105,51 @@ const EnqVue = {
       b.bl = m.bl; b.bh = m.bh;
       b.y = b.base - H * 0.02;
       b.x0 = borne(b.px - b.bl / 2, 4, Math.max(4, Camera.L - b.bl - 4));
-      /* D'abord on remonte, tant qu'il reste de la place. */
-      let garde = 0, libre = false;
-      while (!libre && garde++ < 12){
+      /* D'abord on remonte, tant qu'il reste de la place. Le piège
+         corrigé ici : quand le plafond bloquait la remontée, le drapeau
+         `libre` restait vrai et AUCUN repli ne s'exécutait — les bulles
+         restaient l'une sur l'autre. Le plafond doit déclencher le
+         repli, pas l'annuler. */
+      let garde = 0, libre = false, plafonne = false;
+      while (!libre && !plafonne && garde++ < 12){
         libre = true;
         for (const q of posees){
           if (!chevauche(b, q)) continue;
+          libre = false;
           const remonte = q.y - q.bh - marge;
-          if (remonte - b.bh < plafond) break;      /* plus de place en hauteur */
-          b.y = remonte; libre = false; break;
+          if (remonte - b.bh < plafond) plafonne = true;   /* plus de place en hauteur */
+          else b.y = remonte;
+          break;
         }
       }
-      /* Puis, si le plafond est atteint, on se décale sur le côté. */
-      if (!libre){
-        b.y = Math.max(b.y, plafond + b.bh);
-        for (let essai = 0; essai < 8; essai++){
-          const gene = posees.find(q => chevauche(b, q));
-          if (!gene) break;
-          const versDroite = b.px >= gene.px;
-          b.x0 = versDroite ? gene.x0 + gene.bl + marge : gene.x0 - b.bl - marge;
-          b.x0 = borne(b.x0, 4, Math.max(4, Camera.L - b.bl - 4));
-          b.px = b.x0 + b.bl / 2;
+      /* Puis, si le plafond est atteint, on cherche un TROU dans la
+         rangée : pousser vers un côté puis se faire rabattre par le
+         bord de l'écran re-superposait les bulles larges — c'était la
+         dernière cause de recouvrement. On balaie la rangée de gauche à
+         droite et on prend la première place qui tient. */
+      /* Puis, si le plafond est atteint, on cherche un TROU, rangée par
+         rangée depuis le plafond : une seule rangée ne suffit pas — une
+         bulle centrée la remplit à elle seule, et pousser vers un côté
+         puis se faire rabattre par le bord re-superposait tout. */
+      if (plafonne){
+        let y = plafond + b.bh, cale = false;
+        for (let rang = 0; rang < 5 && !cale; rang++){
+          b.y = y;
+          const bande = posees.filter(q =>
+            (b.y - b.bh) < q.y + marge && (q.y - q.bh) < b.y + marge)
+            .sort((q1, q2) => q1.x0 - q2.x0);
+          let x = 4, place = null;
+          for (const q of bande){
+            if (x + b.bl + marge <= q.x0){ place = x; break; }
+            x = Math.max(x, q.x0 + q.bl + marge);
+          }
+          if (place == null && x + b.bl <= Camera.L - 4) place = x;
+          if (place != null){ b.x0 = place; cale = true; }
+          else y += b.bh + marge;
         }
+        /* b.px ne bouge pas : la queue reste dirigée vers la bouche,
+           dessinerParoleLibre la rabat d'elle-même dans la bulle. */
+        /* Cinq rangées pleines : la plus récente passe devant, faute de mieux. */
       }
       posees.push(b);
       dessinerParoleLibre(b.p, b.px, b.y, b.style, b.x0);
@@ -559,13 +582,30 @@ const EnqVue = {
       ctx.fillStyle = "#8496B6";
       ctx.fillText("Rien pour l'instant.", L / 2, H * 0.45);
     }
+    /* Où en sont les têtes : le dossier raconte le raisonnement, pas
+       seulement l'inventaire. */
+    const theorie = Enquete.theorie();
+    if (theorie.length){
+      ctx.font = "800 " + Math.round(taille * 0.50) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.fillStyle = "#F7B32B";
+      ctx.fillText("CE QU'ON EN PENSE", L / 2, H * 0.70);
+      /* Les théories sont des phrases entières : on réduit la police
+         jusqu'à ce que la plus longue tienne, plutôt que de déborder. */
+      let tTh = taille * 0.62;
+      ctx.font = "700 " + Math.round(tTh) + "px 'Baloo 2', system-ui, sans-serif";
+      const plusLarge = Math.max.apply(null, theorie.map(t => ctx.measureText(t).width));
+      if (plusLarge > L * 0.92) tTh *= L * 0.92 / plusLarge;
+      ctx.font = "700 " + Math.round(Math.max(9, tTh)) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.fillStyle = "#E8DFC8";
+      theorie.forEach((t, i) => ctx.fillText(t, L / 2, H * (0.745 + i * 0.048)));
+    }
     ctx.font = "700 " + Math.round(taille * 0.6) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillStyle = "#8496B6";
     const manque2 = Enquete.cePquiManque();
     ctx.fillStyle = manque2 ? "#8496B6" : "#8FD79B";
-    ctx.fillText(manque2 || "Tout y est : ACCUSER.", L / 2, H * 0.80);
+    ctx.fillText(manque2 || "Tout y est : ACCUSER.", L / 2, H * 0.86);
     ctx.fillStyle = "#8496B6";
-    ctx.fillText("Touchez l'écran pour refermer", L / 2, H * 0.88);
+    ctx.fillText("Touchez l'écran pour refermer", L / 2, H * 0.93);
     ctx.restore();
   },
 
@@ -608,16 +648,44 @@ const EnqVue = {
 /* Mesure d'une bulle sans la dessiner : le calage en a besoin avant de
    savoir où la poser, et deux calculs séparés auraient fini par
    divorcer. */
+/* Découpe un texte en lignes qui tiennent dans `larg`. Fonction pure :
+   la mesure est passée en paramètre, la suite de tests lui donne une
+   règle factice. Un mot plus long que la ligne part seul — on ne coupe
+   pas les mots, une bulle n'est pas un dictionnaire. */
+function decouperLignes(txt, larg, mesure){
+  const mots = String(txt).split(" ");
+  const lignes = [];
+  let courante = "";
+  for (const mot of mots){
+    const essai = courante ? courante + " " + mot : mot;
+    if (courante && mesure(essai) > larg){ lignes.push(courante); courante = mot; }
+    else courante = essai;
+  }
+  if (courante) lignes.push(courante);
+  return lignes;
+}
+
 function mesurerParole(p, style){
   const st = style || {};
   const taille = Math.max(10, Camera.H * 0.046);
   ctx.save();
   ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
-  const l = ctx.measureText(p.txt).width;
+  /* Largeur plafonnée à 44 % de l'écran : deux bulles côte à côte
+     tiennent toujours, donc le repli latéral du calage ne peut plus
+     échouer — c'était la dernière cause de superposition. */
+  const largMax = Camera.L * 0.42;
+  const cle = p.txt + "|" + Math.round(taille) + "|" + Math.round(largMax);
+  if (p._cleLignes !== cle){
+    p._cleLignes = cle;
+    p._lignes = decouperLignes(p.txt, largMax, t => ctx.measureText(t).width);
+    p._largeur = Math.max.apply(null, p._lignes.map(t => ctx.measureText(t).width));
+  }
   ctx.restore();
   const pad = taille * 0.62;
   const hNom = (st.temoin || st.visiteur) ? taille * 0.86 : 0;
-  return { bl:l + pad * 2, bh:taille * 1.72 + hNom, taille, hNom };
+  const interligne = taille * 1.14;
+  return { bl:p._largeur + pad * 2, bh:taille * 1.72 + hNom + (p._lignes.length - 1) * interligne,
+           taille, hNom, lignes:p._lignes, interligne };
 }
 
 function dessinerParoleLibre(p, px, pyBas, style, x0){
@@ -661,6 +729,9 @@ function dessinerParoleLibre(p, px, pyBas, style, x0){
   }
   ctx.font = ((st.temoin || st.visiteur) ? "700 " : "800 ") + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
   ctx.fillStyle = st.visiteur ? "#241C3A" : st.temoin ? "#2A2117" : "#1A1420";
-  ctx.fillText(p.txt, bx + bl / 2 + (st.bord ? taille * 0.12 : 0), by + hNom + taille * 0.86);
+  const lignes = m.lignes || [p.txt];
+  for (let i = 0; i < lignes.length; i++)
+    ctx.fillText(lignes[i], bx + bl / 2 + (st.bord ? taille * 0.12 : 0),
+                 by + hNom + taille * 0.86 + i * m.interligne);
   ctx.restore();
 }

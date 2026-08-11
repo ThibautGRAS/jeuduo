@@ -774,7 +774,7 @@ globalThis.DTOUR = {
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
-  ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS,
+  ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, SUJETS, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, HORTENSE_ECART, TARTE_DUREE,
