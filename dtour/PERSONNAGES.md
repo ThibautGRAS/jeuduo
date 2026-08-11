@@ -133,9 +133,9 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
   soirée, ça se reconstitue comme une bataille : qui était où, et à
   quelle heure. » Sur le chat : « Un chat n'a pas de mobile. Retenez
   ça. »
-- Habituée du bar au niveau 3 :
-  `bar_mathilde_{idle,marche1,marche2}`. Pas encore de pose de
-  consommation.
+- Habituée du bar au niveau 3, **entièrement animée** :
+  `bar_mathilde_{idle,marche1,marche2,attrape,boit,vide}`. Elle marche,
+  se sert et boit comme Gabi et le maire.
 - Fait la queue au niveau 1.
 - Sprite : `pers_mathilde` (commun).
 

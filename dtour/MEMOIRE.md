@@ -81,7 +81,49 @@ Le garde-fou `faisable()` refuse tout verre injouable : distance à la
 vitesse du champion + geste de boire + verres déjà posés < vie × 0.9.
 Il travaille avec la vitesse EFFECTIVE : pompette, on sert moins loin.
 
+### Un test de dimensions ne voit pas le CONTENU
+Le pire raté de la série. En refaisant la découpe des dix poses de
+chaque personnage, le test « toutes les poses ont la même taille » est
+passé au vert du premier coup — et chaque sprite contenait **deux
+personnages empilés** : je recopiais la bande source entière au lieu de
+la seule boîte de la pose, donc la voisine de gauche, celle de droite ET
+celle de la rangée du dessous entraient dans l'image. Un invariant sur
+les métadonnées ne dit rien de ce qu'il y a dedans. Toute découpe se
+regarde, pose par pose, sur une planche de contact — le test vient
+ensuite, pour empêcher la régression, jamais pour valider la première
+livraison.
+
+### La ligne de sol se calcule PAR RANGÉE
+Corollaire du même chantier : la médiane des bas de boîte prise sur les
+DEUX rangées d'une planche tombe entre les deux. Résultat, une rangée
+flottait au-dessus du sol et l'autre était coupée à mi-corps. Chaque
+rangée a sa propre ligne de sol ; seules la largeur et la hauteur de la
+toile sont communes au personnage.
+
+### On ancre un sprite sur les PIEDS, pas sur sa boîte
+Cadrer au plus juste puis centrer à l'écran fait dériver le corps
+latéralement dès qu'un bras se tend : sur un cycle de marche à deux
+images, le personnage tremble. La toile canonique place le centre des
+CHAUSSURES au milieu de l'image et la ligne de sol en bas ; le rendu
+dessine alors bêtement en `x - largeur/2`, `y - hauteur`, et tout tombe
+juste.
+
+### Le magenta se reconnaît à sa TEINTE, pas à sa clarté
+Une planche est arrivée avec deux petites ombres portées sous les pieds.
+Le test de fond « rouge et bleu hauts, vert bas » ne les voyait pas :
+une ombre est du magenta SOMBRE. Elles devenaient donc des taches
+semi-opaques accrochées aux chaussures. Le bon test est chromatique —
+`min(r-g, b-g)` élevé et `r ≈ b` — et il reste juste quelle que soit la
+luminosité. Une jupe rouge, un blouson bleu canard ou un manteau beige
+n'y passent pas.
+
 ### Un sprite n'a pas de taille, il a une ÉCHELLE
+**La leçon a dû être apprise deux fois : d'abord sur les barmans, puis
+sur les six personnages en pied — Thibaut avait 62 px d'écart entre ses
+poses (il grandissait en titubant, rétrécissait en buvant) et Mathilde
+240. Un test lit maintenant la taille dans l'en-tête WebP et refuse
+toute divergence, personnage par personnage.**
+
 Le rendu dessinait chaque pose de barman à une hauteur d'écran fixe
 (`H*0.30`). Or les poses venaient de cadrages différents : `idle`
 faisait 260×183 (un buste serré, vieille planche) et les poses animées

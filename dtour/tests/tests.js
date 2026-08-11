@@ -1683,6 +1683,19 @@ if (D){
 
   /* ================= NIVEAU 3 — la tournée ================= */
   titre("Niveau 3 — la tournée");
+  /* Lit la taille dans l'en-tête WebP : la seule façon, ici, de vérifier
+     un invariant d'IMAGE et pas seulement de code. */
+  const dimsWebp = nom => {
+    const buf = fs.readFileSync(path.join(RACINE, "img", "n3", nom + ".webp"));
+    const tag = buf.toString("ascii", 12, 16);
+    if (tag === "VP8 ") return { l:buf.readUInt16LE(26) & 0x3fff, h:buf.readUInt16LE(28) & 0x3fff };
+    if (tag === "VP8X") return { l:(buf.readUIntLE(24, 3) & 0xffffff) + 1, h:(buf.readUIntLE(27, 3) & 0xffffff) + 1 };
+    if (tag === "VP8L"){
+      const b2 = buf.readUInt32LE(21);
+      return { l:(b2 & 0x3fff) + 1, h:((b2 >> 14) & 0x3fff) + 1 };
+    }
+    return null;
+  };
   const lancerPoses = () => { D.Jeu.demarrer(3); D.Tournee.lancer(); };
   const lancer3 = (champ) => {
     D.Jeu.demarrer(3);
@@ -2158,12 +2171,30 @@ if (D){
       });
     })(),
     D.BARMANS.map(b => b.id + " -> " + (((b.x * D.BAR_COPIES) % 1).toFixed(2))).join(", "));
+  verifier("toutes les poses d'un PERSONNAGE ont la même taille d'image",
+    (() => {
+      /* L'invariant central du niveau 3, appris deux fois. Un sprite n'a
+         pas de taille, il a une ÉCHELLE : à hauteur d'écran constante,
+         seule une taille SOURCE constante garde le personnage à sa
+         taille et son corps centré. Thibaut avait 62 px d'écart entre
+         ses poses (il grandissait en titubant), Mathilde 240. */
+      const soucis = [];
+      for (const pref of ["bar_th", "bar_pf", "bar_gabi", "bar_marini", "bar_martin", "bar_mathilde"]){
+        const poses = D.IMG_PAR_DOSSIER.n3.filter(n => n.indexOf(pref + "_") === 0);
+        if (!poses.length){ soucis.push(pref + " : aucune pose"); continue; }
+        const t = poses.map(n => { const d = dimsWebp(n); return d ? d.l + "x" + d.h : "?"; });
+        if (new Set(t).size !== 1) soucis.push(pref + " : " + [...new Set(t)].join(" / "));
+      }
+      messageDetail = soucis.join(" | ");
+      return soucis.length === 0;
+    })(), "des cadrages différents font grandir et rétrécir le personnage");
   verifier("toutes les poses d'un barman ont la même hauteur d'image",
     (() => {
       /* L'invariant qui empêche le barman de grandir et rétrécir à
          chaque geste : à hauteur d'écran constante, seule une hauteur
          SOURCE constante garde l'échelle du personnage. */
-      const dims = nom => {
+      const dims = dimsWebp;
+      const inutilise = nom => {
         const buf = fs.readFileSync(path.join(RACINE, "img", "n3", nom + ".webp"));
         /* en-tête WebP : VP8 simple (lossy) ou VP8X (étendu) */
         const tag = buf.toString("ascii", 12, 16);

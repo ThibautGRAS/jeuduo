@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.7";
+const VERSION = "6.8";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -552,6 +552,7 @@ const IMAGES_NIVEAU3 = [
   "bar_gabi_attrape", "bar_gabi_boit", "bar_gabi_vide",
   "bar_martin_idle", "bar_martin_marche1", "bar_martin_marche2",
   "bar_mathilde_idle", "bar_mathilde_marche1", "bar_mathilde_marche2",
+  "bar_mathilde_attrape", "bar_mathilde_boit", "bar_mathilde_vide",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 
