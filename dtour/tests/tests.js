@@ -928,6 +928,38 @@ if (D){
   verifier("les assis n'y sont jamais",
     D.PERSOS_ASSIS.every(p => D.SPRITES_PNJ.indexOf(p) < 0),
     "Teo est assis par terre, Charles n'a pas de jambes : ils ne peuvent pas marcher");
+  verifier("un personnage nommé ne fait la queue qu'une fois",
+    (() => {
+      for (let partie = 0; partie < 30; partie++){
+        D.Jeu.demarrer(1);
+        D.Camera.mesurer(1280, 720, 1); D.Camera.recaler();
+        for (let i = 0; i < 60 * 120 && D.Jeu.phase === "jeu"; i++){
+          D.Jeu.pas(1 / 60);
+          const dem = D.Jeu.demandes[0];
+          if (dem) D.Jeu.saluer(dem.cible);
+          const tarte = D.Tartes.tarteImminente();
+          if (tarte && tarte.fenetreOuverte) D.Esquive.tenter();
+        }
+        const compte = {};
+        for (const p of D.Foule.tous){
+          if (D.PERSOS_DEBOUT.indexOf(p.sprite) < 0) continue;
+          compte[p.sprite] = (compte[p.sprite] || 0) + 1;
+          if (compte[p.sprite] > 1) return false;
+        }
+      }
+      return true;
+    })(), "deux fois le même visage connu dans la même file");
+  verifier("les anonymes, eux, peuvent revenir",
+    (() => {
+      D.Jeu.demarrer(1);
+      const vus = {};
+      for (let k = 0; k < 60; k++){
+        const s2 = D.Foule.spriteAnonyme();
+        if (D.PERSOS_DEBOUT.indexOf(s2) >= 0) return false;
+        vus[s2] = (vus[s2] || 0) + 1;
+      }
+      return Object.values(vus).some(n => n > 1);
+    })(), "la foule doit rester une foule");
   verifier("aucun sprite de la file ne vient de la terrasse",
     D.TERRASSE.every(t2 => D.SPRITES_PNJ.indexOf(t2.sprite) < 0));
 
@@ -938,6 +970,20 @@ if (D){
   verifier("chacun a au moins un thème d'affaire",
     D.VISITEURS.every(v => v.lie && Object.keys(v.lie).length >= 1),
     "un passant sans thème n'est qu'un figurant");
+  verifier("la tournée du soir est décidée au lancement",
+    (() => {
+      for (let n = 0; n < 120; n++){
+        D.Jeu.demarrer(2); D.Intro.finir();
+        const marques = D.Affaire.scenario.tags || [];
+        const lies = D.VISITEURS.filter(v => v.lie && marques.some(t2 => v.lie[t2])).map(v => v.id);
+        /* tous ceux qui ont un lien doivent en être */
+        if (!lies.every(id => D.Visiteurs.tournee.indexOf(id) >= 0)) return false;
+        /* et au plus un intrus */
+        if (D.Visiteurs.tournee.filter(id => lies.indexOf(id) < 0).length > 1) return false;
+        if (!D.Visiteurs.tournee.length) return false;
+      }
+      return true;
+    })(), "ceux qui ont quelque chose à dire doivent venir, les autres presque jamais");
   verifier("chacun ne passe qu'une fois par partie",
     (() => {
       D.Jeu.demarrer(2); D.Intro.finir();
@@ -947,12 +993,12 @@ if (D){
         if (!D.Visiteurs.declencher()) break;
         vus.push(D.Visiteurs.qui.id);
       }
-      return vus.length === D.VISITEURS.length && new Set(vus).size === vus.length;
+      return vus.length === D.Visiteurs.tournee.length && new Set(vus).size === vus.length;
     })(), "leur venue doit être un événement, pas une ronde");
   verifier("quand ils sont tous passés, il n'en vient plus",
     (() => {
       D.Jeu.demarrer(2); D.Intro.finir();
-      for (let k = 0; k < D.VISITEURS.length; k++){ D.Visiteurs.etat = "ABSENT"; D.Visiteurs.declencher(); }
+      for (let k = 0; k < D.VISITEURS.length + 2; k++){ D.Visiteurs.etat = "ABSENT"; D.Visiteurs.declencher(); }
       D.Visiteurs.etat = "ABSENT";
       return D.Visiteurs.declencher() === false;
     })());

@@ -153,7 +153,7 @@ const File = {
   etendue(){ return xPlace(Math.max(3, this.places.length - 1)) + 40; },
   gonfler(n){
     for (let i = 0; i < n; i++){
-      const p = new Pnj(piocher(SPRITES_PNJ), "SIMPLE");
+      const p = new Pnj(Foule.spriteLibre(), "SIMPLE");
       this.reserver(p);
       p.x = xPlace(p.place); p.vise = p.x; p.arrive = true;
       p.etat = ETAT.ATTENTE; p.regarde = -1;
@@ -225,9 +225,27 @@ function mainHeros(h, serre){
 
 /* ================= NPCManager -> Foule ================= */
 const Foule = {
-  tous:[], jumeauSuivant:null,
+  tous:[], jumeauSuivant:null, persosVus:null,
 
-  raz(){ this.tous = []; this.jumeauSuivant = null; compteurPnj = 0; },
+  raz(){ this.tous = []; this.jumeauSuivant = null; this.persosVus = {}; compteurPnj = 0; },
+
+  /* Un visage anonyme peut revenir dix fois dans la file : personne ne
+     le remarque. Un personnage qu'on connaît, non — deux Marini dans la
+     même queue, c'est une erreur, pas une figuration. Ceux-là ne
+     passent donc qu'une fois par partie. */
+  spriteLibre(){
+    if (!this.persosVus) this.persosVus = {};
+    const dispo = SPRITES_PNJ.filter(s =>
+      PERSOS_DEBOUT.indexOf(s) < 0 || !this.persosVus[s]);
+    const choisi = piocher(dispo.length ? dispo : SPRITES_PNJ.filter(s => PERSOS_DEBOUT.indexOf(s) < 0));
+    if (PERSOS_DEBOUT.indexOf(choisi) >= 0) this.persosVus[choisi] = true;
+    return choisi;
+  },
+  /* Pour les jumeaux et les revenants, on ne prend QUE des anonymes :
+     un personnage nommé ne peut pas être son propre jumeau. */
+  spriteAnonyme(){
+    return piocher(SPRITES_PNJ.filter(s => PERSOS_DEBOUT.indexOf(s) < 0));
+  },
 
   /* Fait entrer quelqu'un par la gauche. Il longe la file par devant :
      il passe donc forcément devant les deux héros, et c'est là que se
@@ -236,12 +254,16 @@ const Foule = {
     let type = typeForce || Difficulte.tirerType();
     let sprite;
     if (this.jumeauSuivant){ sprite = this.jumeauSuivant; this.jumeauSuivant = null; type = "SIMPLE"; }
-    else if (type === "JUMEAU"){ sprite = piocher(SPRITES_PNJ); this.jumeauSuivant = sprite; }
+    else if (type === "JUMEAU"){ sprite = this.spriteAnonyme(); this.jumeauSuivant = sprite; }
     else if (type === "REVENANT"){
-      const deja = this.tous.filter(p => p.arrive && p.etat === ETAT.ATTENTE);
-      sprite = deja.length ? piocher(deja).sprite : piocher(SPRITES_PNJ);
+      /* Le revenant reprend un visage déjà dans la file — mais jamais
+         celui d'un personnage nommé, qui se retrouverait en double à
+         l'écran. */
+      const deja = this.tous.filter(p => p.arrive && p.etat === ETAT.ATTENTE &&
+                                          PERSOS_DEBOUT.indexOf(p.sprite) < 0);
+      sprite = deja.length ? piocher(deja).sprite : this.spriteAnonyme();
     }
-    else sprite = piocher(SPRITES_PNJ);
+    else sprite = this.spriteLibre();
 
     const p = new Pnj(sprite, type);
     p.revenant = (type === "REVENANT");

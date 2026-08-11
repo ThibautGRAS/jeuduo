@@ -1076,16 +1076,31 @@ const ETAT_V = { ABSENT:"ABSENT", ENTREE:"ENTREE", PARLE:"PARLE", SORTIE:"SORTIE
 
 const Visiteurs = {
   etat:ETAT_V.ABSENT, qui:null, x:0, vise:0, dir:1, pas:0, chrono:0,
-  prochain:0, comptes:0, utiles:0, dernier:null, dejaVus:[], vus:null,
+  prochain:0, comptes:0, utiles:0, dernier:null, dejaVus:[], vus:null, tournee:null,
 
   raz(){
     this.etat = ETAT_V.ABSENT; this.qui = null;
     this.comptes = 0; this.utiles = 0; this.dernier = null; this.dejaVus = [];
+    this.composer();
     /* Chacun ne passe QU'UNE FOIS par partie : leur venue doit être un
        événement, pas une ronde. Quand ils sont tous passés, on n'en
        invente pas d'autres. */
     this.vus = {};
     this.prochain = hasard(VISITEUR_DELAI[0], VISITEUR_DELAI[1]);
+  },
+
+  /* La tournée du soir, décidée au lancement : tous ceux qui ont
+     quelque chose à dire sur CETTE affaire, plus au plus un qui passait
+     par là. Faire venir les quatre à chaque partie les transformait en
+     ronde ; ainsi, chaque sonnerie a une raison d'être. */
+  composer(){
+    const marques = (Affaire.scenario && Affaire.scenario.tags) || [];
+    const lies = VISITEURS.filter(v => v.lie && marques.some(t => v.lie[t]));
+    const autres = VISITEURS.filter(v => lies.indexOf(v) < 0);
+    const tournee = lies.slice();
+    if (autres.length && Math.random() < 0.5) tournee.push(piocher(autres));
+    if (!tournee.length && autres.length) tournee.push(piocher(autres));
+    this.tournee = melangerTableau(tournee).map(v => v.id);
   },
 
   /* --------- ce qu'un passant peut savoir de vrai ---------
@@ -1116,13 +1131,10 @@ const Visiteurs = {
   declencher(){
     if (this.etat !== ETAT_V.ABSENT || !Enquete.actif) return false;
     if (Enquete.dossierOuvert || Enquete.accusation || HortenseApp.visible()) return false;
-    const dispo = VISITEURS.filter(v => !this.vus[v.id]);
+    if (!this.tournee) this.composer();
+    const dispo = VISITEURS.filter(v => this.tournee.indexOf(v.id) >= 0 && !this.vus[v.id]);
     if (!dispo.length) return false;
-    /* On préfère celui qui a quelque chose à dire sur l'affaire : leur
-       unique passage doit compter. */
-    const marques = (Affaire.scenario && Affaire.scenario.tags) || [];
-    const concernes = dispo.filter(v => v.lie && marques.some(t => v.lie[t]));
-    this.qui = piocher(concernes.length && Math.random() < 0.7 ? concernes : dispo);
+    this.qui = piocher(dispo);
     this.vus[this.qui.id] = true;
     this.dernier = this.qui.id;
     this.dir = this.qui.cote >= 0 ? -1 : 1;         /* d'où il vient */
