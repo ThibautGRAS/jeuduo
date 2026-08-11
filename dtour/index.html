@@ -147,13 +147,54 @@ kbd{
 #cmdE:active,#cmdE.pressee{transform:translateX(-50%) translateY(2px);filter:brightness(1.14)}
 @media (max-height:380px){ .cmd kbd{display:none} }
 
-/* ---------------- écran titre ---------------- */
+/* ---------------- écran titre ----------------
+   Le décor du bar en fond, sombre et net, une enseigne au néon, et trois
+   tuiles de niveau. L'ancien écran empilait un logo, trois lignes de
+   liste et une légende sur le trottoir du niveau 1 : lisible, mais rien
+   n'y disait de quel jeu il s'agissait. */
 #titre{
   position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:clamp(8px,2.2vh,20px);
-  padding:clamp(10px,3vh,24px) 24px;text-align:center;transition:opacity .35s ease;
-  background:linear-gradient(180deg,rgba(8,13,24,.44) 0%,rgba(8,13,24,.10) 38%,rgba(8,13,24,.80) 100%);
+  align-items:center;justify-content:center;gap:clamp(6px,1.8vh,16px);
+  padding:calc(8px + var(--haut)) calc(16px + var(--droite)) calc(8px + var(--bas)) calc(16px + var(--gauche));
+  text-align:center;transition:opacity .35s ease;overflow:hidden;
 }
+/* le bar en fond : posé par le code une fois l'image chargée */
+#titreFond{
+  position:absolute;inset:0;background-position:center;background-size:cover;
+  transform:scale(1.06);filter:saturate(1.05) brightness(.62);
+}
+/* deux voiles : un dégradé vertical pour asseoir le texte, une vignette
+   radiale pour ramener l'œil au centre */
+#titreVoile{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(120% 90% at 50% 42%,rgba(8,6,14,0) 0%,rgba(8,6,14,.55) 62%,rgba(8,6,14,.88) 100%),
+    linear-gradient(180deg,rgba(10,7,18,.78) 0%,rgba(10,7,18,.30) 30%,rgba(10,7,18,.86) 100%);
+}
+#titreHaut,#niveaux,#legende{position:relative;z-index:1}
+#titreHaut{display:flex;flex-direction:column;align-items:center;gap:2px}
+#logo{
+  height:clamp(30px,9vh,74px);width:auto;
+  filter:drop-shadow(0 6px 18px rgba(0,0,0,.75));
+}
+/* L'enseigne : deux niveaux de lueur en text-shadow, comme un néon. Pas
+   de shadowBlur ici — c'est du CSS, pas du canevas. */
+#titreEnseigne{display:flex;flex-direction:column;align-items:center;line-height:1}
+#titreEnseigne span{
+  font-size:clamp(8px,1.5vh,11px);font-weight:700;letter-spacing:.42em;
+  color:#C9B6E8;text-indent:.42em;
+}
+#titreEnseigne b{
+  font-size:clamp(24px,7.4vh,54px);font-weight:800;letter-spacing:.06em;color:#FFF3DA;
+  text-shadow:0 0 6px rgba(255,196,84,.95),0 0 22px rgba(255,150,40,.65),
+              0 0 48px rgba(214,90,255,.42),0 4px 14px rgba(0,0,0,.85);
+}
+#titreSst{
+  font-size:clamp(9px,1.8vh,13px);font-weight:600;color:#D8CBEA;letter-spacing:.05em;
+  text-shadow:0 2px 10px rgba(0,0,0,.9);
+}
+@media (max-height:360px){ #logo{display:none} #titreSst{display:none} }
+#titre.parti{opacity:0;pointer-events:none}
 #titre.parti{opacity:0;pointer-events:none}
 /* Le logo se cale sur la HAUTEUR disponible : réglé en largeur, il
    poussait le bouton JOUER et la légende hors de l'écran dès que la
@@ -174,7 +215,8 @@ kbd{
 }
 .primaire:active{transform:translateY(2px);filter:brightness(1.06)}
 #legende{display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center;
-  font-size:11px;font-weight:600;color:#C6D1E6;text-shadow:0 1px 8px rgba(0,0,0,.9)}
+  font-size:clamp(9px,1.5vh,11px);font-weight:600;color:#B6A9C9;
+  text-shadow:0 1px 8px rgba(0,0,0,.9)}
 @media (max-height:400px){ #legende{font-size:10px;gap:10px} #titre .sous{display:none} }
 #legende span{display:inline-flex;align-items:center;gap:6px}
 #legende i{width:8px;height:8px;border-radius:2px;font-style:normal;display:inline-block}
@@ -182,28 +224,59 @@ kbd{
 #legende .pp{background:var(--bleu)}
 #legende .pe{background:var(--ambre)}
 
-/* ---------------- choix du niveau ---------------- */
-#niveaux{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:min(760px,94vw)}
+/* ---------------- choix du niveau ----------------
+   Trois tuiles côte à côte, chacune avec son numéro, sa vignette et sa
+   couleur. En paysage de téléphone la hauteur est le vrai budget : tout
+   est en vh, et les sous-titres tombent avant les titres. */
+#niveaux{
+  display:flex;gap:clamp(6px,1.4vw,14px);justify-content:center;align-items:stretch;
+  width:min(1000px,96vw);
+}
 .niv{
-  flex:1 1 300px;min-width:0;display:flex;align-items:center;gap:12px;
-  padding:clamp(8px,1.6vh,14px) 16px;cursor:pointer;text-align:left;
-  font-family:inherit;color:var(--craie);
-  background:var(--verre);border:1px solid var(--traitFort);border-radius:var(--r2);
-  backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);
-  transition:transform .1s ease,border-color .15s ease,background .15s ease;
+  flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
+  gap:clamp(2px,.8vh,6px);padding:clamp(6px,1.6vh,14px) clamp(6px,1vw,12px);
+  cursor:pointer;text-align:center;font-family:inherit;color:var(--craie);
+  background:linear-gradient(180deg,rgba(24,18,38,.80),rgba(12,9,20,.90));
+  border:1px solid rgba(255,255,255,.14);border-radius:14px;
+  backdrop-filter:blur(14px) saturate(1.25);-webkit-backdrop-filter:blur(14px) saturate(1.25);
+  transition:transform .1s ease,border-color .15s ease,box-shadow .18s ease;
+  position:relative;overflow:hidden;
 }
-.niv:hover,.niv:focus-visible{border-color:var(--ambre);background:rgba(20,30,52,.72)}
+/* un liseré de couleur en haut de la tuile : l'identité du niveau */
+.niv::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--accent);
+}
+.niv.n1{--accent:#37AC48}
+.niv.n2{--accent:#2A8AE4}
+.niv.n3{--accent:#F7B32B}
+.niv:hover,.niv:focus-visible{
+  border-color:var(--accent);
+  box-shadow:0 0 0 1px var(--accent) inset,0 8px 30px rgba(0,0,0,.55);
+}
 .niv:active{transform:translateY(2px)}
-.niv .vign{
-  height:clamp(26px,5.4vh,40px);width:auto;max-width:74px;flex:0 0 auto;
-  object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));
+.niv .num{
+  font-family:"JetBrains Mono",monospace;font-size:clamp(9px,1.7vh,12px);font-weight:700;
+  letter-spacing:.22em;color:var(--accent);
 }
-.niv .txt{display:flex;flex-direction:column;gap:2px;min-width:0}
-.niv .txt b{font-size:clamp(13px,2.2vw,17px);font-weight:800;line-height:1.15;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.niv .txt i{font-style:normal;font-size:clamp(10px,1.7vw,12px);font-weight:600;color:var(--sourd);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-height:400px){ .niv{padding:7px 12px} .niv .txt i{display:none} }
+.niv .cadre{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;height:clamp(30px,8.5vh,68px);
+}
+.niv .vign{
+  max-height:100%;max-width:80%;width:auto;height:auto;object-fit:contain;
+  filter:drop-shadow(0 3px 10px rgba(0,0,0,.6));
+}
+.niv .txt{display:flex;flex-direction:column;gap:1px;min-width:0;width:100%}
+.niv .txt b{
+  font-size:clamp(11px,2vh,16px);font-weight:800;line-height:1.15;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.niv .txt i{
+  font-style:normal;font-size:clamp(9px,1.5vh,12px);font-weight:600;color:#A99CBE;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+@media (max-height:400px){ .niv .txt i{display:none} .niv{padding:6px 8px} }
+@media (max-height:330px){ .niv .cadre{height:clamp(24px,6.5vh,40px)} }
 
 /* ---------------- commandes du niveau 2 ----------------
    Quatre grandes touches sous les pouces : deux pour marcher, une pour
@@ -432,19 +505,28 @@ kbd{
   </div>
 
   <div id="titre">
-    <img id="logo" alt="La file du D'Tour">
+    <div id="titreFond"></div>
+    <div id="titreVoile"></div>
+    <header id="titreHaut">
+      <img id="logo" alt="Les enquêtes de Callaghan">
+      <p id="titreEnseigne"><span>LES ENQUÊTES DE</span><b>CALLAGHAN</b></p>
+      <p id="titreSst">Ici, on boit… et on enquête.</p>
+    </header>
     <div id="niveaux">
-      <button class="niv" data-niv="1">
-        <img class="vign" id="vign1" alt="">
-        <span class="txt"><b>01 · La file du D'Tour</b><i>Ils ne les connaissaient même pas.</i></span>
+      <button class="niv n1" data-niv="1">
+        <span class="num">01</span>
+        <span class="cadre"><img class="vign" id="vign1" alt=""></span>
+        <span class="txt"><b>La file du D'Tour</b><i>Ils ne les connaissaient même pas.</i></span>
       </button>
-      <button class="niv" data-niv="2" id="niv2">
-        <img class="vign" id="vign2" alt="">
-        <span class="txt"><b>02 · L'enquête de la pizza</b><i id="niv2Sst">Six indices, cinq minutes.</i></span>
+      <button class="niv n2" data-niv="2" id="niv2">
+        <span class="num">02</span>
+        <span class="cadre"><img class="vign" id="vign2" alt=""></span>
+        <span class="txt"><b>L'enquête de la pizza</b><i id="niv2Sst">Six indices, cinq minutes.</i></span>
       </button>
-      <button class="niv" data-niv="3" id="niv3">
-        <img class="vign" id="vign3" alt="">
-        <span class="txt"><b>03 · La tournée du D'Tour</b><i>Boire ou jeter, il faut choisir.</i></span>
+      <button class="niv n3" data-niv="3" id="niv3">
+        <span class="num">03</span>
+        <span class="cadre"><img class="vign" id="vign3" alt=""></span>
+        <span class="txt"><b>La tournée du D'Tour</b><i>Boire ou jeter, il faut choisir.</i></span>
       </button>
     </div>
     <div id="legende">
@@ -536,7 +618,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.5</div>
+  <div id="version">CALLAGHAN v6.6</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -608,7 +690,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.5";
+const VERSION = "6.6";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1123,11 +1205,17 @@ const PREFIXES_BAR = ["bar_th", "bar_pf"];
 
 const IMAGES_NIVEAU3 = [
   "fond_bar",
-  /* Francky prépare en six temps : c'est le télégraphe le plus long du
-     niveau, donc le plus lisible — on voit venir un cocktail de loin. */
-  "bar_francky_idle", "bar_francky_choisit", "bar_francky_verse", "bar_francky_shake",
-  "bar_francky_remue", "bar_francky_decore", "bar_francky_sert", "bar_francky_essuie",
-  "bar_jojo_idle", "bar_jojo_dose", "bar_jojo_verse", "bar_jojo_shake", "bar_jojo_sert", "bar_jojo_essuie",
+  /* Les poses de barman sont TOUTES découpées dans la même bande de la
+     même planche : même hauteur en pixels, même trait de coupe au
+     niveau de la ceinture. C'est ce qui garantit qu'à hauteur d'écran
+     constante le personnage garde sa taille et que son buste tombe pile
+     sur le comptoir. Voir MEMOIRE.md, « Un sprite n'a pas de taille,
+     il a une échelle ». */
+  "bar_francky_idle", "bar_francky_choisit", "bar_francky_dose", "bar_francky_verse",
+  "bar_francky_shake", "bar_francky_remplit", "bar_francky_decore", "bar_francky_sert",
+  "bar_francky_essuie",
+  "bar_jojo_idle", "bar_jojo_choisit", "bar_jojo_dose", "bar_jojo_verse",
+  "bar_jojo_superpose", "bar_jojo_serie", "bar_jojo_decore", "bar_jojo_essuie",
   "bar_cocktail", "bar_jager", "bar_eau",
   /* les habitués animés, et le passage d'Hortense */
   "bar_marini_idle", "bar_marini_marche1", "bar_marini_marche2",
@@ -6127,6 +6215,7 @@ const BAR_COPIES = 3;               /* le monde = trois fois le fond mis bout à
 const BAR_SOL = 0.965;              /* ligne de sol du joueur, en fraction de la hauteur du fond */
 const BAR_COMPTOIR = 0.555;         /* le plateau du comptoir, mesuré sur le fond (bois clair : 0.55-0.57) */
 const BAR_TAILLE_HEROS = 0.52;      /* hauteur du héros, en fraction de l'écran */
+const BAR_TAILLE_BARMAN = 0.34;     /* hauteur du buste des barmans (tête -> ceinture) */
 const BAR_PORTEE = 0.030;           /* portée de prise d'un verre, en fraction du monde */
 const BAR_MARCHE = 0.135;           /* fraction du monde parcourue par seconde, à vitesse 1.0 */
 const BAR_EXPIRE = [7.5, 5.2];      /* vie d'un verre posé : début, puis en plein coup de feu */
@@ -6199,19 +6288,26 @@ const BOISSONS = {
    geste avant que le verre soit posé. L'eau a sa préparation à part,
    plus posée — c'est l'indice. */
 const BARMANS = [
-  { id:"francky", nom:"FRANCKY", x:0.34, sert:"cocktail",
+  /* Les postes sont revenus à 0,24 et 0,76 : le décor est le même fond
+     répété trois fois, et ces deux valeurs tombent en face des étagères
+     à bouteilles. À 0,34 et 0,66 ils se retrouvaient au BORD d'une
+     copie, devant les toilettes et le frigo — techniquement visibles,
+     visuellement faux. Ce qu'on voit hors champ est traité par les
+     chevrons de bord, pas en déplaçant les gens. */
+  { id:"francky", nom:"FRANCKY", x:0.24, sert:"cocktail",
     poses:{ repos:"bar_francky_idle", eau:"bar_francky_essuie", sert:"bar_francky_sert" },
-    /* six temps : il choisit, il verse, il shake, il remue, il décore.
-       Plus la séquence est longue, plus le joueur a le temps de LIRE ce
-       qui arrive — c'est là que se gagne le niveau. */
-    prepare:["bar_francky_choisit", "bar_francky_verse", "bar_francky_shake",
-             "bar_francky_remue", "bar_francky_decore"] },
-  { id:"jojo", nom:"JOJO", x:0.66, sert:"jager",
-    poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_sert" },
-    /* trois temps seulement : un Jägerbomb se monte plus vite qu'un
-       cocktail, et cette différence de LONGUEUR est en soi une
-       information — on reconnaît le barman à son rythme. */
-    prepare:["bar_jojo_dose", "bar_jojo_verse", "bar_jojo_shake"] },
+    /* cinq temps : il choisit, il dose, il verse, il shake, il remplit,
+       il décore. Plus la séquence est longue, plus le joueur a le temps
+       de LIRE ce qui arrive — c'est là que se gagne le niveau. */
+    prepare:["bar_francky_choisit", "bar_francky_dose", "bar_francky_verse",
+             "bar_francky_shake", "bar_francky_remplit", "bar_francky_decore"] },
+  { id:"jojo", nom:"JOJO", x:0.76, sert:"jager",
+    poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_serie" },
+    /* quatre temps : il choisit, il dose, il verse, il superpose. Un peu
+       plus court que Francky, et cette différence de RYTHME est en soi
+       une information — on reconnaît le barman avant de voir ce qu'il
+       tient. */
+    prepare:["bar_jojo_choisit", "bar_jojo_dose", "bar_jojo_verse", "bar_jojo_superpose"] },
 ];
 
 const ETAT_VERRE = { PREPARE:"PREPARE", POSE:"POSE", PRIS:"PRIS", TRAINE:"TRAINE" };
@@ -6971,14 +7067,18 @@ const BarVue = {
     for (const b of Tournee.barmans){
       const spr = Images.table[b.pose];
       if (!spr || !spr.naturalWidth) continue;
-      const sh = H * 0.30, sl = sh * spr.naturalWidth / spr.naturalHeight;
+      /* Toutes les poses de barman ont la même hauteur source et le même
+         trait de coupe : une seule hauteur d'écran suffit donc, et le bas
+         du sprite se pose PILE sur le comptoir. Avant, des poses de
+         cadrages différents à hauteur constante faisaient grandir et
+         rétrécir le barman à chaque geste. */
+      const sh = H * BAR_TAILLE_BARMAN, sl = sh * spr.naturalWidth / spr.naturalHeight;
       const x = this.ex(b.ref.x);
-      /* derrière le comptoir : le bas du buste passe dessous */
-      ctx.drawImage(spr, x - sl / 2, this.ey(BAR_COMPTOIR) - sh * 0.94, sl, sh);
+      ctx.drawImage(spr, x - sl / 2, this.ey(BAR_COMPTOIR) - sh * 0.98, sl, sh);
       if (b.etat === "prepare"){
         /* petit indicateur au-dessus : quelque chose arrive */
         const p = borne(b.t / b.duree, 0, 1);
-        const y = this.ey(BAR_COMPTOIR) - sh * 1.04;
+        const y = this.ey(BAR_COMPTOIR) - sh * 1.06;
         ctx.beginPath(); ctx.arc(x, y, H * 0.016, -Math.PI / 2, -Math.PI / 2 + p * 6.283);
         ctx.strokeStyle = "#F7B32B"; ctx.lineWidth = Math.max(2, H * 0.008); ctx.stroke();
       }
@@ -7312,7 +7412,7 @@ const BarVue = {
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","c3E","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","titreFond","titreVoile","titreHaut","titreEnseigne","titreSst","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","c3E","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -7502,6 +7602,12 @@ const Interface = {
     if (E.logo && Images.table.logo) E.logo.src = Images.table.logo.src;
     /* Chaque niveau porte sa vignette : l'enseigne du bar pour le
        premier, la boîte à pizza pour le second. */
+    /* Le décor du bar sert de fond à l'écran titre : c'est l'image qui
+       dit le mieux de quel jeu il s'agit. Posée seulement quand elle est
+       vraiment chargée — sinon on afficherait un cadre vide. */
+    if (E.titreFond && Images.table.fond_bar && Images.table.fond_bar.naturalWidth){
+      E.titreFond.style.backgroundImage = "url(" + Images.table.fond_bar.src + ")";
+    }
     if (E.vign1 && Images.table.logo){ E.vign1.src = Images.table.logo.src; E.vign1.alt = "La file du D'Tour"; }
     if (E.vign2 && Images.table.pizza_boite_ouverte){
       E.vign2.src = Images.table.pizza_boite_ouverte.src; E.vign2.alt = "L'enquête de la pizza";
@@ -8240,7 +8346,7 @@ globalThis.DTOUR = {
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
-  POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE,
+  POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE, BAR_TAILLE_BARMAN, BAR_COPIES,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, ENQ_ESQUIVE_FENETRE, SUJETS, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, HORTENSE_ECART, TARTE_DUREE,

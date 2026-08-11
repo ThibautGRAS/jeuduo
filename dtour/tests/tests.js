@@ -89,6 +89,56 @@ const horsDossier = presentes.filter(f => f.endsWith(".webp") && !dossierParNom[
 verifier("aucune image en vrac à la racine d'img/",
   horsDossier.length === 0, horsDossier.join(", "));
 
+titre("L'écran titre");
+/* Un menu ne se vérifie pas à l'œil dans ce harnais (il ne dessine que
+   le canevas), donc on verrouille au moins sa STRUCTURE : ce qui doit
+   exister, et les règles de mise en page qui l'empêchent de déborder
+   d'un écran de téléphone en paysage. */
+{
+  const bloc = html.match(/<div id="titre">([\s\S]*?)\n  <\/div>/);
+  verifier("l'écran titre existe", !!bloc);
+  verifier("le décor du bar sert de fond",
+    !!bloc && /id="titreFond"/.test(bloc[1]) &&
+    /titreFond\.style\.backgroundImage/.test(source) &&
+    /Images\.table\.fond_bar && Images\.table\.fond_bar\.naturalWidth/.test(source),
+    "et seulement quand l'image est chargée");
+  verifier("l'enseigne annonce le jeu",
+    !!bloc && /CALLAGHAN/.test(bloc[1]) && /LES ENQUÊTES DE/.test(bloc[1]));
+  verifier("les trois niveaux ont chacun leur tuile",
+    (() => {
+      if (!bloc) return false;
+      const tuiles = bloc[1].match(/class="niv n[123]"/g) || [];
+      return tuiles.length === 3 &&
+        [1, 2, 3].every(k => new RegExp('data-niv="' + k + '"').test(bloc[1]));
+    })());
+  verifier("chaque tuile porte son numéro et sa vignette",
+    (() => {
+      if (!bloc) return false;
+      return (bloc[1].match(/class="num"/g) || []).length === 3 &&
+        [1, 2, 3].every(k => new RegExp('id="vign' + k + '"').test(bloc[1]));
+    })());
+  verifier("chaque niveau a sa couleur",
+    [["n1", "#37AC48"], ["n2", "#2A8AE4"], ["n3", "#F7B32B"]]
+      .every(([c, coul]) => new RegExp("\\.niv\\." + c + "\\{--accent:" + coul + "\\}").test(html)));
+  const rniv = html.match(/\n\.niv\{([^}]*)\}/);
+  verifier("les tuiles se partagent la largeur au lieu de s'empiler",
+    !!rniv && /flex:1 1 0/.test(rniv[1]) && !/flex-wrap:wrap/.test(html.match(/#niveaux\{([^}]*)\}/)[1]),
+    "en paysage, un retour à la ligne pousse tout hors de l'écran");
+  verifier("la hauteur est le budget : les tailles du titre suivent la hauteur",
+    (() => {
+      const r = html.match(/#titreEnseigne b\{([^}]*)\}/);
+      const l = html.match(/#logo\{([^}]*)\}/);
+      return !!r && /clamp\([^)]*vh/.test(r[1]) && !!l && /clamp\([^)]*vh/.test(l[1]);
+    })(), "en vw, le titre déborde dès que la barre du navigateur mange la hauteur");
+  verifier("le titre tient compte de l'encoche",
+    (() => {
+      const r = html.match(/#titre\{([^}]*)\}/);
+      return !!r && /var\(--gauche\)/.test(r[1]) && /var\(--droite\)/.test(r[1]);
+    })());
+  verifier("les sous-titres disparaissent avant les titres sur écran bas",
+    /@media \(max-height:400px\)\{ \.niv \.txt i\{display:none\}/.test(html));
+}
+
 titre("Le pupitre du niveau 3");
 /* Ces touches se jouent au pouce, sur un décor chargé : leur
    disposition et leur taille sont du gameplay, pas de la décoration.
@@ -291,6 +341,7 @@ function decorDom(){
 
 let D = null;
 let domBac = null;
+let messageDetail = "";
 try{
   const bac = decorDom();
   bac.globalThis = bac;
@@ -2094,13 +2145,45 @@ if (D){
       return D.Tournee.poseInvite() === "susp_chat";
     })());
 
-  verifier("les deux barmans tiennent dans deux écrans de comptoir",
+  verifier("chaque barman est posté en face des étagères, pas au bord du décor",
     (() => {
-      /* Sans ça, on ne peut jamais voir venir les deux : le télégraphe
-         devient décoratif et le niveau se joue au réflexe. */
-      const xs = D.BARMANS.map(b => b.x).sort((p, q) => p - q);
-      return xs[1] - xs[0] <= 0.34 && xs[0] > 0.2 && xs[1] < 0.8;
-    })());
+      /* Le monde est le même fond répété BAR_COPIES fois. Un barman dont
+         la position tombe au bord d'une copie se retrouve devant les
+         toilettes ou le frigo : techniquement visible, visuellement
+         faux. On exige donc qu'il tombe dans la partie CENTRALE d'une
+         copie, là où sont le comptoir et les bouteilles. */
+      return D.BARMANS.every(b => {
+        const dansLaCopie = (b.x * D.BAR_COPIES) % 1;
+        return dansLaCopie >= 0.22 && dansLaCopie <= 0.80;
+      });
+    })(),
+    D.BARMANS.map(b => b.id + " -> " + (((b.x * D.BAR_COPIES) % 1).toFixed(2))).join(", "));
+  verifier("toutes les poses d'un barman ont la même hauteur d'image",
+    (() => {
+      /* L'invariant qui empêche le barman de grandir et rétrécir à
+         chaque geste : à hauteur d'écran constante, seule une hauteur
+         SOURCE constante garde l'échelle du personnage. */
+      const dims = nom => {
+        const buf = fs.readFileSync(path.join(RACINE, "img", "n3", nom + ".webp"));
+        /* en-tête WebP : VP8 simple (lossy) ou VP8X (étendu) */
+        const tag = buf.toString("ascii", 12, 16);
+        if (tag === "VP8 ") return { l:buf.readUInt16LE(26) & 0x3fff, h:buf.readUInt16LE(28) & 0x3fff };
+        if (tag === "VP8X") return { l:(buf.readUIntLE(24, 3) & 0xffffff) + 1, h:(buf.readUIntLE(27, 3) & 0xffffff) + 1 };
+        if (tag === "VP8L"){
+          const b2 = buf.readUInt32LE(21);
+          return { l:(b2 & 0x3fff) + 1, h:((b2 >> 14) & 0x3fff) + 1 };
+        }
+        return null;
+      };
+      const soucis = [];
+      for (const b of D.BARMANS){
+        const noms = b.prepare.concat(Object.values(b.poses));
+        const hs = noms.map(n => { const d = dims(n); return d ? d.h : -1; });
+        if (new Set(hs).size !== 1) soucis.push(b.id + " : " + hs.join("/"));
+      }
+      messageDetail = soucis.join(" | ");
+      return soucis.length === 0;
+    })(), "des cadrages différents font grandir et rétrécir le barman");
 
   /* --- la tarte au bar --- */
   verifier("Hortense finit par lancer, et le bouton ESQUIVER apparaît",

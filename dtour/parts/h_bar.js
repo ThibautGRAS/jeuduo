@@ -14,6 +14,7 @@ const BAR_COPIES = 3;               /* le monde = trois fois le fond mis bout à
 const BAR_SOL = 0.965;              /* ligne de sol du joueur, en fraction de la hauteur du fond */
 const BAR_COMPTOIR = 0.555;         /* le plateau du comptoir, mesuré sur le fond (bois clair : 0.55-0.57) */
 const BAR_TAILLE_HEROS = 0.52;      /* hauteur du héros, en fraction de l'écran */
+const BAR_TAILLE_BARMAN = 0.34;     /* hauteur du buste des barmans (tête -> ceinture) */
 const BAR_PORTEE = 0.030;           /* portée de prise d'un verre, en fraction du monde */
 const BAR_MARCHE = 0.135;           /* fraction du monde parcourue par seconde, à vitesse 1.0 */
 const BAR_EXPIRE = [7.5, 5.2];      /* vie d'un verre posé : début, puis en plein coup de feu */
@@ -86,19 +87,26 @@ const BOISSONS = {
    geste avant que le verre soit posé. L'eau a sa préparation à part,
    plus posée — c'est l'indice. */
 const BARMANS = [
-  { id:"francky", nom:"FRANCKY", x:0.34, sert:"cocktail",
+  /* Les postes sont revenus à 0,24 et 0,76 : le décor est le même fond
+     répété trois fois, et ces deux valeurs tombent en face des étagères
+     à bouteilles. À 0,34 et 0,66 ils se retrouvaient au BORD d'une
+     copie, devant les toilettes et le frigo — techniquement visibles,
+     visuellement faux. Ce qu'on voit hors champ est traité par les
+     chevrons de bord, pas en déplaçant les gens. */
+  { id:"francky", nom:"FRANCKY", x:0.24, sert:"cocktail",
     poses:{ repos:"bar_francky_idle", eau:"bar_francky_essuie", sert:"bar_francky_sert" },
-    /* six temps : il choisit, il verse, il shake, il remue, il décore.
-       Plus la séquence est longue, plus le joueur a le temps de LIRE ce
-       qui arrive — c'est là que se gagne le niveau. */
-    prepare:["bar_francky_choisit", "bar_francky_verse", "bar_francky_shake",
-             "bar_francky_remue", "bar_francky_decore"] },
-  { id:"jojo", nom:"JOJO", x:0.66, sert:"jager",
-    poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_sert" },
-    /* trois temps seulement : un Jägerbomb se monte plus vite qu'un
-       cocktail, et cette différence de LONGUEUR est en soi une
-       information — on reconnaît le barman à son rythme. */
-    prepare:["bar_jojo_dose", "bar_jojo_verse", "bar_jojo_shake"] },
+    /* cinq temps : il choisit, il dose, il verse, il shake, il remplit,
+       il décore. Plus la séquence est longue, plus le joueur a le temps
+       de LIRE ce qui arrive — c'est là que se gagne le niveau. */
+    prepare:["bar_francky_choisit", "bar_francky_dose", "bar_francky_verse",
+             "bar_francky_shake", "bar_francky_remplit", "bar_francky_decore"] },
+  { id:"jojo", nom:"JOJO", x:0.76, sert:"jager",
+    poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_serie" },
+    /* quatre temps : il choisit, il dose, il verse, il superpose. Un peu
+       plus court que Francky, et cette différence de RYTHME est en soi
+       une information — on reconnaît le barman avant de voir ce qu'il
+       tient. */
+    prepare:["bar_jojo_choisit", "bar_jojo_dose", "bar_jojo_verse", "bar_jojo_superpose"] },
 ];
 
 const ETAT_VERRE = { PREPARE:"PREPARE", POSE:"POSE", PRIS:"PRIS", TRAINE:"TRAINE" };

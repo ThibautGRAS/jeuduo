@@ -458,6 +458,7 @@ function jouerJusqua(D, condition, limite){
     const fr = D.Tournee.barmans[0];
     fr.etat = "prepare"; fr.type = "cocktail"; fr.duree = 2.0; fr.t = 1.3;
     fr.pose = fr.ref.prepare[3];
+    D.Tournee.x = 0.24;
     const jo = D.Tournee.barmans[1];
     jo.etat = "prepare"; jo.type = "eau"; jo.duree = 1.35; jo.t = 0.6;
     jo.pose = jo.ref.poses.eau;

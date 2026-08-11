@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.5";
+const VERSION = "6.6";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -533,11 +533,17 @@ const PREFIXES_BAR = ["bar_th", "bar_pf"];
 
 const IMAGES_NIVEAU3 = [
   "fond_bar",
-  /* Francky prépare en six temps : c'est le télégraphe le plus long du
-     niveau, donc le plus lisible — on voit venir un cocktail de loin. */
-  "bar_francky_idle", "bar_francky_choisit", "bar_francky_verse", "bar_francky_shake",
-  "bar_francky_remue", "bar_francky_decore", "bar_francky_sert", "bar_francky_essuie",
-  "bar_jojo_idle", "bar_jojo_dose", "bar_jojo_verse", "bar_jojo_shake", "bar_jojo_sert", "bar_jojo_essuie",
+  /* Les poses de barman sont TOUTES découpées dans la même bande de la
+     même planche : même hauteur en pixels, même trait de coupe au
+     niveau de la ceinture. C'est ce qui garantit qu'à hauteur d'écran
+     constante le personnage garde sa taille et que son buste tombe pile
+     sur le comptoir. Voir MEMOIRE.md, « Un sprite n'a pas de taille,
+     il a une échelle ». */
+  "bar_francky_idle", "bar_francky_choisit", "bar_francky_dose", "bar_francky_verse",
+  "bar_francky_shake", "bar_francky_remplit", "bar_francky_decore", "bar_francky_sert",
+  "bar_francky_essuie",
+  "bar_jojo_idle", "bar_jojo_choisit", "bar_jojo_dose", "bar_jojo_verse",
+  "bar_jojo_superpose", "bar_jojo_serie", "bar_jojo_decore", "bar_jojo_essuie",
   "bar_cocktail", "bar_jager", "bar_eau",
   /* les habitués animés, et le passage d'Hortense */
   "bar_marini_idle", "bar_marini_marche1", "bar_marini_marche2",

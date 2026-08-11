@@ -81,6 +81,51 @@ Le garde-fou `faisable()` refuse tout verre injouable : distance à la
 vitesse du champion + geste de boire + verres déjà posés < vie × 0.9.
 Il travaille avec la vitesse EFFECTIVE : pompette, on sert moins loin.
 
+### Un sprite n'a pas de taille, il a une ÉCHELLE
+Le rendu dessinait chaque pose de barman à une hauteur d'écran fixe
+(`H*0.30`). Or les poses venaient de cadrages différents : `idle`
+faisait 260×183 (un buste serré, vieille planche) et les poses animées
+~200×255. À hauteur constante, le personnage **grandissait au repos et
+rétrécissait dès qu'il travaillait** — et pour Jojo, des poses EN PIED
+normalisées à la même hauteur le réduisaient à un nain posé sur le
+comptoir. Ce n'est pas un réglage à corriger, c'est une erreur de
+méthode : une hauteur d'écran commune n'a de sens que si les sources
+partagent la même hauteur ET le même trait de coupe. Toutes les poses
+d'un barman sont donc découpées **dans la même bande de la même
+rangée** de la même planche (bande y fixe, seul x varie), ce qui donne
+193 px pour toutes et une coupe à la ceinture. Un test lit la hauteur
+dans l'en-tête WebP et refuse toute divergence.
+
+Corollaire pour les poses qui viennent d'ailleurs (`idle`, la pose
+« eau ») : on les met à l'échelle de la séquence, et on ne peut **ancrer
+sur le pixel le plus haut que si ce pixel est la tête**. La pose de Jojo
+au shaker levé calait le shaker sur la ligne des têtes et enfonçait le
+personnage sous le comptoir ; il a fallu prendre une pose bras baissés.
+La mesure automatique de la largeur de tête, elle, s'est révélée
+inutilisable — elle attrapait un bras levé et sortait des échelles de
+0,43. Trancher à l'œil sur une planche de trois échelles côte à côte a
+été plus rapide et plus juste.
+
+### Aucun décor ne doit être cuit dans un sprite
+Les bustes des planches sont dessinés appuyés sur un bout de comptoir en
+bois. Ce bois ne s'aligne jamais avec le comptoir du jeu : on voyait
+« un bout de planche » flotter sous Francky. Tout sprite se découpe
+AU-DESSUS du décor de la planche — pour ces séquences, la bande de
+comptoir se repère au profil des lignes (la largeur occupée saute
+d'un coup quand la planche relie les poses entre elles).
+
+### Le monde répété change le sens des coordonnées
+Le décor du bar est le même fond mis bout à bout `BAR_COPIES` fois. Une
+position monde de 0,34 ne veut donc pas dire « un tiers du bar » mais
+« tout au début de la deuxième copie », c'est-à-dire au BORD du fond :
+devant les toilettes et le frigo, pas devant les étagères. En
+rapprochant les barmans pour qu'on les voie, je les ai postés
+exactement là. Retour à 0,24 et 0,76, qui tombent au centre d'une copie,
+et un test qui vérifie la position MODULO la copie —
+`(x * BAR_COPIES) % 1` doit rester entre 0,22 et 0,80. La visibilité
+hors champ se règle avec les chevrons de bord, pas en déplaçant les
+gens.
+
 ### Un monde de trois écrans cache ce qu'il faut lire
 Les barmans étaient postés à 0,24 et 0,76 d'un monde large de trois
 écrans : sur la photo de contrôle, **aucun des deux n'était visible**.
@@ -156,6 +201,20 @@ retirant la couleur du fond des pixels de bord
 (`c = (c_vu - (1-a)·fond) / a`) au lieu de laisser un liseré rose. Pas
 de `fill_holes` : le magenta pris entre un bras et un torse doit rester
 transparent, et c'est ce qui arrive naturellement.
+
+### Un écran titre doit dire de quel jeu il s'agit
+L'ancien menu empilait un logo, trois lignes de liste et une légende de
+touches par-dessus le trottoir du niveau 1. Lisible, et parfaitement
+muet : rien n'y disait qu'on tenait un jeu de bar. Le nouveau pose le
+**décor du bar en fond** (l'image la plus parlante du jeu), une enseigne
+au néon en deux niveaux de lueur, et trois **tuiles** avec numéro,
+vignette et couleur par niveau. Deux règles qui viennent du format
+paysage de téléphone : les tailles se règlent en `vh` et pas en `vw`
+(en largeur, le titre déborde dès que la barre du navigateur mange la
+hauteur), et les tuiles se partagent la largeur (`flex:1 1 0`) sans
+`flex-wrap` — un retour à la ligne pousse tout hors de l'écran. Le
+harnais ne dessinant que le canevas, la structure du menu est verrouillée
+par des tests qui lisent le HTML et le CSS.
 
 ### Un pupitre centré masque ce qu'on joue
 Le pupitre du niveau 3 avait été copié de celui du niveau 2 —

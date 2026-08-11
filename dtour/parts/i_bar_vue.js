@@ -156,14 +156,18 @@ const BarVue = {
     for (const b of Tournee.barmans){
       const spr = Images.table[b.pose];
       if (!spr || !spr.naturalWidth) continue;
-      const sh = H * 0.30, sl = sh * spr.naturalWidth / spr.naturalHeight;
+      /* Toutes les poses de barman ont la même hauteur source et le même
+         trait de coupe : une seule hauteur d'écran suffit donc, et le bas
+         du sprite se pose PILE sur le comptoir. Avant, des poses de
+         cadrages différents à hauteur constante faisaient grandir et
+         rétrécir le barman à chaque geste. */
+      const sh = H * BAR_TAILLE_BARMAN, sl = sh * spr.naturalWidth / spr.naturalHeight;
       const x = this.ex(b.ref.x);
-      /* derrière le comptoir : le bas du buste passe dessous */
-      ctx.drawImage(spr, x - sl / 2, this.ey(BAR_COMPTOIR) - sh * 0.94, sl, sh);
+      ctx.drawImage(spr, x - sl / 2, this.ey(BAR_COMPTOIR) - sh * 0.98, sl, sh);
       if (b.etat === "prepare"){
         /* petit indicateur au-dessus : quelque chose arrive */
         const p = borne(b.t / b.duree, 0, 1);
-        const y = this.ey(BAR_COMPTOIR) - sh * 1.04;
+        const y = this.ey(BAR_COMPTOIR) - sh * 1.06;
         ctx.beginPath(); ctx.arc(x, y, H * 0.016, -Math.PI / 2, -Math.PI / 2 + p * 6.283);
         ctx.strokeStyle = "#F7B32B"; ctx.lineWidth = Math.max(2, H * 0.008); ctx.stroke();
       }

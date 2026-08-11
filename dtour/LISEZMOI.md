@@ -398,9 +398,13 @@ Deux boutons : **BOIRE** et **JETER**. Quatre issues :
 **Les barmans télégraphient.** Francky prépare **en cinq temps** — il
 choisit sa bouteille, il verse, il shake, il remue, il décore — et c'est
 le signal le plus long du niveau : un cocktail se voit venir de loin.
-Jojo fait **trois temps** : il dose, il verse dans le shot, il secoue.
-Cette différence de longueur est en soi une information — on reconnaît
-le barman à son rythme avant de regarder ce qu'il tient. Et chez les deux, **le chiffon
+Jojo fait **quatre temps** : il choisit, il dose, il verse dans le shot,
+il superpose les couleurs. Cette différence de longueur est en soi une
+information — on reconnaît le barman à son rythme avant de regarder ce
+qu'il tient. Les deux tiennent leur poste **en face des étagères** (0,24
+et 0,76 du monde) : rapprochés pour qu'on les voie tous les deux, ils se
+retrouvaient au bord d'une copie du décor, devant les toilettes et le
+frigo. C'est le rôle des chevrons de bord, pas celui des barmans. Et chez les deux, **le chiffon
 tranquille annonce l'eau**. Elle n'apparaît qu'après vingt-cinq
 secondes, puis environ une fois sur quatre. Un bon joueur lit le geste
 avant que le verre touche le bois.
