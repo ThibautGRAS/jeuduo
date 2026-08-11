@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.13";
+const VERSION = "6.14";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -111,6 +111,12 @@ const PERSOS_DEBOUT = ["pers_gabi", "pers_francky", "pers_jojo", "pers_marini", 
 const PERSOS_ASSIS = ["pers_teo", "pers_charles"];
 for (const p of PERSOS_DEBOUT) SPRITES_PNJ.push(p);
 const POSES_HEROS = ["idle","attente","marche","regarde","surpris","stress","tendue","victoire"];
+/* Les cinq poses d'un PNJ de la file. Le bras qui se tend est DESSINÉ
+   maintenant : plus besoin de le peindre à partir des couleurs relevées
+   sur le sprite. Les habitués, qui n'ont pas encore de planche, gardent
+   le bras peint — les deux systèmes cohabitent le temps de la
+   transition, et `aBrasDessine()` choisit. */
+const POSES_PNJ = ["attente", "marche1", "marche2", "demi", "main"];
 
 /* Ce que dit l'arrivant en tendant la main. Il est chaleureux, sûr de
    lui, et se trompe complètement de personne — c'est tout le sujet. */
@@ -576,9 +582,11 @@ const IMG_PAR_DOSSIER = {
   commun: ["logo", "face_thibaut", "face_pierre"]
     .concat(EFFETS, SPRITES_HORTENSE, SPRITES_TARTE, PERSONNAGES_MAISON),
   n1: MOMENTS.map(m => m.fond)
-    /* SPRITES_PNJ embarque aussi les habitants debout — ils font la
-       queue au niveau 1 mais vivent dans commun/, on les écarte ici */
-    .concat(SPRITES_PNJ.filter(n => PERSONNAGES_MAISON.indexOf(n) < 0))
+    /* SPRITES_PNJ liste des IDENTITÉS ; ce qui se charge, ce sont leurs
+       poses. Les habitants debout font la queue mais vivent dans
+       commun/, on les écarte ici. */
+    .concat(SPRITES_PNJ.filter(n => PERSONNAGES_MAISON.indexOf(n) < 0)
+      .flatMap(n => POSES_PNJ.map(po => n + "_" + po)))
     .concat(["thibaut", "pierre"].flatMap(h => POSES_HEROS.map(p => h + "_" + p))),
   n2: IMAGES_NIVEAU2,
   n3: IMAGES_NIVEAU3,
@@ -697,7 +705,11 @@ function charger(surAvance){
     const img = new Image();
     img.onload = () => {
       Images.table[nom] = img;
-      if (nom.startsWith("pnj") || nom.startsWith("thibaut") || nom.startsWith("pierre")) releverTeintes(nom, img);
+      /* Les habitants gardent un bras PEINT faute de planche : il leur
+         faut donc leurs teintes, ce qu'ils n'avaient jamais eu — leur
+         bras sortait en couleurs par défaut. */
+      if (nom.startsWith("pnj") || nom.startsWith("pers_") ||
+          nom.startsWith("thibaut") || nom.startsWith("pierre")) releverTeintes(nom, img);
       faits++; if (surAvance) surAvance(faits / noms.length); resoudre();
     };
     img.onerror = () => { faits++; if (surAvance) surAvance(faits / noms.length); resoudre(); };

@@ -216,6 +216,21 @@ function gesteHeros(h, type, duree){ Heros[h].geste = { type, t:0, duree }; }
    devient le bout de sa main, relevé sur l'image au chargement — celle
    de Pierre-François va nettement plus loin que celle de Thibaut, un
    chiffre en dur décalait la poignée d'une demi-main. */
+/* Un PNJ a-t-il ses poses dessinées, ou faut-il lui peindre un bras ? */
+function aBrasDessine(sprite){
+  const t = Images.table[sprite + "_main"];
+  return !!(t && t.naturalWidth);
+}
+
+/* La pose d'un PNJ se déduit de son état, comme partout ailleurs. */
+function posePnj(p){
+  if (p.bras > 0.45) return "main";
+  if (p.bras > 0.02) return "demi";
+  const marche = (p.etat === ETAT.ENTREE || p.etat === ETAT.MARCHE || p.etat === ETAT.REPOS);
+  if (marche) return (Math.floor((p.pas || 0) * 0.9) % 2) ? "marche2" : "marche1";
+  return "attente";
+}
+
 function mainHeros(h, serre){
   const H = Heros[h];
   const x0 = xPlace(H.place);

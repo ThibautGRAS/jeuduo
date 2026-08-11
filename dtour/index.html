@@ -455,7 +455,64 @@ kbd{
 #pivot h2{font-size:clamp(19px,5vw,26px);font-weight:800;line-height:1.2}
 #pivot p{font-size:13px;font-weight:600;color:var(--sourd);max-width:26ch;line-height:1.5}
 @media (prefers-reduced-motion:reduce){#pivot .tourne{animation:none;transform:rotate(0)}}
-#outilsBtn.on{display:block}
+/* ---------------- boutons de coin et pause ----------------
+   Le bouton pause et le panneau de pause vivaient dans le HTML et dans
+   le code sans une seule ligne de style : bouton nu dans le flux du
+   document, panneau en texte brut tout en bas. La fonction existait,
+   personne ne pouvait s'en servir. Les trois boutons sont regroupés
+   dans un coin, et chacun s'allume avec sa classe `on`. */
+#coins{
+  position:absolute;z-index:30;display:flex;align-items:center;gap:6px;
+  top:calc(8px + var(--haut));right:calc(10px + var(--droite));
+  pointer-events:none;
+}
+#coins > button{
+  display:none;pointer-events:auto;
+  width:clamp(28px,6.4vh,38px);height:clamp(28px,6.4vh,38px);padding:0;
+  align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,.22);border-radius:50%;cursor:pointer;
+  font-family:inherit;font-size:clamp(10px,2.1vh,14px);line-height:1;
+  color:rgba(255,255,255,.80);background:rgba(10,8,16,.58);
+  backdrop-filter:blur(8px) saturate(1.2);-webkit-backdrop-filter:blur(8px) saturate(1.2);
+  transition:transform .08s ease,filter .12s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+#coins > button.on{display:flex}
+#coins > button:active{transform:scale(.92);filter:brightness(1.25)}
+
+/* Le panneau de pause : un voile plein écran et trois choix. */
+#pause{
+  position:absolute;inset:0;z-index:60;display:none;
+  flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(6px,1.6vh,14px);text-align:center;
+  padding:calc(10px + var(--haut)) 20px calc(10px + var(--bas));
+  background:radial-gradient(120% 90% at 50% 45%,rgba(10,7,18,.86) 0%,rgba(10,7,18,.96) 100%);
+}
+#pause.on{display:flex}
+#pause h2{
+  font-size:clamp(22px,7vh,46px);font-weight:800;letter-spacing:.10em;color:#FFF3DA;
+  text-shadow:0 0 8px rgba(255,196,84,.75),0 4px 14px rgba(0,0,0,.85);
+}
+#pauseNiv{font-size:clamp(10px,2vh,14px);font-weight:700;color:#B6A9C9;letter-spacing:.06em}
+#pause .choix{
+  display:flex;flex-direction:column;align-items:stretch;gap:clamp(5px,1.2vh,10px);
+  width:min(320px,78vw);margin-top:clamp(4px,1.4vh,12px);
+}
+.secondaire{
+  border:1px solid rgba(255,255,255,.26);border-radius:999px;cursor:pointer;
+  font-family:inherit;font-weight:800;color:#DCE4F4;
+  font-size:clamp(12px,2.2vh,16px);letter-spacing:.04em;padding:.62em 1.4em;
+  background:rgba(24,18,38,.80);
+  transition:transform .08s ease,border-color .15s ease;
+}
+.secondaire:active{transform:translateY(2px)}
+.secondaire:hover,.secondaire:focus-visible{border-color:var(--ambre)}
+/* En paysage bas, les trois choix passent en ligne : empilés, ils
+   sortaient de l'écran. */
+@media (max-height:360px){
+  #pause .choix{flex-direction:row;width:auto}
+  #pause h2{font-size:clamp(18px,5.4vh,28px)}
+}
 #version{
   position:absolute;left:14px;top:calc(14px + var(--haut));z-index:15;
   font-family:"JetBrains Mono",monospace;font-weight:500;font-size:9px;letter-spacing:.2em;
@@ -589,9 +646,11 @@ kbd{
     </button>
   </div>
 
-  <button id="pauseBtn" title="Pause">❚❚</button>
-  <button id="pleinBtn" title="Plein écran">⛶</button>
-  <button id="outilsBtn" title="Outils">⚙</button>
+  <div id="coins">
+    <button id="outilsBtn" title="Outils">⚙</button>
+    <button id="pleinBtn" title="Plein écran">⛶</button>
+    <button id="pauseBtn" title="Pause" aria-label="Pause">❚❚</button>
+  </div>
 
   <div id="debug">
     <h3>DEBUG</h3>
@@ -627,7 +686,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.13</div>
+  <div id="version">CALLAGHAN v6.14</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -699,7 +758,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.13";
+const VERSION = "6.14";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -792,6 +851,12 @@ const PERSOS_DEBOUT = ["pers_gabi", "pers_francky", "pers_jojo", "pers_marini", 
 const PERSOS_ASSIS = ["pers_teo", "pers_charles"];
 for (const p of PERSOS_DEBOUT) SPRITES_PNJ.push(p);
 const POSES_HEROS = ["idle","attente","marche","regarde","surpris","stress","tendue","victoire"];
+/* Les cinq poses d'un PNJ de la file. Le bras qui se tend est DESSINÉ
+   maintenant : plus besoin de le peindre à partir des couleurs relevées
+   sur le sprite. Les habitués, qui n'ont pas encore de planche, gardent
+   le bras peint — les deux systèmes cohabitent le temps de la
+   transition, et `aBrasDessine()` choisit. */
+const POSES_PNJ = ["attente", "marche1", "marche2", "demi", "main"];
 
 /* Ce que dit l'arrivant en tendant la main. Il est chaleureux, sûr de
    lui, et se trompe complètement de personne — c'est tout le sujet. */
@@ -1257,9 +1322,11 @@ const IMG_PAR_DOSSIER = {
   commun: ["logo", "face_thibaut", "face_pierre"]
     .concat(EFFETS, SPRITES_HORTENSE, SPRITES_TARTE, PERSONNAGES_MAISON),
   n1: MOMENTS.map(m => m.fond)
-    /* SPRITES_PNJ embarque aussi les habitants debout — ils font la
-       queue au niveau 1 mais vivent dans commun/, on les écarte ici */
-    .concat(SPRITES_PNJ.filter(n => PERSONNAGES_MAISON.indexOf(n) < 0))
+    /* SPRITES_PNJ liste des IDENTITÉS ; ce qui se charge, ce sont leurs
+       poses. Les habitants debout font la queue mais vivent dans
+       commun/, on les écarte ici. */
+    .concat(SPRITES_PNJ.filter(n => PERSONNAGES_MAISON.indexOf(n) < 0)
+      .flatMap(n => POSES_PNJ.map(po => n + "_" + po)))
     .concat(["thibaut", "pierre"].flatMap(h => POSES_HEROS.map(p => h + "_" + p))),
   n2: IMAGES_NIVEAU2,
   n3: IMAGES_NIVEAU3,
@@ -1378,7 +1445,11 @@ function charger(surAvance){
     const img = new Image();
     img.onload = () => {
       Images.table[nom] = img;
-      if (nom.startsWith("pnj") || nom.startsWith("thibaut") || nom.startsWith("pierre")) releverTeintes(nom, img);
+      /* Les habitants gardent un bras PEINT faute de planche : il leur
+         faut donc leurs teintes, ce qu'ils n'avaient jamais eu — leur
+         bras sortait en couleurs par défaut. */
+      if (nom.startsWith("pnj") || nom.startsWith("pers_") ||
+          nom.startsWith("thibaut") || nom.startsWith("pierre")) releverTeintes(nom, img);
       faits++; if (surAvance) surAvance(faits / noms.length); resoudre();
     };
     img.onerror = () => { faits++; if (surAvance) surAvance(faits / noms.length); resoudre(); };
@@ -1640,6 +1711,21 @@ function gesteHeros(h, type, duree){ Heros[h].geste = { type, t:0, duree }; }
    devient le bout de sa main, relevé sur l'image au chargement — celle
    de Pierre-François va nettement plus loin que celle de Thibaut, un
    chiffre en dur décalait la poignée d'une demi-main. */
+/* Un PNJ a-t-il ses poses dessinées, ou faut-il lui peindre un bras ? */
+function aBrasDessine(sprite){
+  const t = Images.table[sprite + "_main"];
+  return !!(t && t.naturalWidth);
+}
+
+/* La pose d'un PNJ se déduit de son état, comme partout ailleurs. */
+function posePnj(p){
+  if (p.bras > 0.45) return "main";
+  if (p.bras > 0.02) return "demi";
+  const marche = (p.etat === ETAT.ENTREE || p.etat === ETAT.MARCHE || p.etat === ETAT.REPOS);
+  if (marche) return (Math.floor((p.pas || 0) * 0.9) % 2) ? "marche2" : "marche1";
+  return "attente";
+}
+
 function mainHeros(h, serre){
   const H = Heros[h];
   const x0 = xPlace(H.place);
@@ -2635,9 +2721,15 @@ function dessinerPnj(p, voile){
   const bascule = marche ? Math.sin(p.pas) * 0.035 : 0;
 
   ombreAuSol(p.x, yBase, hauteur, voile.ombre / 0.16);
-  dessinerPerso(p.sprite, p.x, yBase - bob, hauteur, p.regarde < 0, p.penche + bascule, 1);
+  /* Avec un vrai cycle de marche, le faux rebond n'a plus à porter le
+     déplacement : on le réduit fortement, sinon la personne tremble. */
+  const dessine = aBrasDessine(p.sprite);
+  const nom = dessine ? p.sprite + "_" + posePnj(p) : p.sprite;
+  dessinerPerso(nom, p.x, yBase - (dessine ? bob * 0.35 : bob), hauteur,
+                p.regarde < 0, p.penche + (dessine ? bascule * 0.3 : bascule), 1);
 
-  if (p.bras > 0.02 && p.cible >= 0){
+  /* Le bras peint ne sert plus qu'à ceux qui n'ont pas de planche. */
+  if (!dessine && p.bras > 0.02 && p.cible >= 0){
     dessinerBras(p, p.x, yBase - bob, hauteur, mainHeros(p.cible, p.etat === ETAT.POIGNEE), p.bras);
   }
 }
@@ -5074,7 +5166,10 @@ const Enquete = {
      bougé : l'appelant sait alors que le geste a servi à ça. */
   avancerDialogue(){
     if (!this.dialogueEnCours()) return false;
-    if (this.dialCourante && this.dialT < 0.25) return false;   /* anti-double-tape */
+    /* 0,12 s : juste assez pour qu'un appui ne compte pas deux fois, pas
+       assez pour qu'un tapement vif paraisse ignoré. À 0,25 s on avait
+       l'impression que le décor ne répondait pas. */
+    if (this.dialCourante && this.dialT < 0.12) return false;
     this.finirCourante();
     this.tirerSuivante();
     return true;
@@ -5102,7 +5197,9 @@ const Enquete = {
     /* Durée volontairement longue : c'est le doigt qui décide. Le
        compte à rebours ne sert que de filet, pour qu'une partie laissée
        en plan ne se bloque jamais. */
-    const filet = this.dureeLecture(r.txt) * 2.6;
+    /* Le filet, pour qui ne tape pas. À 2,6 fois le temps de lecture il
+       durait jusqu'à seize secondes : trop long quand on a compris. */
+    const filet = this.dureeLecture(r.txt) * 1.7;
     const parole = Effets.parole(cible, r.txt, filet);
     this.dialCourante = { r, parole };
     this.dialT = 0;
@@ -7620,7 +7717,7 @@ const BarVue = {
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","legPtG","legPtD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","titreFond","titreVoile","titreHaut","titreEnseigne","titreSst","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","c3E","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","legPtG","legPtD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","titreFond","titreVoile","titreHaut","titreEnseigne","titreSst","pause","pauseNiv","pauseBtn","coins","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","c3E","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -8557,7 +8654,7 @@ globalThis.DTOUR = {
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
-  Heros, Interface, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
+  Heros, Interface, Pause, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
   POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE, BAR_TAILLE_BARMAN, BAR_COPIES,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, ENQ_ESQUIVE_FENETRE, SUJETS, Progres, Intro,

@@ -203,6 +203,23 @@ appartient à l'affaire, pas à l'indice :
   PENSE » suit le raisonnement : l'hypothèse, puis la piste, puis la
   contradiction. On sait toujours où en sont les têtes.
 
+**La file est repeuplée** (v6.14). Seize nouveaux clients, cinq poses
+chacun : ils attendent, ils **marchent vraiment** (deux temps, au lieu du
+faux rebond appliqué à une image figée), et leur bras qui se tend pour
+serrer est **dessiné**, plus peint par le code. 651 Ko pour 80 images, et
+une définition quatre fois supérieure aux anciens sprites de 44 px.
+
+Le bras peint survit pour les habitués du quartier — Gabi, Mathilde, le
+maire, Martin, Francky, Jojo — qui n'ont pas encore de planche de file :
+`aBrasDessine()` choisit l'un ou l'autre, et le jour où tout le monde
+aura son bras, `releverTeintes` et `dessinerBras` disparaîtront.
+
+**Une pause sur tous les niveaux** : un bouton discret en haut à droite,
+avec REPRENDRE, RECOMMENCER et MENU PRINCIPAL. Il existait dans le code
+depuis des versions **sans une seule ligne de style** — bouton nu dans le
+flux du document, panneau en texte brut : la fonction était là, personne
+ne pouvait s'en servir.
+
 **Les inspecteurs jouent la scène** (v6.13). Dix poses chacun, choisies
 par la logique et pas par le rendu : debout, deux temps de marche,
 accroupi à fouiller, en train d'examiner un objet, la main ouverte quand

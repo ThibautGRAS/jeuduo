@@ -479,6 +479,16 @@ inspecteur seul ne peut pas réunir tous les indices. Quand la place
 manque, on raccourcit un libellé ou on passe en pastille ; on ne retire
 pas la commande. Un test refuse désormais toute règle qui masque `#c2C`.
 
+### Une fonctionnalité sans CSS n'existe pas
+`#pauseBtn`, `#pause`, `.secondaire`, `.choix` : le bouton de pause et son
+panneau étaient dans le HTML, câblés dans le code, avec `Pause.mettre()`,
+`Pause.NOMS[3]`, le focus sur REPRENDRE — et **zéro règle de style**. Un
+bouton nu dans le flux du document, un panneau en texte brut au bas de la
+page. Aucun test ne pouvait le voir : ils vérifiaient le comportement, et
+le comportement était juste. Chercher ce motif ailleurs : tout élément
+ajouté au HTML sans être stylé dans la même passe est probablement
+invisible.
+
 ### Le harnais visuel voit ce que la suite ne voit pas
 `Enquete.poseIns(E2.inspecteurs.indexOf(ins))` : `E2` est un alias LOCAL
 de `dessiner()`, pas une variable de module. Les 449 tests passaient —

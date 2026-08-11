@@ -2415,6 +2415,36 @@ if (D){
     !/#legende \.(pt|pp)\{background/.test(html),
     "la pastille reprendrait sa vie propre");
 
+  /* --- la pause doit être atteignable, et visible --- */
+  titre("La pause");
+  (() => {
+    const el = n => domBac.getElementById(n);
+    verifier("les trois boutons de coin sont regroupés",
+      /<div id="coins">[\s\S]*?id="pauseBtn"[\s\S]*?<\/div>/.test(html) &&
+      /#coins > button\{[^}]*display:none/.test(html) &&
+      /#coins > button\.on\{display:flex\}/.test(html));
+    verifier("le bouton pause a un style, et le panneau aussi",
+      /#coins\{[^}]*position:absolute/.test(html) && /#pause\{[^}]*position:absolute/.test(html) &&
+      /#pause\.on\{display:flex\}/.test(html),
+      "ils ont vécu des versions entières sans une ligne de CSS");
+    verifier("REPRENDRE et MENU PRINCIPAL existent et sont stylés",
+      /id="pReprendre"/.test(html) && /id="pMenu"/.test(html) && /\.secondaire\{/.test(html));
+    for (const niv of [1, 2, 3]){
+      D.Jeu.demarrer(niv);
+      if (niv === 3) D.Tournee.lancer();
+      D.Intro.finir();          /* une intro en cours interdit la pause */
+      D.Jeu.pas(1 / 60);
+      const bouton = el("pauseBtn");
+      verifier("au niveau " + niv + ", le bouton pause est allumé",
+        !!bouton && bouton.classList.contains("on"));
+      D.Pause.mettre();
+      const ok = D.Pause.active && el("pause").classList.contains("on");
+      D.Pause.reprendre();
+      verifier("et il met vraiment le jeu en pause", ok && !D.Pause.active);
+    }
+    D.Jeu.retourTitre();
+  })();
+
   /* --- les dix poses d'inspecteur --- */
   verifier("chaque pose d'inspecteur déduite existe sur le disque",
     (() => {

@@ -583,9 +583,15 @@ function dessinerPnj(p, voile){
   const bascule = marche ? Math.sin(p.pas) * 0.035 : 0;
 
   ombreAuSol(p.x, yBase, hauteur, voile.ombre / 0.16);
-  dessinerPerso(p.sprite, p.x, yBase - bob, hauteur, p.regarde < 0, p.penche + bascule, 1);
+  /* Avec un vrai cycle de marche, le faux rebond n'a plus à porter le
+     déplacement : on le réduit fortement, sinon la personne tremble. */
+  const dessine = aBrasDessine(p.sprite);
+  const nom = dessine ? p.sprite + "_" + posePnj(p) : p.sprite;
+  dessinerPerso(nom, p.x, yBase - (dessine ? bob * 0.35 : bob), hauteur,
+                p.regarde < 0, p.penche + (dessine ? bascule * 0.3 : bascule), 1);
 
-  if (p.bras > 0.02 && p.cible >= 0){
+  /* Le bras peint ne sert plus qu'à ceux qui n'ont pas de planche. */
+  if (!dessine && p.bras > 0.02 && p.cible >= 0){
     dessinerBras(p, p.x, yBase - bob, hauteur, mainHeros(p.cible, p.etat === ETAT.POIGNEE), p.bras);
   }
 }

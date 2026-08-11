@@ -1773,7 +1773,10 @@ const Enquete = {
      bougé : l'appelant sait alors que le geste a servi à ça. */
   avancerDialogue(){
     if (!this.dialogueEnCours()) return false;
-    if (this.dialCourante && this.dialT < 0.25) return false;   /* anti-double-tape */
+    /* 0,12 s : juste assez pour qu'un appui ne compte pas deux fois, pas
+       assez pour qu'un tapement vif paraisse ignoré. À 0,25 s on avait
+       l'impression que le décor ne répondait pas. */
+    if (this.dialCourante && this.dialT < 0.12) return false;
     this.finirCourante();
     this.tirerSuivante();
     return true;
@@ -1801,7 +1804,9 @@ const Enquete = {
     /* Durée volontairement longue : c'est le doigt qui décide. Le
        compte à rebours ne sert que de filet, pour qu'une partie laissée
        en plan ne se bloque jamais. */
-    const filet = this.dureeLecture(r.txt) * 2.6;
+    /* Le filet, pour qui ne tape pas. À 2,6 fois le temps de lecture il
+       durait jusqu'à seize secondes : trop long quand on a compris. */
+    const filet = this.dureeLecture(r.txt) * 1.7;
     const parole = Effets.parole(cible, r.txt, filet);
     this.dialCourante = { r, parole };
     this.dialT = 0;
