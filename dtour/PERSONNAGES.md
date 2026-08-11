@@ -61,7 +61,9 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 
 ### GABI
 - Colocataire de l'appartement du niveau 2, **sœur d'Hortense** la
-  lanceuse de tartes, et **belle-sœur de Pierre-François**. Elle
+  lanceuse de tartes, et **belle-sœur de Pierre-François**. Amie de
+  Teopedo, et **amante secrète de Charles** — ils vivent sous le même
+  toit et personne n'est au courant. Elle
   s'appelait « la sœur d'Hortense » jusqu'à la v6.5 ; c'est Gabi.
 - Un rouleau de papier toilette dans la poche. Sans explication.
 - Habitante interrogeable (couloir). Lui parler peut **provoquer** une
@@ -94,6 +96,7 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 - Sprites : `pers_teo` (commun, assis), `bar_teo_*` (n3, en pied).
 
 ### CHARLES
+- **Amant secret de Gabi.** Il connaît aussi PF et Hortense.
 - Lunettes noires **à l'intérieur**, parie sur tout — y compris avec le
   chat (« Il ne compte pas. »). PF le vouvoie.
 - Au niveau 2 il est **assis à la table** : son sprite `pers_charles`
@@ -212,6 +215,53 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
   construire des recoupements dans les affaires à venir.
 - Habitué du bar au niveau 3 : `bar_remy_*` (n3). Pose assise :
   `assis_remy` (n2).
+
+---
+
+## La carte des liens
+
+C'est la donnée qui sert à deux choses : **conseiller le bon inspecteur**
+au niveau 2, et **fabriquer les recoupements** des affaires. Un témoin
+interrogé par quelqu'un qui le connaît en dit plus, et craque plus vite.
+
+| Personnage | Amis | Connaît | Inspecteur conseillé |
+|---|---|---|---|
+| Mathilde | Thibaut, Solène, Rémy, Kevin | Tristan | **Thibaut** |
+| Tristan | Solène, Thibaut, Kevin, Rémy | Mathilde, PF | **Thibaut** |
+| Kevin | Tristan, Mathilde, Solène, Rémy | PF | les deux |
+| Rémy | Thibaut, Tristan, Mathilde | PF, Kevin | les deux |
+| Solène | Tristan, Mathilde, Kevin | Gabi | — |
+| Teopedo | Gabi, Hortense, PF | Thibaut (vaguement) | **PF** |
+| Charles | Gabi (voir ci-dessous) | PF, Hortense | **PF** |
+| Gabi | Solène, Teopedo | Charles, PF, Hortense | **PF** |
+| Francky | **adore Mathilde** | tout le bar | — |
+| Jojo | **n'aime pas Mathilde** | tout le bar | — |
+| Marini, Martin | — | — | — |
+
+### Les trois nœuds à exploiter
+
+**Gabi et Charles sont amants, et personne ne le sait.** Ils vivent dans
+le même appartement, l'une debout dans le couloir, l'autre attablé. Ils
+ont donc tous les deux une raison de mentir sur où ils étaient et avec
+qui — **une raison qui n'a rien à voir avec l'enquête**. C'est le
+meilleur moteur d'une affaire : deux témoignages faux, deux innocents,
+et des inspecteurs qui tirent la mauvaise conclusion s'ils se contentent
+de la contradiction. Corollaire de jeu : accuser l'un des deux sur la
+foi de son mensonge doit être un piège qui coûte cher.
+
+**Le chat a deux maîtresses.** Risoto appartient à Gabi ; Solène le
+nourrit et est convaincue qu'il est à elle. Deux témoignages sincères et
+incompatibles sur le même animal.
+
+**Mathilde divise les deux barmans.** Francky l'adore, Jojo ne la
+supporte pas. C'est la seule inimitié franche de la bande, donc la seule
+source de témoignages de mauvaise foi assumée.
+
+### Ce qui reste à inventer
+
+Aucune inimitié à l'intérieur de la bande d'amis : tout le monde
+s'apprécie. Une brouille, une dette, une rancune ancienne — n'importe
+laquelle donnerait beaucoup aux affaires.
 
 ---
 
