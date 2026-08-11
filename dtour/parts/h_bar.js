@@ -78,6 +78,10 @@ const BAR_CLIENTS = [
      donc sa silhouette de repli est sa propre pose de repos. */
   { id:"tristan", sprite:"bar_tristan_idle", nom:"TRISTAN", taille:0.92,
     prefixe:"bar_tristan", gestes:true },
+  /* Teo se lève enfin : sa planche en pied lui rend des jambes. Son
+     sprite assis reste pour le canapé du niveau 2. */
+  { id:"teo", sprite:"pers_teo", nom:"TEOPEDO", taille:0.94,
+    prefixe:"bar_teo", gestes:true },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;

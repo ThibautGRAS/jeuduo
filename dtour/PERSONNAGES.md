@@ -83,11 +83,15 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 
 ## Les habitants de l'appartement (niveau 2)
 
-### TEO
-- Gamer, assis par terre devant son écran, **ne se lève jamais** (son
-  sprite est assis — il ne peut pas faire la queue au niveau 1, il
-  tient la terrasse). PF le tutoie.
-- Sprite : `pers_teo` (commun).
+### TEO (TEOPEDO)
+- Gamer avachi sur le canapé, manette en main. PF le tutoie. Son nom
+  affiché est **TEOPEDO** — c'est bien son nom, pas une coquille.
+- Il **se lève enfin** depuis la v6.20 : sa planche en pied lui rend des
+  jambes, il est habitué du bar au niveau 3
+  (`bar_teo_{idle,marche1,marche2,attrape,boit,vide}`).
+- Son sprite assis `pers_teo` reste : c'est lui qui occupe le canapé de
+  l'appartement, et c'est sa signature.
+- Sprites : `pers_teo` (commun, assis), `bar_teo_*` (n3, en pied).
 
 ### CHARLES
 - Lunettes noires **à l'intérieur**, parie sur tout — y compris avec le
@@ -117,8 +121,11 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
   **cocktails**. Son télégraphe est le plus long du niveau, en cinq
   temps : il choisit sa bouteille, verse, shake, remue, décore. S'il
   essuie tranquillement un verre au chiffon, méfiance — c'est de l'eau.
-- Sprites : `pers_francky` (commun), `bar_francky_{idle,choisit,verse,
-  shake,remue,decore,sert,essuie}` (n3).
+- Il a désormais une silhouette **en pied** (`pers_francky`, refaite en
+  v6.20) : il peut donc habiter l'appartement du niveau 2, pas seulement
+  y frapper à la porte.
+- Sprites : `pers_francky` (commun, en pied), `bar_francky_{idle,choisit,
+  verse,shake,remue,decore,sert,essuie}` (n3, bustes derrière le bar).
 
 ### JOJO LE NAIN
 - Barman de **l'Entrepotes**, plombier le reste du temps, marié à une
@@ -128,7 +135,13 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
   « JÄGERBOMBS DE JOJO » est au mur — et tient la **droite** du
   comptoir (0,66). Son télégraphe : le doseur puis le shot. Le chiffon
   tranquille, c'est de l'eau.
-- Sprites : `pers_jojo` (commun), `bar_jojo_*` (n3).
+- Silhouette **en pied** depuis la v6.20 (`pers_jojo`), donc utilisable
+  dans l'appartement. **Attention à sa taille** : sa planche le dessine
+  avec les proportions d'un homme trapu ordinaire (rapport tête/hauteur
+  0,168, identique à Francky), pas celles d'une personne de petite
+  taille. Sa petitesse se règle donc par le facteur `taille` du jeu, ce
+  qui donne « petit », pas « nain ».
+- Sprites : `pers_jojo` (commun, en pied), `bar_jojo_*` (n3, bustes).
 
 ---
 

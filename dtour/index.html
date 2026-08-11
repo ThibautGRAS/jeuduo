@@ -691,7 +691,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.19</div>
+  <div id="version">CALLAGHAN v6.20</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -763,7 +763,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.19";
+const VERSION = "6.20";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1319,6 +1319,8 @@ const IMAGES_NIVEAU3 = [
   "bar_charles_attrape", "bar_charles_boit", "bar_charles_vide",
   "bar_tristan_idle", "bar_tristan_marche1", "bar_tristan_marche2",
   "bar_tristan_attrape", "bar_tristan_boit", "bar_tristan_vide",
+  "bar_teo_idle", "bar_teo_marche1", "bar_teo_marche2",
+  "bar_teo_attrape", "bar_teo_boit", "bar_teo_vide",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 
@@ -6471,6 +6473,10 @@ const BAR_CLIENTS = [
      donc sa silhouette de repli est sa propre pose de repos. */
   { id:"tristan", sprite:"bar_tristan_idle", nom:"TRISTAN", taille:0.92,
     prefixe:"bar_tristan", gestes:true },
+  /* Teo se lève enfin : sa planche en pied lui rend des jambes. Son
+     sprite assis reste pour le canapé du niveau 2. */
+  { id:"teo", sprite:"pers_teo", nom:"TEOPEDO", taille:0.94,
+    prefixe:"bar_teo", gestes:true },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;
