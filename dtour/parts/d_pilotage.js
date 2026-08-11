@@ -240,11 +240,15 @@ const Interface = {
     if (E.titre) E.titre.classList.remove("parti");
     if (E.niv2Sst) E.niv2Sst.textContent = "Six indices, cinq minutes.";
     if (E.fin) E.fin.classList.remove("on");
-    if (E.hud) E.hud.classList.remove("on");
-    if (E.pupitre) E.pupitre.classList.remove("on");
-    if (E.outilsBtn) E.outilsBtn.classList.remove("on");
-    if (E.pleinBtn) E.pleinBtn.classList.remove("on");
-    if (E.pauseBtn) E.pauseBtn.classList.remove("on");
+    /* Tout ce qui appartient à une partie se range ICI. La liste avait
+       été écrite quand il n'existait qu'un pupitre : en revenant au menu
+       après le niveau 2 ou 3, JETER et BOIRE restaient affichés en bas
+       de l'écran titre. Un nouveau niveau ajoute son pupitre à cette
+       liste, et le test qui suit le vérifie. */
+    for (const el of [E.hud, E.pupitre, E.pupitre2, E.pupitre3, E.releveBar,
+                      E.outilsBtn, E.pleinBtn, E.pauseBtn]){
+      if (el) el.classList.remove("on");
+    }
   },
   entrerJeu(){
     this.finAffichee = false;

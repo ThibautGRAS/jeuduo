@@ -252,6 +252,16 @@ retirant la couleur du fond des pixels de bord
 de `fill_holes` : le magenta pris entre un bras et un torse doit rester
 transparent, et c'est ce qui arrive naturellement.
 
+### Une liste écrite pour un seul niveau vieillit mal
+`entrerTitre()` rangeait le bandeau et LE pupitre — celui du niveau 1,
+le seul qui existait quand la fonction a été écrite. Deux niveaux plus
+tard, revenir au menu après le bar laissait les grosses touches JETER et
+BOIRE affichées par-dessus l'écran titre. La fonction parcourt maintenant
+une liste d'éléments, un nouveau niveau y ajoute son pupitre, et un test
+rejoue les trois niveaux pour vérifier qu'aucune commande ne survit au
+retour au menu. Chercher ce motif partout : toute énumération d'éléments
+« du jeu » écrite avant le niveau 2 est suspecte.
+
 ### Un écran titre doit dire de quel jeu il s'agit
 L'ancien menu empilait un logo, trois lignes de liste et une légende de
 touches par-dessus le trottoir du niveau 1. Lisible, et parfaitement

@@ -2365,6 +2365,27 @@ if (D){
       return calme < chaud && chaud < finale;
     })());
 
+  /* --- revenir au menu ne doit rien laisser traîner --- */
+  titre("Retour au menu");
+  (() => {
+    /* Bug vu sur photo : après une partie de niveau 2 ou 3, les grosses
+       touches JETER et BOIRE restaient affichées en bas de l'écran
+       titre. entrerTitre() avait été écrit quand il n'existait qu'un
+       seul pupitre. */
+    const el = n => domBac.getElementById(n);
+    for (const niv of [1, 2, 3]){
+      D.Jeu.demarrer(niv);
+      if (niv === 3) D.Tournee.lancer();
+      D.Jeu.pas(1 / 60);
+      D.Jeu.retourTitre();
+      const restants = ["hud", "pupitre", "pupitre2", "pupitre3", "releveBar",
+                        "outilsBtn", "pleinBtn", "pauseBtn"]
+        .filter(n => el(n) && el(n).classList.contains("on"));
+      verifier("après le niveau " + niv + ", le menu ne garde aucune commande",
+        restants.length === 0, "encore visible(s) : " + restants.join(", "));
+    }
+  })();
+
   /* --- retour au calme pour la suite de la suite --- */
   D.Jeu.retourTitre();
 
