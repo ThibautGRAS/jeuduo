@@ -495,6 +495,24 @@ régulière a retiré une déclaration en laissant son usage
 passait, le jeu plantait à la première image, et c'est le harnais visuel
 qui l'a dit. Après toute chirurgie mécanique, on lance l'aperçu.
 
+### Une couleur écrite en dur se cache à plusieurs endroits
+J'avais corrigé les pastilles de légende en v6.10 en écrivant « une
+couleur ne s'écrit qu'à un seul endroit » — et j'en avais laissé une
+deuxième : le fond des touches de salut, `#cmdT` et `#cmdP`, peint dans
+le CSS. Résultat visible cinq versions plus tard : la touche de PF était
+VERTE avec le visage de PF dessus. Quand on retire une donnée du CSS pour
+la faire venir du code, on cherche TOUTES ses occurrences, pas celle qui
+a motivé la correction. Un test refuse maintenant tout `background`
+codé en dur sur ces deux touches.
+
+### La ligne de sol n'est pas la réserve d'interface
+`Camera.sol` valait `H - basUI`, où `basUI` est la place réservée aux
+commandes (8 % du bas). Les gens de la file marchaient donc sur une ligne
+invisible, au-dessus du trottoir du décor : ils avaient l'air de flotter.
+La réserve sert au calcul de la hauteur utile, pas à poser les pieds —
+le sol descend à `H - basUI * 0,45`. Les commandes du niveau 1 sont des
+pastilles dans les coins, elles ne cachent pas le centre.
+
 ### Une fonctionnalité sans CSS n'existe pas
 `#pauseBtn`, `#pause`, `.secondaire`, `.choix` : le bouton de pause et son
 panneau étaient dans le HTML, câblés dans le code, avec `Pause.mettre()`,

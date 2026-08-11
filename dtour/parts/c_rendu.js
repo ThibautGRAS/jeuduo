@@ -46,7 +46,13 @@ const Camera = {
        le décor est une image large, des personnages timides auraient
        l'air posés devant une carte postale. */
     this.base = borne(Math.min(hUtile * 0.60, L * 0.26), 92, 380);
-    this.sol = H - this.basUI;
+    /* La ligne de sol était calée sur la RÉSERVE d'interface (8 % du
+       bas). Ça laissait une bande de trottoir sous les pieds : les gens
+       de la file avaient l'air de flotter. La réserve reste entière pour
+       le calcul de la hauteur utile, mais le sol descend nettement plus
+       bas — les commandes du niveau 1 sont des pastilles dans les coins,
+       elles ne cachent pas le centre. */
+    this.sol = H - this.basUI * 0.45;
     this.calculerVise();
     this.recentrer();
   },

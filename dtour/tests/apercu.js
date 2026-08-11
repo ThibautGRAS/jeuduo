@@ -407,6 +407,22 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "17_bar_figurants_844");
   }
 
+  /* 21. niveau 1 au format d'un téléphone en paysage plein écran : c'est
+         là que le rapport largeur/hauteur est le plus haut, et donc que
+         la ligne de sol se voit le mieux. */
+  {
+    const { D, canevas } = await preparer(844, 390);
+    D.amorcer(); D.Jeu.demarrer();
+    D.Camera.mesurer(844, 390, 1); D.File.gonfler(6); D.Camera.recaler();
+    for (let i = 0; i < 40; i++) D.Jeu.pas(1 / 60);
+    const img = D.Images.table["pnj01_attente"];
+    console.log("    sol=" + D.Camera.sol.toFixed(0) + " basUI=" + D.Camera.basUI.toFixed(0) +
+                " hauteur=" + (D.H_PERSO * D.Camera.ech).toFixed(0) +
+                " sprite=" + img.naturalWidth + "x" + img.naturalHeight);
+    dessinerVia(D, canevas);
+    ecrire(canevas, "21_file_390");
+  }
+
   /* 19. niveau 2 : le pire cas signalé — plusieurs bulles, un badge au
          centre, des plaques de nom, tout en même temps */
   {

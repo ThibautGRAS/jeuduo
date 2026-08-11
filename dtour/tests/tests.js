@@ -2416,6 +2416,20 @@ if (D){
   verifier("Thibaut est vert, PF est bleu, comme leurs vêtements",
     D.Heros.find(h => h.court === "Thibaut").couleur === "#37AC48" &&
     D.Heros.find(h => h.court === "P-F").couleur === "#2A8AE4");
+  verifier("les touches de salut prennent la couleur de leur héros",
+    (() => {
+      D.Interface.preparer();
+      const g = domBac.getElementById("cmdT"), d2 = domBac.getElementById("cmdP");
+      const dedans = (style, coul) => {
+        const n = parseInt(coul.replace("#", ""), 16);
+        return style.indexOf("rgba(" + ((n >> 16) & 255) + "," + ((n >> 8) & 255) + "," + (n & 255)) >= 0;
+      };
+      return !!g && !!d2 &&
+        dedans(g.style.background, D.Heros[0].couleur) &&
+        dedans(d2.style.background, D.Heros[1].couleur);
+    })(), "elles étaient peintes dans le CSS, donc inversées depuis l'échange");
+  verifier("aucune couleur de héros n'est écrite en dur dans les touches",
+    !/#cmd[TP]\{[^}]*background:linear-gradient/.test(html));
   verifier("aucune couleur de héros n'est écrite en dur dans la légende",
     !/#legende \.(pt|pp)\{background/.test(html),
     "la pastille reprendrait sa vie propre");

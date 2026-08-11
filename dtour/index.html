@@ -125,8 +125,13 @@ kbd{
 .cmd .txt span{font-size:clamp(11px,1.9vw,16px);line-height:1.1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 .cmd kbd{color:rgba(255,255,255,.9);border-color:rgba(255,255,255,.42);background:rgba(0,0,0,.24)}
-#cmdT{left:10px;background:linear-gradient(180deg,rgba(55,172,72,.92),rgba(38,132,53,.92))}
-#cmdP{right:10px;flex-direction:row-reverse;background:linear-gradient(180deg,rgba(42,138,228,.92),rgba(28,98,170,.92))}
+/* Le fond des deux touches vient de Heros[].couleur, posé par le code.
+   Il était écrit en dur ici — deuxième endroit après les pastilles de
+   légende — et il s'est donc retrouvé INVERSÉ le jour où Thibaut est
+   passé au vert : la touche de PF était verte avec le visage de PF
+   dessus. Une couleur ne s'écrit qu'à un seul endroit. */
+#cmdT{left:10px}
+#cmdP{right:10px;flex-direction:row-reverse}
 /* La commande du milieu ne sert que par intermittence, mais elle reste
    PLEINEMENT vive : grisée, elle passait pour désactivée et personne
    n'osait la presser — or il faut l'avoir déjà sous le pouce quand la
@@ -686,7 +691,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.15</div>
+  <div id="version">CALLAGHAN v6.16</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -758,7 +763,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.15";
+const VERSION = "6.16";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -2106,7 +2111,13 @@ const Camera = {
        le décor est une image large, des personnages timides auraient
        l'air posés devant une carte postale. */
     this.base = borne(Math.min(hUtile * 0.60, L * 0.26), 92, 380);
-    this.sol = H - this.basUI;
+    /* La ligne de sol était calée sur la RÉSERVE d'interface (8 % du
+       bas). Ça laissait une bande de trottoir sous les pieds : les gens
+       de la file avaient l'air de flotter. La réserve reste entière pour
+       le calcul de la hauteur utile, mais le sol descend nettement plus
+       bas — les commandes du niveau 1 sont des pastilles dans les coins,
+       elles ne cachent pas le centre. */
+    this.sol = H - this.basUI * 0.45;
     this.calculerVise();
     this.recentrer();
   },
@@ -7755,6 +7766,15 @@ const Pause = {
   },
 };
 
+/* Un dégradé vertical à partir de la couleur d'un héros : la même teinte
+   en haut, assombrie d'un quart en bas. */
+function degradeHeros(hex){
+  const n = parseInt(String(hex).replace("#", ""), 16);
+  const r = (n >> 16) & 255, v = (n >> 8) & 255, b = n & 255;
+  const s = f => "rgba(" + Math.round(r * f) + "," + Math.round(v * f) + "," + Math.round(b * f) + ",.92)";
+  return "linear-gradient(180deg," + s(1) + "," + s(0.72) + ")";
+}
+
 const Interface = {
   finAffichee:false, dernierCombo:0,
 
@@ -7791,6 +7811,7 @@ const Interface = {
       if (c.nom) c.nom.textContent = h.court;
       if (c.leg) c.leg.textContent = h.court;
       if (c.pt && c.pt.style) c.pt.style.background = h.couleur;
+      if (c.bouton && c.bouton.style) c.bouton.style.background = degradeHeros(h.couleur);
       if (c.cible) c.cible.textContent = "Cible : " + h.court;
       if (c.bouton && c.bouton.setAttribute) c.bouton.setAttribute("aria-label", "Saluer " + h.court);
     }

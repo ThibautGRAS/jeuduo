@@ -185,6 +185,15 @@ const Pause = {
   },
 };
 
+/* Un dégradé vertical à partir de la couleur d'un héros : la même teinte
+   en haut, assombrie d'un quart en bas. */
+function degradeHeros(hex){
+  const n = parseInt(String(hex).replace("#", ""), 16);
+  const r = (n >> 16) & 255, v = (n >> 8) & 255, b = n & 255;
+  const s = f => "rgba(" + Math.round(r * f) + "," + Math.round(v * f) + "," + Math.round(b * f) + ",.92)";
+  return "linear-gradient(180deg," + s(1) + "," + s(0.72) + ")";
+}
+
 const Interface = {
   finAffichee:false, dernierCombo:0,
 
@@ -221,6 +230,7 @@ const Interface = {
       if (c.nom) c.nom.textContent = h.court;
       if (c.leg) c.leg.textContent = h.court;
       if (c.pt && c.pt.style) c.pt.style.background = h.couleur;
+      if (c.bouton && c.bouton.style) c.bouton.style.background = degradeHeros(h.couleur);
       if (c.cible) c.cible.textContent = "Cible : " + h.court;
       if (c.bouton && c.bouton.setAttribute) c.bouton.setAttribute("aria-label", "Saluer " + h.court);
     }
