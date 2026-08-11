@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.21";
+const VERSION = "6.22";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -517,6 +517,16 @@ const SPRITES_TARTE = ["tarte0","tarte1","tarte2","tarte3","tarte_boom","tarte_e
    img/ et cette liste disent la même chose. */
 /* Les habitants et le chat servent aux niveaux 1 ET 2 : ils vivent
    dans le dossier commun, pas dans celui d'un niveau. */
+/* ---------- l'échelle propre à un personnage ----------
+   Jojo est de petite taille : c'est son nom et c'est la moitié du duo
+   qu'il forme avec Francky. Les planches le dessinent avec les
+   proportions d'un homme trapu ordinaire, alors on le réduit ICI, une
+   fois pour toutes, plutôt que de corriger sa taille à chaque endroit
+   où il apparaît — barman, visiteur, habitué, habitant. Un facteur
+   oublié quelque part et il redevient grand. */
+const ECHELLE_PERSO = { jojo:0.74 };
+function echellePerso(id){ return ECHELLE_PERSO[id] || 1; }
+
 const PERSONNAGES_MAISON = [
   "pers_gabi", "pers_francky", "pers_jojo",
   "pers_marini", "pers_martin", "pers_mathilde", "susp_chat",
@@ -544,6 +554,7 @@ const IMAGES_NIVEAU2 = [
      attendent les places génériques de l'appartement. */
   "assis_teo", "assis_charles", "assis_gabi", "assis_marini", "assis_martin",
   "assis_mathilde", "assis_tristan", "assis_francky", "assis_jojo",
+  "assis_kevin", "assis_remy",
 ];
 
 /* Les dix poses de chaque champion au bar, dans l'ordre où elles
@@ -584,6 +595,10 @@ const IMAGES_NIVEAU3 = [
   "bar_teo_attrape", "bar_teo_boit", "bar_teo_vide",
   "bar_solene_idle", "bar_solene_marche1", "bar_solene_marche2",
   "bar_solene_attrape", "bar_solene_boit", "bar_solene_vide",
+  "bar_kevin_idle", "bar_kevin_marche1", "bar_kevin_marche2",
+  "bar_kevin_attrape", "bar_kevin_boit", "bar_kevin_vide",
+  "bar_remy_idle", "bar_remy_marche1", "bar_remy_marche2",
+  "bar_remy_attrape", "bar_remy_boit", "bar_remy_vide",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 

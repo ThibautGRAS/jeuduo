@@ -691,7 +691,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.21</div>
+  <div id="version">CALLAGHAN v6.22</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -763,7 +763,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.21";
+const VERSION = "6.22";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1262,6 +1262,16 @@ const SPRITES_TARTE = ["tarte0","tarte1","tarte2","tarte3","tarte_boom","tarte_e
    img/ et cette liste disent la même chose. */
 /* Les habitants et le chat servent aux niveaux 1 ET 2 : ils vivent
    dans le dossier commun, pas dans celui d'un niveau. */
+/* ---------- l'échelle propre à un personnage ----------
+   Jojo est de petite taille : c'est son nom et c'est la moitié du duo
+   qu'il forme avec Francky. Les planches le dessinent avec les
+   proportions d'un homme trapu ordinaire, alors on le réduit ICI, une
+   fois pour toutes, plutôt que de corriger sa taille à chaque endroit
+   où il apparaît — barman, visiteur, habitué, habitant. Un facteur
+   oublié quelque part et il redevient grand. */
+const ECHELLE_PERSO = { jojo:0.74 };
+function echellePerso(id){ return ECHELLE_PERSO[id] || 1; }
+
 const PERSONNAGES_MAISON = [
   "pers_gabi", "pers_francky", "pers_jojo",
   "pers_marini", "pers_martin", "pers_mathilde", "susp_chat",
@@ -1289,6 +1299,7 @@ const IMAGES_NIVEAU2 = [
      attendent les places génériques de l'appartement. */
   "assis_teo", "assis_charles", "assis_gabi", "assis_marini", "assis_martin",
   "assis_mathilde", "assis_tristan", "assis_francky", "assis_jojo",
+  "assis_kevin", "assis_remy",
 ];
 
 /* Les dix poses de chaque champion au bar, dans l'ordre où elles
@@ -1329,6 +1340,10 @@ const IMAGES_NIVEAU3 = [
   "bar_teo_attrape", "bar_teo_boit", "bar_teo_vide",
   "bar_solene_idle", "bar_solene_marche1", "bar_solene_marche2",
   "bar_solene_attrape", "bar_solene_boit", "bar_solene_vide",
+  "bar_kevin_idle", "bar_kevin_marche1", "bar_kevin_marche2",
+  "bar_kevin_attrape", "bar_kevin_boit", "bar_kevin_vide",
+  "bar_remy_idle", "bar_remy_marche1", "bar_remy_marche2",
+  "bar_remy_attrape", "bar_remy_boit", "bar_remy_vide",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 
@@ -5803,7 +5818,7 @@ const EnqVue = {
     const H = Camera.H;
     const img = Images.table[Visiteurs.qui.sprite];
     if (!img || !img.naturalWidth) return;
-    const h = H * ENQ_TAILLE * (Visiteurs.qui.taille || 0.92);
+    const h = H * ENQ_TAILLE * (Visiteurs.qui.taille || 0.92) * echellePerso(Visiteurs.qui.id);
     const l = h * img.naturalWidth / img.naturalHeight;
     const px = this.ex(Visiteurs.x);
     const sol = this.ey(ENQ_LIGNE) - H * 0.012;
@@ -6490,6 +6505,10 @@ const BAR_CLIENTS = [
     prefixe:"bar_teo", gestes:true },
   { id:"solene", sprite:"bar_solene_idle", nom:"SOLÈNE", taille:0.88,
     prefixe:"bar_solene", gestes:true },
+  { id:"kevin", sprite:"bar_kevin_idle", nom:"KEVIN", taille:0.94,
+    prefixe:"bar_kevin", gestes:true },
+  { id:"remy", sprite:"bar_remy_idle", nom:"RÉMY", taille:0.93,
+    prefixe:"bar_remy", gestes:true },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;
@@ -7292,7 +7311,10 @@ const BarVue = {
          du sprite se pose PILE sur le comptoir. Avant, des poses de
          cadrages différents à hauteur constante faisaient grandir et
          rétrécir le barman à chaque geste. */
-      const sh = H * BAR_TAILLE_BARMAN, sl = sh * spr.naturalWidth / spr.naturalHeight;
+      /* Jojo est petit : son échelle vient d'ECHELLE_PERSO, déclarée une
+         seule fois pour tous les endroits où il apparaît. */
+      const sh = H * BAR_TAILLE_BARMAN * echellePerso(b.ref.id);
+      const sl = sh * spr.naturalWidth / spr.naturalHeight;
       const x = this.ex(b.ref.x);
       ctx.drawImage(spr, x - sl / 2, this.ey(BAR_COMPTOIR) - sh * 0.98, sl, sh);
       if (b.etat === "prepare"){
@@ -7448,7 +7470,7 @@ const BarVue = {
     for (const cl of Tournee.clients){
       const spr = Images.table[Tournee.poseClient(cl)];
       if (!spr || !spr.naturalWidth) continue;
-      const sh = H * BAR_TAILLE_HEROS * cl.ref.taille;
+      const sh = H * BAR_TAILLE_HEROS * cl.ref.taille * echellePerso(cl.ref.id);
       const sl = sh * spr.naturalWidth / spr.naturalHeight;
       /* un cran plus haut et plus sombres : ils sont derrière, ils ne
          doivent jamais se disputer l'œil avec le champion */
@@ -8611,7 +8633,7 @@ globalThis.DTOUR = {
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
-  Heros, Interface, Pause, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
+  Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
   POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE, BAR_TAILLE_BARMAN, BAR_COPIES,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, ENQ_ESQUIVE_FENETRE, SUJETS, Progres, Intro,

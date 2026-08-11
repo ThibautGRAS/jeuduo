@@ -84,6 +84,10 @@ const BAR_CLIENTS = [
     prefixe:"bar_teo", gestes:true },
   { id:"solene", sprite:"bar_solene_idle", nom:"SOLÈNE", taille:0.88,
     prefixe:"bar_solene", gestes:true },
+  { id:"kevin", sprite:"bar_kevin_idle", nom:"KEVIN", taille:0.94,
+    prefixe:"bar_kevin", gestes:true },
+  { id:"remy", sprite:"bar_remy_idle", nom:"RÉMY", taille:0.93,
+    prefixe:"bar_remy", gestes:true },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;

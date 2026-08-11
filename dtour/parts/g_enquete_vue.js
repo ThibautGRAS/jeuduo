@@ -224,7 +224,7 @@ const EnqVue = {
     const H = Camera.H;
     const img = Images.table[Visiteurs.qui.sprite];
     if (!img || !img.naturalWidth) return;
-    const h = H * ENQ_TAILLE * (Visiteurs.qui.taille || 0.92);
+    const h = H * ENQ_TAILLE * (Visiteurs.qui.taille || 0.92) * echellePerso(Visiteurs.qui.id);
     const l = h * img.naturalWidth / img.naturalHeight;
     const px = this.ex(Visiteurs.x);
     const sol = this.ey(ENQ_LIGNE) - H * 0.012;

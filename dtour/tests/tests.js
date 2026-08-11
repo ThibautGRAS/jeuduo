@@ -2489,6 +2489,20 @@ if (D){
     /data-niv[\s\S]{0,400}?Interface\.lancerNiveau/.test(source),
     "le bouton doit passer par lancerNiveau, pas par demarrer");
 
+  /* --- Jojo est petit, partout --- */
+  verifier("Jojo a une échelle propre, inférieure à 1",
+    D.echellePerso("jojo") < 0.85 && D.echellePerso("jojo") > 0.5,
+    "sa planche le dessine de taille ordinaire : la petitesse vient du code");
+  verifier("les autres gardent l'échelle normale",
+    ["francky", "gabi", "kevin", "remy", "solene"].every(i => D.echellePerso(i) === 1));
+  verifier("l'échelle est appliquée partout où il apparaît",
+    (() => {
+      /* barman derrière le comptoir, habitué du bar, visiteur de
+         l'appartement : un endroit oublié et il redevient grand. */
+      const n = (source.match(/echellePerso\(/g) || []).length;
+      return n >= 4;
+    })(), "il faut au moins la déclaration et les trois lieux de rendu");
+
   /* --- la pause doit être atteignable, et visible --- */
   titre("La pause");
   (() => {

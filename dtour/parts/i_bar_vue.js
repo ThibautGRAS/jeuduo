@@ -161,7 +161,10 @@ const BarVue = {
          du sprite se pose PILE sur le comptoir. Avant, des poses de
          cadrages différents à hauteur constante faisaient grandir et
          rétrécir le barman à chaque geste. */
-      const sh = H * BAR_TAILLE_BARMAN, sl = sh * spr.naturalWidth / spr.naturalHeight;
+      /* Jojo est petit : son échelle vient d'ECHELLE_PERSO, déclarée une
+         seule fois pour tous les endroits où il apparaît. */
+      const sh = H * BAR_TAILLE_BARMAN * echellePerso(b.ref.id);
+      const sl = sh * spr.naturalWidth / spr.naturalHeight;
       const x = this.ex(b.ref.x);
       ctx.drawImage(spr, x - sl / 2, this.ey(BAR_COMPTOIR) - sh * 0.98, sl, sh);
       if (b.etat === "prepare"){
@@ -317,7 +320,7 @@ const BarVue = {
     for (const cl of Tournee.clients){
       const spr = Images.table[Tournee.poseClient(cl)];
       if (!spr || !spr.naturalWidth) continue;
-      const sh = H * BAR_TAILLE_HEROS * cl.ref.taille;
+      const sh = H * BAR_TAILLE_HEROS * cl.ref.taille * echellePerso(cl.ref.id);
       const sl = sh * spr.naturalWidth / spr.naturalHeight;
       /* un cran plus haut et plus sombres : ils sont derrière, ils ne
          doivent jamais se disputer l'œil avec le champion */

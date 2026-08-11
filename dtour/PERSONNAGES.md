@@ -135,12 +135,14 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
   « JÄGERBOMBS DE JOJO » est au mur — et tient la **droite** du
   comptoir (0,66). Son télégraphe : le doseur puis le shot. Le chiffon
   tranquille, c'est de l'eau.
-- Silhouette **en pied** depuis la v6.20 (`pers_jojo`), donc utilisable
-  dans l'appartement. **Attention à sa taille** : sa planche le dessine
-  avec les proportions d'un homme trapu ordinaire (rapport tête/hauteur
-  0,168, identique à Francky), pas celles d'une personne de petite
-  taille. Sa petitesse se règle donc par le facteur `taille` du jeu, ce
-  qui donne « petit », pas « nain ».
+- Silhouette **en pied** depuis la v6.20 (`pers_jojo`).
+- **Sa petite taille est déclarée dans le code**, pas dans le dessin :
+  ses planches le donnent avec les proportions d'un homme trapu
+  ordinaire (rapport tête/hauteur 0,168, identique à Francky).
+  `ECHELLE_PERSO.jojo = 0.74` le réduit **partout à la fois** — derrière
+  le comptoir, en visiteur, en habitué. Si une nouvelle façon de
+  l'afficher apparaît un jour, elle doit passer par `echellePerso()`,
+  sinon il redevient grand à cet endroit-là. Un test compte les usages.
 - Sprites : `pers_jojo` (commun, en pied), `bar_jojo_*` (n3, bustes).
 
 ---
@@ -190,6 +192,29 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 
 ---
 
+### KEVIN
+- **Professeur de mathématiques**, salle de sport et course à pied.
+  Éternel célibataire, il aime sortir, faire la fête et les femmes — et
+  il en parle. Survêtement gris intégral, il ne se change jamais.
+- Ami de **Thibaut** et de **Rémy**. Il connaît Mathilde, Solène et
+  Tristan.
+- Habitué du bar au niveau 3 : `bar_kevin_*` (n3). Pose assise :
+  `assis_kevin` (n2).
+
+### RÉMY
+- **Professeur d'histoire**, comme Mathilde — et comme Teo. Trois profs
+  d'histoire dans la même bande, c'est assumé : c'est comme ça qu'ils se
+  sont connus.
+- Course à pied, vélo, **paris sportifs** et foot. Il aime aussi les
+  travaux, et la fête. Chemise à motifs, écharpe grise, il l'a toujours.
+- Ami de **Mathilde, Tristan, Thibaut, Kevin et Solène**, et il connaît
+  **PF**. C'est le personnage le plus relié de la bande : de quoi
+  construire des recoupements dans les affaires à venir.
+- Habitué du bar au niveau 3 : `bar_remy_*` (n3). Pose assise :
+  `assis_remy` (n2).
+
+---
+
 ## Les visiteurs (niveau 2)
 
 ### MARINI, MAIRE DE COMPIÈGNE
@@ -229,6 +254,8 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 | Mathilde | fait la queue | visiteuse | habituée du bar |
 | Tristan | — | — | habitué du bar (animé) |
 | Solène | — | — | habituée du bar (animée) |
+| Kevin | — | — | habitué du bar (animé) |
+| Rémy | — | — | habitué du bar (animé) |
 | Teo | terrasse | habitant | — |
 | Charles | terrasse | habitant (assis) | habitué du bar (animé) |
 | Risoto | — | suspect | traverse, clin d'œil |
