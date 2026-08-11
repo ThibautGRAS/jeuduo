@@ -691,7 +691,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.26</div>
+  <div id="version">CALLAGHAN v6.27</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -763,7 +763,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.26";
+const VERSION = "6.27";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -4788,14 +4788,23 @@ const Affaire = {
        comprend. Sans cette garantie, un tirage sur trois se bouclait
        avec un seul inspecteur et le bouton CHANGER ne servait à rien. */
     const a = id => INDICES.find(i => i.id === id) || {};
+    /* Le repli écrasait la DERNIÈRE case quand aucun indice neutre
+       n'était libre — y compris celle que le passage précédent venait de
+       remplir. Avec beaucoup d'indices marqués, la garantie se mangeait
+       elle-même et une affaire repartait avec cinq indices utiles. On
+       protège donc les cases déjà acquises. */
+    const protege = [];
     for (const trait of ["expert", "social"]){
       if (this.reels.some(id => a(id)[trait])) continue;
       const candidat = reste.find(id => a(id)[trait] && this.reels.indexOf(id) < 0);
       if (!candidat) continue;
-      const remplacable = this.reels.findIndex((id, k) =>
-        k >= obligatoires.length && !a(id).expert && !a(id).social);
-      const ou = remplacable >= 0 ? remplacable : this.reels.length - 1;
+      let ou = this.reels.findIndex((id, k) =>
+        k >= obligatoires.length && protege.indexOf(k) < 0 && !a(id).expert && !a(id).social);
+      if (ou < 0) ou = this.reels.findIndex((id, k) =>
+        k >= obligatoires.length && protege.indexOf(k) < 0);
+      if (ou < 0) continue;                    /* plus de place : on n'écrase rien */
       this.reels[ou] = candidat;
+      protege.push(ou);
     }
 
     const places = ZONES.map(z => z.id).filter(id => id !== this.cachette);

@@ -516,6 +516,31 @@ régulière a retiré une déclaration en laissant son usage
 passait, le jeu plantait à la première image, et c'est le harnais visuel
 qui l'a dit. Après toute chirurgie mécanique, on lance l'aperçu.
 
+### Une garantie qui s'écrase elle-même
+Chaque affaire doit contenir au moins un indice que PF sait lire
+(`expert`) et un que Thibaut comprend (`social`). Quand aucun indice
+NEUTRE n'était disponible, le code de garantie écrasait la dernière
+case du tirage — y compris celle que le passage précédent venait de
+remplir. Avec treize indices ça ne se voyait jamais ; avec cinquante,
+un tirage sur trois repartait avec cinq indices utiles au lieu de six.
+Les cases acquises sont maintenant protégées, et on renonce plutôt que
+d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
+suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
+
+### Un scénario ne peut nommer que des gens PRÉSENTS
+Trois affaires écrites avec Solène, Rémy et Jojo pour coupables : elles
+ne peuvent pas tourner tant que le casting de l'appartement est figé sur
+quatre habitants. Le tirage de distribution n'est pas un raffinement à
+ajouter après les scénarios, c'est ce qui les rend possibles.
+
+### Marquer un indice `social` ne se fait pas à la légère
+Vingt et un nouveaux indices passés en `social` d'un coup : la suite est
+devenue intermittente sur DEUX tests distincts, dont la lecture d'un
+indice par PF (`(pf && !ind.social) ? analyse : brut` — un indice social
+lu par PF affiche la version brute). Le trait ne dit pas « cet objet
+parle des gens », il dit « c'est Thibaut qui le lit le mieux ». Annulé
+en attendant d'en comprendre toutes les conséquences.
+
 ### Lire la structure AVANT d'écrire cinquante entrées
 Premier essai des nouveaux indices : trente-sept entrées écrites d'un
 trait, puis trois échecs de suite. Trois identifiants existaient déjà
