@@ -918,14 +918,55 @@ if (D){
   egal("loin de tout, interroger ne fait rien", D.Enquete.parler(), false);
 
   titre("Les visiteurs de passage");
+  titre("Qui fait la queue au niveau 1");
+  verifier("aucun personnage n'est en double dans la file",
+    new Set(D.SPRITES_PNJ).size === D.SPRITES_PNJ.length,
+    D.SPRITES_PNJ.filter((p, i) => D.SPRITES_PNJ.indexOf(p) !== i).join(", "));
+  verifier("les personnages debout font la queue",
+    D.PERSOS_DEBOUT.every(p => D.SPRITES_PNJ.indexOf(p) >= 0),
+    D.PERSOS_DEBOUT.filter(p => D.SPRITES_PNJ.indexOf(p) < 0).join(", "));
+  verifier("les assis n'y sont jamais",
+    D.PERSOS_ASSIS.every(p => D.SPRITES_PNJ.indexOf(p) < 0),
+    "Teo est assis par terre, Charles n'a pas de jambes : ils ne peuvent pas marcher");
+  verifier("aucun sprite de la file ne vient de la terrasse",
+    D.TERRASSE.every(t2 => D.SPRITES_PNJ.indexOf(t2.sprite) < 0));
+
+  titre("Les visiteurs de passage");
   verifier("seuls des personnages écrits pour le jeu passent",
     D.VISITEURS.every(v => /^pers_/.test(v.sprite)),
     D.VISITEURS.filter(v => !/^pers_/.test(v.sprite)).map(v => v.id).join(", "));
   verifier("chacun a au moins un thème d'affaire",
     D.VISITEURS.every(v => v.lie && Object.keys(v.lie).length >= 1),
     "un passant sans thème n'est qu'un figurant");
-  verifier("jamais deux fois le même d'affilée",
-    /this\.dernier[\s\S]{0,200}filter\(v => v\.id !== this\.dernier\)/.test(source));
+  verifier("chacun ne passe qu'une fois par partie",
+    (() => {
+      D.Jeu.demarrer(2); D.Intro.finir();
+      const vus = [];
+      for (let k = 0; k < 12; k++){
+        D.Visiteurs.etat = "ABSENT";
+        if (!D.Visiteurs.declencher()) break;
+        vus.push(D.Visiteurs.qui.id);
+      }
+      return vus.length === D.VISITEURS.length && new Set(vus).size === vus.length;
+    })(), "leur venue doit être un événement, pas une ronde");
+  verifier("quand ils sont tous passés, il n'en vient plus",
+    (() => {
+      D.Jeu.demarrer(2); D.Intro.finir();
+      for (let k = 0; k < D.VISITEURS.length; k++){ D.Visiteurs.etat = "ABSENT"; D.Visiteurs.declencher(); }
+      D.Visiteurs.etat = "ABSENT";
+      return D.Visiteurs.declencher() === false;
+    })());
+  verifier("on préfère envoyer celui qui a quelque chose à dire",
+    (() => {
+      let concernes = 0;
+      for (let n = 0; n < 200; n++){
+        D.Jeu.demarrer(2); D.Intro.finir();
+        D.Visiteurs.declencher();
+        const marques = D.Affaire.scenario.tags || [];
+        if (D.Visiteurs.qui.lie && marques.some(t2 => D.Visiteurs.qui.lie[t2])) concernes++;
+      }
+      return concernes > 110;
+    })(), "le premier passage doit compter");
   verifier("Jojo est dans le registre",
     D.VISITEURS.some(v => v.id === "jojo" && v.lie && v.lie.plomberie && v.lie.hauteur));
   verifier("les deux barmen se partagent le thème de l'alcool",
@@ -984,6 +1025,17 @@ if (D){
   verifier("puis il s'en va", !D.Visiteurs.visible(), "il reste planté là");
 
   /* ce qu'il dit d'utile doit être VRAI dans l'affaire en cours */
+  verifier("aucun conseil ne présume du genre de quelqu'un",
+    (() => {
+      for (let n = 0; n < 200; n++){
+        D.Jeu.demarrer(2); D.Intro.finir();
+        for (let k = 0; k < 6; k++){
+          const c = D.Visiteurs.conseil();
+          if (/\b(elle|Elle) [a-zé]+e\b/.test(c) && /RISOTO|CHARLES|TEOPEDO/.test(c)) return false;
+        }
+      }
+      return true;
+    })(), "le témoin clé peut être n'importe lequel des quatre");
   verifier("ses indications sont vraies",
     (() => {
       for (let n = 0; n < 120; n++){

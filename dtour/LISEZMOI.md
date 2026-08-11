@@ -94,9 +94,11 @@ change ce qu'on obtient de lui.
 | **LA SŒUR D'HORTENSE** — couloir | Colocataire, sœur de celle qui lance des tartes, et belle-sœur de Pierre-François. |
 | **RISOTO** — au sol | Le chat. Il ne dira rien, mais il laisse des traces. |
 
-Les trois sont aussi dans le **niveau 1** : la sœur fait la queue comme
-tout le monde — elle est debout et entière, donc elle marche — et les
-deux autres tiennent la terrasse du D'Tour. Leurs sprites les montrent
+Ils sont aussi dans le **niveau 1**, mais filtrés par leur pose : les
+cinq qui tiennent **debout et entiers** font la queue — la sœur,
+Francky, Jojo, Marini et Martin. Teo est assis par terre sur son sprite
+et Charles n'a pas de jambes : ils ne peuvent pas marcher, alors ils
+tiennent la terrasse du D'Tour. Leurs sprites les montrent
 assis : on ne peut pas les faire marcher, alors ils regardent. Quand la
 file s'allonge, elle finit par passer devant eux, ce qui est exactement
 ce que fait une file.
@@ -216,10 +218,23 @@ doublon, six meubles distincts, jamais d'indice sur la cachette, et les
 deux indices porteurs toujours présents.
 
 **Des gens passent.** Toutes les 42 à 78 secondes, quelqu'un entre par
-un bord, s'arrête près des inspecteurs, dit une phrase et repart —
-**Francky** ou **Jojo**, jamais deux fois le même d'affilée. Seuls des
-personnages écrits pour le jeu figurent au registre : un passant sans
-histoire ne vaut pas la peine d'interrompre une enquête.
+un bord, s'arrête près des inspecteurs, dit une phrase et repart.
+**Chacun ne passe qu'une fois par partie** : leur venue doit être un
+événement, pas une ronde. Quand les quatre sont passés, il n'en vient
+plus d'autres.
+
+Sept fois sur dix, on envoie celui qui a quelque chose à dire sur
+l'affaire en cours — leur unique passage doit compter.
+
+| | |
+|---|---|
+| **FRANCKY, DU D'TOUR** | Barman. Cocktail « bonne nuit les petits ». `dodo`, `alcool` |
+| **JOJO LE NAIN** | Barman de l'Entrepotes, plombier, marié à une femme très grande. `plomberie`, `hauteur`, `alcool` |
+| **MARINI, MAIRE DE COMPIÈGNE** | Quatre-vingts ans, véreux, aime les femmes. `porte`, `argent` |
+| **MARTIN, AGENT DE SÉCURITÉ** | Boxeur autiste, ancien comptable. Il compte tout. `salon`, `argent`, `chat` |
+
+Seuls des personnages écrits pour le jeu figurent au registre : un
+passant sans histoire ne vaut pas la peine d'interrompre une enquête.
 
 Sept fois sur dix, si l'affaire touche à l'un de ses thèmes, il tombe
 pile sur le sujet. Sinon il dit quelque chose d'utile sur l'affaire, ou

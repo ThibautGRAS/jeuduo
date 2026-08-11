@@ -931,6 +931,35 @@ const VISITEUR_UTILE = 0.45;        /* part de visites qui apprennent quelque ch
    pris dans la foule du niveau 1 ont été retirés : un passant sans
    histoire ne vaut pas la peine d'interrompre une enquête. */
 const VISITEURS = [
+  { id:"marini", nom:"MARINI, MAIRE DE COMPIÈGNE", sprite:"pers_marini", cote:-1, taille:0.98,
+    banal:["J'inaugure quelque chose dans le quartier. Je ne sais plus quoi.",
+           "Vous voterez pour moi. Vous ne le savez pas encore.",
+           "Il y a une jeune femme charmante en bas. Elle m'a dit de monter.",
+           "Quatre-vingts ans, et toutes mes dents. Enfin, presque toutes."],
+    lie:{
+      porte:["J'ai le double des clés de tout l'immeuble. C'est le protocole.",
+             "Quelqu'un est monté juste avant moi. Je tiens les portes, moi.",
+             "Vers {heure}, l'interphone n'arrêtait pas. Je l'ai noté."],
+      argent:["Cinq euros. À mon époque on appelait ça une facture.",
+              "Tout se règle. Même une pizza. Surtout une pizza.",
+              "Je peux faire disparaître cette affaire. Contre un service."],
+    } },
+  { id:"martin", nom:"MARTIN, AGENT DE SÉCURITÉ", sprite:"pers_martin", cote:1, taille:1.0,
+    banal:["J'ai fait le tour du bâtiment. Quatorze minutes. Comme d'habitude.",
+           "J'ai été comptable avant. J'ai gardé les chiffres.",
+           "Je ne bois pas, je ne fume pas, je compte.",
+           "Trois personnes sont montées, deux sont redescendues."],
+    lie:{
+      salon:["De ma position, je vois le canapé. Quelqu'un ne s'est pas levé de la soirée.",
+             "Il y a eu six allers-retours vers la cuisine. J'ai compté.",
+             "La télévision est restée éteinte. Personne ne regardait rien."],
+      argent:["Cinq euros, ce n'est pas rien : c'est exactement le prix d'une part.",
+              "Un billet posé à plat, ce n'est pas un billet tombé. C'est un billet déposé.",
+              "J'ai vérifié : il manque une pizza et il reste cinq euros. Ça s'équilibre."],
+      chat:["Le chat est passé quatre fois. Toujours dans le même sens.",
+            "J'ai suivi les traces. Elles s'arrêtent net.",
+            "Le chat ne monte pas sur les meubles hauts. J'ai regardé."],
+    } },
   { id:"jojo", nom:"JOJO LE NAIN", sprite:"pers_jojo", cote:1, taille:1.0,
     banal:["Je tenais le bar de l'Entrepotes. Ce soir, c'est relâche.",
            "Francky met trop de sirop. Je le dis depuis dix ans.",
@@ -964,11 +993,15 @@ const ETAT_V = { ABSENT:"ABSENT", ENTREE:"ENTREE", PARLE:"PARLE", SORTIE:"SORTIE
 
 const Visiteurs = {
   etat:ETAT_V.ABSENT, qui:null, x:0, vise:0, dir:1, pas:0, chrono:0,
-  prochain:0, comptes:0, utiles:0, dernier:null,
+  prochain:0, comptes:0, utiles:0, dernier:null, vus:null,
 
   raz(){
     this.etat = ETAT_V.ABSENT; this.qui = null;
     this.comptes = 0; this.utiles = 0; this.dernier = null;
+    /* Chacun ne passe QU'UNE FOIS par partie : leur venue doit être un
+       événement, pas une ronde. Quand ils sont tous passés, on n'en
+       invente pas d'autres. */
+    this.vus = {};
     this.prochain = hasard(VISITEUR_DELAI[0], VISITEUR_DELAI[1]);
   },
 
@@ -985,8 +1018,10 @@ const Visiteurs = {
       choix.push("À votre place, je regarderais " + z.ref.nom + ".");
     }
     if (cle){
-      choix.push(cle.nom + " est descendu vers " + Affaire.faits.heure + ". Ça m'a marqué.");
-      choix.push("Demandez à " + cle.nom + ". Elle avait l'air pressée.");
+      /* Rien qui présume du genre : le témoin clé peut être n'importe
+         lequel des quatre, chat compris. */
+      choix.push("J'ai croisé " + cle.nom + " vers " + Affaire.faits.heure + ". Ça m'a marqué.");
+      choix.push("Demandez à " + cle.nom + ". Il y a quelque chose qui cloche.");
     }
     if (Enquete.indices >= 3 && !Enquete.pizza){
       choix.push("Quelqu'un a fouillé " + Affaire.faits.ou + " avant vous.");
@@ -998,11 +1033,14 @@ const Visiteurs = {
   declencher(){
     if (this.etat !== ETAT_V.ABSENT || !Enquete.actif) return false;
     if (Enquete.dossierOuvert || Enquete.accusation || HortenseApp.visible()) return false;
-    /* Jamais deux fois le même d'affilée : avec deux personnages, ça se
-       remarquerait tout de suite. */
-    const dispo = VISITEURS.length > 1 && this.dernier
-      ? VISITEURS.filter(v => v.id !== this.dernier) : VISITEURS;
-    this.qui = piocher(dispo);
+    const dispo = VISITEURS.filter(v => !this.vus[v.id]);
+    if (!dispo.length) return false;
+    /* On préfère celui qui a quelque chose à dire sur l'affaire : leur
+       unique passage doit compter. */
+    const marques = (Affaire.scenario && Affaire.scenario.tags) || [];
+    const concernes = dispo.filter(v => v.lie && marques.some(t => v.lie[t]));
+    this.qui = piocher(concernes.length && Math.random() < 0.7 ? concernes : dispo);
+    this.vus[this.qui.id] = true;
     this.dernier = this.qui.id;
     this.dir = this.qui.cote >= 0 ? -1 : 1;         /* d'où il vient */
     this.x = this.dir > 0 ? -0.05 : 1.05;

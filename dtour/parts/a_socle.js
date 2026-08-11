@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "4.4";
+const VERSION = "4.5";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -103,11 +103,13 @@ const TYPES = {
 
 const NB_PNJ = 16;
 const SPRITES_PNJ = Array.from({ length:NB_PNJ }, (_, i) => "pnj" + String(i + 1).padStart(2, "0"));
-/* La sœur d'Hortense fait aussi la queue au D'Tour : c'est le même
-   quartier. Elle est debout et entière, donc elle marche comme les
-   autres. Charles et Teo, eux, sont assis sur leurs sprites — on ne peut
-   pas les faire marcher, ils tiennent la terrasse. */
-SPRITES_PNJ.push("pers_soeur");
+/* Nos personnages font aussi la queue au D'Tour : c'est le même
+   quartier. Seuls ceux qui sont DEBOUT et ENTIERS y ont leur place —
+   Teo est assis par terre sur son sprite et Charles n'a pas de jambes,
+   ils ne peuvent pas marcher. Ils tiennent la terrasse. */
+const PERSOS_DEBOUT = ["pers_soeur", "pers_francky", "pers_jojo", "pers_marini", "pers_martin"];
+const PERSOS_ASSIS = ["pers_teo", "pers_charles"];
+for (const p of PERSOS_DEBOUT) SPRITES_PNJ.push(p);
 const POSES_HEROS = ["idle","attente","marche","regarde","surpris","stress","tendue","victoire"];
 
 /* Ce que dit l'arrivant en tendant la main. Il est chaleureux, sûr de
@@ -425,7 +427,7 @@ const IMAGES_NIVEAU2 = [
   "ind_miettes", "ind_chorizo", "ind_fromage", "ind_serviette",
   "ind_sauce", "ind_assiette", "ind_ticket", "ind_pattes", "ind_billet",
   "pizza_entiere", "pizza_entamee", "pizza_part", "pizza_boite_ouverte",
-  "susp_chat", "pers_teo", "pers_charles", "pers_soeur", "pers_francky", "pers_jojo",
+  "susp_chat", "pers_teo", "pers_charles", "pers_soeur", "pers_francky", "pers_jojo", "pers_marini", "pers_martin",
   "badge_indice", "badge_suspect",
 ];
 
