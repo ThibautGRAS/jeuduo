@@ -257,6 +257,16 @@ const Interface = {
     if (E.pupitre2) E.pupitre2.classList.remove("on");
   },
 
+  /* Niveau 1 : le bouton d'esquive s'allume dès qu'une tarte est en
+     l'air, et clignote quand la fenêtre est ouverte. Il reste cliquable
+     en permanence — un bouton éteint ne se presse pas, et l'esquive se
+     joue en moins d'une demi-seconde. */
+  majEsquive(){
+    if (!E.cmdE || Jeu.niveau !== 1) return;
+    const t = Tartes.tarteImminente();
+    E.cmdE.classList.toggle("alerte", !!(t && t.fenetreOuverte));
+  },
+
   /* Le bouton d'action dit ce qu'il fait, et change quand la tarte
      arrive : c'est la seule façon d'apprendre l'esquive sans notice. */
   majAction(){
@@ -403,7 +413,13 @@ const Entrees = {
       Sons.reveiller();
       if (Jeu.phase === "titre"){ Jeu.demarrer(); return; }
       Interface.flashCommande(2);
-      Esquive.tenter();
+      /* Une pression doit toujours répondre quelque chose : sans retour,
+         le joueur croit le bouton mort. */
+      const r = Esquive.tenter();
+      if (r === "rien"){
+        Effets.texte(X_SALUT, -1.35 * H_PERSO, "PAS DE TARTE", "#93A4C4", 0.75);
+        Sons.bip(320, 0.05, "sine", 0.08);
+      }
     };
     Entrees.esquiver = esquiver;
 

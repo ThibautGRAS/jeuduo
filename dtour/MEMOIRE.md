@@ -147,6 +147,14 @@ appelait `Intro.finir()` pour aller au gameplay et sautait précisément
 le moment qui plantait. Le harnais d'aperçu rend maintenant une trame
 pendant l'introduction.
 
+### Un bouton grisé passe pour un bouton mort
+La commande d'esquive du niveau 1 était à 55 % d'opacité tant qu'aucune
+tarte n'était en l'air. Elle restait cliquable, mais personne ne la
+pressait — et une pression à vide ne renvoyait aucun retour, ce qui
+confirmait l'impression. Deux règles : une commande disponible s'affiche
+pleinement, et toute pression répond quelque chose, même « il n'y a rien
+à faire ».
+
 ### Masquer un bouton, c'est supprimer une mécanique
 En ajoutant ACCUSER, j'ai caché CHANGER sous 360 px de haut « pour que
 ça tienne ». C'est-à-dire précisément sur l'iPhone couché, le seul

@@ -125,16 +125,21 @@ kbd{
 .cmd kbd{color:rgba(255,255,255,.9);border-color:rgba(255,255,255,.42);background:rgba(0,0,0,.24)}
 #cmdT{left:10px;background:linear-gradient(180deg,rgba(55,172,72,.92),rgba(38,132,53,.92))}
 #cmdP{right:10px;flex-direction:row-reverse;background:linear-gradient(180deg,rgba(42,138,228,.92),rgba(28,98,170,.92))}
-/* La commande du milieu ne sert que par intermittence : elle reste
-   petite et discrète tant qu'aucune tarte n'est en l'air. */
+/* La commande du milieu ne sert que par intermittence, mais elle reste
+   PLEINEMENT vive : grisée, elle passait pour désactivée et personne
+   n'osait la presser — or il faut l'avoir déjà sous le pouce quand la
+   tarte arrive, on n'a que 450 ms. */
 #cmdE{
   left:50%;transform:translateX(-50%);justify-content:center;
-  background:linear-gradient(180deg,rgba(247,179,43,.92),rgba(198,133,14,.92));
-  color:#1A1305;opacity:.55;
+  background:linear-gradient(180deg,rgba(247,179,43,.94),rgba(198,133,14,.94));
+  color:#1A1305;
 }
 #cmdE .txt span{font-size:clamp(11px,1.9vw,15px)}
 #cmdE kbd{color:rgba(26,19,5,.85);border-color:rgba(26,19,5,.34);background:rgba(255,255,255,.26)}
-#cmdE.alerte{opacity:1;animation:tartePrete .5s ease-in-out infinite}
+#cmdE.alerte{
+  animation:tartePrete .5s ease-in-out infinite;
+  box-shadow:0 0 0 3px rgba(247,179,43,.55),0 4px 16px rgba(0,0,0,.34);
+}
 @keyframes tartePrete{0%,100%{filter:brightness(1)}50%{filter:brightness(1.32)}}
 .cmd:active,.cmd.pressee{transform:translateY(2px);filter:brightness(1.14)}
 #cmdE:active,#cmdE.pressee{transform:translateX(-50%) translateY(2px);filter:brightness(1.14)}
@@ -471,7 +476,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v4.7</div>
+  <div id="version">CALLAGHAN v4.8</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -531,7 +536,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "4.7";
+const VERSION = "4.8";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1569,6 +1574,7 @@ const Jeu = {
       this.ralenti = melange(this.ralenti, 0.22, Math.min(1, dt * 2.2));
       if (this.finChrono > 1.7 && !Interface.finAffichee) Interface.afficherFin();
     }
+    Interface.majEsquive();
     for (const h of Heros){
       if (h.geste){ h.geste.t += dt; if (h.geste.t >= h.geste.duree) h.geste = null; }
       h.sueur = Math.max(0, h.sueur - dt * 0.5);
@@ -5493,6 +5499,16 @@ const Interface = {
     if (E.pupitre2) E.pupitre2.classList.remove("on");
   },
 
+  /* Niveau 1 : le bouton d'esquive s'allume dès qu'une tarte est en
+     l'air, et clignote quand la fenêtre est ouverte. Il reste cliquable
+     en permanence — un bouton éteint ne se presse pas, et l'esquive se
+     joue en moins d'une demi-seconde. */
+  majEsquive(){
+    if (!E.cmdE || Jeu.niveau !== 1) return;
+    const t = Tartes.tarteImminente();
+    E.cmdE.classList.toggle("alerte", !!(t && t.fenetreOuverte));
+  },
+
   /* Le bouton d'action dit ce qu'il fait, et change quand la tarte
      arrive : c'est la seule façon d'apprendre l'esquive sans notice. */
   majAction(){
@@ -5639,7 +5655,13 @@ const Entrees = {
       Sons.reveiller();
       if (Jeu.phase === "titre"){ Jeu.demarrer(); return; }
       Interface.flashCommande(2);
-      Esquive.tenter();
+      /* Une pression doit toujours répondre quelque chose : sans retour,
+         le joueur croit le bouton mort. */
+      const r = Esquive.tenter();
+      if (r === "rien"){
+        Effets.texte(X_SALUT, -1.35 * H_PERSO, "PAS DE TARTE", "#93A4C4", 0.75);
+        Sons.bip(320, 0.05, "sine", 0.08);
+      }
     };
     Entrees.esquiver = esquiver;
 

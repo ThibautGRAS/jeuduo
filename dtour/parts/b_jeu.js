@@ -468,6 +468,7 @@ const Jeu = {
       this.ralenti = melange(this.ralenti, 0.22, Math.min(1, dt * 2.2));
       if (this.finChrono > 1.7 && !Interface.finAffichee) Interface.afficherFin();
     }
+    Interface.majEsquive();
     for (const h of Heros){
       if (h.geste){ h.geste.t += dt; if (h.geste.t >= h.geste.duree) h.geste = null; }
       h.sueur = Math.max(0, h.sueur - dt * 0.5);

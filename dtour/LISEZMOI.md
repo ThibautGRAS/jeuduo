@@ -350,6 +350,13 @@ Pierre-François ne rentre pas dans le cadre.
 | Écran | moitié gauche | moitié droite |
 | | le gros bouton vert | le gros bouton bleu |
 
+Le bouton **Esquiver** reste vif et cliquable en permanence, même quand
+aucune tarte n'est en l'air : grisé, il passait pour désactivé et
+personne n'osait le presser — or il faut l'avoir déjà sous le pouce
+quand la tarte arrive, on n'a que 450 ms. Il s'entoure d'un halo et
+clignote quand la fenêtre s'ouvre, et une pression à vide répond « PAS
+DE TARTE » plutôt que rien du tout.
+
 `Espace` lance ou relance une partie. `S` coupe le son. `D` ouvre les
 outils. `Échap` ou `P` met en pause — la scène reste visible derrière,
 ce qui vaut mieux qu'un écran noir pour se rappeler où on en était.

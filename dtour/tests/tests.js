@@ -918,6 +918,29 @@ if (D){
   egal("loin de tout, interroger ne fait rien", D.Enquete.parler(), false);
 
   titre("Les visiteurs de passage");
+  titre("Le bouton d'esquive");
+  verifier("il n'est jamais grisé",
+    !/#cmdE\{[^}]*opacity:\s*\.\d/.test(html),
+    "un bouton éteint ne se presse pas, et l'esquive dure 450 ms");
+  verifier("il reste cliquable en permanence",
+    /#pupitre\.on \.cmd\{pointer-events:auto\}/.test(html) && /class="cmd" id="cmdE"/.test(html),
+    "il doit hériter des événements comme les deux autres");
+  verifier("il s'allume quand la fenêtre s'ouvre",
+    /majEsquive\(\)[\s\S]{0,300}classList\.toggle\("alerte"/.test(source));
+  verifier("une pression sans tarte répond quand même",
+    /=== "rien"[\s\S]{0,200}PAS DE TARTE/.test(source),
+    "sans retour, on croit le bouton mort");
+  (() => {
+    D.Jeu.demarrer(1);
+    D.Camera.mesurer(1280, 720, 1); D.Camera.recaler();
+    D.Effets.raz();
+    const av = D.Effets.textes.length;
+    D.Esquive.tenter();
+    void av;
+    verifier("et l'esquive à vide ne coûte rien", D.Jeu.vies === D.VIES,
+      "presser dans le vide ne doit pas punir");
+  })();
+
   titre("Qui fait la queue au niveau 1");
   verifier("aucun personnage n'est en double dans la file",
     new Set(D.SPRITES_PNJ).size === D.SPRITES_PNJ.length,
