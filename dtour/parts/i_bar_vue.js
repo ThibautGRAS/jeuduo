@@ -83,6 +83,7 @@ const BarVue = {
       ctx.restore();
     }
 
+    if (T.actif && !T.fini) this.dessinerBords();
     if (T.actif || T.fini) this.dessinerBandeau();
     if (T.message) this.dessinerMessage();
   },
@@ -219,7 +220,7 @@ const BarVue = {
   dessinerInvite(){
     const T = Tournee, H = Camera.H;
     const inv = T.invite;
-    const spr = Images.table[inv.qui === "chat" ? "susp_chat" : "h_marche"];
+    const spr = Images.table[T.poseInvite()];
     if (!spr || !spr.naturalWidth) return;
     const sh = H * (inv.qui === "chat" ? 0.11 : 0.42);
     const sl = sh * spr.naturalWidth / spr.naturalHeight;
@@ -309,7 +310,7 @@ const BarVue = {
   dessinerClients(){
     const H = Camera.H;
     for (const cl of Tournee.clients){
-      const spr = Images.table[cl.ref.sprite];
+      const spr = Images.table[Tournee.poseClient(cl)];
       if (!spr || !spr.naturalWidth) continue;
       const sh = H * BAR_TAILLE_HEROS * cl.ref.taille;
       const sl = sh * spr.naturalWidth / spr.naturalHeight;
@@ -330,6 +331,70 @@ const BarVue = {
         this.halo(x, this.ey(BAR_COMPTOIR), H * 0.05, [255, 120, 120], 0.7);
         ctx.restore();
       }
+    }
+  },
+
+  /* --------- ce qui se passe hors de l'écran ---------
+     Le comptoir fait trois écrans de large : un barman qui prépare à
+     l'autre bout ne se voit pas, et tout le niveau repose sur le fait
+     de LIRE les barmans. Sans ces repères de bord, l'anticipation
+     demandée n'existe simplement pas — on découvrait les verres en
+     arrivant dessus. */
+  dansLEcran(fx){
+    const x = this.ex(fx);
+    return x > Camera.L * 0.06 && x < Camera.L * 0.94;
+  },
+
+  chevron(cote, y, teinte, taille, force){
+    const L = Camera.L;
+    const x = cote < 0 ? L * 0.028 : L * 0.972;
+    const s = taille * (cote < 0 ? 1 : -1);
+    ctx.save();
+    ctx.globalAlpha = force;
+    ctx.beginPath();
+    ctx.moveTo(x - s, y - taille * 0.85);
+    ctx.lineTo(x + s * 0.55, y);
+    ctx.lineTo(x - s, y + taille * 0.85);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(" + teinte.join(",") + ",.92)";
+    ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = "rgba(10,8,16,.75)"; ctx.stroke();
+    ctx.restore();
+  },
+
+  dessinerBords(){
+    const T = Tournee, H = Camera.H;
+    /* les verres déjà posés : couleur de la boisson, et la jauge de vie
+       qui se vide en même temps que celle du verre */
+    for (const v of T.verres){
+      if (v.etat !== ETAT_VERRE.POSE || this.dansLEcran(v.x)) continue;
+      const cote = this.ex(v.x) < Camera.L / 2 ? -1 : 1;
+      const y = this.ey(BAR_COMPTOIR);
+      const teinte = this.TEINTES[v.type] || [255, 255, 255];
+      this.chevron(cote, y, teinte, H * 0.055, 1);
+      const p = 1 - v.t / v.vie;
+      const x = cote < 0 ? Camera.L * 0.028 : Camera.L * 0.972;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y + H * 0.10, H * 0.017, -Math.PI / 2, -Math.PI / 2 + p * 6.283);
+      ctx.strokeStyle = p > 0.35 ? "#8FD79B" : "#E8574B";
+      ctx.lineWidth = Math.max(2, H * 0.009); ctx.stroke();
+      ctx.restore();
+    }
+    /* et les préparations en cours : on voit venir, même de dos */
+    for (const b of T.barmans){
+      if (b.etat !== "prepare" || this.dansLEcran(b.xPose)) continue;
+      const cote = this.ex(b.xPose) < Camera.L / 2 ? -1 : 1;
+      const y = this.ey(BAR_COMPTOIR) - H * 0.20;
+      const teinte = this.TEINTES[b.type] || [255, 255, 255];
+      const p = borne(b.t / b.duree, 0, 1);
+      this.chevron(cote, y, teinte, H * 0.038, 0.55 + 0.45 * p);
+      const x = cote < 0 ? Camera.L * 0.028 : Camera.L * 0.972;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y - H * 0.055, H * 0.014, -Math.PI / 2, -Math.PI / 2 + p * 6.283);
+      ctx.strokeStyle = "#F7B32B"; ctx.lineWidth = Math.max(2, H * 0.008); ctx.stroke();
+      ctx.restore();
     }
   },
 

@@ -387,10 +387,19 @@ Deux boutons : **BOIRE** et **JETER**. Quatre issues :
 | BOIRE | eau | **DE L'EAU ?!** — gel, combo perdu, ambiance −8 |
 | JETER | cocktail / Jäger | **SACRILÈGE !** — −80, combo perdu |
 
-**Les barmans télégraphient.** Le shaker annonce un cocktail, le doseur
-puis le shot un Jägerbomb — et le chiffon tranquille, l'eau. L'eau
-n'apparaît qu'après vingt-cinq secondes, puis environ une fois sur
-quatre. Un bon joueur lit le geste avant que le verre touche le bois.
+**Les barmans télégraphient.** Francky prépare **en cinq temps** — il
+choisit sa bouteille, il verse, il shake, il remue, il décore — et c'est
+le signal le plus long du niveau : un cocktail se voit venir de loin.
+Jojo fait plus court, doseur puis shot. Et chez les deux, **le chiffon
+tranquille annonce l'eau**. Elle n'apparaît qu'après vingt-cinq
+secondes, puis environ une fois sur quatre. Un bon joueur lit le geste
+avant que le verre touche le bois.
+
+Le comptoir fait trois écrans : quand un barman prépare hors champ, un
+**chevron au bord de l'écran** en donne la couleur et l'avancement, et
+les verres déjà posés hors champ ont le leur avec leur jauge de vie.
+Sans ces repères l'anticipation n'existait pas — on découvrait les
+verres en arrivant dessus.
 
 **Jamais d'injouable.** Avant de servir, le pattern vérifie que le
 verre est atteignable : distance à la vitesse du champion, plus le
@@ -449,10 +458,12 @@ l'ambiance finale : finir vite et fort paie mieux que finir de justesse.
 
 ### Le bar est habité
 
-Des habitués entrent et sortent : **la sœur d'Hortense, le maire, Martin**
-— les sprites du niveau 2, réemployés. Ils longent le comptoir, et un
-verre laissé là depuis plus de la moitié de sa vie **finit dans leur
-main**. Ce n'est pas une punition de plus : le verre chipé ne devient pas
+Des habitués entrent et sortent : **la sœur d'Hortense, le maire, Martin**.
+Le maire a sa propre planche : il marche vraiment, se sert, boit, puis
+s'en va son verre à la main. Les autres n'ont qu'une silhouette — le
+jour où leur planche arrive, il suffit de leur donner un préfixe. Ils
+longent le comptoir, et un verre laissé là depuis plus de la moitié de
+sa vie **finit dans leur main**. Ce n'est pas une punition de plus : le verre chipé ne devient pas
 une traîne, ils font le ménage à notre place — mais les points partent
 avec eux.
 
@@ -460,8 +471,9 @@ Et surtout : **personne ne vole un verre d'eau.** Un verre qui reste
 planté là alors qu'un habitué passe devant, c'est de l'eau. Le niveau
 gagne un indice sans une ligne d'interface.
 
-Risoto traverse parfois le bas de l'écran. Hortense peut passer, tarte
-en main, regarder le joueur… et repartir. La menace suffit.
+Risoto traverse parfois le bas de l'écran. Et Hortense traverse le bar,
+**s'arrête au milieu, montre sa tarte au citron**, regarde le joueur…
+puis repart sans la lancer. La menace suffit — c'est tout le gag.
 
 ### Les lumières du comptoir
 

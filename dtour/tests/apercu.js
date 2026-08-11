@@ -445,6 +445,30 @@ function jouerJusqua(D, condition, limite){
     dessinerVia(D, canevas);
     ecrire(canevas, "16_bar_lumieres_844");
   }
+
+  /* 17. niveau 3 : Francky en pleine préparation, le maire se sert,
+         Hortense s'arrête avec sa tarte */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(3);
+    D.Tournee.lancer();
+    D.Tournee.x = 0.52; D.Tournee.temps = 48; D.Tournee.combo = 3;
+    D.Tournee.ambiance = 64; D.Score.points = 2960;
+    const fr = D.Tournee.barmans[0];
+    fr.etat = "prepare"; fr.type = "cocktail"; fr.duree = 2.0; fr.t = 1.3;
+    fr.pose = fr.ref.prepare[3];
+    const jo = D.Tournee.barmans[1];
+    jo.etat = "prepare"; jo.type = "eau"; jo.duree = 1.35; jo.t = 0.6;
+    jo.pose = jo.ref.poses.eau;
+    D.Tournee.verres.push({ type:"jager", x:0.62, etat:D.ETAT_VERRE.POSE, t:5.2, vie:7.5, barman:"jojo" });
+    const maire = D.BAR_CLIENTS.find(c => c.prefixe);
+    D.Tournee.clients = [{ ref:maire, x:0.62, dir:1, etat:"prend", t:0.42, cible:0.62, verre:null, foulee:0, verreEnMain:false }];
+    D.Tournee.invite = { qui:"hortense", x:0.44, dir:1, t:1, pause:1.2, foulee:0 };
+    for (let i = 0; i < 20; i++) D.Camera.suivreBar(D.Tournee.x, 1 / 30);
+    dessinerVia(D, canevas);
+    ecrire(canevas, "17_bar_figurants_844");
+  }
 })();
 
 /* dessiner() n'est pas exporté : on le rejoint par la boucle du jeu,

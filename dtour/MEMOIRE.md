@@ -68,6 +68,8 @@ queue au niveau 1) — `n1` doit les EXCLURE, ils vivent dans commun/.
 | Défaites | jauge à 0, ou temps écoulé jauge non pleine | il n'y en avait AUCUNE avant |
 | Prime SUR LE COUP | +50 si bu en moins de 1,6 s | récompense la lecture, pas le sprint |
 | Multiplicateur | plafonné ×5 | sinon la prime ne pèse plus rien |
+| Postes des barmans | 0,34 et 0,66 | plus écartés, on n'en voyait aucun |
+| Télégraphe Francky | 5 poses ; Jojo 3 | plus c'est long, plus ça se lit |
 | Habitués | chipent un verre après 55 % de sa vie, jamais l'eau | ménage gratuit, points perdus |
 | Verre raté | il TRAÎNE (grisé) au lieu de disparaître | jeter = +10, boire = « ÉVENTÉ… » |
 | Débordement | 5 traînes → ambiance −1.2/s | le ménage fait partie du service |
@@ -76,6 +78,25 @@ queue au niveau 1) — `n1` doit les EXCLURE, ils vivent dans commun/.
 Le garde-fou `faisable()` refuse tout verre injouable : distance à la
 vitesse du champion + geste de boire + verres déjà posés < vie × 0.9.
 Il travaille avec la vitesse EFFECTIVE : pompette, on sert moins loin.
+
+### Un monde de trois écrans cache ce qu'il faut lire
+Les barmans étaient postés à 0,24 et 0,76 d'un monde large de trois
+écrans : sur la photo de contrôle, **aucun des deux n'était visible**.
+Tout le niveau repose sur la lecture de leurs gestes, et ces gestes se
+jouaient hors champ. Deux corrections : les postes rapprochés à 0,34 et
+0,66, et des chevrons de bord qui donnent la couleur et l'avancement de
+ce qui se prépare ailleurs. Un test refuse un écartement supérieur à
+0,34. La leçon générale : une mécanique d'anticipation se vérifie sur
+une image rendue, pas sur le schéma.
+
+### Les planches annotées piègent le découpage
+Les nouvelles planches portent des cadres blancs et des légendes
+(« MODE BARMAN », « 1. CHOISIT LES INGRÉDIENTS », « VUE ORIGINALE »).
+Les composantes de texte se filtrent à la hauteur (< 55 px) et les
+traits de cadre à la largeur (> 620 px) ; la boîte « VUE ORIGINALE »,
+elle, ne se distingue que par sa POSITION (x > 1230). Les rangées sont
+données à la main : la détection automatique fusionnait les deux
+premières, les chevelures dépassant sur la rangée du dessous.
 
 ### La jauge se lit AVANT la fuite, pas après
 En ajoutant la fuite d'ambiance, je l'ai mise avant le contrôle de

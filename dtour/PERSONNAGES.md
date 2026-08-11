@@ -51,8 +51,9 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 - La lanceuse de tartes au citron meringuées. Passe **par les fenêtres**
   au niveau 1, **frappe à la porte** au niveau 2 (et il FAUT lui
   ouvrir : elle attend, l'enquête se gèle).
-- Au niveau 3 elle peut traverser le bar, tarte en main, regarder le
-  joueur… et repartir. La menace suffit.
+- Au niveau 3 elle traverse le bar, **s'arrête au milieu et montre sa
+  tarte**, puis repart sans la lancer. Sprites du passage :
+  `bar_hortense_{marche1,marche2,tarte}`.
 - Le fond du bar l'affiche : « Hortense a dit : pas de tarte, pas de
   service. » et « Règle n°1 du D'Tour : ne jamais dire non à Hortense. »
 - Sprites : `h_*` et `tarte*`, `debris_*` (commun).
@@ -101,10 +102,12 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 - Visiteur du niveau 2, thèmes `dodo` et `alcool` ; hors sujet, il
   râle sur sa tournée impayée (« Francky met trop de sirop. Je le dis
   depuis dix ans », dit un autre).
-- Au niveau 3 il tient la **gauche** du comptoir et sert les
-  **cocktails**. Son télégraphe : le shaker. S'il essuie tranquillement
-  un verre à la cuillère, méfiance — c'est de l'eau.
-- Sprites : `pers_francky` (commun), `bar_francky_*` (n3).
+- Au niveau 3 il tient la **gauche** du comptoir (0,34) et sert les
+  **cocktails**. Son télégraphe est le plus long du niveau, en cinq
+  temps : il choisit sa bouteille, verse, shake, remue, décore. S'il
+  essuie tranquillement un verre au chiffon, méfiance — c'est de l'eau.
+- Sprites : `pers_francky` (commun), `bar_francky_{idle,choisit,verse,
+  shake,remue,decore,sert,essuie}` (n3).
 
 ### JOJO LE NAIN
 - Barman de **l'Entrepotes**, plombier le reste du temps, marié à une
@@ -112,7 +115,7 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 - Visiteur du niveau 2, thèmes `plomberie`, `hauteur`, `alcool`.
 - Au niveau 3, il vient prêter main-forte au D'Tour — l'ardoise
   « JÄGERBOMBS DE JOJO » est au mur — et tient la **droite** du
-  comptoir. Son télégraphe : le doseur puis le shot. Le chiffon
+  comptoir (0,66). Son télégraphe : le doseur puis le shot. Le chiffon
   tranquille, c'est de l'eau.
 - Sprites : `pers_jojo` (commun), `bar_jojo_*` (n3).
 
@@ -125,7 +128,8 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 - « Je ne me souviens pas de la pizza. Je me souviens très bien
   d'elle. » Il passe aussi à la télé du bar (« LE MAIRE FAIT LE
   POINT »).
-- Habitué du bar au niveau 3 — il se sert, évidemment.
+- Habitué du bar au niveau 3 — il se sert, évidemment. Le seul habitué
+  entièrement animé : `bar_marini_{idle,marche1,marche2,attrape,boit,vide}`.
 - Sprite : `pers_marini` (commun). Fait la queue au niveau 1.
 
 ### MARTIN, AGENT DE SÉCURITÉ

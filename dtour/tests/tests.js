@@ -2007,6 +2007,74 @@ if (D){
       return vus >= 2 && D.Tournee.clients.length <= 2;
     })());
 
+  /* --- les animations des figurants --- */
+  verifier("le télégraphe de Francky est le plus long : il se lit de loin",
+    (() => {
+      const fr = D.BARMANS.find(b => b.id === "francky");
+      const jo = D.BARMANS.find(b => b.id === "jojo");
+      return fr.prepare.length >= 5 && fr.prepare.length > jo.prepare.length;
+    })());
+  verifier("chaque pose de barman citée existe sur le disque",
+    (() => {
+      const n3 = new Set(D.IMG_PAR_DOSSIER.n3);
+      return D.BARMANS.every(b =>
+        b.prepare.every(p2 => n3.has(p2)) && Object.values(b.poses).every(p2 => n3.has(p2)));
+    })());
+  verifier("un habitué sans planche garde sa silhouette",
+    (() => {
+      const sans = D.BAR_CLIENTS.find(c => !c.prefixe);
+      const cl = { ref:sans, x:0.5, dir:1, etat:"entre", t:0, foulee:0 };
+      return D.Tournee.poseClient(cl) === sans.sprite;
+    })());
+  verifier("un habitué avec planche marche, se sert, puis s'en va son verre en main",
+    (() => {
+      lancer3(0);
+      const avec = D.BAR_CLIENTS.find(c => c.prefixe);
+      const n3 = new Set(D.IMG_PAR_DOSSIER.n3);
+      const cl = { ref:avec, x:0.5, dir:1, etat:"entre", t:0, foulee:0, verreEnMain:false };
+      const vues = [];
+      vues.push(D.Tournee.poseClient(cl));
+      cl.foulee = 1.2; vues.push(D.Tournee.poseClient(cl));
+      cl.etat = "attend"; vues.push(D.Tournee.poseClient(cl));
+      cl.etat = "prend"; cl.t = 0.1; vues.push(D.Tournee.poseClient(cl));
+      cl.t = 0.5; vues.push(D.Tournee.poseClient(cl));
+      cl.etat = "repart"; cl.verreEnMain = true; vues.push(D.Tournee.poseClient(cl));
+      return new Set(vues).size === 6 && vues.every(p2 => n3.has(p2));
+    })());
+  verifier("Hortense traverse, s'arrête pour montrer la tarte, et repart",
+    (() => {
+      lancer3(0);
+      D.Tournee.invite = { qui:"hortense", x:0.10, dir:1, t:0, pause:0, foulee:0 };
+      const n3 = new Set(D.IMG_PAR_DOSSIER.n3);
+      const marche = D.Tournee.poseInvite();
+      /* elle avance jusqu'au milieu, où elle doit s'arrêter */
+      let vueTarte = false, avanceApres = false;
+      let xPause = null;
+      for (let i = 0; i < 60 * 12; i++){
+        D.Jeu.pas(1 / 60);
+        if (!D.Tournee.invite) break;
+        if (D.Tournee.invite.pause > 0){
+          vueTarte = vueTarte || D.Tournee.poseInvite() === "bar_hortense_tarte";
+          if (xPause === null) xPause = D.Tournee.invite.x;
+        } else if (xPause !== null && D.Tournee.invite.x > xPause + 0.02) avanceApres = true;
+      }
+      return n3.has(marche) && vueTarte && avanceApres;
+    })(), "la menace ne vaut que si elle s'arrête vraiment");
+  verifier("le chat ne prend pas les poses d'Hortense",
+    (() => {
+      lancer3(0);
+      D.Tournee.invite = { qui:"chat", x:0.2, dir:1, t:0, pause:0, foulee:0 };
+      return D.Tournee.poseInvite() === "susp_chat";
+    })());
+
+  verifier("les deux barmans tiennent dans deux écrans de comptoir",
+    (() => {
+      /* Sans ça, on ne peut jamais voir venir les deux : le télégraphe
+         devient décoratif et le niveau se joue au réflexe. */
+      const xs = D.BARMANS.map(b => b.x).sort((p, q) => p - q);
+      return xs[1] - xs[0] <= 0.34 && xs[0] > 0.2 && xs[1] < 0.8;
+    })());
+
   /* --- les points --- */
   verifier("pris au CLAC, la prime de vitesse tombe",
     (() => {

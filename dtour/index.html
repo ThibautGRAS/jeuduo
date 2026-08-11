@@ -531,7 +531,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.3</div>
+  <div id="version">CALLAGHAN v6.4</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -602,7 +602,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.3";
+const VERSION = "6.4";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1117,9 +1117,16 @@ const PREFIXES_BAR = ["bar_th", "bar_pf"];
 
 const IMAGES_NIVEAU3 = [
   "fond_bar",
-  "bar_francky_idle", "bar_francky_shake", "bar_francky_verse", "bar_francky_sert", "bar_francky_touille",
+  /* Francky prépare en six temps : c'est le télégraphe le plus long du
+     niveau, donc le plus lisible — on voit venir un cocktail de loin. */
+  "bar_francky_idle", "bar_francky_choisit", "bar_francky_verse", "bar_francky_shake",
+  "bar_francky_remue", "bar_francky_decore", "bar_francky_sert", "bar_francky_essuie",
   "bar_jojo_idle", "bar_jojo_mesure", "bar_jojo_shot", "bar_jojo_verse", "bar_jojo_montre", "bar_jojo_attend", "bar_jojo_essuie",
   "bar_cocktail", "bar_jager", "bar_eau",
+  /* les habitués animés, et le passage d'Hortense */
+  "bar_marini_idle", "bar_marini_marche1", "bar_marini_marche2",
+  "bar_marini_attrape", "bar_marini_boit", "bar_marini_vide",
+  "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 
 /* ---------- où vit chaque image ----------
@@ -6136,7 +6143,10 @@ function poseBar(champion, pose){ return champion.prefixe + "_" + pose; }
    devient un indice — un verre que personne ne chipe est suspect. */
 const BAR_CLIENTS = [
   { id:"soeur",  sprite:"pers_soeur",  nom:"LA SŒUR",  taille:0.86 },
-  { id:"marini", sprite:"pers_marini", nom:"LE MAIRE", taille:0.84 },
+  /* Le maire a sa planche : il marche, il se sert, il boit. Les autres
+     n'ont qu'une silhouette — poseClient() s'en accommode, et le jour
+     où leur planche arrive il suffit de leur donner un `prefixe`. */
+  { id:"marini", sprite:"pers_marini", nom:"LE MAIRE", taille:0.84, prefixe:"bar_marini" },
   { id:"martin", sprite:"pers_martin", nom:"MARTIN",   taille:0.90 },
 ];
 const BAR_CLIENT_SEUIL = 0.55;      /* un verre entamé à plus de 55 % de sa vie est chipable */
@@ -6153,10 +6163,14 @@ const BOISSONS = {
    geste avant que le verre soit posé. L'eau a sa préparation à part,
    plus posée — c'est l'indice. */
 const BARMANS = [
-  { id:"francky", nom:"FRANCKY", x:0.24, sert:"cocktail",
-    poses:{ repos:"bar_francky_idle", eau:"bar_francky_touille", sert:"bar_francky_sert" },
-    prepare:["bar_francky_shake", "bar_francky_verse"] },
-  { id:"jojo", nom:"JOJO", x:0.76, sert:"jager",
+  { id:"francky", nom:"FRANCKY", x:0.34, sert:"cocktail",
+    poses:{ repos:"bar_francky_idle", eau:"bar_francky_essuie", sert:"bar_francky_sert" },
+    /* six temps : il choisit, il verse, il shake, il remue, il décore.
+       Plus la séquence est longue, plus le joueur a le temps de LIRE ce
+       qui arrive — c'est là que se gagne le niveau. */
+    prepare:["bar_francky_choisit", "bar_francky_verse", "bar_francky_shake",
+             "bar_francky_remue", "bar_francky_decore"] },
+  { id:"jojo", nom:"JOJO", x:0.66, sert:"jager",
     poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_montre" },
     prepare:["bar_jojo_mesure", "bar_jojo_shot", "bar_jojo_verse"] },
 ];
@@ -6574,12 +6588,21 @@ const Tournee = {
     if (this.prochainClin <= 0 && !this.invite){
       this.prochainClin = hasard(24, 44);
       this.invite = { qui:Math.random() < 0.72 ? "chat" : "hortense",
-                      x:-0.06, dir:1, t:0 };
+                      x:-0.06, dir:1, t:0, pause:0, foulee:0 };
     }
     if (this.invite){
-      this.invite.t += dt;
-      this.invite.x += this.invite.dir * dt * (this.invite.qui === "chat" ? 0.16 : 0.085);
-      if (this.invite.x > 1.08) this.invite = null;
+      const iv = this.invite;
+      iv.t += dt;
+      if (iv.qui === "chat"){
+        iv.x += iv.dir * dt * 0.16;
+      } else {
+        /* Hortense traverse, s'arrête au milieu, montre la tarte, et
+           repart sans la lancer. C'est la menace qui fait le gag. */
+        if (!iv.pause && iv.x >= 0.46){ iv.pause = 1.6; }
+        if (iv.pause > 0){ iv.pause -= dt; iv.foulee = iv.foulee || 0; }
+        else { iv.x += iv.dir * dt * 0.085; iv.foulee = (iv.foulee || 0) + dt * 7; }
+      }
+      if (iv.x > 1.08) this.invite = null;
     }
 
     Camera.suivreBar(this.x, dt);
@@ -6599,10 +6622,12 @@ const Tournee = {
       this.clients.push({
         ref, x:parGauche ? -0.05 : 1.05, dir:parGauche ? 1 : -1,
         etat:"entre", t:0, cible:hasard(0.15, 0.85), verre:null,
+        foulee:0, verreEnMain:false,
       });
     }
     for (const cl of this.clients){
       cl.t += dt;
+      if (cl.etat === "entre" || cl.etat === "repart") cl.foulee += dt * 7;
       if (cl.etat === "entre"){
         cl.x += cl.dir * dt * 0.075;
         /* un verre chipable en chemin ? on se détourne */
@@ -6625,6 +6650,7 @@ const Tournee = {
         const k = this.verres.indexOf(cl.verre);
         if (k >= 0 && cl.verre.etat === ETAT_VERRE.POSE){
           this.verres.splice(k, 1);
+          cl.verreEnMain = true;
           this.stats.chipes++;
           this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + 1);
           this.dire("CHIPÉ PAR " + cl.ref.nom + " !", 1.3);
@@ -6637,6 +6663,24 @@ const Tournee = {
       cl.x += cl.dir * dt * 0.085;
     }
     this.clients = this.clients.filter(cl => cl.x > -0.12 && cl.x < 1.12);
+  },
+
+  /* La pose d'un habitué, même règle que pour le champion : elle se
+     déduit de l'état. Sans planche, on renvoie la silhouette. */
+  poseInvite(){
+    const iv = this.invite;
+    if (!iv || iv.qui === "chat") return "susp_chat";
+    if (iv.pause > 0) return "bar_hortense_tarte";
+    return (Math.floor((iv.foulee || 0) * 0.9) % 2) ? "bar_hortense_marche2" : "bar_hortense_marche1";
+  },
+
+  poseClient(cl){
+    if (!cl.ref.prefixe) return cl.ref.sprite;
+    const p = cl.ref.prefixe;
+    if (cl.etat === "prend") return cl.t < 0.30 ? p + "_attrape" : p + "_boit";
+    if (cl.etat === "attend") return p + "_idle";
+    if (cl.etat === "repart" && cl.verreEnMain) return p + "_vide";
+    return (Math.floor(cl.foulee * 0.9) % 2) ? p + "_marche2" : p + "_marche1";
   },
 
   /* Un verre à portée du client, assez vieux pour être abandonné — et
@@ -6736,6 +6780,7 @@ const BarVue = {
       ctx.restore();
     }
 
+    if (T.actif && !T.fini) this.dessinerBords();
     if (T.actif || T.fini) this.dessinerBandeau();
     if (T.message) this.dessinerMessage();
   },
@@ -6872,7 +6917,7 @@ const BarVue = {
   dessinerInvite(){
     const T = Tournee, H = Camera.H;
     const inv = T.invite;
-    const spr = Images.table[inv.qui === "chat" ? "susp_chat" : "h_marche"];
+    const spr = Images.table[T.poseInvite()];
     if (!spr || !spr.naturalWidth) return;
     const sh = H * (inv.qui === "chat" ? 0.11 : 0.42);
     const sl = sh * spr.naturalWidth / spr.naturalHeight;
@@ -6962,7 +7007,7 @@ const BarVue = {
   dessinerClients(){
     const H = Camera.H;
     for (const cl of Tournee.clients){
-      const spr = Images.table[cl.ref.sprite];
+      const spr = Images.table[Tournee.poseClient(cl)];
       if (!spr || !spr.naturalWidth) continue;
       const sh = H * BAR_TAILLE_HEROS * cl.ref.taille;
       const sl = sh * spr.naturalWidth / spr.naturalHeight;
@@ -6983,6 +7028,70 @@ const BarVue = {
         this.halo(x, this.ey(BAR_COMPTOIR), H * 0.05, [255, 120, 120], 0.7);
         ctx.restore();
       }
+    }
+  },
+
+  /* --------- ce qui se passe hors de l'écran ---------
+     Le comptoir fait trois écrans de large : un barman qui prépare à
+     l'autre bout ne se voit pas, et tout le niveau repose sur le fait
+     de LIRE les barmans. Sans ces repères de bord, l'anticipation
+     demandée n'existe simplement pas — on découvrait les verres en
+     arrivant dessus. */
+  dansLEcran(fx){
+    const x = this.ex(fx);
+    return x > Camera.L * 0.06 && x < Camera.L * 0.94;
+  },
+
+  chevron(cote, y, teinte, taille, force){
+    const L = Camera.L;
+    const x = cote < 0 ? L * 0.028 : L * 0.972;
+    const s = taille * (cote < 0 ? 1 : -1);
+    ctx.save();
+    ctx.globalAlpha = force;
+    ctx.beginPath();
+    ctx.moveTo(x - s, y - taille * 0.85);
+    ctx.lineTo(x + s * 0.55, y);
+    ctx.lineTo(x - s, y + taille * 0.85);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(" + teinte.join(",") + ",.92)";
+    ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = "rgba(10,8,16,.75)"; ctx.stroke();
+    ctx.restore();
+  },
+
+  dessinerBords(){
+    const T = Tournee, H = Camera.H;
+    /* les verres déjà posés : couleur de la boisson, et la jauge de vie
+       qui se vide en même temps que celle du verre */
+    for (const v of T.verres){
+      if (v.etat !== ETAT_VERRE.POSE || this.dansLEcran(v.x)) continue;
+      const cote = this.ex(v.x) < Camera.L / 2 ? -1 : 1;
+      const y = this.ey(BAR_COMPTOIR);
+      const teinte = this.TEINTES[v.type] || [255, 255, 255];
+      this.chevron(cote, y, teinte, H * 0.055, 1);
+      const p = 1 - v.t / v.vie;
+      const x = cote < 0 ? Camera.L * 0.028 : Camera.L * 0.972;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y + H * 0.10, H * 0.017, -Math.PI / 2, -Math.PI / 2 + p * 6.283);
+      ctx.strokeStyle = p > 0.35 ? "#8FD79B" : "#E8574B";
+      ctx.lineWidth = Math.max(2, H * 0.009); ctx.stroke();
+      ctx.restore();
+    }
+    /* et les préparations en cours : on voit venir, même de dos */
+    for (const b of T.barmans){
+      if (b.etat !== "prepare" || this.dansLEcran(b.xPose)) continue;
+      const cote = this.ex(b.xPose) < Camera.L / 2 ? -1 : 1;
+      const y = this.ey(BAR_COMPTOIR) - H * 0.20;
+      const teinte = this.TEINTES[b.type] || [255, 255, 255];
+      const p = borne(b.t / b.duree, 0, 1);
+      this.chevron(cote, y, teinte, H * 0.038, 0.55 + 0.45 * p);
+      const x = cote < 0 ? Camera.L * 0.028 : Camera.L * 0.972;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y - H * 0.055, H * 0.014, -Math.PI / 2, -Math.PI / 2 + p * 6.283);
+      ctx.strokeStyle = "#F7B32B"; ctx.lineWidth = Math.max(2, H * 0.008); ctx.stroke();
+      ctx.restore();
     }
   },
 

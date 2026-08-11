@@ -57,7 +57,10 @@ function poseBar(champion, pose){ return champion.prefixe + "_" + pose; }
    devient un indice — un verre que personne ne chipe est suspect. */
 const BAR_CLIENTS = [
   { id:"soeur",  sprite:"pers_soeur",  nom:"LA SŒUR",  taille:0.86 },
-  { id:"marini", sprite:"pers_marini", nom:"LE MAIRE", taille:0.84 },
+  /* Le maire a sa planche : il marche, il se sert, il boit. Les autres
+     n'ont qu'une silhouette — poseClient() s'en accommode, et le jour
+     où leur planche arrive il suffit de leur donner un `prefixe`. */
+  { id:"marini", sprite:"pers_marini", nom:"LE MAIRE", taille:0.84, prefixe:"bar_marini" },
   { id:"martin", sprite:"pers_martin", nom:"MARTIN",   taille:0.90 },
 ];
 const BAR_CLIENT_SEUIL = 0.55;      /* un verre entamé à plus de 55 % de sa vie est chipable */
@@ -74,10 +77,14 @@ const BOISSONS = {
    geste avant que le verre soit posé. L'eau a sa préparation à part,
    plus posée — c'est l'indice. */
 const BARMANS = [
-  { id:"francky", nom:"FRANCKY", x:0.24, sert:"cocktail",
-    poses:{ repos:"bar_francky_idle", eau:"bar_francky_touille", sert:"bar_francky_sert" },
-    prepare:["bar_francky_shake", "bar_francky_verse"] },
-  { id:"jojo", nom:"JOJO", x:0.76, sert:"jager",
+  { id:"francky", nom:"FRANCKY", x:0.34, sert:"cocktail",
+    poses:{ repos:"bar_francky_idle", eau:"bar_francky_essuie", sert:"bar_francky_sert" },
+    /* six temps : il choisit, il verse, il shake, il remue, il décore.
+       Plus la séquence est longue, plus le joueur a le temps de LIRE ce
+       qui arrive — c'est là que se gagne le niveau. */
+    prepare:["bar_francky_choisit", "bar_francky_verse", "bar_francky_shake",
+             "bar_francky_remue", "bar_francky_decore"] },
+  { id:"jojo", nom:"JOJO", x:0.66, sert:"jager",
     poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_montre" },
     prepare:["bar_jojo_mesure", "bar_jojo_shot", "bar_jojo_verse"] },
 ];
@@ -495,12 +502,21 @@ const Tournee = {
     if (this.prochainClin <= 0 && !this.invite){
       this.prochainClin = hasard(24, 44);
       this.invite = { qui:Math.random() < 0.72 ? "chat" : "hortense",
-                      x:-0.06, dir:1, t:0 };
+                      x:-0.06, dir:1, t:0, pause:0, foulee:0 };
     }
     if (this.invite){
-      this.invite.t += dt;
-      this.invite.x += this.invite.dir * dt * (this.invite.qui === "chat" ? 0.16 : 0.085);
-      if (this.invite.x > 1.08) this.invite = null;
+      const iv = this.invite;
+      iv.t += dt;
+      if (iv.qui === "chat"){
+        iv.x += iv.dir * dt * 0.16;
+      } else {
+        /* Hortense traverse, s'arrête au milieu, montre la tarte, et
+           repart sans la lancer. C'est la menace qui fait le gag. */
+        if (!iv.pause && iv.x >= 0.46){ iv.pause = 1.6; }
+        if (iv.pause > 0){ iv.pause -= dt; iv.foulee = iv.foulee || 0; }
+        else { iv.x += iv.dir * dt * 0.085; iv.foulee = (iv.foulee || 0) + dt * 7; }
+      }
+      if (iv.x > 1.08) this.invite = null;
     }
 
     Camera.suivreBar(this.x, dt);
@@ -520,10 +536,12 @@ const Tournee = {
       this.clients.push({
         ref, x:parGauche ? -0.05 : 1.05, dir:parGauche ? 1 : -1,
         etat:"entre", t:0, cible:hasard(0.15, 0.85), verre:null,
+        foulee:0, verreEnMain:false,
       });
     }
     for (const cl of this.clients){
       cl.t += dt;
+      if (cl.etat === "entre" || cl.etat === "repart") cl.foulee += dt * 7;
       if (cl.etat === "entre"){
         cl.x += cl.dir * dt * 0.075;
         /* un verre chipable en chemin ? on se détourne */
@@ -546,6 +564,7 @@ const Tournee = {
         const k = this.verres.indexOf(cl.verre);
         if (k >= 0 && cl.verre.etat === ETAT_VERRE.POSE){
           this.verres.splice(k, 1);
+          cl.verreEnMain = true;
           this.stats.chipes++;
           this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + 1);
           this.dire("CHIPÉ PAR " + cl.ref.nom + " !", 1.3);
@@ -558,6 +577,24 @@ const Tournee = {
       cl.x += cl.dir * dt * 0.085;
     }
     this.clients = this.clients.filter(cl => cl.x > -0.12 && cl.x < 1.12);
+  },
+
+  /* La pose d'un habitué, même règle que pour le champion : elle se
+     déduit de l'état. Sans planche, on renvoie la silhouette. */
+  poseInvite(){
+    const iv = this.invite;
+    if (!iv || iv.qui === "chat") return "susp_chat";
+    if (iv.pause > 0) return "bar_hortense_tarte";
+    return (Math.floor((iv.foulee || 0) * 0.9) % 2) ? "bar_hortense_marche2" : "bar_hortense_marche1";
+  },
+
+  poseClient(cl){
+    if (!cl.ref.prefixe) return cl.ref.sprite;
+    const p = cl.ref.prefixe;
+    if (cl.etat === "prend") return cl.t < 0.30 ? p + "_attrape" : p + "_boit";
+    if (cl.etat === "attend") return p + "_idle";
+    if (cl.etat === "repart" && cl.verreEnMain) return p + "_vide";
+    return (Math.floor(cl.foulee * 0.9) % 2) ? p + "_marche2" : p + "_marche1";
   },
 
   /* Un verre à portée du client, assez vieux pour être abandonné — et

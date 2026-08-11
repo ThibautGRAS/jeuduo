@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.3";
+const VERSION = "6.4";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -533,9 +533,16 @@ const PREFIXES_BAR = ["bar_th", "bar_pf"];
 
 const IMAGES_NIVEAU3 = [
   "fond_bar",
-  "bar_francky_idle", "bar_francky_shake", "bar_francky_verse", "bar_francky_sert", "bar_francky_touille",
+  /* Francky prépare en six temps : c'est le télégraphe le plus long du
+     niveau, donc le plus lisible — on voit venir un cocktail de loin. */
+  "bar_francky_idle", "bar_francky_choisit", "bar_francky_verse", "bar_francky_shake",
+  "bar_francky_remue", "bar_francky_decore", "bar_francky_sert", "bar_francky_essuie",
   "bar_jojo_idle", "bar_jojo_mesure", "bar_jojo_shot", "bar_jojo_verse", "bar_jojo_montre", "bar_jojo_attend", "bar_jojo_essuie",
   "bar_cocktail", "bar_jager", "bar_eau",
+  /* les habitués animés, et le passage d'Hortense */
+  "bar_marini_idle", "bar_marini_marche1", "bar_marini_marche2",
+  "bar_marini_attrape", "bar_marini_boit", "bar_marini_vide",
+  "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 
 /* ---------- où vit chaque image ----------
