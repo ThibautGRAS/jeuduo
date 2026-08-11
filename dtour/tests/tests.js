@@ -74,53 +74,14 @@ if (fs.existsSync(dossierImg)){
     }
   }
 }
-const citees = new Set();
-for (const m of source.matchAll(/"(fond_[a-z]+|logo|face_[a-z_]+|fx_[a-z]+|pnj\d\d|(?:thibaut|pierre)_[a-z]+)"/g)) citees.add(m[1]);
-for (const m of source.matchAll(/Images\.table\.(fx_[a-z]+|appart|loupe)/g)) citees.add(m[1]);
-for (const m of source.matchAll(/sprite:"([a-z_0-9]+)"/g)) if (!/^(pierre|thibaut)$/.test(m[1])) citees.add(m[1]);
-for (const m of source.matchAll(/"(enq_[a-z_]+|pizza_[a-z_]+|badge_[a-z]+|bar_[a-z_]+)"/g)) citees.add(m[1]);
-citees.add("appart"); citees.add("loupe");
-for (const m of source.matchAll(/"(h_[a-zA-Z]+|tarte[0-9]|tarte_[a-z]+|debris_[a-z]+)"/g)) citees.add(m[1]);
-/* les quatre orientations de la tarte sont composées : "tarte" + n */
-for (let i = 0; i < 4; i++) citees.add("tarte" + i);
-/* les poses des héros sont construites par concaténation : on les recompose */
-for (const h of ["thibaut","pierre"]) for (const p of ["idle","attente","marche","regarde","surpris","stress","tendue","victoire"]) citees.add(h + "_" + p);
-for (let i = 1; i <= 16; i++) citees.add("pnj" + String(i).padStart(2, "0"));
-const manquantes = [...citees].filter(n => !presentes.includes(n + ".webp"));
-
-/* Le test précédent ne dit que « le fichier est là ». Il ne dit pas
-   qu'on le CHARGE : les images du niveau 2 étaient sur le disque, la
-   suite était verte, et l'appartement restait noir. On confronte donc
-   img/ à la liste de chargement, dans les deux sens. */
-const chargees = new Set();
-{
-  for (const liste of ["IMAGES_NIVEAU2", "IMAGES_NIVEAU3", "PERSONNAGES_MAISON"]){
-    const blocs = source.match(new RegExp("const " + liste + " = \\[([\\s\\S]*?)\\];"));
-    if (blocs) for (const m of blocs[1].matchAll(/"([A-Za-z_0-9]+)"/g)) chargees.add(m[1]);
-  }
-  for (const nom of ["logo", "face_thibaut", "face_pierre"]) chargees.add(nom);
-  for (const liste of ["EFFETS", "SPRITES_HORTENSE", "SPRITES_TARTE", "SPRITES_PNJ"]){
-    const b = source.match(new RegExp("const " + liste + " = \\[([\\s\\S]*?)\\]"));
-    if (b) for (const m of b[1].matchAll(/"([A-Za-z_0-9]+)"/g)) chargees.add(m[1]);
-  }
-  for (const m of source.matchAll(/fond:"([a-z_]+)"/g)) chargees.add(m[1]);
-  for (const h of ["thibaut", "pierre"]){
-    const b = source.match(/const POSES_HEROS = \[([\s\S]*?)\]/);
-    if (b) for (const m of b[1].matchAll(/"([a-z]+)"/g)) chargees.add(h + "_" + m[1]);
-  }
-  for (let i = 1; i <= 16; i++) chargees.add("pnj" + String(i).padStart(2, "0"));
-}
+/* Les listes d'images ne se relisent plus à la regex : elles sont
+   construites par concaténation dans le code (POSES_BAR × préfixes,
+   poses des héros, PNJ…) et toute tentative de les reconstituer ici a
+   fini par mentir — vert alors que le disque et le code divergeaient.
+   La confrontation disque ↔ chargement se fait donc sur le code
+   EXÉCUTÉ, dans la section « Rangement des images » : listeImages()
+   est la seule vérité. Ici on ne garde que ce qui se voit du dehors. */
 const surDisque = presentes.filter(f => f.endsWith(".webp")).map(f => f.slice(0, -5));
-const jamaisChargees = surDisque.filter(n => !chargees.has(n));
-const introuvables = [...chargees].filter(n => surDisque.indexOf(n) < 0);
-verifier("toutes les images du disque sont chargées au démarrage",
-  jamaisChargees.length === 0, "jamais demandée(s) : " + jamaisChargees.join(", "));
-verifier("aucune image demandée ne manque sur le disque",
-  introuvables.length === 0, "introuvable(s) : " + introuvables.join(", "));
-verifier("toutes les images citées existent dans img/", manquantes.length === 0, "manquant : " + manquantes.join(", "));
-verifier("aucune image inutilisée dans img/",
-  presentes.filter(f => f.endsWith(".webp") && !citees.has(f.slice(0, -5))).length === 0,
-  "inutilisée : " + presentes.filter(f => f.endsWith(".webp") && !citees.has(f.slice(0, -5))).join(", "));
 /* Le rangement fichier par fichier est vérifié plus bas, sur le code
    EXÉCUTÉ (section « Rangement des images ») : la table IMG_CHEMIN y
    est vivante, inutile de la reconstruire par regex ici. */
@@ -348,6 +309,18 @@ if (D){
      chargerait une URL morte. */
   (() => {
     const noms = D.listeImages();
+    /* Dans les deux sens : une image sur le disque que personne ne
+       charge est un poids mort ; une image chargée qui manque au disque
+       laisse un trou noir à l'écran (l'appartement du niveau 2 est resté
+       noir une version entière avec une suite verte). */
+    const jamais = surDisque.filter(n => noms.indexOf(n) < 0);
+    const absentes = noms.filter(n => surDisque.indexOf(n) < 0);
+    verifier("toutes les images du disque sont chargées au démarrage",
+      jamais.length === 0, "jamais demandée(s) : " + jamais.join(", "));
+    verifier("aucune image chargée ne manque sur le disque",
+      absentes.length === 0, "introuvable(s) : " + absentes.join(", "));
+    verifier("aucun doublon dans la liste de chargement",
+      new Set(noms).size === noms.length);
     const malRanges = noms.filter(n => dossierParNom[n] && D.IMG_CHEMIN[n] !== dossierParNom[n])
       .map(n => n + " (disque " + dossierParNom[n] + ", code " + D.IMG_CHEMIN[n] + ")");
     verifier("le rangement du disque suit IMG_PAR_DOSSIER",
@@ -1653,6 +1626,7 @@ if (D){
 
   /* ================= NIVEAU 3 — la tournée ================= */
   titre("Niveau 3 — la tournée");
+  const lancerPoses = () => { D.Jeu.demarrer(3); D.Tournee.lancer(); };
   const lancer3 = (champ) => {
     D.Jeu.demarrer(3);
     D.Tournee.choixChamp = champ === undefined ? 0 : champ;
@@ -1683,11 +1657,34 @@ if (D){
         b.prepare.every(pz => n3.has(pz)) &&
         Object.values(b.poses).every(pz => n3.has(pz)));
     })());
-  verifier("chaque champion a ses cinq sprites chargés",
+  verifier("chaque champion a ses dix poses sur le disque",
     (() => {
       const n3 = new Set(D.IMG_PAR_DOSSIER.n3);
-      return D.BAR_CHAMPIONS.every(c =>
-        [c.idle, c.marche, c.course, c.boit, c.jette].every(pz => n3.has(pz)));
+      return D.BAR_CHAMPIONS.every(c => D.POSES_BAR.every(po => n3.has(D.poseBar(c, po))));
+    })(),
+    "il manque une pose : la planche a été découpée à moitié");
+  verifier("toutes les poses que la mécanique demande existent",
+    (() => {
+      /* on force chaque état et on vérifie que pose() nomme une image
+         réelle : une pose oubliée fait disparaître le champion */
+      lancerPoses();
+      const n3 = new Set(D.IMG_PAR_DOSSIER.n3);
+      const T = D.Tournee, c = T.champion;
+      const vues = [];
+      const relever = () => vues.push(T.pose());
+      T.marche = 0; T.bourre = 0; T.freinT = 0; T.boitT = 0; relever();
+      T.marche = 1; T.dureeMarche = 0.1; T.foulee = 0; relever();
+      T.foulee = 1.2; relever();
+      T.dureeMarche = 1.2; relever();
+      T.marche = 0; T.freinT = 0.1; relever();
+      T.freinT = 0; T.bourre = 2; relever();
+      T.bourre = 0;
+      for (const act of ["boit", "jette"]){
+        T.action = act; T.boitTotal = 1;
+        for (const p of [0.1, 0.5, 0.9]){ T.boitT = 1 - p; relever(); }
+      }
+      T.boitT = 0;
+      return vues.length === 12 && vues.every(po => n3.has(D.poseBar(c, po)));
     })());
 
   /* --- le garde-fou de faisabilité --- */
@@ -1729,7 +1726,29 @@ if (D){
   poserVerre("jager", D.Tournee.x);
   verifier("jeter un Jägerbomb : sacrilège et amende", D.Tournee.jeter() === true &&
     D.Tournee.stats.sacrileges === 1 && D.Score.points < scoreAvant2);
-  verifier("l'ambiance a payé les erreurs", D.Tournee.ambiance < 14);
+  /* Mesurer l'ambiance en fin de séquence ne dit rien : gains et
+     pertes s'annulent. Ce qui compte, c'est le PRIX d'une erreur. */
+  verifier("chaque erreur coûte de l'ambiance",
+    (() => {
+      lancer3(0);
+      D.Tournee.x = 0.5;
+      D.Tournee.ambiance = 60;
+      poserVerre("eau", 0.5);
+      D.Tournee.boire();                       /* boire l'eau */
+      const apresEau = D.Tournee.ambiance;
+      D.Tournee.boitT = 0;
+      poserVerre("jager", 0.5);
+      D.Tournee.jeter();                       /* sacrilège */
+      return apresEau <= 60 - 8 && D.Tournee.ambiance <= apresEau - 8;
+    })());
+  verifier("une bonne décision en rapporte",
+    (() => {
+      lancer3(0);
+      D.Tournee.x = 0.5; D.Tournee.ambiance = 50;
+      poserVerre("cocktail", 0.5);
+      D.Tournee.boire();
+      return D.Tournee.ambiance >= 50 + D.BAR_AMBIANCE_GAIN - 0.01;
+    })());
 
   /* --- l'expiration --- */
   lancer3(0);
@@ -1861,24 +1880,47 @@ if (D){
     })());
 
   /* --- des barmans qui servent vraiment, sans jamais coincer --- */
-  verifier("la soirée pose des verres et reste jouable",
+  verifier("la soirée sert des verres sans qu'on demande rien",
     (() => {
       lancer3(0);
       let poses = 0;
-      for (let i = 0; i < 60 * 60; i++){
+      for (let i = 0; i < 60 * 40; i++){
         const avant = D.Tournee.verres.length;
+        /* on maintient la salle en vie pour observer le service seul */
+        D.Tournee.ambiance = 60;
         D.Jeu.pas(1 / 60);
         if (D.Tournee.verres.length > avant) poses++;
-        /* le joueur ne joue pas : les verres expirent, la partie continue */
       }
-      return poses >= 6 && D.Jeu.phase === "jeu";
-    })(), "en une minute sans jouer, il doit se passer des choses");
+      return poses >= 5;
+    })(), "en quarante secondes, il doit se passer des choses");
+  verifier("ne rien faire finit par vider le bar : on peut PERDRE",
+    (() => {
+      lancer3(0);
+      for (let i = 0; i < 60 * D.BAR_DUREE; i++){
+        D.Jeu.pas(1 / 60);
+        if (D.Tournee.fini) break;
+      }
+      return !!D.Tournee.fini && D.Tournee.fini.gagne === false &&
+        D.Tournee.fini.cause === "vide" && D.Jeu.phase === "fin";
+    })(), "sans défaite possible, la jauge ne veut rien dire");
+  verifier("le chrono s'épuise si l'ambiance tient mais ne monte pas",
+    (() => {
+      lancer3(0);
+      for (let i = 0; i < 60 * (D.BAR_DUREE + 2); i++){
+        D.Tournee.ambiance = 50;          /* on tient la salle, sans jamais remplir */
+        D.Jeu.pas(1 / 60);
+        if (D.Tournee.fini) break;
+      }
+      return !!D.Tournee.fini && D.Tournee.fini.gagne === false &&
+        D.Tournee.fini.cause === "temps";
+    })());
   verifier("le coup de feu part une seule fois, vers 70 s",
     (() => {
       lancer3(0);
       let departs = 0;
       for (let i = 0; i < 60 * 100; i++){
         const avant = D.Tournee.coupDeFeu;
+        D.Tournee.ambiance = 60;          /* la salle tient : on observe le coup de feu */
         D.Jeu.pas(1 / 60);
         if (!avant && D.Tournee.coupDeFeu) departs++;
       }
@@ -1912,6 +1954,109 @@ if (D){
       poserVerre("eau", D.Tournee.x);
       D.Tournee.boire();
       return D.Tournee.finaleReste === D.BAR_TOURNEE_FINALE;
+    })());
+
+  /* --- les habitués --- */
+  verifier("les habitués sortent des sprites déjà dessinés",
+    (() => {
+      const dispo = new Set(D.IMG_PAR_DOSSIER.commun);
+      return D.BAR_CLIENTS.length >= 3 && D.BAR_CLIENTS.every(c => dispo.has(c.sprite));
+    })());
+  verifier("un verre frais ne se fait pas chiper sous le nez du joueur",
+    (() => {
+      lancer3(0);
+      const v = poserVerre("cocktail", 0.5);
+      v.t = 0;
+      return D.Tournee.verreChipable(0.5) < 0;
+    })(), "ils ne doivent voler que ce qu'on a déjà abandonné");
+  verifier("un verre qui traîne depuis un moment, oui",
+    (() => {
+      lancer3(0);
+      const v = poserVerre("cocktail", 0.5);
+      v.t = v.vie * 0.8;
+      return D.Tournee.verreChipable(0.5) >= 0;
+    })());
+  verifier("personne ne vole un verre d'eau — c'est l'indice du niveau",
+    (() => {
+      lancer3(0);
+      const v = poserVerre("eau", 0.5);
+      v.t = v.vie * 0.9;
+      return D.Tournee.verreChipable(0.5) < 0;
+    })());
+  verifier("un verre chipé quitte le comptoir sans devenir une traîne",
+    (() => {
+      lancer3(0);
+      const v = poserVerre("jager", 0.5);
+      v.t = v.vie * 0.9;
+      D.Tournee.clients = [{ ref:D.BAR_CLIENTS[0], x:0.5, dir:1, etat:"prend", t:0.6, cible:0.5, verre:v }];
+      const combo = D.Tournee.combo;
+      D.Tournee.majClients(1 / 60);
+      return D.Tournee.verres.indexOf(v) < 0 && D.Tournee.stats.chipes === 1 &&
+        D.Tournee.combo === combo;
+    })());
+  verifier("des habitués finissent par entrer, et repartent",
+    (() => {
+      lancer3(0);
+      let vus = 0;
+      for (let i = 0; i < 60 * 90; i++){
+        D.Tournee.ambiance = 60;
+        const avant = D.Tournee.clients.length;
+        D.Jeu.pas(1 / 60);
+        if (D.Tournee.clients.length > avant) vus++;
+      }
+      return vus >= 2 && D.Tournee.clients.length <= 2;
+    })());
+
+  /* --- les points --- */
+  verifier("pris au CLAC, la prime de vitesse tombe",
+    (() => {
+      lancer3(0);
+      D.Tournee.x = 0.5;
+      const v = poserVerre("cocktail", 0.5); v.t = 0.4;
+      const avant = D.Score.points;
+      D.Tournee.boire();
+      const rapide = D.Score.points - avant;
+      lancer3(0);
+      D.Tournee.x = 0.5;
+      const v2 = poserVerre("cocktail", 0.5); v2.t = D.BAR_SUR_LE_COUP + 1;
+      const avant2 = D.Score.points;
+      D.Tournee.boire();
+      return rapide - (D.Score.points - avant2) === D.BAR_PRIME_COUP;
+    })());
+  verifier("le multiplicateur de combo plafonne",
+    (() => {
+      lancer3(0);
+      D.Tournee.x = 0.5; D.Tournee.combo = 60;
+      const avant = D.Score.points;
+      const v = poserVerre("cocktail", 0.5); v.t = 5;
+      D.Tournee.boire();
+      return D.Score.points - avant === 100 * D.BAR_MULT_MAX;
+    })());
+  verifier("gagner rapporte un bonus de temps et d'ambiance",
+    (() => {
+      lancer3(0);
+      D.Tournee.ambiance = D.BAR_AMBIANCE_BUT;
+      D.Jeu.pas(1 / 60);
+      const avant = D.Score.points;
+      for (let k = 0; k < D.BAR_TOURNEE_FINALE; k++){
+        D.Tournee.boitT = 0;
+        poserVerre("cocktail", D.Tournee.x);
+        D.Tournee.boire();
+        for (let i = 0; i < 30; i++) D.Jeu.pas(1 / 60);
+      }
+      return D.Tournee.fini.gagne && D.Tournee.bonusFin > D.Tournee.meilleurCombo * 40 &&
+        D.Score.points > avant;
+    })());
+  verifier("le tempo monte avec la soirée, et sert aussi aux néons",
+    (() => {
+      lancer3(0);
+      const calme = D.Tournee.tempo();
+      D.Tournee.coupDeFeu = true;
+      const chaud = D.Tournee.tempo();
+      D.Tournee.coupDeFeu = false; D.Tournee.finale = true;
+      const finale = D.Tournee.tempo();
+      D.Tournee.finale = false;
+      return calme < chaud && chaud < finale;
     })());
 
   /* --- retour au calme pour la suite de la suite --- */

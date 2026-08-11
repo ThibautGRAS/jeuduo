@@ -63,6 +63,12 @@ queue au niveau 1) — `n1` doit les EXCLURE, ils vivent dans commun/.
 | Eau | après 25 s, p = 0.26 | le piège attend que le réflexe s'installe |
 | Coup de feu | à 70 s, 20 s, une fois | |
 | Dernière tournée | 5 décisions, erreur = on repart à 5 | |
+| Durée de la soirée | 150 s | le chrono est une vraie contrainte |
+| Ambiance | départ 35, fuite 0,35/s, gain 8 | il faut pouvoir monter ET tomber |
+| Défaites | jauge à 0, ou temps écoulé jauge non pleine | il n'y en avait AUCUNE avant |
+| Prime SUR LE COUP | +50 si bu en moins de 1,6 s | récompense la lecture, pas le sprint |
+| Multiplicateur | plafonné ×5 | sinon la prime ne pèse plus rien |
+| Habitués | chipent un verre après 55 % de sa vie, jamais l'eau | ménage gratuit, points perdus |
 | Verre raté | il TRAÎNE (grisé) au lieu de disparaître | jeter = +10, boire = « ÉVENTÉ… » |
 | Débordement | 5 traînes → ambiance −1.2/s | le ménage fait partie du service |
 | Pompette | 3 verres bus en < 9 s → 5 s à vitesse ×0.55 | l'eau bue dessoûle instantanément |
@@ -70,6 +76,34 @@ queue au niveau 1) — `n1` doit les EXCLURE, ils vivent dans commun/.
 Le garde-fou `faisable()` refuse tout verre injouable : distance à la
 vitesse du champion + geste de boire + verres déjà posés < vie × 0.9.
 Il travaille avec la vitesse EFFECTIVE : pompette, on sert moins loin.
+
+### La jauge se lit AVANT la fuite, pas après
+En ajoutant la fuite d'ambiance, je l'ai mise avant le contrôle de
+« jauge pleine ». Résultat : une jauge amenée à 100 par une bonne
+décision redescendait à 99,99 à l'image suivante, le seuil n'était
+jamais franchi, **la dernière tournée ne partait jamais et la partie
+devenait infinie**. Ce sont les deux tests de la finale, écrits la
+version d'avant, qui l'ont dit dans la minute. Quand on insère un
+amortissement dans une boucle, on regarde ce qui LIT la valeur juste
+après.
+
+### Reconstruire une liste du code à la regex finit toujours par mentir
+La suite vérifiait « disque ↔ images chargées » en recomposant
+`IMAGES_NIVEAU3` et compagnie par expressions régulières sur le source.
+Le jour où la liste est devenue `[...].concat(PREFIXES.flatMap(...))`,
+le test est passé au vert **en comparant deux ensembles faux**. La
+confrontation se fait maintenant sur `D.listeImages()`, dans le bac
+d'exécution : la seule vérité, c'est ce que le jeu demande vraiment.
+
+### Un fond magenta vaut mieux qu'un damier
+Les premières planches arrivaient sur damier gris : le détourage
+remontait les composantes grisâtres depuis les bords, au risque
+d'emporter un verre d'eau ou une chemise claire. Sur `#FF00FF` la
+découpe est exacte, et surtout on récupère une alpha GRADUÉE en
+retirant la couleur du fond des pixels de bord
+(`c = (c_vu - (1-a)·fond) / a`) au lieu de laisser un liseré rose. Pas
+de `fill_holes` : le magenta pris entre un bras et un torse doit rester
+transparent, et c'est ce qui arrive naturellement.
 
 ### Un pupitre centré masque ce qu'on joue
 Le pupitre du niveau 3 avait été copié de celui du niveau 2 —

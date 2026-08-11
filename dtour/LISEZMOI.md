@@ -413,12 +413,84 @@ son poison).
 
 La soirée monte : un verre à la fois, puis deux après 45 s, puis le
 **🔥 COUP DE FEU 🔥** vers 70 s — vingt secondes où tout accélère, trois
-verres possibles, musique à 118. La jauge **AMBIANCE** pleine déclenche
-la **DERNIÈRE TOURNÉE** : cinq décisions d'affilée, une erreur remet le
-compteur à cinq, la cinquième valide la soirée.
+verres possibles, la musique passe de 96 à 118.
+
+### Comment on gagne, comment on perd
+
+La soirée dure **2 min 30**, et la jauge **AMBIANCE** part à 35 : il y a
+de quoi monter, et de quoi tomber. Elle **fuit toute seule** de 0,35 par
+seconde — ne rien faire, c'est perdre. Chaque bonne décision rend 8,
+chaque erreur en coûte 8, un verre raté 5.
+
+| Issue | Ce qui l'a déclenchée |
+|---|---|
+| **SOIRÉE VALIDÉE** | jauge pleine → DERNIÈRE TOURNÉE → 5 décisions réussies |
+| **LE BAR S'EST VIDÉ** | la jauge est tombée à zéro |
+| **SOIRÉE ÉCOURTÉE** | 2 min 30 écoulées sans avoir rempli la jauge |
+
+L'écran de fin dit toujours **pourquoi** : une défaite qu'on ne comprend
+pas ne se rejoue pas.
+
+### Les points
+
+| Geste | Points |
+|---|---|
+| Cocktail bu | 100 |
+| Jägerbomb bu | 120 |
+| Eau jetée | 150 |
+| **SUR LE COUP** (bu dans la 1,6 s après le CLAC) | +50 |
+| Verre qui traîne, débarrassé | +10 |
+| Sacrilège | −80 |
+
+Le tout multiplié par le combo — ×2 à 3 enchaînements, jusqu'à **×5**,
+plafond assumé pour que la prime de vitesse reste intéressante. À la
+victoire s'ajoutent le meilleur combo ×40, le temps restant ×5 et
+l'ambiance finale : finir vite et fort paie mieux que finir de justesse.
+
+### Le bar est habité
+
+Des habitués entrent et sortent : **la sœur d'Hortense, le maire, Martin**
+— les sprites du niveau 2, réemployés. Ils longent le comptoir, et un
+verre laissé là depuis plus de la moitié de sa vie **finit dans leur
+main**. Ce n'est pas une punition de plus : le verre chipé ne devient pas
+une traîne, ils font le ménage à notre place — mais les points partent
+avec eux.
+
+Et surtout : **personne ne vole un verre d'eau.** Un verre qui reste
+planté là alors qu'un habitué passe devant, c'est de l'eau. Le niveau
+gagne un indice sans une ligne d'interface.
 
 Risoto traverse parfois le bas de l'écran. Hortense peut passer, tarte
 en main, regarder le joueur… et repartir. La menace suffit.
+
+### Les lumières du comptoir
+
+Chaque verre pose un **halo coloré** sur le bois : chaud pour un
+cocktail, ambré pour un Jägerbomb, **franchement froid pour l'eau**.
+C'est de la décoration qui travaille — le piège se lit à pleine vitesse,
+du coin de l'œil. Un **projecteur** tombe sur le verre pendant la
+seconde qui suit le CLAC, un **liseré de néon** court le long du
+comptoir au tempo exact de la musique (même source, sinon l'œil et
+l'oreille se contredisent), il vire à l'ambre à combo 5 et au rouge à
+combo 10, deux taches balaient le plafond au-delà de 5, et le comptoir
+prend un éclat à chaque réussite. Tout en dégradés : pas un
+`shadowBlur`.
+
+### Le son
+
+Un lit d'ambiance de bar synthétisé — brouhaha filtré qui monte d'un ton
+au coup de feu, verres qu'on pose au loin, éclats de rire — et un vamp
+funk majeur, basse qui marche, accords à contretemps, charley aux
+croches. Rien n'est échantillonné : le jeu reste un seul fichier.
+
+### Les dix poses
+
+Chaque champion a sa planche : repos, deux temps de marche, course,
+freinage, attrape, boit, verre vide, jette, titube. La pose se **déduit**
+de l'état — le geste de boire est une seule minuterie dont on lit
+l'avancement (attrape → boit → vide), donc l'image ne peut pas se
+désynchroniser de la mécanique. La pose de titubage sert à la pompette,
+le freinage à l'arrêt d'un sprint.
 
 **Au doigt** : les deux flèches dans le coin bas gauche, JETER puis
 BOIRE dans le coin bas droit — BOIRE le plus au bord, c'est la touche

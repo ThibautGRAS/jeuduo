@@ -18,6 +18,13 @@ const BAR_PORTEE = 0.030;           /* portée de prise d'un verre, en fraction 
 const BAR_MARCHE = 0.135;           /* fraction du monde parcourue par seconde, à vitesse 1.0 */
 const BAR_EXPIRE = [7.5, 5.2];      /* vie d'un verre posé : début, puis en plein coup de feu */
 const BAR_AMBIANCE_BUT = 100;
+const BAR_AMBIANCE_DEBUT = 35;      /* on commence à mi-pente : il y a de quoi monter ET de quoi tomber */
+const BAR_AMBIANCE_FUITE = 0.35;    /* la salle se lasse toute seule, par seconde */
+const BAR_AMBIANCE_GAIN = 8;        /* ce que rapporte une bonne décision */
+const BAR_DUREE = 150;              /* la soirée dure deux minutes trente */
+const BAR_SUR_LE_COUP = 1.6;        /* servi et bu dans la seconde et demie : prime */
+const BAR_PRIME_COUP = 50;
+const BAR_MULT_MAX = 5;             /* le multiplicateur de combo plafonne */
 const BAR_COUP_DE_FEU_A = 70;       /* le coup de feu part vers 70 s */
 const BAR_COUP_DE_FEU_DUREE = 20;
 const BAR_TOURNEE_FINALE = 5;       /* décisions à réussir pour conclure */
@@ -32,15 +39,28 @@ const BAR_POMPETTE_FREIN = 0.55;    /* la vitesse qu'il reste quand on titube */
    être objectivement meilleur — c'est ce que le test d'équilibre
    surveille. */
 const BAR_CHAMPIONS = [
-  { heros:1, nom:"THIBAUT", vitesse:1.00, boire:1.00, jauges:{ vitesse:5, descente:3 },
-    idle:"bar_th_idle", marche:"bar_th_marche", course:"bar_th_course",
-    boit:"bar_th_action", jette:"bar_th_action",
+  { heros:1, nom:"THIBAUT", prefixe:"bar_th", vitesse:1.00, boire:1.00,
+    jauges:{ vitesse:5, descente:3 },
     devise:"Rapide. Mais quand il boit, il ne fait que ça." },
-  { heros:0, nom:"PF", vitesse:0.82, boire:0.65, jauges:{ vitesse:3, descente:5 },
-    idle:"bar_pf_idle", marche:"bar_pf_marche", course:"bar_pf_marche",
-    boit:"bar_pf_boit", jette:"bar_pf_jette",
+  { heros:0, nom:"PF", prefixe:"bar_pf", vitesse:0.82, boire:0.65,
+    jauges:{ vitesse:3, descente:5 },
     devise:"Lent. Mais redoutable une fois au comptoir." },
 ];
+/* Les dix poses viennent d'une planche par personnage : on les nomme
+   par composition, jamais en dur — une pose ajoutée se branche en un
+   seul endroit. */
+function poseBar(champion, pose){ return champion.prefixe + "_" + pose; }
+
+/* Les habitués. Ils ne sont là que pour vivre — mais un verre qui
+   traîne trop longtemps sous leur nez finit dans leur main. Ils ne
+   touchent JAMAIS un verre d'eau : personne ne vole de l'eau, et ça
+   devient un indice — un verre que personne ne chipe est suspect. */
+const BAR_CLIENTS = [
+  { id:"soeur",  sprite:"pers_soeur",  nom:"LA SŒUR",  taille:0.86 },
+  { id:"marini", sprite:"pers_marini", nom:"LE MAIRE", taille:0.84 },
+  { id:"martin", sprite:"pers_martin", nom:"MARTIN",   taille:0.90 },
+];
+const BAR_CLIENT_SEUIL = 0.55;      /* un verre entamé à plus de 55 % de sa vie est chipable */
 
 /* Les boissons. `bonne` dit s'il faut la boire ; l'eau se jette. */
 const BOISSONS = {
@@ -72,6 +92,8 @@ const Tournee = {
   stats:null, fini:null, message:null, messageT:0, messageDuree:1.6,
   gele:0, secousse:0, invite:null, prochainClin:0,
   bus:[], bourre:0, deborde:false,
+  clients:[], prochainClient:0, flash:0, boitTotal:1, freinT:0, dureeMarche:0,
+  restant:BAR_DUREE,
 
   /* --------- montage --------- */
   monter(){
@@ -94,14 +116,19 @@ const Tournee = {
     this.x = 0.5; this.dir = 1; this.marche = 0; this.foulee = 0;
     this.boitT = 0; this.jetteT = 0; this.action = null;
     this.verres = [];
-    this.ambiance = 0; this.combo = 0; this.meilleurCombo = 0;
+    this.combo = 0; this.meilleurCombo = 0;
     this.coupDeFeu = false; this.coupT = 0; this.coupFait = false;
     this.finale = false; this.finaleReste = 0;
     this.temps = 0; this.gele = 0; this.secousse = 0;
     this.message = null; this.invite = null;
     this.prochainClin = hasard(14, 26);
     this.bus = []; this.bourre = 0; this.deborde = false;
-    this.stats = { cocktails:0, jagers:0, eauxJetees:0, eauxBues:0, sacrileges:0, rates:0 };
+    this.clients = []; this.prochainClient = hasard(8, 14);
+    this.flash = 0; this.boitTotal = 1; this.freinT = 0; this.dureeMarche = 0;
+    this.restant = BAR_DUREE;
+    this.ambiance = BAR_AMBIANCE_DEBUT;
+    this.stats = { cocktails:0, jagers:0, eauxJetees:0, eauxBues:0, sacrileges:0, rates:0,
+                   chipes:0, debarrasses:0, primes:0 };
     this.barmans = BARMANS.map(b => ({
       ref:b, etat:"repos", t:0, prochaine:0, pose:b.poses.repos, type:null,
     }));
@@ -111,6 +138,30 @@ const Tournee = {
   },
 
   dire(txt, duree){ this.message = txt; this.messageT = 0; this.messageDuree = duree || 1.6; },
+
+  /* Le tempo sert à DEUX choses : la musique, et le clignotement des
+     néons du comptoir. Une seule source, sinon l'image et le son
+     partent en désaccord. */
+  tempo(){ return this.finale ? 126 : this.coupDeFeu ? 118 : 96; },
+
+  /* La pose du champion se DÉDUIT de l'état, elle n'est jamais posée à
+     la main : le geste de boire est une seule minuterie (boitT) dont on
+     lit l'avancement, donc l'image ne peut pas se désynchroniser de la
+     mécanique. */
+  pose(){
+    if (this.boitT > 0 && this.boitTotal > 0){
+      const p = 1 - this.boitT / this.boitTotal;
+      if (this.action === "jette") return p < 0.35 ? "attrape" : "jette";
+      return p < 0.25 ? "attrape" : p < 0.75 ? "boit" : "vide";
+    }
+    if (this.bourre > 0) return "titube";
+    if (this.freinT > 0) return "frein";
+    if (this.marche !== 0){
+      if (this.dureeMarche > 0.6) return "course";
+      return (Math.floor(this.foulee * 0.9) % 2) ? "marche2" : "marche1";
+    }
+    return "idle";
+  },
 
   vitesseEffective(){
     return this.champion.vitesse * (this.bourre > 0 ? BAR_POMPETTE_FREIN : 1);
@@ -172,7 +223,7 @@ const Tournee = {
         vie:this.coupDeFeu ? BAR_EXPIRE[1] : BAR_EXPIRE[0],
         barman:b.ref.id,
       });
-      Sons.clic(); Sons.bip(720, 0.05, "triangle", 0.14);
+      Sons.verrePose();
       b.etat = "sert"; b.pose = b.ref.poses.sert; b.t = 0;
       return;
     }
@@ -190,6 +241,10 @@ const Tournee = {
   marcher(d){
     if (!this.actif || this.fini) return;
     if (this.boitT > 0) return;           /* boire immobilise — c'est la faiblesse de Thibaut */
+    /* s'arrêter net après un sprint laisse une trace : la pose de
+       freinage existe, autant qu'elle serve */
+    if (d === 0 && this.marche !== 0 && this.dureeMarche > 0.45) this.freinT = 0.20;
+    if (d !== this.marche) this.dureeMarche = 0;
     this.marche = d;
   },
 
@@ -225,14 +280,15 @@ const Tournee = {
     if (trainait){
       /* un verre qui traîne : le jeter débarrasse, le boire déçoit */
       if (boit){
-        this.boitT = 1.15 * c.boire;
+        this.boitTotal = this.boitT = 1.15 * c.boire;
         this.action = "boit";
         this.dire("ÉVENTÉ…", 1.2);
         Sons.bip(240, 0.25, "sine", 0.10, 190);
       } else {
-        this.boitT = 0.55;
+        this.boitTotal = this.boitT = 0.55;
         this.action = "jette";
         Score.points += 10;
+        this.stats.debarrasses++;
         this.dire("DÉBARRASSÉ  +10", 1.0);
         Sons.clic();
       }
@@ -241,15 +297,21 @@ const Tournee = {
 
     if (boit && B.bonne){
       /* la bonne boisson, bue : la durée du geste dépend du champion */
-      this.boitT = 1.15 * c.boire;
+      this.boitTotal = this.boitT = 1.15 * c.boire;
       this.action = "boit";
       this.combo++;
       this.meilleurCombo = Math.max(this.meilleurCombo, this.combo);
-      const gain = B.points * Math.min(4, 1 + Math.floor(this.combo / 3));
+      const mult = Math.min(BAR_MULT_MAX, 1 + Math.floor(this.combo / 3));
+      let gain = B.points * mult;
+      /* prime de vitesse : pris presque au CLAC. C'est ce qui récompense
+         la lecture des barmans plutôt que le sprint à l'aveugle. */
+      const surLeCoup = v.t <= BAR_SUR_LE_COUP;
+      if (surLeCoup){ gain += BAR_PRIME_COUP; this.stats.primes++; }
       Score.points += gain;
-      this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + (this.finale ? 0 : 7));
+      this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + (this.finale ? 0 : BAR_AMBIANCE_GAIN));
       if (v.type === "cocktail") this.stats.cocktails++; else this.stats.jagers++;
-      this.dire("PARFAIT !  +" + gain, 1.1);
+      this.flash = 0.22;
+      this.dire((surLeCoup ? "SUR LE COUP !  +" : "PARFAIT !  +") + gain, 1.1);
       Sons.reussite(Math.min(7, this.combo));
       /* la gorgée compte : trois verres coup sur coup, et on titube */
       this.bus.push(this.temps);
@@ -266,13 +328,14 @@ const Tournee = {
     }
     if (!boit && !B.bonne){
       /* l'eau, jetée : le réflexe du soir */
-      this.boitT = 0.55;
+      this.boitTotal = this.boitT = 0.55;
       this.action = "jette";
       this.combo++;
       this.meilleurCombo = Math.max(this.meilleurCombo, this.combo);
       Score.points += B.points;
-      this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + (this.finale ? 0 : 7));
+      this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + (this.finale ? 0 : BAR_AMBIANCE_GAIN));
       this.stats.eauxJetees++;
+      this.flash = 0.18;
       this.dire("PAS DUPE !  +" + B.points, 1.1);
       Sons.tarteEsquive();
       if (this.finale) this.avancerFinale();
@@ -280,7 +343,7 @@ const Tournee = {
     }
     if (boit && !B.bonne){
       /* il a bu l'eau. Silence. */
-      this.boitT = 1.15 * c.boire;
+      this.boitTotal = this.boitT = 1.15 * c.boire;
       this.action = "boit";
       this.combo = 0;
       this.gele = 0.35;
@@ -295,7 +358,7 @@ const Tournee = {
       return true;
     }
     /* il a jeté une bonne boisson : sacrilège */
-    this.boitT = 0.55;
+    this.boitTotal = this.boitT = 0.55;
     this.action = "jette";
     this.combo = 0;
     this.secousse = 0.5;
@@ -319,10 +382,19 @@ const Tournee = {
     this.dire("ON REPREND LA TOURNÉE !", 1.6);
   },
 
-  terminer(gagne){
-    this.fini = { gagne, t:0 };
+  /* --------- comment la soirée se gagne, et comment elle se perd ---------
+     Il manquait une défaite : la jauge ne pouvait que monter et le
+     chrono ne servait à rien. Trois issues, désormais :
+       - jauge pleine puis la dernière tournée réussie → SOIRÉE VALIDÉE
+       - jauge à zéro → le bar s'est vidé, on a perdu la salle
+       - temps écoulé sans avoir rempli la jauge → soirée écourtée   */
+  terminer(gagne, cause){
+    this.fini = { gagne, t:0, cause:cause || (gagne ? "tournee" : "temps") };
     this.actif = false;
-    Score.points += this.meilleurCombo * 40;
+    let bonus = this.meilleurCombo * 40;
+    if (gagne) bonus += Math.round(this.restant) * 5 + Math.round(this.ambiance);
+    this.bonusFin = bonus;
+    Score.points += bonus;
     if (gagne) Sons.palier(); else Sons.fin();
     Jeu.phase = "fin";
     Jeu.finChrono = 0;
@@ -334,7 +406,11 @@ const Tournee = {
     if (this.fini){ this.fini.t += dt; return; }
     if (this.enChoix || !this.actif) return;
     this.temps += dt;
+    this.restant = Math.max(0, BAR_DUREE - this.temps);
     if (this.gele > 0){ this.gele -= dt; return; }
+    if (this.flash > 0) this.flash = Math.max(0, this.flash - dt * 3);
+    if (this.freinT > 0) this.freinT = Math.max(0, this.freinT - dt);
+    if (this.marche !== 0 && this.boitT <= 0) this.dureeMarche += dt;
     this.secousse = Math.max(0, this.secousse - dt * 2);
     if (this.message){ this.messageT += dt; if (this.messageT > this.messageDuree) this.message = null; }
 
@@ -392,13 +468,27 @@ const Tournee = {
       if (this.coupT > BAR_COUP_DE_FEU_DUREE) this.coupDeFeu = false;
     }
 
-    /* la jauge pleine déclenche la dernière tournée */
+    /* La jauge pleine se lit AVANT la fuite. Dans l'autre ordre, une
+       jauge amenée à 100 par une bonne décision redescendait à 99,99 à
+       l'image suivante et la dernière tournée ne partait JAMAIS : la
+       partie devenait infinie. Ce sont les tests de la finale qui l'ont
+       dit, pas la relecture. */
     if (!this.finale && this.ambiance >= BAR_AMBIANCE_BUT){
       this.finale = true;
       this.finaleReste = BAR_TOURNEE_FINALE;
       this.dire("DERNIÈRE TOURNÉE !", 2.4);
       Sons.palier();
     }
+
+    /* La salle se lasse toute seule : sans rien faire, on descend. C'est
+       ce qui rend le chrono et la jauge vraiment opposés. */
+    if (!this.finale) this.ambiance = Math.max(0, this.ambiance - BAR_AMBIANCE_FUITE * dt);
+
+    /* les deux défaites */
+    if (!this.finale && this.ambiance <= 0){ this.terminer(false, "vide"); return; }
+    if (!this.finale && this.restant <= 0){ this.terminer(false, "temps"); return; }
+
+    this.majClients(dt);
 
     /* clins d'œil : Risoto traverse, Hortense passe et regarde */
     this.prochainClin -= dt;
@@ -414,5 +504,71 @@ const Tournee = {
     }
 
     Camera.suivreBar(this.x, dt);
+  },
+
+  /* --------- les habitués ---------
+     Ils entrent par un bord, longent le comptoir, et si un verre traîne
+     depuis un moment sous leur nez, ils se servent. Ce n'est pas une
+     punition de plus : le verre chipé ne devient pas une traîne — ils
+     font le ménage à notre place, mais les points partent avec eux. */
+  majClients(dt){
+    this.prochainClient -= dt;
+    if (this.prochainClient <= 0 && this.clients.length < 2){
+      this.prochainClient = hasard(10, 20) / (this.coupDeFeu ? 1.8 : 1);
+      const ref = BAR_CLIENTS[Math.floor(Math.random() * BAR_CLIENTS.length)];
+      const parGauche = Math.random() < 0.5;
+      this.clients.push({
+        ref, x:parGauche ? -0.05 : 1.05, dir:parGauche ? 1 : -1,
+        etat:"entre", t:0, cible:hasard(0.15, 0.85), verre:null,
+      });
+    }
+    for (const cl of this.clients){
+      cl.t += dt;
+      if (cl.etat === "entre"){
+        cl.x += cl.dir * dt * 0.075;
+        /* un verre chipable en chemin ? on se détourne */
+        const i = this.verreChipable(cl.x);
+        if (i >= 0){ cl.etat = "prend"; cl.t = 0; cl.verre = this.verres[i]; }
+        else if ((cl.dir > 0 && cl.x >= cl.cible) || (cl.dir < 0 && cl.x <= cl.cible)){
+          cl.etat = "attend"; cl.t = 0;
+        }
+        continue;
+      }
+      if (cl.etat === "attend"){
+        const i = this.verreChipable(cl.x);
+        if (i >= 0){ cl.etat = "prend"; cl.t = 0; cl.verre = this.verres[i]; }
+        else if (cl.t > hasard(2.5, 5)){ cl.etat = "repart"; cl.dir = Math.random() < 0.5 ? 1 : -1; }
+        continue;
+      }
+      if (cl.etat === "prend"){
+        if (cl.t < 0.55) continue;
+        /* il l'emporte — sauf si le joueur a été plus rapide */
+        const k = this.verres.indexOf(cl.verre);
+        if (k >= 0 && cl.verre.etat === ETAT_VERRE.POSE){
+          this.verres.splice(k, 1);
+          this.stats.chipes++;
+          this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + 1);
+          this.dire("CHIPÉ PAR " + cl.ref.nom + " !", 1.3);
+          Sons.verreChipe();
+        }
+        cl.verre = null; cl.etat = "repart";
+        cl.dir = Math.random() < 0.5 ? 1 : -1;
+        continue;
+      }
+      cl.x += cl.dir * dt * 0.085;
+    }
+    this.clients = this.clients.filter(cl => cl.x > -0.12 && cl.x < 1.12);
+  },
+
+  /* Un verre à portée du client, assez vieux pour être abandonné — et
+     jamais un verre d'eau : personne ne vole de l'eau. */
+  verreChipable(x){
+    for (let i = 0; i < this.verres.length; i++){
+      const v = this.verres[i];
+      if (v.etat !== ETAT_VERRE.POSE || v.type === "eau") continue;
+      if (v.t < v.vie * BAR_CLIENT_SEUIL) continue;
+      if (Math.abs(v.x - x) < BAR_PORTEE * 1.2) return i;
+    }
+    return -1;
   },
 };

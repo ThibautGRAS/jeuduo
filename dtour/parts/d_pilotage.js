@@ -3,7 +3,7 @@
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -334,8 +334,11 @@ const Interface = {
 
   afficherFinBar(){
     const gagne = Tournee.fini && Tournee.fini.gagne;
+    const cause = Tournee.fini ? Tournee.fini.cause : "temps";
     if (E.finTitre){
-      E.finTitre.innerHTML = gagne ? "SOIRÉE<em>VALIDÉE.</em>" : "SOIRÉE<em>ÉCOURTÉE.</em>";
+      E.finTitre.innerHTML = gagne ? "SOIRÉE<em>VALIDÉE.</em>"
+        : cause === "vide" ? "LE BAR<em>S'EST VIDÉ.</em>"
+        : "SOIRÉE<em>ÉCOURTÉE.</em>";
     }
     if (E.releve) E.releve.style.display = "none";
     if (E.releveEnq) E.releveEnq.classList.remove("on");
@@ -347,8 +350,19 @@ const Interface = {
     if (E.bJagers) E.bJagers.textContent = chiffres(st.jagers || 0);
     if (E.bEaux) E.bEaux.textContent = chiffres(st.eauxJetees || 0);
     if (E.bErreurs) E.bErreurs.textContent = chiffres((st.eauxBues || 0) + (st.sacrileges || 0) + (st.rates || 0));
-    if (E.eCoupable){ E.eCoupable.textContent = "CHAMPION : " + (Tournee.champion ? Tournee.champion.nom : ""); E.eCoupable.classList.add("on"); }
-    if (E.eChute) E.eChute.textContent = "";
+    if (E.bChipes) E.bChipes.textContent = chiffres(st.chipes || 0);
+    if (E.eCoupable){
+      E.eCoupable.textContent = "CHAMPION : " + (Tournee.champion ? Tournee.champion.nom : "")
+        + (Tournee.bonusFin ? "  ·  BONUS " + chiffres(Tournee.bonusFin) : "");
+      E.eCoupable.classList.add("on");
+    }
+    /* On dit pourquoi : une défaite qu'on ne comprend pas ne se rejoue pas. */
+    if (E.eChute){
+      E.eChute.textContent = gagne
+        ? "La dernière tournée est passée. Personne ne s'en souviendra."
+        : cause === "vide" ? "Plus d'ambiance : la salle est partie ailleurs."
+        : "Le temps a manqué — la jauge d'ambiance n'était pas pleine.";
+    }
     if (E.fin) E.fin.classList.add("on");
     if (E.btnRejouer) E.btnRejouer.focus({ preventScroll:true });
   },
@@ -890,6 +904,7 @@ globalThis.DTOUR = {
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
+  POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, SUJETS, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, HORTENSE_ECART, TARTE_DUREE,

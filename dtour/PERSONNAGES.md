@@ -23,6 +23,9 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
   descente 0.65). « Lent. Mais redoutable une fois au comptoir. »
   Revers de la médaille : il enchaîne si vite qu'il se met POMPETTE
   plus facilement que Thibaut — l'eau le dessoûle.
+- Dix poses au bar (`bar_pf_*`) : repos, marche1, marche2, course,
+  frein, attrape, boit, vide, jette, titube. Planche séparée de celle
+  de Thibaut, pour qu'aucun des deux ne puisse glisser dans l'autre.
 - Sprites : `pierre_*` (n1), `enq_pf_*` (n2), `bar_pf_*` (n3),
   `face_pierre` (commun).
 
@@ -59,6 +62,8 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
   **belle-sœur de Pierre-François**.
 - Habitante interrogeable (couloir). Lui parler peut **provoquer** une
   visite d'Hortense — insister finit toujours par payer.
+- Au niveau 3, elle fait partie des **habitués du bar** : elle longe le
+  comptoir et chipe les verres qu'on a laissés traîner.
 - Sprite : `pers_soeur` (commun). Fait la queue au niveau 1.
 
 ### RISOTO (le chat)
@@ -120,12 +125,14 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 - « Je ne me souviens pas de la pizza. Je me souviens très bien
   d'elle. » Il passe aussi à la télé du bar (« LE MAIRE FAIT LE
   POINT »).
+- Habitué du bar au niveau 3 — il se sert, évidemment.
 - Sprite : `pers_marini` (commun). Fait la queue au niveau 1.
 
 ### MARTIN, AGENT DE SÉCURITÉ
 - Boxeur, ancien comptable : **il compte tout**. Thèmes `securite`,
   `porte`, `argent`.
 - « Vingt-deux entrées, dix-neuf sorties. Ça ne tombe jamais juste. »
+- Habitué du bar au niveau 3. Il compte probablement les verres.
 - Sprite : `pers_martin` (commun). Fait la queue au niveau 1.
 
 ---
@@ -137,14 +144,14 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 | PF | héros (droite) | inspecteur | champion |
 | Thibaut | héros (gauche) | inspecteur | champion |
 | Hortense | attaque aux fenêtres | frappe à la porte | traverse, rare |
-| La sœur | fait la queue | habitante | — |
+| La sœur | fait la queue | habitante | habituée du bar |
 | Teo | terrasse | habitant | — |
 | Charles | terrasse | habitant | — |
 | Risoto | — | suspect | traverse, clin d'œil |
 | Francky | fait la queue | visiteur | barman (cocktails) |
 | Jojo | fait la queue | visiteur | barman (Jägerbombs) |
-| Marini | fait la queue | visiteur | à la télé du fond |
-| Martin | fait la queue | visiteur | — |
+| Marini | fait la queue | visiteur | habitué + télé du fond |
+| Martin | fait la queue | visiteur | habitué du bar |
 
 Ajouter un niveau, c'est piocher dans ce tableau — pas inventer des
 gens : « seuls des personnages écrits pour le jeu valent la peine

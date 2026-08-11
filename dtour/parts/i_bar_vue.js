@@ -38,9 +38,12 @@ const BarVue = {
       ctx.drawImage(img, x0, 0, lUne + 1, H);
     }
 
+    this.dessinerNeon();
     this.dessinerBarmans();
+    this.dessinerHalos();
     this.dessinerVerres();
     if (T.invite) this.dessinerInvite();
+    this.dessinerClients();
     this.dessinerHeros();
 
     /* Le coup de feu réchauffe la salle. */
@@ -67,6 +70,15 @@ const BarVue = {
       /* et un léger voile chaud, l'œil qui pique */
       ctx.save();
       ctx.fillStyle = "rgba(255,140,190," + (0.045 * int2).toFixed(3) + ")";
+      ctx.fillRect(0, 0, L, H);
+      ctx.restore();
+    }
+
+    /* le comptoir prend la lumière quand ça se passe bien */
+    if (T.flash > 0){
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = "rgba(255,232,170," + (0.16 * T.flash / 0.22).toFixed(3) + ")";
       ctx.fillRect(0, 0, L, H);
       ctx.restore();
     }
@@ -98,7 +110,7 @@ const BarVue = {
       ctx.lineWidth = choisi ? 4 : 2;
       ctx.strokeStyle = choisi ? Heros[c.heros].couleur : "rgba(255,255,255,.25)";
       ctx.stroke();
-      const spr = Images.table[c.idle];
+      const spr = Images.table[poseBar(c, "idle")];
       if (spr && spr.naturalWidth){
         const sh = cadreH * 0.52, sl = sh * spr.naturalWidth / spr.naturalHeight;
         ctx.drawImage(spr, cx - sl / 2, cy - cadreH * 0.44, sl, sh);
@@ -184,10 +196,7 @@ const BarVue = {
     const T = Tournee, H = Camera.H;
     const c = T.champion;
     if (!c) return;
-    let nomSpr = c.idle;
-    if (T.boitT > 0) nomSpr = T.action === "jette" ? c.jette : c.boit;
-    else if (T.marche !== 0) nomSpr = (c.vitesse >= 1 ? c.course : c.marche);
-    const spr = Images.table[nomSpr];
+    const spr = Images.table[poseBar(c, T.pose())];
     if (!spr || !spr.naturalWidth) return;
     const sh = H * BAR_TAILLE_HEROS, sl = sh * spr.naturalWidth / spr.naturalHeight;
     const x = this.ex(T.x);
@@ -219,6 +228,109 @@ const BarVue = {
     ctx.globalAlpha = 0.96;
     ctx.drawImage(spr, x - sl / 2, y - sh, sl, sh);
     ctx.restore();
+  },
+
+  /* --------- les lumières du comptoir ---------
+     Aucun shadowBlur : tout est en dégradés. Ce n'est pas que de la
+     déco — le halo sous un verre dit sa nature d'un coup d'œil (chaud
+     pour un cocktail, ambré pour un Jäger, FROID pour l'eau), et c'est
+     ce qui rend le piège lisible à pleine vitesse. */
+  TEINTES:{ cocktail:[255, 138, 60], jager:[247, 179, 43], eau:[120, 200, 255] },
+
+  halo(x, y, r, teinte, force){
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    const c = teinte;
+    g.addColorStop(0, "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + (0.80 * force).toFixed(3) + ")");
+    g.addColorStop(0.5, "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + (0.26 * force).toFixed(3) + ")");
+    g.addColorStop(1, "rgba(" + c[0] + "," + c[1] + "," + c[2] + ",0)");
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.42, 0, 0, 6.283); ctx.fill();
+  },
+
+  /* le liseré de néon qui court le long du comptoir, au tempo de la
+     musique — même source que Sons.ordonnerMusique, sinon l'œil et
+     l'oreille se contredisent */
+  dessinerNeon(){
+    const T = Tournee, H = Camera.H, L = Camera.L;
+    const noire = 60 / T.tempo();
+    const battement = (T.temps % noire) / noire;
+    const puls = 0.35 + 0.65 * Math.pow(1 - battement, 2.2);
+    const teinte = T.combo >= 10 ? [232, 87, 75] : T.combo >= 5 ? [247, 179, 43] : [190, 110, 255];
+    const y = this.ey(BAR_COMPTOIR) + H * 0.012;
+    const g = ctx.createLinearGradient(0, y - H * 0.03, 0, y + H * 0.02);
+    const t = teinte;
+    g.addColorStop(0, "rgba(" + t.join(",") + ",0)");
+    g.addColorStop(0.5, "rgba(" + t.join(",") + "," + (0.44 * puls).toFixed(3) + ")");
+    g.addColorStop(1, "rgba(" + t.join(",") + ",0)");
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = g;
+    ctx.fillRect(0, y - H * 0.03, L, H * 0.05);
+    /* à gros combo, deux taches qui balaient le plafond */
+    if (T.combo >= 5){
+      for (const sens of [1, -1]){
+        const bx = L * (0.5 + sens * 0.34 * Math.sin(T.temps * 0.9 + (sens > 0 ? 0 : 1.7)));
+        this.halo(bx, H * 0.10, H * 0.20, teinte, 0.5 * puls);
+      }
+    }
+    ctx.restore();
+  },
+
+  /* un halo sous chaque verre, plus un projecteur sur celui qui vient
+     d'être posé : le CLAC s'entend, maintenant il se voit */
+  dessinerHalos(){
+    const T = Tournee, H = Camera.H;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (const v of T.verres){
+      const teinte = this.TEINTES[v.type] || [255, 255, 255];
+      const x = this.ex(v.x), y = this.ey(BAR_COMPTOIR);
+      const vieux = v.etat === ETAT_VERRE.TRAINE;
+      this.halo(x, y, H * (vieux ? 0.065 : 0.115), teinte, vieux ? 0.32 : 1);
+      /* le projecteur : un cône depuis les spots, la première seconde */
+      if (v.etat === ETAT_VERRE.POSE && v.t < 1.1){
+        const f = 1 - v.t / 1.1;
+        const haut = 0, lh = H * 0.030, lb = H * 0.11;
+        const g = ctx.createLinearGradient(0, haut, 0, y);
+        g.addColorStop(0, "rgba(" + teinte.join(",") + "," + (0.10 * f).toFixed(3) + ")");
+        g.addColorStop(0.65, "rgba(" + teinte.join(",") + "," + (0.30 * f).toFixed(3) + ")");
+        g.addColorStop(1, "rgba(" + teinte.join(",") + ",0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.moveTo(x - lh, haut); ctx.lineTo(x + lh, haut);
+        ctx.lineTo(x + lb, y); ctx.lineTo(x - lb, y);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+    ctx.restore();
+  },
+
+  /* --------- les habitués --------- */
+  dessinerClients(){
+    const H = Camera.H;
+    for (const cl of Tournee.clients){
+      const spr = Images.table[cl.ref.sprite];
+      if (!spr || !spr.naturalWidth) continue;
+      const sh = H * BAR_TAILLE_HEROS * cl.ref.taille;
+      const sl = sh * spr.naturalWidth / spr.naturalHeight;
+      /* un cran plus haut et plus sombres : ils sont derrière, ils ne
+         doivent jamais se disputer l'œil avec le champion */
+      const x = this.ex(cl.x), y = this.ey(BAR_SOL) - H * 0.022;
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,.24)";
+      ctx.beginPath(); ctx.ellipse(x, y, sl * 0.26, H * 0.011, 0, 0, 6.283); ctx.fill();
+      ctx.globalAlpha = 0.90;
+      if (cl.dir < 0){ ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0); }
+      ctx.drawImage(spr, x - sl / 2, y - sh, sl, sh);
+      ctx.restore();
+      /* la main qui se tend juste avant de chiper */
+      if (cl.etat === "prend"){
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        this.halo(x, this.ey(BAR_COMPTOIR), H * 0.05, [255, 120, 120], 0.7);
+        ctx.restore();
+      }
+    }
   },
 
   /* --------- habillage --------- */
@@ -255,6 +367,18 @@ const BarVue = {
       ctx.fillText(texte, px + pl / 2, ly);
     };
     plaque(String(Score.points), false, "#F7B32B");
+    /* le chrono : la jauge doit être pleine AVANT la fin de la soirée */
+    {
+      const r = Math.max(0, Math.ceil(T.restant));
+      const txt = Math.floor(r / 60) + ":" + (r % 60 < 10 ? "0" : "") + (r % 60);
+      ctx.font = "800 " + Math.round(taille * 0.9) + "px 'Baloo 2', system-ui, sans-serif";
+      const lt = ctx.measureText(txt).width, ph = taille * 1.25, pl = lt + taille * 0.7;
+      arrondi(L / 2 - pl / 2, ly - ph / 2, pl, ph, ph / 2);
+      ctx.fillStyle = "rgba(10,8,16,.62)"; ctx.fill();
+      ctx.textAlign = "center";
+      ctx.fillStyle = r <= 20 ? "#E8574B" : "#DCE4F4";
+      ctx.fillText(txt, L / 2, ly);
+    }
     if (T.combo >= 2){
       plaque("COMBO x" + T.combo, true,
         T.combo >= 10 ? "#E8574B" : T.combo >= 5 ? "#F7B32B" : "#8FD79B");

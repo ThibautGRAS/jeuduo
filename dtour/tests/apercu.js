@@ -418,10 +418,32 @@ function jouerJusqua(D, condition, limite){
     }
     D.Tournee.verres.push({ type:"jager", x:0.56, etat:D.ETAT_VERRE.POSE, t:2, vie:7.5, barman:"jojo" });
     D.Tournee.dire("POMPETTE !", 2.0);
+    D.Tournee.clients = [
+      { ref:D.BAR_CLIENTS[1], x:0.30, dir:1, etat:"prend", t:0.3, cible:0.3, verre:null },
+      { ref:D.BAR_CLIENTS[2], x:0.62, dir:-1, etat:"attend", t:1, cible:0.62, verre:null },
+    ];
     D.Camera.xBar = 0; 
     for (let i = 0; i < 30; i++) D.Camera.suivreBar(D.Tournee.x, 1 / 30);
     dessinerVia(D, canevas);
     ecrire(canevas, "15_bar_pompette_844");
+  }
+
+  /* 16. niveau 3 : lumières du comptoir, projecteur sur un verre neuf */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(3);
+    D.Tournee.lancer();
+    D.Tournee.x = 0.50; D.Tournee.temps = 55; D.Tournee.combo = 7;
+    D.Tournee.ambiance = 82; D.Score.points = 4120;
+    D.Tournee.verres.push({ type:"cocktail", x:0.44, etat:D.ETAT_VERRE.POSE, t:0.3, vie:7.5, barman:"francky" });
+    D.Tournee.verres.push({ type:"eau", x:0.57, etat:D.ETAT_VERRE.POSE, t:1.0, vie:7.5, barman:"jojo" });
+    D.Tournee.verres.push({ type:"jager", x:0.63, etat:D.ETAT_VERRE.TRAINE, t:9, vie:7.5, barman:"jojo" });
+    D.Tournee.clients = [{ ref:D.BAR_CLIENTS[0], x:0.63, dir:1, etat:"prend", t:0.3, cible:0.63, verre:null }];
+    D.Tournee.marche = 1; D.Tournee.dureeMarche = 1.2; D.Tournee.flash = 0.12;
+    for (let i = 0; i < 20; i++) D.Camera.suivreBar(D.Tournee.x, 1 / 30);
+    dessinerVia(D, canevas);
+    ecrire(canevas, "16_bar_lumieres_844");
   }
 })();
 

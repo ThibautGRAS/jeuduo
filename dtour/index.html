@@ -465,6 +465,7 @@ kbd{
       <div><span class="lib">COCKTAILS</span><div class="val chiffre" id="bCocktails">0</div></div>
       <div><span class="lib">JÄGERBOMBS</span><div class="val chiffre" id="bJagers">0</div></div>
       <div><span class="lib">EAUX ÉVITÉES</span><div class="val chiffre" id="bEaux">0</div></div>
+      <div><span class="lib">VERRES CHIPÉS</span><div class="val chiffre" id="bChipes">0</div></div>
       <div><span class="lib">ERREURS</span><div class="val chiffre" id="bErreurs">0</div></div>
     </div>
     <div id="releveEnq" class="verre">
@@ -530,7 +531,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.2</div>
+  <div id="version">CALLAGHAN v6.3</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -601,7 +602,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.2";
+const VERSION = "6.3";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -810,6 +811,68 @@ const Sons = {
     }
   },
 
+  /* --- lit d'ambiance du bar : brouhaha, verres, rires ---
+     Même moteur que le fond d'enquête : une boucle de bruit filtrée,
+     plus des événements calés sur l'horloge AUDIO (pas sur l'affichage,
+     une seconde qui traîne s'entend). Rien n'est échantillonné : tout
+     est synthétisé, le jeu reste un seul fichier. */
+  lancerFondBar(){
+    this.init();
+    if (!this.ac || this.bar) return;
+    const n = this.ac.sampleRate * 3;
+    const b = this.ac.createBuffer(1, n, this.ac.sampleRate), d = b.getChannelData(0);
+    let prec = 0;
+    for (let i = 0; i < n; i++){ prec = (prec + (Math.random() * 2 - 1) * 0.07) * 0.988; d[i] = prec; }
+    const src = this.ac.createBufferSource(); src.buffer = b; src.loop = true;
+    const f = this.ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 520; f.Q.value = 0.7;
+    const g = this.ac.createGain(); g.gain.value = 0;
+    src.connect(f); f.connect(g); g.connect(this.maitre);
+    src.start();
+    const t = this.ac.currentTime;
+    this.bar = { src, gain:g, filtre:f, prochainVerre:t + 2, prochainRire:t + 5 };
+  },
+  arreterFondBar(){
+    if (!this.bar) return;
+    try{ this.bar.src.stop(); }catch(e){}
+    this.bar = null;
+  },
+  /* chaud : 0 au calme, 1 en plein coup de feu — la salle monte d'un ton */
+  fondBar(dt, chaud){
+    if (!this.ac || !this.bar) return;
+    const c = borne(chaud || 0, 0, 1);
+    const g = this.bar.gain.gain;
+    g.value = melange(g.value, 0.34 + c * 0.30, Math.min(1, dt * 1.1));
+    this.bar.filtre.frequency.value = melange(this.bar.filtre.frequency.value, 480 + c * 420, Math.min(1, dt * 0.9));
+    const t = this.ac.currentTime;
+    if (t > this.bar.prochainVerre){
+      this.bar.prochainVerre = t + hasard(1.4, 4.2) / (0.6 + c);
+      if (this.actif){
+        /* un verre qu'on pose quelque part dans la salle */
+        this.percTic(t, 0.016);
+        this.bip(hasard(1500, 2400), 0.05, "sine", 0.020, hasard(900, 1400));
+      }
+    }
+    if (t > this.bar.prochainRire){
+      this.bar.prochainRire = t + hasard(7, 17) / (0.7 + c);
+      if (this.actif){
+        /* trois syllabes de rire, dans le fond */
+        const f0 = hasard(260, 420);
+        for (let k = 0; k < 3; k++) this.souffle(0.09 - k * 0.02, 0.05, f0 * (1 + k * 0.22), 3.0);
+      }
+    }
+  },
+
+  /* le CLAC du verre sur le comptoir : bois, puis verre */
+  verrePose(){
+    this.bip(150, 0.06, "sine", 0.20, 90);
+    this.bip(2100, 0.07, "triangle", 0.10, 1500);
+  },
+  /* un client emporte un verre sous le nez du joueur */
+  verreChipe(){
+    this.bip(880, 0.07, "sine", 0.10, 1300);
+    this.souffle(0.10, 0.06, 900, 2.4);
+  },
+
   arrivee(){ this.souffle(0.1, 0.09, 420, 1.6); },
   alerte(){ this.bip(880, 0.07, "triangle", 0.2); this.bip(1320, 0.07, "sine", 0.13); },
   poignee(){ this.souffle(0.11, 0.2, 240, 1.4); this.bip(190, 0.09, "sine", 0.2, 130); },
@@ -960,7 +1023,20 @@ const Sons = {
     { basse:[164.81, 196.00], accord:[196.00, 233.08, 293.66] },  /* Mi 7   */
     { basse:[110.00, 103.83], accord:[164.81, 207.65, 246.94] },  /* La m   */
   ],
-  grilleCourante(){ return Jeu.niveau === 2 ? this.GRILLE_ENQUETE : this.GRILLE; },
+  /* ---------- grille du niveau 3 ----------
+     Un vamp de bar, majeur et bon enfant : la basse marche, les accords
+     tombent à contretemps, le charley ne s'arrête jamais. Ça doit
+     donner envie de courir le long du comptoir. */
+  GRILLE_BAR:[
+    { basse:[98.00, 146.83],  accord:[196.00, 246.94, 293.66] },  /* Sol   */
+    { basse:[110.00, 164.81], accord:[220.00, 261.63, 329.63] },  /* La m  */
+    { basse:[130.81, 196.00], accord:[261.63, 329.63, 392.00] },  /* Do    */
+    { basse:[123.47, 98.00],  accord:[246.94, 293.66, 369.99] },  /* Si m  */
+  ],
+  grilleCourante(){
+    if (Jeu.niveau === 3) return this.GRILLE_BAR;
+    return Jeu.niveau === 2 ? this.GRILLE_ENQUETE : this.GRILLE;
+  },
 
   /* tempo : 92 le jour, 108 le soir, 124 la nuit ; 88 pour l'enquête */
   ordonnerMusique(tempo){
@@ -969,12 +1045,23 @@ const Sons = {
     const noire = 60 / tempo;
     while (this.quand < this.ac.currentTime + 0.2){
       const m = grille[this.mesure % 4], t = this.temps4, q = this.quand;
+      if (Jeu.niveau === 3){
+        /* basse à chaque temps, accords sur les contretemps, charley aux
+           croches : le bar swingue au lieu de marcher au pas */
+        this.note(m.basse[t % 2], q, noire * 0.52, "triangle", 0.135, 480);
+        m.accord.forEach((f, i) =>
+          this.note(f, q + noire * 0.5 + 0.010 * i, noire * 0.30, "square", 0.026, 1900));
+        this.balai(q, 0.042);
+        this.balai(q + noire * 0.5, t % 2 === 0 ? 0.030 : 0.046);
+        if (t === 3) this.note(m.basse[1] * 2, q + noire * 0.75, noire * 0.22, "sine", 0.05, 1400);
+      } else {
       if (t === 0 || t === 2) this.note(m.basse[t === 0 ? 0 : 1], q, noire * 0.85, "triangle", 0.14, 420);
       if (t === 1 || t === 3){
         m.accord.forEach((f, i) => this.note(f, q + 0.012 * i, noire * 0.42, "sine", 0.045, 2400));
       }
       this.balai(q, t % 2 === 0 ? 0.05 : 0.028);
       if (t === 3) this.balai(q + noire * 0.5, 0.034);
+      }
       this.quand += noire;
       this.temps4++;
       if (this.temps4 > 3){ this.temps4 = 0; this.mesure++; }
@@ -1020,20 +1107,20 @@ const IMAGES_NIVEAU2 = [
   "badge_indice", "badge_suspect",
 ];
 
-/* Niveau 3 — la tournée du D'Tour. Le fond, les deux héros en tenue de
-   bar, les deux barmans au travail et les trois boissons. La planche
-   fournie glissait un Thibaut en polo vert dans la rangée de PF — le
-   même piège que la première fois — il a été écarté à la découpe.
-   Thibaut n'a qu'une pose d'action (il boit ET jette dans la même
-   image) : elle sert aux deux gestes, c'est dans le personnage. */
+/* Les dix poses de chaque champion au bar, dans l'ordre où elles
+   s'enchaînent. Deux planches séparées — une par personnage — parce que
+   les mettre côte à côte avait déjà fait glisser un Thibaut en polo
+   vert dans la rangée de PF, deux fois. */
+const POSES_BAR = ["idle", "marche1", "marche2", "course", "frein",
+                   "attrape", "boit", "vide", "jette", "titube"];
+const PREFIXES_BAR = ["bar_th", "bar_pf"];
+
 const IMAGES_NIVEAU3 = [
   "fond_bar",
-  "bar_th_idle", "bar_th_course", "bar_th_marche", "bar_th_frein", "bar_th_action",
-  "bar_pf_idle", "bar_pf_marche", "bar_pf_boit", "bar_pf_jette",
   "bar_francky_idle", "bar_francky_shake", "bar_francky_verse", "bar_francky_sert", "bar_francky_touille",
   "bar_jojo_idle", "bar_jojo_mesure", "bar_jojo_shot", "bar_jojo_verse", "bar_jojo_montre", "bar_jojo_attend", "bar_jojo_essuie",
   "bar_cocktail", "bar_jager", "bar_eau",
-];
+].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 
 /* ---------- où vit chaque image ----------
    img/ est rangé par niveau : commun/ pour ce qui sert partout, n1/,
@@ -1586,7 +1673,7 @@ const Jeu = {
       this.temps = 0; this.vies = 1; this.finChrono = 0; this.phase = "jeu";
       Tournee.monter();
       Interface.entrerJeu();
-      Sons.reveiller(); Sons.lancerMusique();
+      Sons.reveiller(); Sons.lancerFondBar(); Sons.lancerMusique();
       return;
     }
     if (this.niveau === 2){
@@ -1642,7 +1729,9 @@ const Jeu = {
           this.finChrono += dt;
           if (this.finChrono > 1.2 && !Interface.finAffichee) Interface.afficherFin();
         }
-        Sons.ordonnerMusique(Tournee.coupDeFeu ? 118 : 96);
+        /* la salle chauffe avec le jeu : coup de feu, gros combo, finale */
+        Sons.fondBar(dt, Tournee.coupDeFeu ? 1 : Tournee.finale ? 0.8 : Math.min(0.6, Tournee.combo / 12));
+        Sons.ordonnerMusique(Tournee.tempo());
       }
       return;
     }
@@ -1821,6 +1910,7 @@ const Jeu = {
     this.phase = "titre";
     this.niveau = 1;
     Sons.arreterFondEnquete();
+    Sons.arreterFondBar();
     this.ralenti = 1;
     Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
     this.temps = 0; this.gel = 0; this.moment = 0; this.fondu = 1; this.fonduDe = 0; this.demandes = [];
@@ -6007,6 +6097,13 @@ const BAR_PORTEE = 0.030;           /* portée de prise d'un verre, en fraction 
 const BAR_MARCHE = 0.135;           /* fraction du monde parcourue par seconde, à vitesse 1.0 */
 const BAR_EXPIRE = [7.5, 5.2];      /* vie d'un verre posé : début, puis en plein coup de feu */
 const BAR_AMBIANCE_BUT = 100;
+const BAR_AMBIANCE_DEBUT = 35;      /* on commence à mi-pente : il y a de quoi monter ET de quoi tomber */
+const BAR_AMBIANCE_FUITE = 0.35;    /* la salle se lasse toute seule, par seconde */
+const BAR_AMBIANCE_GAIN = 8;        /* ce que rapporte une bonne décision */
+const BAR_DUREE = 150;              /* la soirée dure deux minutes trente */
+const BAR_SUR_LE_COUP = 1.6;        /* servi et bu dans la seconde et demie : prime */
+const BAR_PRIME_COUP = 50;
+const BAR_MULT_MAX = 5;             /* le multiplicateur de combo plafonne */
 const BAR_COUP_DE_FEU_A = 70;       /* le coup de feu part vers 70 s */
 const BAR_COUP_DE_FEU_DUREE = 20;
 const BAR_TOURNEE_FINALE = 5;       /* décisions à réussir pour conclure */
@@ -6021,15 +6118,28 @@ const BAR_POMPETTE_FREIN = 0.55;    /* la vitesse qu'il reste quand on titube */
    être objectivement meilleur — c'est ce que le test d'équilibre
    surveille. */
 const BAR_CHAMPIONS = [
-  { heros:1, nom:"THIBAUT", vitesse:1.00, boire:1.00, jauges:{ vitesse:5, descente:3 },
-    idle:"bar_th_idle", marche:"bar_th_marche", course:"bar_th_course",
-    boit:"bar_th_action", jette:"bar_th_action",
+  { heros:1, nom:"THIBAUT", prefixe:"bar_th", vitesse:1.00, boire:1.00,
+    jauges:{ vitesse:5, descente:3 },
     devise:"Rapide. Mais quand il boit, il ne fait que ça." },
-  { heros:0, nom:"PF", vitesse:0.82, boire:0.65, jauges:{ vitesse:3, descente:5 },
-    idle:"bar_pf_idle", marche:"bar_pf_marche", course:"bar_pf_marche",
-    boit:"bar_pf_boit", jette:"bar_pf_jette",
+  { heros:0, nom:"PF", prefixe:"bar_pf", vitesse:0.82, boire:0.65,
+    jauges:{ vitesse:3, descente:5 },
     devise:"Lent. Mais redoutable une fois au comptoir." },
 ];
+/* Les dix poses viennent d'une planche par personnage : on les nomme
+   par composition, jamais en dur — une pose ajoutée se branche en un
+   seul endroit. */
+function poseBar(champion, pose){ return champion.prefixe + "_" + pose; }
+
+/* Les habitués. Ils ne sont là que pour vivre — mais un verre qui
+   traîne trop longtemps sous leur nez finit dans leur main. Ils ne
+   touchent JAMAIS un verre d'eau : personne ne vole de l'eau, et ça
+   devient un indice — un verre que personne ne chipe est suspect. */
+const BAR_CLIENTS = [
+  { id:"soeur",  sprite:"pers_soeur",  nom:"LA SŒUR",  taille:0.86 },
+  { id:"marini", sprite:"pers_marini", nom:"LE MAIRE", taille:0.84 },
+  { id:"martin", sprite:"pers_martin", nom:"MARTIN",   taille:0.90 },
+];
+const BAR_CLIENT_SEUIL = 0.55;      /* un verre entamé à plus de 55 % de sa vie est chipable */
 
 /* Les boissons. `bonne` dit s'il faut la boire ; l'eau se jette. */
 const BOISSONS = {
@@ -6061,6 +6171,8 @@ const Tournee = {
   stats:null, fini:null, message:null, messageT:0, messageDuree:1.6,
   gele:0, secousse:0, invite:null, prochainClin:0,
   bus:[], bourre:0, deborde:false,
+  clients:[], prochainClient:0, flash:0, boitTotal:1, freinT:0, dureeMarche:0,
+  restant:BAR_DUREE,
 
   /* --------- montage --------- */
   monter(){
@@ -6083,14 +6195,19 @@ const Tournee = {
     this.x = 0.5; this.dir = 1; this.marche = 0; this.foulee = 0;
     this.boitT = 0; this.jetteT = 0; this.action = null;
     this.verres = [];
-    this.ambiance = 0; this.combo = 0; this.meilleurCombo = 0;
+    this.combo = 0; this.meilleurCombo = 0;
     this.coupDeFeu = false; this.coupT = 0; this.coupFait = false;
     this.finale = false; this.finaleReste = 0;
     this.temps = 0; this.gele = 0; this.secousse = 0;
     this.message = null; this.invite = null;
     this.prochainClin = hasard(14, 26);
     this.bus = []; this.bourre = 0; this.deborde = false;
-    this.stats = { cocktails:0, jagers:0, eauxJetees:0, eauxBues:0, sacrileges:0, rates:0 };
+    this.clients = []; this.prochainClient = hasard(8, 14);
+    this.flash = 0; this.boitTotal = 1; this.freinT = 0; this.dureeMarche = 0;
+    this.restant = BAR_DUREE;
+    this.ambiance = BAR_AMBIANCE_DEBUT;
+    this.stats = { cocktails:0, jagers:0, eauxJetees:0, eauxBues:0, sacrileges:0, rates:0,
+                   chipes:0, debarrasses:0, primes:0 };
     this.barmans = BARMANS.map(b => ({
       ref:b, etat:"repos", t:0, prochaine:0, pose:b.poses.repos, type:null,
     }));
@@ -6100,6 +6217,30 @@ const Tournee = {
   },
 
   dire(txt, duree){ this.message = txt; this.messageT = 0; this.messageDuree = duree || 1.6; },
+
+  /* Le tempo sert à DEUX choses : la musique, et le clignotement des
+     néons du comptoir. Une seule source, sinon l'image et le son
+     partent en désaccord. */
+  tempo(){ return this.finale ? 126 : this.coupDeFeu ? 118 : 96; },
+
+  /* La pose du champion se DÉDUIT de l'état, elle n'est jamais posée à
+     la main : le geste de boire est une seule minuterie (boitT) dont on
+     lit l'avancement, donc l'image ne peut pas se désynchroniser de la
+     mécanique. */
+  pose(){
+    if (this.boitT > 0 && this.boitTotal > 0){
+      const p = 1 - this.boitT / this.boitTotal;
+      if (this.action === "jette") return p < 0.35 ? "attrape" : "jette";
+      return p < 0.25 ? "attrape" : p < 0.75 ? "boit" : "vide";
+    }
+    if (this.bourre > 0) return "titube";
+    if (this.freinT > 0) return "frein";
+    if (this.marche !== 0){
+      if (this.dureeMarche > 0.6) return "course";
+      return (Math.floor(this.foulee * 0.9) % 2) ? "marche2" : "marche1";
+    }
+    return "idle";
+  },
 
   vitesseEffective(){
     return this.champion.vitesse * (this.bourre > 0 ? BAR_POMPETTE_FREIN : 1);
@@ -6161,7 +6302,7 @@ const Tournee = {
         vie:this.coupDeFeu ? BAR_EXPIRE[1] : BAR_EXPIRE[0],
         barman:b.ref.id,
       });
-      Sons.clic(); Sons.bip(720, 0.05, "triangle", 0.14);
+      Sons.verrePose();
       b.etat = "sert"; b.pose = b.ref.poses.sert; b.t = 0;
       return;
     }
@@ -6179,6 +6320,10 @@ const Tournee = {
   marcher(d){
     if (!this.actif || this.fini) return;
     if (this.boitT > 0) return;           /* boire immobilise — c'est la faiblesse de Thibaut */
+    /* s'arrêter net après un sprint laisse une trace : la pose de
+       freinage existe, autant qu'elle serve */
+    if (d === 0 && this.marche !== 0 && this.dureeMarche > 0.45) this.freinT = 0.20;
+    if (d !== this.marche) this.dureeMarche = 0;
     this.marche = d;
   },
 
@@ -6214,14 +6359,15 @@ const Tournee = {
     if (trainait){
       /* un verre qui traîne : le jeter débarrasse, le boire déçoit */
       if (boit){
-        this.boitT = 1.15 * c.boire;
+        this.boitTotal = this.boitT = 1.15 * c.boire;
         this.action = "boit";
         this.dire("ÉVENTÉ…", 1.2);
         Sons.bip(240, 0.25, "sine", 0.10, 190);
       } else {
-        this.boitT = 0.55;
+        this.boitTotal = this.boitT = 0.55;
         this.action = "jette";
         Score.points += 10;
+        this.stats.debarrasses++;
         this.dire("DÉBARRASSÉ  +10", 1.0);
         Sons.clic();
       }
@@ -6230,15 +6376,21 @@ const Tournee = {
 
     if (boit && B.bonne){
       /* la bonne boisson, bue : la durée du geste dépend du champion */
-      this.boitT = 1.15 * c.boire;
+      this.boitTotal = this.boitT = 1.15 * c.boire;
       this.action = "boit";
       this.combo++;
       this.meilleurCombo = Math.max(this.meilleurCombo, this.combo);
-      const gain = B.points * Math.min(4, 1 + Math.floor(this.combo / 3));
+      const mult = Math.min(BAR_MULT_MAX, 1 + Math.floor(this.combo / 3));
+      let gain = B.points * mult;
+      /* prime de vitesse : pris presque au CLAC. C'est ce qui récompense
+         la lecture des barmans plutôt que le sprint à l'aveugle. */
+      const surLeCoup = v.t <= BAR_SUR_LE_COUP;
+      if (surLeCoup){ gain += BAR_PRIME_COUP; this.stats.primes++; }
       Score.points += gain;
-      this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + (this.finale ? 0 : 7));
+      this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + (this.finale ? 0 : BAR_AMBIANCE_GAIN));
       if (v.type === "cocktail") this.stats.cocktails++; else this.stats.jagers++;
-      this.dire("PARFAIT !  +" + gain, 1.1);
+      this.flash = 0.22;
+      this.dire((surLeCoup ? "SUR LE COUP !  +" : "PARFAIT !  +") + gain, 1.1);
       Sons.reussite(Math.min(7, this.combo));
       /* la gorgée compte : trois verres coup sur coup, et on titube */
       this.bus.push(this.temps);
@@ -6255,13 +6407,14 @@ const Tournee = {
     }
     if (!boit && !B.bonne){
       /* l'eau, jetée : le réflexe du soir */
-      this.boitT = 0.55;
+      this.boitTotal = this.boitT = 0.55;
       this.action = "jette";
       this.combo++;
       this.meilleurCombo = Math.max(this.meilleurCombo, this.combo);
       Score.points += B.points;
-      this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + (this.finale ? 0 : 7));
+      this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + (this.finale ? 0 : BAR_AMBIANCE_GAIN));
       this.stats.eauxJetees++;
+      this.flash = 0.18;
       this.dire("PAS DUPE !  +" + B.points, 1.1);
       Sons.tarteEsquive();
       if (this.finale) this.avancerFinale();
@@ -6269,7 +6422,7 @@ const Tournee = {
     }
     if (boit && !B.bonne){
       /* il a bu l'eau. Silence. */
-      this.boitT = 1.15 * c.boire;
+      this.boitTotal = this.boitT = 1.15 * c.boire;
       this.action = "boit";
       this.combo = 0;
       this.gele = 0.35;
@@ -6284,7 +6437,7 @@ const Tournee = {
       return true;
     }
     /* il a jeté une bonne boisson : sacrilège */
-    this.boitT = 0.55;
+    this.boitTotal = this.boitT = 0.55;
     this.action = "jette";
     this.combo = 0;
     this.secousse = 0.5;
@@ -6308,10 +6461,19 @@ const Tournee = {
     this.dire("ON REPREND LA TOURNÉE !", 1.6);
   },
 
-  terminer(gagne){
-    this.fini = { gagne, t:0 };
+  /* --------- comment la soirée se gagne, et comment elle se perd ---------
+     Il manquait une défaite : la jauge ne pouvait que monter et le
+     chrono ne servait à rien. Trois issues, désormais :
+       - jauge pleine puis la dernière tournée réussie → SOIRÉE VALIDÉE
+       - jauge à zéro → le bar s'est vidé, on a perdu la salle
+       - temps écoulé sans avoir rempli la jauge → soirée écourtée   */
+  terminer(gagne, cause){
+    this.fini = { gagne, t:0, cause:cause || (gagne ? "tournee" : "temps") };
     this.actif = false;
-    Score.points += this.meilleurCombo * 40;
+    let bonus = this.meilleurCombo * 40;
+    if (gagne) bonus += Math.round(this.restant) * 5 + Math.round(this.ambiance);
+    this.bonusFin = bonus;
+    Score.points += bonus;
     if (gagne) Sons.palier(); else Sons.fin();
     Jeu.phase = "fin";
     Jeu.finChrono = 0;
@@ -6323,7 +6485,11 @@ const Tournee = {
     if (this.fini){ this.fini.t += dt; return; }
     if (this.enChoix || !this.actif) return;
     this.temps += dt;
+    this.restant = Math.max(0, BAR_DUREE - this.temps);
     if (this.gele > 0){ this.gele -= dt; return; }
+    if (this.flash > 0) this.flash = Math.max(0, this.flash - dt * 3);
+    if (this.freinT > 0) this.freinT = Math.max(0, this.freinT - dt);
+    if (this.marche !== 0 && this.boitT <= 0) this.dureeMarche += dt;
     this.secousse = Math.max(0, this.secousse - dt * 2);
     if (this.message){ this.messageT += dt; if (this.messageT > this.messageDuree) this.message = null; }
 
@@ -6381,13 +6547,27 @@ const Tournee = {
       if (this.coupT > BAR_COUP_DE_FEU_DUREE) this.coupDeFeu = false;
     }
 
-    /* la jauge pleine déclenche la dernière tournée */
+    /* La jauge pleine se lit AVANT la fuite. Dans l'autre ordre, une
+       jauge amenée à 100 par une bonne décision redescendait à 99,99 à
+       l'image suivante et la dernière tournée ne partait JAMAIS : la
+       partie devenait infinie. Ce sont les tests de la finale qui l'ont
+       dit, pas la relecture. */
     if (!this.finale && this.ambiance >= BAR_AMBIANCE_BUT){
       this.finale = true;
       this.finaleReste = BAR_TOURNEE_FINALE;
       this.dire("DERNIÈRE TOURNÉE !", 2.4);
       Sons.palier();
     }
+
+    /* La salle se lasse toute seule : sans rien faire, on descend. C'est
+       ce qui rend le chrono et la jauge vraiment opposés. */
+    if (!this.finale) this.ambiance = Math.max(0, this.ambiance - BAR_AMBIANCE_FUITE * dt);
+
+    /* les deux défaites */
+    if (!this.finale && this.ambiance <= 0){ this.terminer(false, "vide"); return; }
+    if (!this.finale && this.restant <= 0){ this.terminer(false, "temps"); return; }
+
+    this.majClients(dt);
 
     /* clins d'œil : Risoto traverse, Hortense passe et regarde */
     this.prochainClin -= dt;
@@ -6403,6 +6583,72 @@ const Tournee = {
     }
 
     Camera.suivreBar(this.x, dt);
+  },
+
+  /* --------- les habitués ---------
+     Ils entrent par un bord, longent le comptoir, et si un verre traîne
+     depuis un moment sous leur nez, ils se servent. Ce n'est pas une
+     punition de plus : le verre chipé ne devient pas une traîne — ils
+     font le ménage à notre place, mais les points partent avec eux. */
+  majClients(dt){
+    this.prochainClient -= dt;
+    if (this.prochainClient <= 0 && this.clients.length < 2){
+      this.prochainClient = hasard(10, 20) / (this.coupDeFeu ? 1.8 : 1);
+      const ref = BAR_CLIENTS[Math.floor(Math.random() * BAR_CLIENTS.length)];
+      const parGauche = Math.random() < 0.5;
+      this.clients.push({
+        ref, x:parGauche ? -0.05 : 1.05, dir:parGauche ? 1 : -1,
+        etat:"entre", t:0, cible:hasard(0.15, 0.85), verre:null,
+      });
+    }
+    for (const cl of this.clients){
+      cl.t += dt;
+      if (cl.etat === "entre"){
+        cl.x += cl.dir * dt * 0.075;
+        /* un verre chipable en chemin ? on se détourne */
+        const i = this.verreChipable(cl.x);
+        if (i >= 0){ cl.etat = "prend"; cl.t = 0; cl.verre = this.verres[i]; }
+        else if ((cl.dir > 0 && cl.x >= cl.cible) || (cl.dir < 0 && cl.x <= cl.cible)){
+          cl.etat = "attend"; cl.t = 0;
+        }
+        continue;
+      }
+      if (cl.etat === "attend"){
+        const i = this.verreChipable(cl.x);
+        if (i >= 0){ cl.etat = "prend"; cl.t = 0; cl.verre = this.verres[i]; }
+        else if (cl.t > hasard(2.5, 5)){ cl.etat = "repart"; cl.dir = Math.random() < 0.5 ? 1 : -1; }
+        continue;
+      }
+      if (cl.etat === "prend"){
+        if (cl.t < 0.55) continue;
+        /* il l'emporte — sauf si le joueur a été plus rapide */
+        const k = this.verres.indexOf(cl.verre);
+        if (k >= 0 && cl.verre.etat === ETAT_VERRE.POSE){
+          this.verres.splice(k, 1);
+          this.stats.chipes++;
+          this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + 1);
+          this.dire("CHIPÉ PAR " + cl.ref.nom + " !", 1.3);
+          Sons.verreChipe();
+        }
+        cl.verre = null; cl.etat = "repart";
+        cl.dir = Math.random() < 0.5 ? 1 : -1;
+        continue;
+      }
+      cl.x += cl.dir * dt * 0.085;
+    }
+    this.clients = this.clients.filter(cl => cl.x > -0.12 && cl.x < 1.12);
+  },
+
+  /* Un verre à portée du client, assez vieux pour être abandonné — et
+     jamais un verre d'eau : personne ne vole de l'eau. */
+  verreChipable(x){
+    for (let i = 0; i < this.verres.length; i++){
+      const v = this.verres[i];
+      if (v.etat !== ETAT_VERRE.POSE || v.type === "eau") continue;
+      if (v.t < v.vie * BAR_CLIENT_SEUIL) continue;
+      if (Math.abs(v.x - x) < BAR_PORTEE * 1.2) return i;
+    }
+    return -1;
   },
 };
 "use strict";
@@ -6445,9 +6691,12 @@ const BarVue = {
       ctx.drawImage(img, x0, 0, lUne + 1, H);
     }
 
+    this.dessinerNeon();
     this.dessinerBarmans();
+    this.dessinerHalos();
     this.dessinerVerres();
     if (T.invite) this.dessinerInvite();
+    this.dessinerClients();
     this.dessinerHeros();
 
     /* Le coup de feu réchauffe la salle. */
@@ -6474,6 +6723,15 @@ const BarVue = {
       /* et un léger voile chaud, l'œil qui pique */
       ctx.save();
       ctx.fillStyle = "rgba(255,140,190," + (0.045 * int2).toFixed(3) + ")";
+      ctx.fillRect(0, 0, L, H);
+      ctx.restore();
+    }
+
+    /* le comptoir prend la lumière quand ça se passe bien */
+    if (T.flash > 0){
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = "rgba(255,232,170," + (0.16 * T.flash / 0.22).toFixed(3) + ")";
       ctx.fillRect(0, 0, L, H);
       ctx.restore();
     }
@@ -6505,7 +6763,7 @@ const BarVue = {
       ctx.lineWidth = choisi ? 4 : 2;
       ctx.strokeStyle = choisi ? Heros[c.heros].couleur : "rgba(255,255,255,.25)";
       ctx.stroke();
-      const spr = Images.table[c.idle];
+      const spr = Images.table[poseBar(c, "idle")];
       if (spr && spr.naturalWidth){
         const sh = cadreH * 0.52, sl = sh * spr.naturalWidth / spr.naturalHeight;
         ctx.drawImage(spr, cx - sl / 2, cy - cadreH * 0.44, sl, sh);
@@ -6591,10 +6849,7 @@ const BarVue = {
     const T = Tournee, H = Camera.H;
     const c = T.champion;
     if (!c) return;
-    let nomSpr = c.idle;
-    if (T.boitT > 0) nomSpr = T.action === "jette" ? c.jette : c.boit;
-    else if (T.marche !== 0) nomSpr = (c.vitesse >= 1 ? c.course : c.marche);
-    const spr = Images.table[nomSpr];
+    const spr = Images.table[poseBar(c, T.pose())];
     if (!spr || !spr.naturalWidth) return;
     const sh = H * BAR_TAILLE_HEROS, sl = sh * spr.naturalWidth / spr.naturalHeight;
     const x = this.ex(T.x);
@@ -6626,6 +6881,109 @@ const BarVue = {
     ctx.globalAlpha = 0.96;
     ctx.drawImage(spr, x - sl / 2, y - sh, sl, sh);
     ctx.restore();
+  },
+
+  /* --------- les lumières du comptoir ---------
+     Aucun shadowBlur : tout est en dégradés. Ce n'est pas que de la
+     déco — le halo sous un verre dit sa nature d'un coup d'œil (chaud
+     pour un cocktail, ambré pour un Jäger, FROID pour l'eau), et c'est
+     ce qui rend le piège lisible à pleine vitesse. */
+  TEINTES:{ cocktail:[255, 138, 60], jager:[247, 179, 43], eau:[120, 200, 255] },
+
+  halo(x, y, r, teinte, force){
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    const c = teinte;
+    g.addColorStop(0, "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + (0.80 * force).toFixed(3) + ")");
+    g.addColorStop(0.5, "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + (0.26 * force).toFixed(3) + ")");
+    g.addColorStop(1, "rgba(" + c[0] + "," + c[1] + "," + c[2] + ",0)");
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.42, 0, 0, 6.283); ctx.fill();
+  },
+
+  /* le liseré de néon qui court le long du comptoir, au tempo de la
+     musique — même source que Sons.ordonnerMusique, sinon l'œil et
+     l'oreille se contredisent */
+  dessinerNeon(){
+    const T = Tournee, H = Camera.H, L = Camera.L;
+    const noire = 60 / T.tempo();
+    const battement = (T.temps % noire) / noire;
+    const puls = 0.35 + 0.65 * Math.pow(1 - battement, 2.2);
+    const teinte = T.combo >= 10 ? [232, 87, 75] : T.combo >= 5 ? [247, 179, 43] : [190, 110, 255];
+    const y = this.ey(BAR_COMPTOIR) + H * 0.012;
+    const g = ctx.createLinearGradient(0, y - H * 0.03, 0, y + H * 0.02);
+    const t = teinte;
+    g.addColorStop(0, "rgba(" + t.join(",") + ",0)");
+    g.addColorStop(0.5, "rgba(" + t.join(",") + "," + (0.44 * puls).toFixed(3) + ")");
+    g.addColorStop(1, "rgba(" + t.join(",") + ",0)");
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = g;
+    ctx.fillRect(0, y - H * 0.03, L, H * 0.05);
+    /* à gros combo, deux taches qui balaient le plafond */
+    if (T.combo >= 5){
+      for (const sens of [1, -1]){
+        const bx = L * (0.5 + sens * 0.34 * Math.sin(T.temps * 0.9 + (sens > 0 ? 0 : 1.7)));
+        this.halo(bx, H * 0.10, H * 0.20, teinte, 0.5 * puls);
+      }
+    }
+    ctx.restore();
+  },
+
+  /* un halo sous chaque verre, plus un projecteur sur celui qui vient
+     d'être posé : le CLAC s'entend, maintenant il se voit */
+  dessinerHalos(){
+    const T = Tournee, H = Camera.H;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (const v of T.verres){
+      const teinte = this.TEINTES[v.type] || [255, 255, 255];
+      const x = this.ex(v.x), y = this.ey(BAR_COMPTOIR);
+      const vieux = v.etat === ETAT_VERRE.TRAINE;
+      this.halo(x, y, H * (vieux ? 0.065 : 0.115), teinte, vieux ? 0.32 : 1);
+      /* le projecteur : un cône depuis les spots, la première seconde */
+      if (v.etat === ETAT_VERRE.POSE && v.t < 1.1){
+        const f = 1 - v.t / 1.1;
+        const haut = 0, lh = H * 0.030, lb = H * 0.11;
+        const g = ctx.createLinearGradient(0, haut, 0, y);
+        g.addColorStop(0, "rgba(" + teinte.join(",") + "," + (0.10 * f).toFixed(3) + ")");
+        g.addColorStop(0.65, "rgba(" + teinte.join(",") + "," + (0.30 * f).toFixed(3) + ")");
+        g.addColorStop(1, "rgba(" + teinte.join(",") + ",0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.moveTo(x - lh, haut); ctx.lineTo(x + lh, haut);
+        ctx.lineTo(x + lb, y); ctx.lineTo(x - lb, y);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+    ctx.restore();
+  },
+
+  /* --------- les habitués --------- */
+  dessinerClients(){
+    const H = Camera.H;
+    for (const cl of Tournee.clients){
+      const spr = Images.table[cl.ref.sprite];
+      if (!spr || !spr.naturalWidth) continue;
+      const sh = H * BAR_TAILLE_HEROS * cl.ref.taille;
+      const sl = sh * spr.naturalWidth / spr.naturalHeight;
+      /* un cran plus haut et plus sombres : ils sont derrière, ils ne
+         doivent jamais se disputer l'œil avec le champion */
+      const x = this.ex(cl.x), y = this.ey(BAR_SOL) - H * 0.022;
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,.24)";
+      ctx.beginPath(); ctx.ellipse(x, y, sl * 0.26, H * 0.011, 0, 0, 6.283); ctx.fill();
+      ctx.globalAlpha = 0.90;
+      if (cl.dir < 0){ ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0); }
+      ctx.drawImage(spr, x - sl / 2, y - sh, sl, sh);
+      ctx.restore();
+      /* la main qui se tend juste avant de chiper */
+      if (cl.etat === "prend"){
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        this.halo(x, this.ey(BAR_COMPTOIR), H * 0.05, [255, 120, 120], 0.7);
+        ctx.restore();
+      }
+    }
   },
 
   /* --------- habillage --------- */
@@ -6662,6 +7020,18 @@ const BarVue = {
       ctx.fillText(texte, px + pl / 2, ly);
     };
     plaque(String(Score.points), false, "#F7B32B");
+    /* le chrono : la jauge doit être pleine AVANT la fin de la soirée */
+    {
+      const r = Math.max(0, Math.ceil(T.restant));
+      const txt = Math.floor(r / 60) + ":" + (r % 60 < 10 ? "0" : "") + (r % 60);
+      ctx.font = "800 " + Math.round(taille * 0.9) + "px 'Baloo 2', system-ui, sans-serif";
+      const lt = ctx.measureText(txt).width, ph = taille * 1.25, pl = lt + taille * 0.7;
+      arrondi(L / 2 - pl / 2, ly - ph / 2, pl, ph, ph / 2);
+      ctx.fillStyle = "rgba(10,8,16,.62)"; ctx.fill();
+      ctx.textAlign = "center";
+      ctx.fillStyle = r <= 20 ? "#E8574B" : "#DCE4F4";
+      ctx.fillText(txt, L / 2, ly);
+    }
     if (T.combo >= 2){
       plaque("COMBO x" + T.combo, true,
         T.combo >= 10 ? "#E8574B" : T.combo >= 5 ? "#F7B32B" : "#8FD79B");
@@ -6690,7 +7060,7 @@ const BarVue = {
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -7021,8 +7391,11 @@ const Interface = {
 
   afficherFinBar(){
     const gagne = Tournee.fini && Tournee.fini.gagne;
+    const cause = Tournee.fini ? Tournee.fini.cause : "temps";
     if (E.finTitre){
-      E.finTitre.innerHTML = gagne ? "SOIRÉE<em>VALIDÉE.</em>" : "SOIRÉE<em>ÉCOURTÉE.</em>";
+      E.finTitre.innerHTML = gagne ? "SOIRÉE<em>VALIDÉE.</em>"
+        : cause === "vide" ? "LE BAR<em>S'EST VIDÉ.</em>"
+        : "SOIRÉE<em>ÉCOURTÉE.</em>";
     }
     if (E.releve) E.releve.style.display = "none";
     if (E.releveEnq) E.releveEnq.classList.remove("on");
@@ -7034,8 +7407,19 @@ const Interface = {
     if (E.bJagers) E.bJagers.textContent = chiffres(st.jagers || 0);
     if (E.bEaux) E.bEaux.textContent = chiffres(st.eauxJetees || 0);
     if (E.bErreurs) E.bErreurs.textContent = chiffres((st.eauxBues || 0) + (st.sacrileges || 0) + (st.rates || 0));
-    if (E.eCoupable){ E.eCoupable.textContent = "CHAMPION : " + (Tournee.champion ? Tournee.champion.nom : ""); E.eCoupable.classList.add("on"); }
-    if (E.eChute) E.eChute.textContent = "";
+    if (E.bChipes) E.bChipes.textContent = chiffres(st.chipes || 0);
+    if (E.eCoupable){
+      E.eCoupable.textContent = "CHAMPION : " + (Tournee.champion ? Tournee.champion.nom : "")
+        + (Tournee.bonusFin ? "  ·  BONUS " + chiffres(Tournee.bonusFin) : "");
+      E.eCoupable.classList.add("on");
+    }
+    /* On dit pourquoi : une défaite qu'on ne comprend pas ne se rejoue pas. */
+    if (E.eChute){
+      E.eChute.textContent = gagne
+        ? "La dernière tournée est passée. Personne ne s'en souviendra."
+        : cause === "vide" ? "Plus d'ambiance : la salle est partie ailleurs."
+        : "Le temps a manqué — la jauge d'ambiance n'était pas pleine.";
+    }
     if (E.fin) E.fin.classList.add("on");
     if (E.btnRejouer) E.btnRejouer.focus({ preventScroll:true });
   },
@@ -7577,6 +7961,7 @@ globalThis.DTOUR = {
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
+  POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, SUJETS, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, HORTENSE_ECART, TARTE_DUREE,

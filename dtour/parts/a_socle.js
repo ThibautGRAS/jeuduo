@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.2";
+const VERSION = "6.3";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -227,6 +227,68 @@ const Sons = {
     }
   },
 
+  /* --- lit d'ambiance du bar : brouhaha, verres, rires ---
+     Même moteur que le fond d'enquête : une boucle de bruit filtrée,
+     plus des événements calés sur l'horloge AUDIO (pas sur l'affichage,
+     une seconde qui traîne s'entend). Rien n'est échantillonné : tout
+     est synthétisé, le jeu reste un seul fichier. */
+  lancerFondBar(){
+    this.init();
+    if (!this.ac || this.bar) return;
+    const n = this.ac.sampleRate * 3;
+    const b = this.ac.createBuffer(1, n, this.ac.sampleRate), d = b.getChannelData(0);
+    let prec = 0;
+    for (let i = 0; i < n; i++){ prec = (prec + (Math.random() * 2 - 1) * 0.07) * 0.988; d[i] = prec; }
+    const src = this.ac.createBufferSource(); src.buffer = b; src.loop = true;
+    const f = this.ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 520; f.Q.value = 0.7;
+    const g = this.ac.createGain(); g.gain.value = 0;
+    src.connect(f); f.connect(g); g.connect(this.maitre);
+    src.start();
+    const t = this.ac.currentTime;
+    this.bar = { src, gain:g, filtre:f, prochainVerre:t + 2, prochainRire:t + 5 };
+  },
+  arreterFondBar(){
+    if (!this.bar) return;
+    try{ this.bar.src.stop(); }catch(e){}
+    this.bar = null;
+  },
+  /* chaud : 0 au calme, 1 en plein coup de feu — la salle monte d'un ton */
+  fondBar(dt, chaud){
+    if (!this.ac || !this.bar) return;
+    const c = borne(chaud || 0, 0, 1);
+    const g = this.bar.gain.gain;
+    g.value = melange(g.value, 0.34 + c * 0.30, Math.min(1, dt * 1.1));
+    this.bar.filtre.frequency.value = melange(this.bar.filtre.frequency.value, 480 + c * 420, Math.min(1, dt * 0.9));
+    const t = this.ac.currentTime;
+    if (t > this.bar.prochainVerre){
+      this.bar.prochainVerre = t + hasard(1.4, 4.2) / (0.6 + c);
+      if (this.actif){
+        /* un verre qu'on pose quelque part dans la salle */
+        this.percTic(t, 0.016);
+        this.bip(hasard(1500, 2400), 0.05, "sine", 0.020, hasard(900, 1400));
+      }
+    }
+    if (t > this.bar.prochainRire){
+      this.bar.prochainRire = t + hasard(7, 17) / (0.7 + c);
+      if (this.actif){
+        /* trois syllabes de rire, dans le fond */
+        const f0 = hasard(260, 420);
+        for (let k = 0; k < 3; k++) this.souffle(0.09 - k * 0.02, 0.05, f0 * (1 + k * 0.22), 3.0);
+      }
+    }
+  },
+
+  /* le CLAC du verre sur le comptoir : bois, puis verre */
+  verrePose(){
+    this.bip(150, 0.06, "sine", 0.20, 90);
+    this.bip(2100, 0.07, "triangle", 0.10, 1500);
+  },
+  /* un client emporte un verre sous le nez du joueur */
+  verreChipe(){
+    this.bip(880, 0.07, "sine", 0.10, 1300);
+    this.souffle(0.10, 0.06, 900, 2.4);
+  },
+
   arrivee(){ this.souffle(0.1, 0.09, 420, 1.6); },
   alerte(){ this.bip(880, 0.07, "triangle", 0.2); this.bip(1320, 0.07, "sine", 0.13); },
   poignee(){ this.souffle(0.11, 0.2, 240, 1.4); this.bip(190, 0.09, "sine", 0.2, 130); },
@@ -377,7 +439,20 @@ const Sons = {
     { basse:[164.81, 196.00], accord:[196.00, 233.08, 293.66] },  /* Mi 7   */
     { basse:[110.00, 103.83], accord:[164.81, 207.65, 246.94] },  /* La m   */
   ],
-  grilleCourante(){ return Jeu.niveau === 2 ? this.GRILLE_ENQUETE : this.GRILLE; },
+  /* ---------- grille du niveau 3 ----------
+     Un vamp de bar, majeur et bon enfant : la basse marche, les accords
+     tombent à contretemps, le charley ne s'arrête jamais. Ça doit
+     donner envie de courir le long du comptoir. */
+  GRILLE_BAR:[
+    { basse:[98.00, 146.83],  accord:[196.00, 246.94, 293.66] },  /* Sol   */
+    { basse:[110.00, 164.81], accord:[220.00, 261.63, 329.63] },  /* La m  */
+    { basse:[130.81, 196.00], accord:[261.63, 329.63, 392.00] },  /* Do    */
+    { basse:[123.47, 98.00],  accord:[246.94, 293.66, 369.99] },  /* Si m  */
+  ],
+  grilleCourante(){
+    if (Jeu.niveau === 3) return this.GRILLE_BAR;
+    return Jeu.niveau === 2 ? this.GRILLE_ENQUETE : this.GRILLE;
+  },
 
   /* tempo : 92 le jour, 108 le soir, 124 la nuit ; 88 pour l'enquête */
   ordonnerMusique(tempo){
@@ -386,12 +461,23 @@ const Sons = {
     const noire = 60 / tempo;
     while (this.quand < this.ac.currentTime + 0.2){
       const m = grille[this.mesure % 4], t = this.temps4, q = this.quand;
+      if (Jeu.niveau === 3){
+        /* basse à chaque temps, accords sur les contretemps, charley aux
+           croches : le bar swingue au lieu de marcher au pas */
+        this.note(m.basse[t % 2], q, noire * 0.52, "triangle", 0.135, 480);
+        m.accord.forEach((f, i) =>
+          this.note(f, q + noire * 0.5 + 0.010 * i, noire * 0.30, "square", 0.026, 1900));
+        this.balai(q, 0.042);
+        this.balai(q + noire * 0.5, t % 2 === 0 ? 0.030 : 0.046);
+        if (t === 3) this.note(m.basse[1] * 2, q + noire * 0.75, noire * 0.22, "sine", 0.05, 1400);
+      } else {
       if (t === 0 || t === 2) this.note(m.basse[t === 0 ? 0 : 1], q, noire * 0.85, "triangle", 0.14, 420);
       if (t === 1 || t === 3){
         m.accord.forEach((f, i) => this.note(f, q + 0.012 * i, noire * 0.42, "sine", 0.045, 2400));
       }
       this.balai(q, t % 2 === 0 ? 0.05 : 0.028);
       if (t === 3) this.balai(q + noire * 0.5, 0.034);
+      }
       this.quand += noire;
       this.temps4++;
       if (this.temps4 > 3){ this.temps4 = 0; this.mesure++; }
@@ -437,20 +523,20 @@ const IMAGES_NIVEAU2 = [
   "badge_indice", "badge_suspect",
 ];
 
-/* Niveau 3 — la tournée du D'Tour. Le fond, les deux héros en tenue de
-   bar, les deux barmans au travail et les trois boissons. La planche
-   fournie glissait un Thibaut en polo vert dans la rangée de PF — le
-   même piège que la première fois — il a été écarté à la découpe.
-   Thibaut n'a qu'une pose d'action (il boit ET jette dans la même
-   image) : elle sert aux deux gestes, c'est dans le personnage. */
+/* Les dix poses de chaque champion au bar, dans l'ordre où elles
+   s'enchaînent. Deux planches séparées — une par personnage — parce que
+   les mettre côte à côte avait déjà fait glisser un Thibaut en polo
+   vert dans la rangée de PF, deux fois. */
+const POSES_BAR = ["idle", "marche1", "marche2", "course", "frein",
+                   "attrape", "boit", "vide", "jette", "titube"];
+const PREFIXES_BAR = ["bar_th", "bar_pf"];
+
 const IMAGES_NIVEAU3 = [
   "fond_bar",
-  "bar_th_idle", "bar_th_course", "bar_th_marche", "bar_th_frein", "bar_th_action",
-  "bar_pf_idle", "bar_pf_marche", "bar_pf_boit", "bar_pf_jette",
   "bar_francky_idle", "bar_francky_shake", "bar_francky_verse", "bar_francky_sert", "bar_francky_touille",
   "bar_jojo_idle", "bar_jojo_mesure", "bar_jojo_shot", "bar_jojo_verse", "bar_jojo_montre", "bar_jojo_attend", "bar_jojo_essuie",
   "bar_cocktail", "bar_jager", "bar_eau",
-];
+].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 
 /* ---------- où vit chaque image ----------
    img/ est rangé par niveau : commun/ pour ce qui sert partout, n1/,
