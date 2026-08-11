@@ -1015,9 +1015,14 @@ if (D){
   } else ok("scénario sans coupable : rien à contredire");
 
   titre("Les trois dans les deux niveaux");
-  verifier("la sœur fait aussi la queue au D'Tour",
-    D.SPRITES_PNJ.indexOf("pers_gabi") >= 0,
-    "elle est debout et entière, donc elle peut marcher");
+  /* Les habitants ne font PLUS la queue depuis la v6.15 : ils n'avaient
+     pas de planche de file, donc pas de bras dessiné, et le bras peint
+     n'a jamais eu l'air d'un bras. Ce test garde la trace du choix. */
+  verifier("aucun habitant ne fait la queue : la file n'a que des clients",
+    D.SPRITES_PNJ.every(n => n.indexOf("pers_") !== 0),
+    "un habitant dans la file redemanderait un bras peint");
+  verifier("et la file est assez fournie pour s'en passer",
+    D.SPRITES_PNJ.length >= 24, D.SPRITES_PNJ.length + " clients");
   verifier("les deux assis tiennent la terrasse", D.TERRASSE.length === 2);
   verifier("et ce sont bien Charles et Teo",
     D.TERRASSE.map(t2 => t2.sprite).sort().join(",") === "pers_charles,pers_teo");

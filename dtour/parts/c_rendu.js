@@ -193,69 +193,7 @@ function ombreAuSol(xMonde, yBase, hauteur, force){
   ctx.fill();
 }
 
-/* --- bras peint du PNJ ---
-   La planche ne donne qu'une main tendue générique : s'en servir pour
-   les seize aurait changé le personnage au milieu de la file. On peint
-   donc le bras avec la couleur de manche et la couleur de peau relevées
-   sur le sprite lui-même. Un léger creux au milieu évite qu'il passe
-   devant le visage de Pierre-François. */
-function dessinerBras(pnj, xMonde, yBase, hauteur, cible, ext){
-  const t = pnj.teinte;
-  const ep = { x:Camera.ecran(xMonde) - hauteur * 0.13, y:yBase - hauteur * EPAULE };
-  const but = { x:Camera.ecran(cible.x), y:Camera.sol + cible.y * Camera.ech };
-  const fin = { x:melange(ep.x, but.x, ext), y:melange(ep.y, but.y, ext) };
 
-  /* Le coude tombe sous la ligne épaule-main, d'autant plus que le bras
-     va loin : c'est ce qui donne le geste « je tends le bras par-dessus
-     Pierre-François », et ça fait passer l'avant-bras devant son torse
-     plutôt que devant son visage. */
-  const portee = Math.hypot(fin.x - ep.x, fin.y - ep.y);
-  const coude = {
-    x:melange(ep.x, fin.x, 0.44),
-    y:melange(ep.y, fin.y, 0.44) + portee * 0.12 + hauteur * 0.015,
-  };
-
-  const trait = hauteur * 0.034;
-  const cerne = trait + hauteur * 0.017;
-  ctx.save();
-  ctx.lineCap = "round"; ctx.lineJoin = "round";
-
-  /* raccord d'épaule : sans lui, le bras avait l'air posé à côté du corps */
-  ctx.beginPath(); ctx.arc(ep.x, ep.y, hauteur * 0.032, 0, 6.2832);
-  ctx.fillStyle = t.manche; ctx.fill();
-  ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1, hauteur * 0.016); ctx.stroke();
-
-  /* cerne d'un seul tenant : deux traits séparés laissaient un angle net au coude */
-  ctx.beginPath();
-  ctx.moveTo(ep.x, ep.y); ctx.quadraticCurveTo(coude.x, coude.y, fin.x, fin.y);
-  ctx.strokeStyle = "#23181A"; ctx.lineWidth = cerne; ctx.stroke();
-
-  /* manche : de l'épaule au coude */
-  ctx.beginPath();
-  ctx.moveTo(ep.x, ep.y);
-  ctx.quadraticCurveTo(melange(ep.x, coude.x, 0.6), melange(ep.y, coude.y, 0.6), coude.x, coude.y);
-  ctx.strokeStyle = t.manche; ctx.lineWidth = trait; ctx.stroke();
-
-  /* avant-bras nu : du coude à la main, un peu plus fin */
-  ctx.beginPath();
-  ctx.moveTo(coude.x, coude.y);
-  ctx.quadraticCurveTo(melange(coude.x, fin.x, 0.45), melange(coude.y, fin.y, 0.45), fin.x, fin.y);
-  ctx.strokeStyle = t.peau; ctx.lineWidth = trait * 0.86; ctx.stroke();
-
-  /* la main : une ellipse couchée le long du bras. En cercle, elle
-     donnait une sucette au bout d'un bâton. */
-  const ang = Math.atan2(fin.y - coude.y, fin.x - coude.x);
-  const rx = hauteur * 0.050, ry = hauteur * 0.037;
-  ctx.beginPath(); ctx.ellipse(fin.x, fin.y, rx, ry, ang, 0, 6.2832);
-  ctx.fillStyle = t.peau; ctx.fill();
-  ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1, hauteur * 0.015); ctx.stroke();
-  /* le pli du pouce */
-  ctx.beginPath();
-  ctx.ellipse(fin.x, fin.y - ry * 0.35, rx * 0.62, ry * 0.30, ang, 0, 6.2832);
-  ctx.strokeStyle = t.peauOmbre; ctx.lineWidth = Math.max(1, hauteur * 0.010); ctx.stroke();
-  ctx.restore();
-  return fin;
-}
 
 /* --- alerte au-dessus du héros visé ---
    Le signal est posé sur le héros à saluer, pas sur le PNJ, et reprend
@@ -590,10 +528,6 @@ function dessinerPnj(p, voile){
   dessinerPerso(nom, p.x, yBase - (dessine ? bob * 0.35 : bob), hauteur,
                 p.regarde < 0, p.penche + (dessine ? bascule * 0.3 : bascule), 1);
 
-  /* Le bras peint ne sert plus qu'à ceux qui n'ont pas de planche. */
-  if (!dessine && p.bras > 0.02 && p.cible >= 0){
-    dessinerBras(p, p.x, yBase - bob, hauteur, mainHeros(p.cible, p.etat === ETAT.POIGNEE), p.bras);
-  }
 }
 
 /* --- boucle de dessin --- */

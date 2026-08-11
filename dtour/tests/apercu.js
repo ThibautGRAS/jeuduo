@@ -78,77 +78,13 @@ async function preparer(L, H){
   }
   D.Images.pret = true;
 
-  /* relevé des teintes et des ancres : la fonction du jeu passe par
-     document.createElement("canvas"), qui est un vrai canevas ici */
-  const relever = new Function("D", "return null;");
-  void relever;
-  for (const [nom, img] of Object.entries(D.Images.table)){
-    if (!/^(pnj|thibaut|pierre)/.test(nom)) continue;
-    releverIci(D, nom, img);
-  }
   return { D, canevas };
 }
 
-/* Même calcul que releverTeintes() du jeu, refait ici parce que la
-   fonction n'est pas exportée. Si les deux divergent, l'aperçu le
-   montrera tout de suite : les bras seront de la mauvaise couleur. */
-function releverIci(D, nom, img){
-  const c = createCanvas(img.width, img.height);
-  const x = c.getContext("2d");
-  x.drawImage(img, 0, 0);
-  const d = x.getImageData(0, 0, c.width, c.height).data;
-  const lire = (fx, fy) => {
-    const px = Math.floor(c.width * fx), py = Math.floor(c.height * fy);
-    const i = (py * c.width + px) * 4;
-    return [d[i], d[i + 1], d[i + 2], d[i + 3]];
-  };
-  let peau = [232, 178, 142], mieux = -1;
-  for (let fy = 0.06; fy <= 0.22; fy += 0.02){
-    for (let fx = 0.3; fx <= 0.7; fx += 0.05){
-      const p = lire(fx, fy);
-      if (p[3] < 200) continue;
-      const note = p[0] - p[2];
-      if (p[0] > 120 && p[0] >= p[1] && p[1] >= p[2] && note > 22 && note > mieux){ mieux = note; peau = [p[0], p[1], p[2]]; }
-    }
-  }
-  const chair = p => p[0] > 120 && p[0] >= p[1] && p[1] >= p[2] && (p[0] - p[2]) > 30;
-  let manche = null, fonce = 1e9;
-  for (const fx of [0.50, 0.42, 0.58, 0.36, 0.64, 0.46, 0.54]){
-    for (const fy of [0.34, 0.40, 0.30]){
-      const p = lire(fx, fy);
-      if (p[3] < 210 || chair(p)) continue;
-      const somme = p[0] + p[1] + p[2];
-      if (somme < fonce){ fonce = somme; manche = [p[0], p[1], p[2]]; }
-    }
-  }
-  if (!manche) manche = lire(0.5, 0.36).slice(0, 3);
-  const fiche = {
-    peau:"rgb(" + peau.join(",") + ")",
-    peauOmbre:"rgb(" + peau.map(v => Math.round(v * 0.82)).join(",") + ")",
-    manche:"rgb(" + manche.join(",") + ")",
-    mancheOmbre:"rgb(" + manche.map(v => Math.round(v * 0.72)).join(",") + ")",
-    ancre:0.5,
-  };
-  const opaque = (px, py) => d[(py * c.width + px) * 4 + 3] > 120;
-  let xg = c.width, xd = -1;
-  for (let py = Math.floor(c.height * 0.82); py < c.height; py++){
-    for (let px = 0; px < c.width; px++){ if (opaque(px, py)){ if (px < xg) xg = px; if (px > xd) xd = px; } }
-  }
-  if (xd >= 0) fiche.ancre = (xg + xd) / 2 / c.width;
-  if (nom.endsWith("_tendue")){
-    let mx = -1, my = 0, n = 0;
-    for (let px = c.width - 1; px >= 0 && mx < 0; px--){
-      for (let py = 0; py < Math.floor(c.height * 0.72); py++){ if (opaque(px, py)){ mx = px; my += py; n++; } }
-    }
-    if (mx >= 0){
-      const lm = D.H_PERSO * c.width / c.height;
-      fiche.mainX = (mx / c.width - fiche.ancre) * lm;
-      fiche.mainY = -(1 - (my / Math.max(1, n)) / c.height) * D.H_PERSO;
-    }
-  }
-  D.Images.teintes[nom] = fiche;
-}
-
+/* Le calcul des teintes et le bras peint ont disparu en v6.15. Cette
+   copie du calcul vivait ici parce que la fonction du jeu n'était pas
+   exportée : deux implémentations du même relevé, qui ne pouvaient que
+   divorcer. Elles sont parties ensemble. */
 function ecrire(canevas, nom){
   const p = path.join(SORTIE, nom + ".png");
   fs.writeFileSync(p, canevas.toBuffer("image/png"));

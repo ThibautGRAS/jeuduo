@@ -479,6 +479,22 @@ inspecteur seul ne peut pas réunir tous les indices. Quand la place
 manque, on raccourcit un libellé ou on passe en pastille ; on ne retire
 pas la commande. Un test refuse désormais toute règle qui masque `#c2C`.
 
+### Supprimer un système, c'est cinq endroits à la fois
+Le bras peint tenait en cinq morceaux : `dessinerBras()`, son appel,
+`releverTeintes()`, l'accesseur `get teinte()`, le repérage de la main du
+héros dans `mainHeros()` — et une **sixième copie du calcul dupliquée dans
+le harnais visuel**, parce que la fonction du jeu n'était pas exportée.
+Tout part ensemble ou rien ne part : en laisser un morceau, c'est garder
+le piège sans le bénéfice. Au passage, `ancreDe()` relevait aussi
+l'ancrage horizontal sur le sprite ; le pipeline canonique le garantit,
+donc la fonction retourne 0,5.
+
+Et pour la deuxième fois de la session, une suppression par expression
+régulière a retiré une déclaration en laissant son usage
+(`const t = ...` enlevé, `return t.ancre` conservé) : `node --check`
+passait, le jeu plantait à la première image, et c'est le harnais visuel
+qui l'a dit. Après toute chirurgie mécanique, on lance l'aperçu.
+
 ### Une fonctionnalité sans CSS n'existe pas
 `#pauseBtn`, `#pause`, `.secondaire`, `.choix` : le bouton de pause et son
 panneau étaient dans le HTML, câblés dans le code, avec `Pause.mettre()`,

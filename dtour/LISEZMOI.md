@@ -203,8 +203,17 @@ appartient à l'affaire, pas à l'indice :
   PENSE » suit le raisonnement : l'hypothèse, puis la piste, puis la
   contradiction. On sait toujours où en sont les têtes.
 
-**La file est repeuplée** (v6.14). Seize nouveaux clients, cinq poses
-chacun : ils attendent, ils **marchent vraiment** (deux temps, au lieu du
+**Le bras peint n'existe plus** (v6.15). Vingt-huit clients dans la file,
+les deux héros redessinés en huit poses, et **plus personne n'a besoin
+d'un bras tracé au code** : `releverTeintes()` et `dessinerBras()` sont
+supprimées, avec la copie dupliquée du calcul qui vivait dans le harnais.
+Les habitants du quartier ne font plus la queue — c'était la seule raison
+qui restait de peindre un bras — mais ils gardent la terrasse,
+l'appartement du niveau 2 et le bar du niveau 3. L'ancrage horizontal des
+sprites, lui aussi relevé sur l'image autrefois, vaut désormais 0,5 par
+construction : le pipeline de découpe met le centre des pieds au milieu.
+
+**La file est repeuplée** (v6.14). Des clients à cinq poses chacun : ils attendent, ils **marchent vraiment** (deux temps, au lieu du
 faux rebond appliqué à une image figée), et leur bras qui se tend pour
 serrer est **dessiné**, plus peint par le code. 651 Ko pour 80 images, et
 une définition quatre fois supérieure aux anciens sprites de 44 px.

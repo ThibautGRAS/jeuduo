@@ -49,7 +49,6 @@ class Pnj {
   }
 
   get img(){ return Images.table[this.sprite]; }
-  get teinte(){ return Images.teintes[this.sprite] || { peau:"#E8B28E", peauOmbre:"#C08F6F", manche:"#2C3550", mancheOmbre:"#1D2439" }; }
 
   /* Le PNJ ne connaît que lui-même : il avance vers `vise` et change
      d'état quand il y arrive. Toute décision qui regarde les autres
@@ -235,11 +234,11 @@ function mainHeros(h, serre){
   const H = Heros[h];
   const x0 = xPlace(H.place);
   if (!serre) return { x:x0 + 0.34 * H_PERSO, y:-0.60 * H_PERSO };
-  const m = Images.teintes[H.sprite + "_tendue"];
-  return {
-    x:x0 + (m && m.mainX != null ? m.mainX : 0.38 * H_PERSO),
-    y:(m && m.mainY != null ? m.mainY : -0.58 * H_PERSO),
-  };
+  /* La main était REPÉRÉE sur le sprite pour y faire arriver un bras
+     peint. Le bras est dessiné : il ne reste qu'à savoir où les mains se
+     rejoignent, pour y poser l'étincelle de la poignée. Une constante
+     suffit, et elle ne dépend plus de la planche. */
+  return { x:x0 + 0.38 * H_PERSO, y:-0.58 * H_PERSO };
 }
 
 /* ================= NPCManager -> Foule ================= */

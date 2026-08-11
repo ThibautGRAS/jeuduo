@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.14";
+const VERSION = "6.15";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -101,13 +101,16 @@ const TYPES = {
   JUMEAU:       { poids:5,    des:24 },
 };
 
-const NB_PNJ = 16;
+const NB_PNJ = 28;
 const SPRITES_PNJ = Array.from({ length:NB_PNJ }, (_, i) => "pnj" + String(i + 1).padStart(2, "0"));
-/* Nos personnages font aussi la queue au D'Tour : c'est le même
-   quartier. Seuls ceux qui sont DEBOUT et ENTIERS y ont leur place —
-   Teo est assis par terre sur son sprite et Charles n'a pas de jambes,
-   ils ne peuvent pas marcher. Ils tiennent la terrasse. */
-const PERSOS_DEBOUT = ["pers_gabi", "pers_francky", "pers_jojo", "pers_marini", "pers_martin", "pers_mathilde"];
+/* Les habitants ne font PLUS la queue au D'Tour. Ils n'avaient pas de
+   planche de file, donc pas de bras dessiné : le code leur peignait un
+   bras à partir des couleurs relevées sur leur sprite, et ça n'a jamais
+   eu l'air d'un bras. Vingt-huit clients suffisent largement à remplir
+   la file ; les habitants gardent leur place à la terrasse, dans
+   l'appartement du niveau 2 et au bar du niveau 3. C'est ce qui permet
+   de supprimer releverTeintes() et dessinerBras(). */
+const PERSOS_DEBOUT = [];
 const PERSOS_ASSIS = ["pers_teo", "pers_charles"];
 for (const p of PERSOS_DEBOUT) SPRITES_PNJ.push(p);
 const POSES_HEROS = ["idle","attente","marche","regarde","surpris","stress","tendue","victoire"];
@@ -608,94 +611,18 @@ function listeImages(){
    pour les seize aurait changé le personnage en pleine file. On relève
    donc, une fois pour toutes, la couleur de peau et celle de la manche
    de chaque sprite pour peindre un bras au bon coloris. */
-function releverTeintes(nom, img){
-  try{
-    const c = document.createElement("canvas");
-    c.width = img.naturalWidth; c.height = img.naturalHeight;
-    const x = c.getContext("2d", { willReadFrequently:true });
-    x.drawImage(img, 0, 0);
-    const d = x.getImageData(0, 0, c.width, c.height).data;
-    const lire = (fx, fy) => {
-      const px = Math.floor(c.width * fx), py = Math.floor(c.height * fy);
-      const i = (py * c.width + px) * 4;
-      return [d[i], d[i + 1], d[i + 2], d[i + 3]];
-    };
-    /* peau : on cherche le pixel le plus « chair » dans la zone du visage */
-    let peau = [232, 178, 142], meilleur = -1;
-    for (let fy = 0.06; fy <= 0.22; fy += 0.02){
-      for (let fx = 0.3; fx <= 0.7; fx += 0.05){
-        const p = lire(fx, fy);
-        if (p[3] < 200) continue;
-        const note = p[0] - p[2];
-        if (p[0] > 120 && p[0] >= p[1] && p[1] >= p[2] && note > 22 && note > meilleur){
-          meilleur = note; peau = [p[0], p[1], p[2]];
-        }
-      }
-    }
-    /* Manche : on sonde la POITRINE, pas le flanc. Le flanc tombe une
-       fois sur deux à côté du corps ou sur une main, et le bras peint
-       se retrouvait couleur chair sur toute sa longueur. On écarte
-       explicitement les teintes de peau. */
-    const chair = p => p[0] > 120 && p[0] >= p[1] && p[1] >= p[2] && (p[0] - p[2]) > 30;
-    let manche = null, fonce = 1e9;
-    for (const fx of [0.50, 0.42, 0.58, 0.36, 0.64, 0.46, 0.54]){
-      for (const fy of [0.34, 0.40, 0.30]){
-        const p = lire(fx, fy);
-        if (p[3] < 210 || chair(p)) continue;
-        const somme = p[0] + p[1] + p[2];
-        if (somme < fonce){ fonce = somme; manche = [p[0], p[1], p[2]]; }
-      }
-    }
-    if (!manche) manche = lire(0.5, 0.36).slice(0, 3);
-    const fiche = {
-      peau: "rgb(" + peau.join(",") + ")",
-      peauOmbre: "rgb(" + peau.map(v => Math.round(v * 0.82)).join(",") + ")",
-      manche: "rgb(" + manche.join(",") + ")",
-      mancheOmbre: "rgb(" + manche.map(v => Math.round(v * 0.72)).join(",") + ")",
-      ancre: 0.5,
-    };
+/* releverTeintes() a été supprimée en v6.15 : elle relevait la couleur
+   de peau et de manche de chaque sprite pour PEINDRE le bras qui se
+   tend. Tous les bras sont dessinés maintenant. Voir MEMOIRE.md. */
 
-    /* --- ancre horizontale ---
-       Le centre du sprite n'est pas le centre du corps : la pose « main
-       tendue » est 50 % plus large que la pose au repos, et cadrer sur
-       le milieu de l'image faisait glisser le personnage d'un quart de
-       sa largeur au moment où il tendait le bras. On relève donc le
-       milieu des PIEDS, qui ne bouge pas d'une pose à l'autre. */
-    const opaque = (px, py) => d[(py * c.width + px) * 4 + 3] > 120;
-    let xg = c.width, xd = -1;
-    for (let py = Math.floor(c.height * 0.82); py < c.height; py++){
-      for (let px = 0; px < c.width; px++){
-        if (!opaque(px, py)) continue;
-        if (px < xg) xg = px;
-        if (px > xd) xd = px;
-      }
-    }
-    if (xd >= 0) fiche.ancre = (xg + xd) / 2 / c.width;
-
-    /* --- bout de la main tendue ---
-       Utilisé comme point de rendez-vous du bras peint du PNJ. */
-    if (nom.endsWith("_tendue")){
-      let mx = -1, my = 0, n = 0;
-      for (let px = c.width - 1; px >= 0 && mx < 0; px--){
-        for (let py = 0; py < Math.floor(c.height * 0.72); py++){
-          if (opaque(px, py)){ mx = px; my += py; n++; }
-        }
-      }
-      if (mx >= 0){
-        const largeurMonde = H_PERSO * c.width / c.height;
-        fiche.mainX = (mx / c.width - fiche.ancre) * largeurMonde;
-        fiche.mainY = -(1 - (my / Math.max(1, n)) / c.height) * H_PERSO;
-      }
-    }
-    Images.teintes[nom] = fiche;
-  }catch(e){
-    Images.teintes[nom] = { peau:"#E8B28E", peauOmbre:"#C08F6F", manche:"#2C3550", mancheOmbre:"#1D2439", ancre:0.5 };
-  }
-}
 
 function ancreDe(nom){
-  const t = Images.teintes[nom];
-  return t && t.ancre != null ? t.ancre : 0.5;
+  /* L'ancrage horizontal était RELEVÉ sur le sprite, en cherchant le
+     milieu des chaussures. Le pipeline de découpe canonique le garantit
+     désormais : le centre des pieds est au milieu de l'image. C'est donc
+     0,5 par construction, pour tout le monde. */
+  void nom;
+  return 0.5;
 }
 
 function charger(surAvance){
@@ -705,11 +632,7 @@ function charger(surAvance){
     const img = new Image();
     img.onload = () => {
       Images.table[nom] = img;
-      /* Les habitants gardent un bras PEINT faute de planche : il leur
-         faut donc leurs teintes, ce qu'ils n'avaient jamais eu — leur
-         bras sortait en couleurs par défaut. */
-      if (nom.startsWith("pnj") || nom.startsWith("pers_") ||
-          nom.startsWith("thibaut") || nom.startsWith("pierre")) releverTeintes(nom, img);
+      /* Plus de relevé de teintes : tous les bras sont dessinés. */
       faits++; if (surAvance) surAvance(faits / noms.length); resoudre();
     };
     img.onerror = () => { faits++; if (surAvance) surAvance(faits / noms.length); resoudre(); };
