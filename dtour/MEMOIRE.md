@@ -559,6 +559,14 @@ file qui flottait. La bonne méthode : mesurer sur l'image (l'écart-type
 par ligne montre où le trottoir est uniforme), et le décor livré avec le
 niveau doit annoncer sa ligne de sol.
 
+### Une chaîne de commandes masque un test rouge
+J'ai poussé la v6.21 avec un test en échec. La boucle de vérification
+affichait bien le rouge, mais elle se terminait avec un code de succès,
+et le `&&` qui suivait a enchaîné sur le commit et le push. Le garde-fou
+doit ARRÊTER la chaîne : la boucle sort en erreur dès qu'un ✗ apparaît,
+et rien ne se pousse derrière. Voir un échec défiler dans la sortie ne
+suffit pas — il faut qu'il bloque.
+
 ### Une fonctionnalité sans CSS n'existe pas
 `#pauseBtn`, `#pause`, `.secondaire`, `.choix` : le bouton de pause et son
 panneau étaient dans le HTML, câblés dans le code, avec `Pause.mettre()`,

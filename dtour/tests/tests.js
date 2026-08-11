@@ -1046,9 +1046,16 @@ if (D){
   verifier("la personne debout est la plus grande",
     D.PLACES_FIXES.gabi.taille > D.PLACES_FIXES.teo.taille &&
     D.PLACES_FIXES.gabi.taille > D.PLACES_FIXES.charles.taille);
-  verifier("aucun buste n'atteint la taille d'un inspecteur debout",
-    D.PLACES_FIXES.charles.taille < D.ENQ_TAILLE * 0.5 &&
-    D.PLACES_FIXES.teo.taille < D.ENQ_TAILLE * 0.6);
+  /* Ce test comparait des BUSTES recadrés au bassin, dont la taille
+     déclarée valait la hauteur visible. Depuis la v6.21 ce sont des
+     figures assises ENTIÈRES : leur toile contient tout le corps plus
+     du vide, donc la valeur déclarée est plus grande à hauteur visible
+     égale. Ce qui doit rester vrai, c'est qu'une personne assise reste
+     nettement plus petite qu'une personne debout. */
+  verifier("une personne assise reste nettement plus petite que debout",
+    D.PLACES_FIXES.teo.taille < D.PLACES_FIXES.gabi.taille * 0.85 &&
+    D.PLACES_FIXES.charles.taille < D.PLACES_FIXES.gabi.taille * 0.85 &&
+    D.PLACES_FIXES.gabi.taille < D.ENQ_TAILLE);
   verifier("quatre habitants, dont le chat", D.SUSPECTS_BANQUE.length === 4, D.SUSPECTS_BANQUE.length);
   verifier("chacun a une place fixe et une taille",
     D.SUSPECTS_BANQUE.every(s => D.PLACES_FIXES[s.id] && D.PLACES_FIXES[s.id].taille > 0));
