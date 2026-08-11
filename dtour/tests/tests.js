@@ -290,10 +290,15 @@ function decorDom(){
 }
 
 let D = null;
+let domBac = null;
 try{
   const bac = decorDom();
   bac.globalThis = bac;
   bac.window = bac;
+  /* Les tests d'interface ont besoin du DOM du bac : l'état d'un bouton
+     fait partie du jeu (un bouton grisé au mauvais moment rend une
+     mécanique injouable). */
+  domBac = bac.document;
   const ctxVm = vm.createContext(bac);
   script.runInContext(ctxVm);
   D = bac.DTOUR;
@@ -808,12 +813,12 @@ if (D){
     Object.values(D.SUJETS).every(l => l.every(su => su.qPF !== su.qTH)),
     "sauf pour le chat, qui ne répond de toute façon pas");
   verifier("Pierre-François tutoie Teo et sa belle-sœur",
-    D.SUJETS.soeur.concat(D.SUJETS.teo).every(su => /\bTu\b|\bte\b|\bton\b|\bta\b/.test(su.qPF)),
-    D.SUJETS.soeur.concat(D.SUJETS.teo).filter(su => !/\bTu\b|\bte\b|\bton\b|\bta\b/.test(su.qPF)).map(su => su.qPF).join(" | "));
+    D.SUJETS.gabi.concat(D.SUJETS.teo).every(su => /\bTu\b|\bte\b|\bton\b|\bta\b/.test(su.qPF)),
+    D.SUJETS.gabi.concat(D.SUJETS.teo).filter(su => !/\bTu\b|\bte\b|\bton\b|\bta\b/.test(su.qPF)).map(su => su.qPF).join(" | "));
   verifier("et vouvoie Charles, qu'il ne connaît pas",
     D.SUJETS.charles.every(su => /\bVous\b|\bvous\b/.test(su.qPF)));
   verifier("Thibaut vouvoie tout le monde",
-    D.SUJETS.soeur.concat(D.SUJETS.teo, D.SUJETS.charles).every(su => /\bvous\b/i.test(su.qTH)));
+    D.SUJETS.gabi.concat(D.SUJETS.teo, D.SUJETS.charles).every(su => /\bvous\b/i.test(su.qTH)));
   /* Une découverte qui nomme un meuble doit nommer LE BON. */
   verifier("chaque découverte nomme la vraie cachette",
     D.SCENARIOS.every(sc => sc.trouvaille.some(p => /\{Ou\}|\{ou\}/.test(p[1]))),
@@ -932,7 +937,7 @@ if (D){
 
   titre("Les trois dans les deux niveaux");
   verifier("la sœur fait aussi la queue au D'Tour",
-    D.SPRITES_PNJ.indexOf("pers_soeur") >= 0,
+    D.SPRITES_PNJ.indexOf("pers_gabi") >= 0,
     "elle est debout et entière, donc elle peut marcher");
   verifier("les deux assis tiennent la terrasse", D.TERRASSE.length === 2);
   verifier("et ce sont bien Charles et Teo",
@@ -954,8 +959,8 @@ if (D){
     D.PLACES_FIXES.charles.bas < D.PLACES_FIXES.teo.bas,
     "un plateau de table est plus haut qu'une assise");
   verifier("la personne debout est la plus grande",
-    D.PLACES_FIXES.soeur.taille > D.PLACES_FIXES.teo.taille &&
-    D.PLACES_FIXES.soeur.taille > D.PLACES_FIXES.charles.taille);
+    D.PLACES_FIXES.gabi.taille > D.PLACES_FIXES.teo.taille &&
+    D.PLACES_FIXES.gabi.taille > D.PLACES_FIXES.charles.taille);
   verifier("aucun buste n'atteint la taille d'un inspecteur debout",
     D.PLACES_FIXES.charles.taille < D.ENQ_TAILLE * 0.5 &&
     D.PLACES_FIXES.teo.taille < D.ENQ_TAILLE * 0.6);
@@ -1149,7 +1154,8 @@ if (D){
     })());
   verifier("on préfère envoyer celui qui a quelque chose à dire",
     (() => {
-      /* Test statistique : le taux réel mesuré est 62 %, le seuil 55 %.
+      /* Test statistique : taux réel mesuré 69 % depuis l'arrivée de
+         Mathilde (62 % avant), seuil 55 %.
          À 200 tirages il flottait une fois sur soixante-dix (2,2 σ) ;
          à 600 le même seuil est à 3,7 σ. */
       let concernes = 0;
@@ -1307,7 +1313,7 @@ if (D){
       for (let n = 0; n < 200; n++){
         D.Jeu.demarrer(2); D.Intro.finir();
         const avant = D.HortenseApp.quand;
-        const is = D.SUSPECTS.findIndex(x => x.id === "soeur");
+        const is = D.SUSPECTS.findIndex(x => x.id === "gabi");
         D.Enquete.actifIdx = D.Heros.findIndex(h => h.sprite === "thibaut");
         D.Enquete.interroger(is);
         essais++;
@@ -1320,7 +1326,7 @@ if (D){
       let vite = 0;
       for (let n = 0; n < 400; n++){
         D.Jeu.demarrer(2); D.Intro.finir();
-        const is = D.SUSPECTS.findIndex(x => x.id === "soeur");
+        const is = D.SUSPECTS.findIndex(x => x.id === "gabi");
         D.Enquete.interroger(is);
         if (D.HortenseApp.quand - (D.ENQ_DUREE - D.Enquete.restant) < 9) vite++;
       }
@@ -2022,9 +2028,30 @@ if (D){
     })());
   verifier("un habitué sans planche garde sa silhouette",
     (() => {
-      const sans = D.BAR_CLIENTS.find(c => !c.prefixe);
+      /* Le repli doit tenir même si plus personne ne s'en sert : c'est
+         ce qui permettra d'ajouter un habitué avec une seule image. */
+      const sans = { id:"essai", sprite:"pers_teo", nom:"ESSAI", taille:1 };
       const cl = { ref:sans, x:0.5, dir:1, etat:"entre", t:0, foulee:0 };
-      return D.Tournee.poseClient(cl) === sans.sprite;
+      return D.Tournee.poseClient(cl) === "pers_teo";
+    })());
+  verifier("un habitué sans gestes ne prend pas de pose de consommation",
+    (() => {
+      const sans = D.BAR_CLIENTS.find(c => c.prefixe && !c.gestes);
+      if (!sans) return false;
+      const cl = { ref:sans, x:0.5, dir:1, etat:"prend", t:0.5, foulee:0, verreEnMain:true };
+      return D.Tournee.poseClient(cl) === sans.prefixe + "_idle";
+    })());
+  verifier("chaque pose d'habitué annoncée existe sur le disque",
+    (() => {
+      const n3 = new Set(D.IMG_PAR_DOSSIER.n3);
+      const commun = new Set(D.IMG_PAR_DOSSIER.commun);
+      return D.BAR_CLIENTS.every(c => {
+        if (!commun.has(c.sprite)) return false;
+        if (!c.prefixe) return true;
+        const base = ["idle", "marche1", "marche2"];
+        const plus = c.gestes ? ["attrape", "boit", "vide"] : [];
+        return base.concat(plus).every(po => n3.has(c.prefixe + "_" + po));
+      });
     })());
   verifier("un habitué avec planche marche, se sert, puis s'en va son verre en main",
     (() => {
@@ -2074,6 +2101,103 @@ if (D){
       const xs = D.BARMANS.map(b => b.x).sort((p, q) => p - q);
       return xs[1] - xs[0] <= 0.34 && xs[0] > 0.2 && xs[1] < 0.8;
     })());
+
+  /* --- la tarte au bar --- */
+  verifier("Hortense finit par lancer, et le bouton ESQUIVER apparaît",
+    (() => {
+      lancer3(0);
+      const bouton = domBac.getElementById("c3E");
+      D.Tournee.x = 0.60;
+      D.Tournee.invite = { qui:"hortense", x:0.10, dir:1, t:0, pause:0, foulee:0, vue:false, jete:false };
+      let lance = false, vuBouton = false, vuAlerte = false;
+      for (let i = 0; i < 60 * 20; i++){
+        D.Tournee.ambiance = 60;
+        D.Jeu.pas(1 / 60);
+        if (D.Tournee.tarte){
+          lance = true;
+          if (bouton.classList.contains("on")) vuBouton = true;
+          if (D.Tournee.esquiveOuverte && bouton.classList.contains("alerte")) vuAlerte = true;
+        }
+        if (lance && !D.Tournee.tarte) break;
+      }
+      /* le tirage peut la faire repartir sans lancer : on force alors */
+      if (!lance){
+        D.Tournee.invite = { qui:"hortense", x:0.30, dir:1, t:0, pause:0, foulee:0, vue:true, jete:true };
+        lance = D.Tournee.lancerTarte() === true;
+        for (let i = 0; i < 60 * 6 && D.Tournee.tarte; i++){
+          D.Jeu.pas(1 / 60);
+          if (bouton.classList.contains("on")) vuBouton = true;
+          if (D.Tournee.esquiveOuverte && bouton.classList.contains("alerte")) vuAlerte = true;
+        }
+      }
+      return lance && vuBouton && vuAlerte;
+    })());
+  verifier("ESQUIVER n'est jamais éteint quand une tarte vole",
+    (() => {
+      lancer3(0);
+      const bouton = domBac.getElementById("c3E");
+      D.Tournee.invite = { qui:"hortense", x:0.20, dir:1, t:0, pause:0, foulee:0, vue:true, jete:true };
+      D.Tournee.lancerTarte();
+      let eteint = false;
+      for (let i = 0; i < 60 * 6 && D.Tournee.tarte; i++){
+        D.Jeu.pas(1 / 60);
+        if (bouton.classList.contains("eteint")) eteint = true;
+      }
+      return !eteint;
+    })(), "une invite à agir ne s'éteint jamais");
+  verifier("esquiver rapporte, recevoir coûte",
+    (() => {
+      lancer3(0);
+      D.Tournee.x = 0.5; D.Tournee.ambiance = 60; D.Tournee.combo = 6;
+      D.Tournee.invite = { qui:"hortense", x:0.2, dir:1, t:0, pause:0, foulee:0, vue:true, jete:true };
+      D.Tournee.lancerTarte();
+      const pts = D.Score.points;
+      let ok = false;
+      for (let i = 0; i < 60 * 6 && D.Tournee.tarte; i++){
+        D.Jeu.pas(1 / 60);
+        if (D.Tournee.esquiveOuverte){ ok = D.Tournee.esquiver() === true; break; }
+      }
+      if (!(ok && D.Score.points === pts + D.BAR_ESQUIVE_PTS && D.Tournee.combo === 6)) return false;
+      /* et maintenant on la reçoit */
+      lancer3(0);
+      D.Tournee.x = 0.5; D.Tournee.ambiance = 60; D.Tournee.combo = 6;
+      D.Tournee.invite = { qui:"hortense", x:0.2, dir:1, t:0, pause:0, foulee:0, vue:true, jete:true };
+      D.Tournee.lancerTarte();
+      for (let i = 0; i < 60 * 8 && D.Tournee.tarteRecue === 0; i++) D.Jeu.pas(1 / 60);
+      return D.Tournee.tarteRecue === 1 && D.Tournee.combo === 0 &&
+        D.Tournee.ambiance <= 50 && D.Tournee.gele > 0;
+    })());
+  verifier("BOIRE esquive aussi : c'est la touche déjà sous le pouce",
+    (() => {
+      lancer3(0);
+      D.Tournee.x = 0.5;
+      D.Tournee.invite = { qui:"hortense", x:0.2, dir:1, t:0, pause:0, foulee:0, vue:true, jete:true };
+      D.Tournee.lancerTarte();
+      for (let i = 0; i < 60 * 6 && !D.Tournee.esquiveOuverte; i++) D.Jeu.pas(1 / 60);
+      return D.Tournee.esquiveOuverte && D.Tournee.boire() === true && D.Tournee.tarteEsquivee === 1;
+    })());
+  verifier("le gel n'immobilise pas la tarte en vol",
+    (() => {
+      lancer3(0);
+      D.Tournee.x = 0.5; D.Tournee.gele = 0.5;
+      D.Tournee.invite = { qui:"hortense", x:0.2, dir:1, t:0, pause:0, foulee:0, vue:true, jete:true };
+      D.Tournee.lancerTarte();
+      const x0 = D.Tournee.tarte.x;
+      for (let i = 0; i < 12; i++) D.Jeu.pas(1 / 60);
+      return D.Tournee.tarte && D.Tournee.tarte.x > x0;
+    })(), "sinon on prend la tarte dès la fin du gel, sans avoir pu bouger");
+
+  /* --- le pupitre pendant le choix du champion --- */
+  verifier("le pupitre reste rangé pendant le choix du champion",
+    (() => {
+      const pup = domBac.getElementById("pupitre3");
+      D.Jeu.demarrer(3);
+      D.Jeu.pas(1 / 60);
+      const cache = !pup.classList.contains("on");
+      D.Tournee.lancer();
+      D.Jeu.pas(1 / 60);
+      return cache && pup.classList.contains("on");
+    })(), "on ne pilote rien tant qu'on n'a pas de champion");
 
   /* --- les points --- */
   verifier("pris au CLAC, la prime de vitesse tombe",
@@ -2129,6 +2253,37 @@ if (D){
 
   /* --- retour au calme pour la suite de la suite --- */
   D.Jeu.retourTitre();
+
+  /* --- l'esquive du niveau 2 doit être JOUABLE, pas seulement possible --- */
+  titre("L'esquive de l'appartement");
+  (() => {
+    const bouton = domBac.getElementById("c2A");
+    const txt = domBac.getElementById("c2ATxt");
+    D.Jeu.demarrer(2); D.Intro.finir();
+    let vue = false, eteinte = false, libelle = "";
+    for (let i = 0; i < 60 * 280; i++){
+      D.Jeu.pas(1 / 60);
+      if (D.Enquete.esquiveOuverte){
+        vue = true;
+        libelle = txt.textContent;
+        /* c'est ICI que tout se joue : le bouton doit être vivant */
+        if (bouton.classList.contains("eteint")) eteinte = true;
+        break;
+      }
+    }
+    verifier("la fenêtre d'esquive s'ouvre bien", vue);
+    verifier("le bouton annonce l'esquive", libelle === "ESQUIVER !", "il dit « " + libelle + " »");
+    verifier("et il n'est pas éteint au moment d'appuyer", !eteinte,
+      "il était grisé : l'esquive paraissait impossible");
+    verifier("appuyer esquive vraiment",
+      D.Enquete.esquiveOuverte ? (D.Enquete.action() === true && D.Enquete.tarteEsquivee) : false);
+    verifier("la fenêtre laisse le temps du pouce",
+      D.ENQ_ESQUIVE_FENETRE >= 0.55, D.ENQ_ESQUIVE_FENETRE + " s");
+    /* On rend le jeu au niveau 1 : la section suivante appelle
+       demarrer() sans argument, qui GARDE le niveau courant — sans ça
+       le rythme d'Hortense se mesurait dans un appartement. */
+    D.Jeu.retourTitre();
+  })();
 
   /* --- Hortense ne doit jamais devenir une routine --- */
   titre("Rythme d'Hortense");

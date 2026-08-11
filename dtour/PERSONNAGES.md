@@ -58,14 +58,18 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
   service. » et « Règle n°1 du D'Tour : ne jamais dire non à Hortense. »
 - Sprites : `h_*` et `tarte*`, `debris_*` (commun).
 
-### LA SŒUR D'HORTENSE
-- Colocataire de l'appartement du niveau 2, sœur de la lanceuse,
-  **belle-sœur de Pierre-François**.
+### GABI
+- Colocataire de l'appartement du niveau 2, **sœur d'Hortense** la
+  lanceuse de tartes, et **belle-sœur de Pierre-François**. Elle
+  s'appelait « la sœur d'Hortense » jusqu'à la v6.5 ; c'est Gabi.
+- Un rouleau de papier toilette dans la poche. Sans explication.
 - Habitante interrogeable (couloir). Lui parler peut **provoquer** une
   visite d'Hortense — insister finit toujours par payer.
-- Au niveau 3, elle fait partie des **habitués du bar** : elle longe le
-  comptoir et chipe les verres qu'on a laissés traîner.
-- Sprite : `pers_soeur` (commun). Fait la queue au niveau 1.
+- Au niveau 3, habituée du bar et **entièrement animée** :
+  `bar_gabi_{idle,marche1,marche2,attrape,boit,vide}`, verre de vin
+  compris. Elle longe le comptoir et chipe les verres qu'on a laissés
+  traîner.
+- Sprite : `pers_gabi` (commun). Fait la queue au niveau 1.
 
 ### RISOTO (le chat)
 - Le chat de l'appartement. Ne parle pas — il ne répond qu'à ses
@@ -121,6 +125,22 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 
 ---
 
+### MATHILDE
+- **Petite amie de Thibaut.** Professeure d'histoire, sportive, et elle
+  aime faire la fête — les trois à la fois, sans contradiction.
+- Visiteuse du niveau 2, thèmes `alcool` et `chat`. C'est la seule qui
+  parle de **méthode** : chronologie, sources, recoupement. « Une
+  soirée, ça se reconstitue comme une bataille : qui était où, et à
+  quelle heure. » Sur le chat : « Un chat n'a pas de mobile. Retenez
+  ça. »
+- Habituée du bar au niveau 3 :
+  `bar_mathilde_{idle,marche1,marche2}`. Pas encore de pose de
+  consommation.
+- Fait la queue au niveau 1.
+- Sprite : `pers_mathilde` (commun).
+
+---
+
 ## Les visiteurs (niveau 2)
 
 ### MARINI, MAIRE DE COMPIÈGNE
@@ -136,7 +156,12 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 - Boxeur, ancien comptable : **il compte tout**. Thèmes `securite`,
   `porte`, `argent`.
 - « Vingt-deux entrées, dix-neuf sorties. Ça ne tombe jamais juste. »
-- Habitué du bar au niveau 3. Il compte probablement les verres.
+- Habitué du bar au niveau 3 : `bar_martin_{idle,marche1,marche2}`. Sa
+  planche n'a pas de pose de consommation, il se sert donc sans changer
+  d'expression — ce qui lui va bien.
+- **À trancher** : la planche livrée en v6.5 montre un jeune homme mince
+  au sac à dos, là où cette fiche décrit un boxeur agent de sécurité.
+  Soit la fiche se réécrit, soit c'est un autre personnage.
 - Sprite : `pers_martin` (commun). Fait la queue au niveau 1.
 
 ---
@@ -148,7 +173,8 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 | PF | héros (droite) | inspecteur | champion |
 | Thibaut | héros (gauche) | inspecteur | champion |
 | Hortense | attaque aux fenêtres | frappe à la porte | traverse, rare |
-| La sœur | fait la queue | habitante | habituée du bar |
+| Gabi | fait la queue | habitante | habituée du bar (animée) |
+| Mathilde | fait la queue | visiteuse | habituée du bar |
 | Teo | terrasse | habitant | — |
 | Charles | terrasse | habitant | — |
 | Risoto | — | suspect | traverse, clin d'œil |

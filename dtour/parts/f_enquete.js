@@ -38,6 +38,7 @@ const ENQ_FOUILLE = 0.75;
 const ENQ_ACCUSATIONS = 2;         /* on n'a droit qu'à deux noms */
 const ENQ_MAUVAISE = 20;            /* secondes perdues sur une accusation ratée */
 const ENQ_TARTE = 10;               /* secondes perdues sur une tarte reçue */
+const ENQ_ESQUIVE_FENETRE = 0.62;   /* fenêtre d'esquive : 0,45 s était trop court au pouce */
 const ENQ_ESQUIVE_PTS = 100;
 
 /* ---------- les meubles fouillables ----------
@@ -169,7 +170,7 @@ const BAVARDAGES = [
    ne connaît pas. Thibaut vouvoie tout le monde : c'est un inconnu, et
    c'est précisément ce qui le rend efficace. */
 const SUJETS = {
-  soeur:[
+  gabi:[
     { qPF:"Tu étais où à {heure} ?", qTH:"Vous étiez où à {heure} ?",
       pf:"Chez moi. Comme tous les soirs. Passe dimanche.",
       ok:"Dans ma chambre. La porte du couloir grince, je l'aurais entendue.",
@@ -251,7 +252,7 @@ const RIEN = {
    interchangeables : chacun a un lien avec les deux inspecteurs, et ce
    lien change ce qu'on obtient de lui.
 
-     LA SŒUR D'HORTENSE  colocataire. Sœur de celle qui lance des tartes,
+     GABI  colocataire. Sœur de celle qui lance des tartes,
                          et belle-sœur de Pierre-François. Elle ne dira
                          donc rien d'utile à Pierre-François.
      CHARLES             son amant. Personne n'est censé savoir qu'il
@@ -275,7 +276,7 @@ const RIEN = {
 const PLACES_FIXES = {
   teo:     { x:0.292, bas:0.805, taille:0.315 },  /* avachi sur la droite du canapé */
   charles: { x:0.660, bas:0.730, taille:0.260 },  /* attablé, place du fond */
-  soeur:   { x:0.818, bas:0.900, taille:0.575 },  /* debout dans le couloir */
+  gabi:   { x:0.818, bas:0.900, taille:0.575 },  /* debout dans le couloir */
   chat:    { x:0.452, bas:0.925, taille:0.170 },  /* par terre            */
 };
 
@@ -296,7 +297,7 @@ const SUSPECTS_BANQUE = [
       "Il connaît l'appartement mieux qu'un visiteur.",
     ] },
 
-  { id:"soeur", nom:"LA SŒUR D'HORTENSE", sprite:"pers_soeur",
+  { id:"gabi", nom:"GABI", sprite:"pers_gabi",
     role:"Colocataire. Belle-sœur de Pierre-François.",
     fond:[
       "Elle a un rouleau de papier toilette dans la poche. Sans explication.",
@@ -348,7 +349,7 @@ function composerSuspects(){
    peut donc pas sortir. */
 const SCENARIOS = [
   /* --- la sœur --- */
-  { id:"pour_hortense", tags:["porte"], coupable:"soeur", cachettes:["frigo", "placards"],
+  { id:"pour_hortense", tags:["porte"], coupable:"gabi", cachettes:["frigo", "placards"],
     porteurs:["ticket", "assiette", "serviette"],
     deduc:{
       ticket:[[1, "Une pizza chorizo, livrée à {heure}. La préférée d'Hortense, non ?"],
@@ -368,10 +369,10 @@ const SCENARIOS = [
                 [1, "On range une pizza comme ça pour quelqu'un qu'on aime."]],
     contradiction:"Vous l'avez rangée pour votre sœur. Elle repasse ce soir.",
     chute:"Elle la gardait pour Hortense. Personne n'a rien volé, et personne n'a rien dit." ,
-    anecdote:{ suspect:"soeur", qTH:"Pourquoi au frigo, et pas sur le plan ?", qPF:"Pourquoi au frigo, et pas sur le plan ?", ok:"Parce qu'au frigo, ça se garde.", ko:"Elle se garde pour qui ?", pf:"Tu poses des questions de flic." }
+    anecdote:{ suspect:"gabi", qTH:"Pourquoi au frigo, et pas sur le plan ?", qPF:"Pourquoi au frigo, et pas sur le plan ?", ok:"Parce qu'au frigo, ça se garde.", ko:"Elle se garde pour qui ?", pf:"Tu poses des questions de flic." }
   },
 
-  { id:"la_porte", tags:["porte", "chat"], coupable:"soeur", cachettes:["commode", "portant"],
+  { id:"la_porte", tags:["porte", "chat"], coupable:"gabi", cachettes:["commode", "portant"],
     porteurs:["ticket", "boite", "pattes"],
     deduc:{
       ticket:[[0, "Livrée à {heure}. La porte a sonné une fois."],
@@ -391,10 +392,10 @@ const SCENARIOS = [
                 [1, "Il a fallu vouloir la cacher."]],
     contradiction:"Vous avez ouvert à quelqu'un. Ce n'était pas le livreur.",
     chute:"Elle a ouvert la porte à quelqu'un qui n'aurait pas dû venir. La pizza a payé le silence." ,
-    anecdote:{ suspect:"soeur", qTH:"Qui avez-vous laissé entrer ?", qPF:"Qui avez-vous laissé entrer ?", ok:"Quelqu'un qui n'aurait pas dû monter.", ko:"Et vous n'avez rien dit.", pf:"Ne me fais pas dire ça." }
+    anecdote:{ suspect:"gabi", qTH:"Qui avez-vous laissé entrer ?", qPF:"Qui avez-vous laissé entrer ?", ok:"Quelqu'un qui n'aurait pas dû monter.", ko:"Et vous n'avez rien dit.", pf:"Ne me fais pas dire ça." }
   },
 
-  { id:"la_dette", tags:["argent", "salon"], coupable:"soeur", cachettes:["poubelle", "evier"],
+  { id:"la_dette", tags:["argent", "salon"], coupable:"gabi", cachettes:["poubelle", "evier"],
     porteurs:["billet", "miettes", "boite"],
     deduc:{
       billet:[[0, "Cinq euros. Posé bien à plat, en évidence."],
@@ -414,7 +415,7 @@ const SCENARIOS = [
                 [1, "Elle a même fait le tri."]],
     contradiction:"Vous avez laissé cinq euros. On ne rembourse que ce qu'on a pris.",
     chute:"Nous étions sortis. Elle a tout mangé, laissé des miettes et un billet de cinq euros pour qu'on en rachète une. C'est presque de la politesse." ,
-    anecdote:{ suspect:"soeur", qTH:"Ces cinq euros, ils sortent d'où ?", qPF:"Ces cinq euros, ils sortent d'où ?", ok:"De mon porte-monnaie. D'où veux-tu qu'ils sortent.", ko:"On ne rembourse que ce qu'on a pris.", pf:"Tu comptes vraiment l'argent, maintenant ?" }
+    anecdote:{ suspect:"gabi", qTH:"Ces cinq euros, ils sortent d'où ?", qPF:"Ces cinq euros, ils sortent d'où ?", ok:"De mon porte-monnaie. D'où veux-tu qu'ils sortent.", ko:"On ne rembourse que ce qu'on a pris.", pf:"Tu comptes vraiment l'argent, maintenant ?" }
   },
 
   /* --- Charles --- */
@@ -654,7 +655,7 @@ const SCENARIOS = [
       ok:"Personne. C'est bien le problème de cet appartement.", ko:"Moi. Et je range bien.",
       pf:"Tu ranges toujours des choses au mauvais endroit." } },
 
-  { id:"le_regime", tags:["argent", "salon"], coupable:"soeur", cachettes:["portant", "lit", "commode"],
+  { id:"le_regime", tags:["argent", "salon"], coupable:"gabi", cachettes:["portant", "lit", "commode"],
     porteurs:["billet", "serviette", "chorizo"],
     deduc:{
       billet:[[0, "Cinq euros dans un pot de farine. On paie sa conscience."],
@@ -674,7 +675,7 @@ const SCENARIOS = [
                 [1, "Elle l'a cachée d'elle-même. Et elle a perdu."]],
     contradiction:"Vous l'avez cachée pour ne pas la manger. Ça n'a pas suffi.",
     chute:"Elle commençait un régime le lendemain. Elle a caché la pizza pour tenir. Elle a tenu quarante minutes.",
-    anecdote:{ suspect:"soeur", qTH:"Vous cachez souvent de la nourriture ?", qPF:"Tu caches encore des trucs à toi-même ?",
+    anecdote:{ suspect:"gabi", qTH:"Vous cachez souvent de la nourriture ?", qPF:"Tu caches encore des trucs à toi-même ?",
       ok:"Jamais. Je n'ai rien à me cacher.", ko:"Une fois. Ça n'a pas marché.",
       pf:"On avait dit qu'on ne parlait plus de ça." } },
 
@@ -726,7 +727,7 @@ const SCENARIOS = [
       ok:"Une. J'ai vu passer le livreur une fois.", ko:"Une. Enfin, une à la fois.",
       pf:"Vous hésitez sur un chiffre simple." } },
 
-  { id:"bonne_nuit", tags:["dodo", "salon", "argent"], coupable:"soeur", cachettes:["frigo", "placards"],
+  { id:"bonne_nuit", tags:["dodo", "salon", "argent"], coupable:"gabi", cachettes:["frigo", "placards"],
     porteurs:["ticket", "assiette", "billet"],
     deduc:{
       ticket:[[0, "Livrée à {heure}. Juste après la tournée de Francky."],
@@ -746,7 +747,7 @@ const SCENARIOS = [
                 [1, "Elle a eu tout le temps du monde."]],
     contradiction:"Vous n'avez pas touché au cocktail de Francky. Vous êtes la seule.",
     chute:"Francky avait servi sa tournée « bonne nuit les petits ». Tout le monde s'est effondré. Elle, non — elle ne boit pas. Elle a mangé tranquillement et rangé la boîte.",
-    anecdote:{ suspect:"soeur", qTH:"Vous avez bu quelque chose ce soir ?", qPF:"Tu as bu, toi ?",
+    anecdote:{ suspect:"gabi", qTH:"Vous avez bu quelque chose ce soir ?", qPF:"Tu as bu, toi ?",
       ok:"Un verre d'eau. Je conduis demain.", ko:"Rien du tout. Je suis la seule à m'en souvenir.",
       pf:"Tu sais bien que je ne bois pas non plus. Enfin, presque." } },
 
@@ -800,7 +801,7 @@ const SCENARIOS = [
       ok:"Un filet d'eau. On a épongé.", ko:"Une vraie fuite. J'ai tout sorti de ce placard.",
       pf:"Tu bricoles toujours quand il ne faut pas." } },
 
-  { id:"le_placard_haut", tags:["hauteur", "porte"], coupable:"soeur",
+  { id:"le_placard_haut", tags:["hauteur", "porte"], coupable:"gabi",
     cachettes:["placards"],
     porteurs:["ticket", "menu", "miettes"],
     deduc:{
@@ -821,7 +822,7 @@ const SCENARIOS = [
                 [1, "Il a donc fallu quelqu'un de grand. Ou de l'aide."]],
     contradiction:"Vous n'atteignez pas ce placard. Quelqu'un l'a fait pour vous.",
     chute:"Elle a demandé un coup de main à la femme de Jojo, qui attendait en bas et qui atteint tout sans monter sur rien. Deux personnes pour cacher une pizza : c'est une organisation.",
-    anecdote:{ suspect:"soeur", qTH:"Qui vous a aidée à ranger, en haut ?", qPF:"Tu as fait ça toute seule ?",
+    anecdote:{ suspect:"gabi", qTH:"Qui vous a aidée à ranger, en haut ?", qPF:"Tu as fait ça toute seule ?",
       ok:"Personne. Je ne range jamais en haut.", ko:"On m'a tendu la boîte. Je n'ai fait que la pousser.",
       pf:"Tu ne montes jamais sur un tabouret, je le sais." } },
 
@@ -875,7 +876,7 @@ const SCENARIOS = [
       ok:"Je regarde, je ne touche pas.", ko:"Un joint. Deux minutes. Et j'avais faim.",
       pf:"Tu vas finir par inonder l'immeuble." } },
 
-  { id:"la_bassine", temoinCle:"soeur", tags:["plomberie", "porte"], coupable:null,
+  { id:"la_bassine", temoinCle:"gabi", tags:["plomberie", "porte"], coupable:null,
     cachettes:["evier", "poubelle"],
     porteurs:["ticket", "boite", "serviette"],
     deduc:{
@@ -896,7 +897,7 @@ const SCENARIOS = [
                 [1, "Personne ne l'a volée. Elle a fini par terre, sous une fuite."]],
     contradiction:"Vous avez pris la boîte pour la fuite. Vous n'avez pas regardé dedans.",
     chute:"Ça gouttait. La première chose plate à portée de main était la boîte. Elle a servi de bassine pendant vingt minutes, avec la pizza encore dedans.",
-    anecdote:{ suspect:"soeur", qTH:"Qu'avez-vous mis sous la fuite ?", qPF:"Tu as mis quoi sous la fuite ?",
+    anecdote:{ suspect:"gabi", qTH:"Qu'avez-vous mis sous la fuite ?", qPF:"Tu as mis quoi sous la fuite ?",
       ok:"Une casserole. Comme tout le monde.", ko:"Ce qui traînait. Je n'ai pas regardé quoi.",
       pf:"Tu ne regardes jamais ce que tu prends." } },
 
@@ -976,7 +977,7 @@ const SCENARIOS = [
       pf:"Tu ne comptes jamais, et c'est bien le problème." } },
 
   /* --- le maire --- */
-  { id:"inauguration", temoinCle:"soeur", tags:["officiel", "porte"], coupable:null,
+  { id:"inauguration", temoinCle:"gabi", tags:["officiel", "porte"], coupable:null,
     cachettes:["commode", "manteaux"],
     porteurs:["ticket", "menu", "serviette"],
     deduc:{
@@ -997,7 +998,7 @@ const SCENARIOS = [
                 [1, "Personne ne l'a volée. Elle a été classée."]],
     contradiction:"On n'inaugure pas un dîner. Vous avez pourtant signé quelque chose.",
     chute:"Marini est monté serrer des mains, a fait signer un registre à tout le monde, a posé son parapheur sur la boîte et l'a oubliée là. Le document, lui, est parfaitement en règle.",
-    anecdote:{ suspect:"soeur", qTH:"Qui vous a fait signer quelque chose ?", qPF:"Tu as signé un truc, toi ?",
+    anecdote:{ suspect:"gabi", qTH:"Qui vous a fait signer quelque chose ?", qPF:"Tu as signé un truc, toi ?",
       ok:"Le maire. Il fait signer tout le monde.", ko:"J'ai signé sans lire. Comme d'habitude.",
       pf:"Tu signes vraiment n'importe quoi." } },
 
@@ -1052,7 +1053,7 @@ const SCENARIOS = [
       pf:"Vous aviez à faire quoi, exactement ?" } },
 
   /* --- l'agent de sécurité --- */
-  { id:"le_registre", tags:["securite", "porte"], coupable:"soeur",
+  { id:"le_registre", tags:["securite", "porte"], coupable:"gabi",
     cachettes:["commode", "portant", "lit"],
     porteurs:["ticket", "menu", "assiette"],
     deduc:{
@@ -1073,7 +1074,7 @@ const SCENARIOS = [
                 [1, "Le registre ne se trompe pas. Les gens, si."]],
     contradiction:"Vous n'êtes jamais descendue. Le registre est formel.",
     chute:"Martin note tout, en bas, depuis neuf ans de comptabilité et trois ans de sécurité. Le registre disait qui était encore là. Il ne restait qu'une personne à qui poser la question.",
-    anecdote:{ suspect:"soeur", qTH:"Vous êtes descendue à un moment ?", qPF:"Tu es sortie, toi ?",
+    anecdote:{ suspect:"gabi", qTH:"Vous êtes descendue à un moment ?", qPF:"Tu es sortie, toi ?",
       ok:"Deux fois. Le gardien vous le dira.", ko:"Pas une fois. Pourquoi je serais descendue ?",
       pf:"Tu n'aimes pas les escaliers, je sais." } },
 
@@ -1127,7 +1128,7 @@ const SCENARIOS = [
       ok:"Une. Peut-être une et demie.", ko:"Je n'ai pas compté. Ça se compte, une pizza ?",
       pf:"Ça se compte très bien, figure-toi." } },
 
-  { id:"la_tarte", temoinCle:"soeur", tags:["porte", "chat"], coupable:null, cachettes:["placards", "evier"],
+  { id:"la_tarte", temoinCle:"gabi", tags:["porte", "chat"], coupable:null, cachettes:["placards", "evier"],
     porteurs:["ticket", "chorizo", "assiette"],
     deduc:{
       ticket:[[0, "Livrée à {heure}. Et pourtant, une odeur de citron flotte encore."],
@@ -1147,7 +1148,7 @@ const SCENARIOS = [
                 [1, "Il y avait une tarte au citron ici. Plus maintenant."]],
     contradiction:"Personne n'a volé. Quelqu'un a troqué.",
     chute:"Hortense est passée. Elle a laissé une tarte au citron et emporté l'idée. La pizza, elle, n'a jamais bougé." ,
-    anecdote:{ suspect:"soeur", qTH:"Qu'est-ce qui a disparu du placard ?", qPF:"Qu'est-ce qui a disparu du placard ?", ok:"Une tarte au citron. Ma sœur adore ça.", ko:"Elle a donc échangé.", pf:"Elle passe, elle prend, elle repart." }
+    anecdote:{ suspect:"gabi", qTH:"Qu'est-ce qui a disparu du placard ?", qPF:"Qu'est-ce qui a disparu du placard ?", ok:"Une tarte au citron. Ma sœur adore ça.", ko:"Elle a donc échangé.", pf:"Elle passe, elle prend, elle repart." }
   },
 ];
 
@@ -1387,7 +1388,7 @@ const HortenseApp = {
     p.x = melange(p.x0, fin, a);
     p.y = 0.52 - Math.sin(Math.PI * Math.min(1, a)) * 0.10 + a * 0.05;
     p.rot += dt * 9;
-    Enquete.esquiveOuverte = p.etat === "vol" && this.resteAvantImpact() <= 0.45;
+    Enquete.esquiveOuverte = p.etat === "vol" && this.resteAvantImpact() <= ENQ_ESQUIVE_FENETRE;
     if (p.etat === "vol" && a >= 1){
       p.etat = "fini";
       Enquete.recevoirTarte(this.cible);
@@ -1398,7 +1399,7 @@ const HortenseApp = {
   esquiver(){
     const p = this.tarte;
     if (!p || p.etat !== "vol") return false;
-    if (this.resteAvantImpact() > 0.45) return false;
+    if (this.resteAvantImpact() > ENQ_ESQUIVE_FENETRE) return false;
     p.etat = "esquivee";
     Enquete.esquiveOuverte = false;
     return true;
@@ -1453,6 +1454,22 @@ const VISITEURS = [
       argent:["Cinq euros ? Dans ma commune, on ne se déplace pas pour moins.",
               "L'argent laisse toujours une trace. C'est bien le problème.",
               "Regardez qui a payé. Vous saurez qui a mangé."],
+    } },
+  { id:"mathilde", nom:"MATHILDE", sprite:"pers_mathilde", cote:-1, taille:0.96,
+    banal:["Je cherche Thibaut. On m'a dit qu'il enquêtait. J'ai des doutes.",
+           "Prof d'histoire. Je passe mes journées à reconstituer des trucs. Ça aide.",
+           "J'ai couru dix kilomètres ce matin. Vous, vous avez couru après une pizza.",
+           "Si vous ne trouvez rien, on fait une fête. Ça marche aussi."],
+    lie:{
+      /* Elle enseigne la méthode : sources, chronologie, recoupement.
+         C'est la seule visiteuse qui parle de la FAÇON d'enquêter. */
+      alcool:["Une soirée, ça se reconstitue comme une bataille : qui était où, et à quelle heure.",
+              "Personne ne se souvient de rien après le deuxième verre. C'est documenté.",
+              "J'ai vu la tournée passer. J'ai arrêté au premier, moi. Enfin, au deuxième.",
+              "Cherchez qui a bu le moins. C'est lui qui se souvient — et c'est lui qui a mangé."],
+      chat:["Ce chat a une tête de coupable, mais un chat n'a pas de mobile. Retenez ça.",
+            "Il m'a regardée droit dans les yeux. Un innocent détourne le regard.",
+            "Suivez les poils. Un animal laisse toujours son passage."],
     } },
   { id:"martin", nom:"MARTIN, AGENT DE SÉCURITÉ", sprite:"pers_martin", cote:1, taille:1.0,
     banal:["Je ne bois pas. Je ne mange pas en service. Je note.",
@@ -1942,7 +1959,7 @@ const Enquete = {
 
     /* Parler à la sœur d'Hortense revient à la prévenir. Elle le dit
        elle-même, pour qu'on comprenne ce qui va suivre. */
-    if (s.id === "soeur" && HortenseApp.provoquer()){
+    if (s.id === "gabi" && HortenseApp.provoquer()){
       this.dialogue([[{ temoin:is }, piocher([
         "Je viens de prévenir ma sœur, au fait.",
         "Ma sœur adore ce genre d'histoires. Je lui envoie un message.",
@@ -1968,7 +1985,7 @@ const Enquete = {
     if (pf){
       if (!s.gene){
         s.gene = true;
-        this.dire(s.id === "soeur" ? "C'est sa belle-sœur. Thibaut ferait mieux."
+        this.dire(s.id === "gabi" ? "C'est sa belle-sœur. Thibaut ferait mieux."
                 : s.id === "teo"   ? "C'est son ami. Thibaut ferait mieux."
                 : "Thibaut poserait de meilleures questions.", 2.4);
       }

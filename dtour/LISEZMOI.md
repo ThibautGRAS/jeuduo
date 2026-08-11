@@ -55,6 +55,14 @@ les met à la lumière de l'appartement.
 quelqu'un, `TAB` changer d'inspecteur, `ESPACE` action contextuelle et
 esquive, `D` le dossier, `A` accuser, `Échap` pause.
 
+**L'esquive de la tarte** (corrigée en v6.5). Le bouton d'action devient
+« ESQUIVER ! » dès qu'une tarte arrive — mais il se grisait dans la même
+passe, parce qu'aucun meuble n'était à portée. On voyait un bouton mort
+au moment précis où il fallait appuyer, et l'esquive est restée
+injouable une version entière. L'invite passe désormais devant : elle ne
+s'éteint jamais. Et la fenêtre est passée de 0,45 s à **0,62 s** — au
+pouce, un tiers de seconde ne suffit pas.
+
 **Fouiller et interroger sont deux touches**, pas une. Quand quelqu'un se
 tient devant un meuble — et c'est le cas de Charles, assis à la table —
 on ne savait pas ce que le bouton allait faire. Chacune s'éteint quand
@@ -95,11 +103,11 @@ change ce qu'on obtient de lui.
 |---|---|
 | **TEOPEDO** — canapé | Ami de Pierre-François et d'Hortense. Prof d'histoire. Un passé qu'il ne raconte pas, et des gestes qui le racontent pour lui. |
 | **CHARLES** — table | L'amant de la colocataire. Personne n'est censé savoir qu'il était là : c'est son seul mobile, et il vaut toutes les pizzas du monde. |
-| **LA SŒUR D'HORTENSE** — couloir | Colocataire, sœur de celle qui lance des tartes, et belle-sœur de Pierre-François. |
+| **GABI** — couloir | Colocataire, sœur de celle qui lance des tartes, et belle-sœur de Pierre-François. |
 | **RISOTO** — au sol | Le chat. Il ne dira rien, mais il laisse des traces. |
 
 Ils sont aussi dans le **niveau 1**, mais filtrés par leur pose : les
-cinq qui tiennent **debout et entiers** font la queue — la sœur,
+six qui tiennent **debout et entiers** font la queue — Gabi, Mathilde,
 Francky, Jojo, Marini et Martin. Teo est assis par terre sur son sprite
 et Charles n'a pas de jambes : ils ne peuvent pas marcher, alors ils
 tiennent la terrasse du D'Tour. Leurs sprites les montrent
@@ -338,7 +346,7 @@ porte : elle dormirait pour toujours.
 pendant le dossier ni pendant l'accusation. Mais **parler à sa sœur,
 c'est la prévenir** : une fois sur deux elle rapplique dans les
 secondes qui suivent, sinon l'attente est franchement raccourcie — et
-insister finit toujours par payer. La sœur le dit elle-même : « Je viens
+insister finit toujours par payer. Gabi le dit elle-même : « Je viens
 de prévenir ma sœur, au fait. » L'attente moyenne tombe de 150 à 37
 secondes. Elle lance sa tarte, on a
 450 ms pour se baisser, et en repartant elle laisse tomber une rondelle
@@ -390,7 +398,9 @@ Deux boutons : **BOIRE** et **JETER**. Quatre issues :
 **Les barmans télégraphient.** Francky prépare **en cinq temps** — il
 choisit sa bouteille, il verse, il shake, il remue, il décore — et c'est
 le signal le plus long du niveau : un cocktail se voit venir de loin.
-Jojo fait plus court, doseur puis shot. Et chez les deux, **le chiffon
+Jojo fait **trois temps** : il dose, il verse dans le shot, il secoue.
+Cette différence de longueur est en soi une information — on reconnaît
+le barman à son rythme avant de regarder ce qu'il tient. Et chez les deux, **le chiffon
 tranquille annonce l'eau**. Elle n'apparaît qu'après vingt-cinq
 secondes, puis environ une fois sur quatre. Un bon joueur lit le geste
 avant que le verre touche le bois.
@@ -458,12 +468,13 @@ l'ambiance finale : finir vite et fort paie mieux que finir de justesse.
 
 ### Le bar est habité
 
-Des habitués entrent et sortent : **la sœur d'Hortense, le maire, Martin**.
-Le maire a sa propre planche : il marche vraiment, se sert, boit, puis
-s'en va son verre à la main. Les autres n'ont qu'une silhouette — le
-jour où leur planche arrive, il suffit de leur donner un préfixe. Ils
-longent le comptoir, et un verre laissé là depuis plus de la moitié de
-sa vie **finit dans leur main**. Ce n'est pas une punition de plus : le verre chipé ne devient pas
+Quatre habitués entrent et sortent : **Gabi, le maire, Martin et
+Mathilde**. Gabi et le maire ont leurs gestes complets — ils marchent,
+se servent, boivent, repartent le verre en main. Martin et Mathilde
+n'ont pas encore de pose de consommation : ils se servent sans changer
+d'expression, et le code se rabat proprement là-dessus. Ils longent le
+comptoir, et un verre laissé là depuis plus de la moitié de sa vie
+**finit dans leur main**. Ce n'est pas une punition de plus : le verre chipé ne devient pas
 une traîne, ils font le ménage à notre place — mais les points partent
 avec eux.
 
@@ -472,8 +483,14 @@ planté là alors qu'un habitué passe devant, c'est de l'eau. Le niveau
 gagne un indice sans une ligne d'interface.
 
 Risoto traverse parfois le bas de l'écran. Et Hortense traverse le bar,
-**s'arrête au milieu, montre sa tarte au citron**, regarde le joueur…
-puis repart sans la lancer. La menace suffit — c'est tout le gag.
+**s'arrête au milieu et montre sa tarte au citron**… puis une fois sur
+deux **elle la lance vraiment**.
+
+Alors le bouton **ESQUIVER** apparaît — dès que la tarte est en l'air,
+pas seulement pendant la fenêtre, pour qu'on ait le temps de se
+préparer — et il n'est jamais éteint. BOIRE esquive aussi, c'est la
+touche déjà sous le pouce, et la touche A au clavier. Réussi : +200 et
+de l'ambiance. Manqué : gel, combo perdu, −10 d'ambiance.
 
 ### Les lumières du comptoir
 
@@ -503,6 +520,10 @@ de l'état — le geste de boire est une seule minuterie dont on lit
 l'avancement (attrape → boit → vide), donc l'image ne peut pas se
 désynchroniser de la mécanique. La pose de titubage sert à la pompette,
 le freinage à l'arrêt d'un sprint.
+
+Pendant **CHOISIS TON CHAMPION**, le pupitre reste rangé : on choisit
+au doigt sur les deux cartes, et les commandes n'apparaissent qu'une
+fois le champion en place — elles n'avaient rien à piloter.
 
 **Au doigt** : les deux flèches dans le coin bas gauche, JETER puis
 BOIRE dans le coin bas droit — BOIRE le plus au bord, c'est la touche

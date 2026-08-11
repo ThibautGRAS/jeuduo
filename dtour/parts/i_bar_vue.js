@@ -45,6 +45,7 @@ const BarVue = {
     if (T.invite) this.dessinerInvite();
     this.dessinerClients();
     this.dessinerHeros();
+    if (T.tarte) this.dessinerTarte();
 
     /* Le coup de feu réchauffe la salle. */
     if (T.coupDeFeu){
@@ -332,6 +333,30 @@ const BarVue = {
         ctx.restore();
       }
     }
+  },
+
+  /* La tarte réutilise les images du niveau 1 : c'est la même tarte,
+     et on veut qu'elle soit reconnue tout de suite. */
+  dessinerTarte(){
+    const T = Tournee, H = Camera.H;
+    const p = T.tarte;
+    const nom = p.etat === "esquivee" ? "tarte_ecrasee" : "tarte" + (Math.floor(p.rot) % 4);
+    const spr = Images.table[nom];
+    if (!spr || !spr.naturalWidth) return;
+    const sh = H * 0.085, sl = sh * spr.naturalWidth / spr.naturalHeight;
+    const x = this.ex(p.x), y = this.ey(p.y);
+    ctx.save();
+    if (p.etat === "vol"){
+      /* halo d'alerte pendant la fenêtre : la seule aide qu'on donne */
+      if (T.esquiveOuverte){
+        ctx.globalCompositeOperation = "lighter";
+        this.halo(x, y, H * 0.10, [255, 210, 120], 0.9);
+        ctx.globalCompositeOperation = "source-over";
+      }
+      ctx.translate(x, y); ctx.rotate(p.rot); ctx.translate(-x, -y);
+    }
+    ctx.drawImage(spr, x - sl / 2, y - sh / 2, sl, sh);
+    ctx.restore();
   },
 
   /* --------- ce qui se passe hors de l'écran ---------

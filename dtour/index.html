@@ -248,6 +248,11 @@ kbd{
   font-size:clamp(13px,2.4vh,17px);
 }
 #c3B{background:linear-gradient(180deg,rgba(55,172,72,.95),rgba(32,120,48,.95))}
+/* ESQUIVER n'existe que quand une tarte vole : sinon il prendrait la
+   place du pouce pour rien. Quand il est là, il clignote. */
+#c3E{background:linear-gradient(180deg,rgba(247,179,43,.96),rgba(198,133,14,.96));color:#1A1305;display:none}
+#c3E.on{display:flex}
+#c3E.alerte{animation:tartePrete .45s ease-in-out infinite}
 #c3J{background:linear-gradient(180deg,rgba(232,87,75,.95),rgba(168,52,42,.95))}
 .cmd3.pressee,.cmd3:active{transform:scale(.93);filter:brightness(1.15)}
 /* Éteint veut dire « rien à portée », pas « bouton absent » : on garde
@@ -531,7 +536,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.4</div>
+  <div id="version">CALLAGHAN v6.5</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -549,6 +554,7 @@ kbd{
       <button class="cmd3 fleche" id="c3D" aria-label="Aller à droite">▶</button>
     </div>
     <div class="cote">
+      <button class="cmd3 acte" id="c3E">ESQUIVER</button>
       <button class="cmd3 acte" id="c3J">JETER</button>
       <button class="cmd3 acte" id="c3B">BOIRE</button>
     </div>
@@ -602,7 +608,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.4";
+const VERSION = "6.5";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -691,7 +697,7 @@ const SPRITES_PNJ = Array.from({ length:NB_PNJ }, (_, i) => "pnj" + String(i + 1
    quartier. Seuls ceux qui sont DEBOUT et ENTIERS y ont leur place —
    Teo est assis par terre sur son sprite et Charles n'a pas de jambes,
    ils ne peuvent pas marcher. Ils tiennent la terrasse. */
-const PERSOS_DEBOUT = ["pers_soeur", "pers_francky", "pers_jojo", "pers_marini", "pers_martin"];
+const PERSOS_DEBOUT = ["pers_gabi", "pers_francky", "pers_jojo", "pers_marini", "pers_martin", "pers_mathilde"];
 const PERSOS_ASSIS = ["pers_teo", "pers_charles"];
 for (const p of PERSOS_DEBOUT) SPRITES_PNJ.push(p);
 const POSES_HEROS = ["idle","attente","marche","regarde","surpris","stress","tendue","victoire"];
@@ -1093,8 +1099,8 @@ const SPRITES_TARTE = ["tarte0","tarte1","tarte2","tarte3","tarte_boom","tarte_e
 /* Les habitants et le chat servent aux niveaux 1 ET 2 : ils vivent
    dans le dossier commun, pas dans celui d'un niveau. */
 const PERSONNAGES_MAISON = [
-  "pers_teo", "pers_charles", "pers_soeur", "pers_francky", "pers_jojo",
-  "pers_marini", "pers_martin", "susp_chat",
+  "pers_teo", "pers_charles", "pers_gabi", "pers_francky", "pers_jojo",
+  "pers_marini", "pers_martin", "pers_mathilde", "susp_chat",
 ];
 
 const IMAGES_NIVEAU2 = [
@@ -1121,11 +1127,15 @@ const IMAGES_NIVEAU3 = [
      niveau, donc le plus lisible — on voit venir un cocktail de loin. */
   "bar_francky_idle", "bar_francky_choisit", "bar_francky_verse", "bar_francky_shake",
   "bar_francky_remue", "bar_francky_decore", "bar_francky_sert", "bar_francky_essuie",
-  "bar_jojo_idle", "bar_jojo_mesure", "bar_jojo_shot", "bar_jojo_verse", "bar_jojo_montre", "bar_jojo_attend", "bar_jojo_essuie",
+  "bar_jojo_idle", "bar_jojo_dose", "bar_jojo_verse", "bar_jojo_shake", "bar_jojo_sert", "bar_jojo_essuie",
   "bar_cocktail", "bar_jager", "bar_eau",
   /* les habitués animés, et le passage d'Hortense */
   "bar_marini_idle", "bar_marini_marche1", "bar_marini_marche2",
   "bar_marini_attrape", "bar_marini_boit", "bar_marini_vide",
+  "bar_gabi_idle", "bar_gabi_marche1", "bar_gabi_marche2",
+  "bar_gabi_attrape", "bar_gabi_boit", "bar_gabi_vide",
+  "bar_martin_idle", "bar_martin_marche1", "bar_martin_marche2",
+  "bar_mathilde_idle", "bar_mathilde_marche1", "bar_mathilde_marche2",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 
@@ -3215,6 +3225,7 @@ const ENQ_FOUILLE = 0.75;
 const ENQ_ACCUSATIONS = 2;         /* on n'a droit qu'à deux noms */
 const ENQ_MAUVAISE = 20;            /* secondes perdues sur une accusation ratée */
 const ENQ_TARTE = 10;               /* secondes perdues sur une tarte reçue */
+const ENQ_ESQUIVE_FENETRE = 0.62;   /* fenêtre d'esquive : 0,45 s était trop court au pouce */
 const ENQ_ESQUIVE_PTS = 100;
 
 /* ---------- les meubles fouillables ----------
@@ -3346,7 +3357,7 @@ const BAVARDAGES = [
    ne connaît pas. Thibaut vouvoie tout le monde : c'est un inconnu, et
    c'est précisément ce qui le rend efficace. */
 const SUJETS = {
-  soeur:[
+  gabi:[
     { qPF:"Tu étais où à {heure} ?", qTH:"Vous étiez où à {heure} ?",
       pf:"Chez moi. Comme tous les soirs. Passe dimanche.",
       ok:"Dans ma chambre. La porte du couloir grince, je l'aurais entendue.",
@@ -3428,7 +3439,7 @@ const RIEN = {
    interchangeables : chacun a un lien avec les deux inspecteurs, et ce
    lien change ce qu'on obtient de lui.
 
-     LA SŒUR D'HORTENSE  colocataire. Sœur de celle qui lance des tartes,
+     GABI  colocataire. Sœur de celle qui lance des tartes,
                          et belle-sœur de Pierre-François. Elle ne dira
                          donc rien d'utile à Pierre-François.
      CHARLES             son amant. Personne n'est censé savoir qu'il
@@ -3452,7 +3463,7 @@ const RIEN = {
 const PLACES_FIXES = {
   teo:     { x:0.292, bas:0.805, taille:0.315 },  /* avachi sur la droite du canapé */
   charles: { x:0.660, bas:0.730, taille:0.260 },  /* attablé, place du fond */
-  soeur:   { x:0.818, bas:0.900, taille:0.575 },  /* debout dans le couloir */
+  gabi:   { x:0.818, bas:0.900, taille:0.575 },  /* debout dans le couloir */
   chat:    { x:0.452, bas:0.925, taille:0.170 },  /* par terre            */
 };
 
@@ -3473,7 +3484,7 @@ const SUSPECTS_BANQUE = [
       "Il connaît l'appartement mieux qu'un visiteur.",
     ] },
 
-  { id:"soeur", nom:"LA SŒUR D'HORTENSE", sprite:"pers_soeur",
+  { id:"gabi", nom:"GABI", sprite:"pers_gabi",
     role:"Colocataire. Belle-sœur de Pierre-François.",
     fond:[
       "Elle a un rouleau de papier toilette dans la poche. Sans explication.",
@@ -3525,7 +3536,7 @@ function composerSuspects(){
    peut donc pas sortir. */
 const SCENARIOS = [
   /* --- la sœur --- */
-  { id:"pour_hortense", tags:["porte"], coupable:"soeur", cachettes:["frigo", "placards"],
+  { id:"pour_hortense", tags:["porte"], coupable:"gabi", cachettes:["frigo", "placards"],
     porteurs:["ticket", "assiette", "serviette"],
     deduc:{
       ticket:[[1, "Une pizza chorizo, livrée à {heure}. La préférée d'Hortense, non ?"],
@@ -3545,10 +3556,10 @@ const SCENARIOS = [
                 [1, "On range une pizza comme ça pour quelqu'un qu'on aime."]],
     contradiction:"Vous l'avez rangée pour votre sœur. Elle repasse ce soir.",
     chute:"Elle la gardait pour Hortense. Personne n'a rien volé, et personne n'a rien dit." ,
-    anecdote:{ suspect:"soeur", qTH:"Pourquoi au frigo, et pas sur le plan ?", qPF:"Pourquoi au frigo, et pas sur le plan ?", ok:"Parce qu'au frigo, ça se garde.", ko:"Elle se garde pour qui ?", pf:"Tu poses des questions de flic." }
+    anecdote:{ suspect:"gabi", qTH:"Pourquoi au frigo, et pas sur le plan ?", qPF:"Pourquoi au frigo, et pas sur le plan ?", ok:"Parce qu'au frigo, ça se garde.", ko:"Elle se garde pour qui ?", pf:"Tu poses des questions de flic." }
   },
 
-  { id:"la_porte", tags:["porte", "chat"], coupable:"soeur", cachettes:["commode", "portant"],
+  { id:"la_porte", tags:["porte", "chat"], coupable:"gabi", cachettes:["commode", "portant"],
     porteurs:["ticket", "boite", "pattes"],
     deduc:{
       ticket:[[0, "Livrée à {heure}. La porte a sonné une fois."],
@@ -3568,10 +3579,10 @@ const SCENARIOS = [
                 [1, "Il a fallu vouloir la cacher."]],
     contradiction:"Vous avez ouvert à quelqu'un. Ce n'était pas le livreur.",
     chute:"Elle a ouvert la porte à quelqu'un qui n'aurait pas dû venir. La pizza a payé le silence." ,
-    anecdote:{ suspect:"soeur", qTH:"Qui avez-vous laissé entrer ?", qPF:"Qui avez-vous laissé entrer ?", ok:"Quelqu'un qui n'aurait pas dû monter.", ko:"Et vous n'avez rien dit.", pf:"Ne me fais pas dire ça." }
+    anecdote:{ suspect:"gabi", qTH:"Qui avez-vous laissé entrer ?", qPF:"Qui avez-vous laissé entrer ?", ok:"Quelqu'un qui n'aurait pas dû monter.", ko:"Et vous n'avez rien dit.", pf:"Ne me fais pas dire ça." }
   },
 
-  { id:"la_dette", tags:["argent", "salon"], coupable:"soeur", cachettes:["poubelle", "evier"],
+  { id:"la_dette", tags:["argent", "salon"], coupable:"gabi", cachettes:["poubelle", "evier"],
     porteurs:["billet", "miettes", "boite"],
     deduc:{
       billet:[[0, "Cinq euros. Posé bien à plat, en évidence."],
@@ -3591,7 +3602,7 @@ const SCENARIOS = [
                 [1, "Elle a même fait le tri."]],
     contradiction:"Vous avez laissé cinq euros. On ne rembourse que ce qu'on a pris.",
     chute:"Nous étions sortis. Elle a tout mangé, laissé des miettes et un billet de cinq euros pour qu'on en rachète une. C'est presque de la politesse." ,
-    anecdote:{ suspect:"soeur", qTH:"Ces cinq euros, ils sortent d'où ?", qPF:"Ces cinq euros, ils sortent d'où ?", ok:"De mon porte-monnaie. D'où veux-tu qu'ils sortent.", ko:"On ne rembourse que ce qu'on a pris.", pf:"Tu comptes vraiment l'argent, maintenant ?" }
+    anecdote:{ suspect:"gabi", qTH:"Ces cinq euros, ils sortent d'où ?", qPF:"Ces cinq euros, ils sortent d'où ?", ok:"De mon porte-monnaie. D'où veux-tu qu'ils sortent.", ko:"On ne rembourse que ce qu'on a pris.", pf:"Tu comptes vraiment l'argent, maintenant ?" }
   },
 
   /* --- Charles --- */
@@ -3831,7 +3842,7 @@ const SCENARIOS = [
       ok:"Personne. C'est bien le problème de cet appartement.", ko:"Moi. Et je range bien.",
       pf:"Tu ranges toujours des choses au mauvais endroit." } },
 
-  { id:"le_regime", tags:["argent", "salon"], coupable:"soeur", cachettes:["portant", "lit", "commode"],
+  { id:"le_regime", tags:["argent", "salon"], coupable:"gabi", cachettes:["portant", "lit", "commode"],
     porteurs:["billet", "serviette", "chorizo"],
     deduc:{
       billet:[[0, "Cinq euros dans un pot de farine. On paie sa conscience."],
@@ -3851,7 +3862,7 @@ const SCENARIOS = [
                 [1, "Elle l'a cachée d'elle-même. Et elle a perdu."]],
     contradiction:"Vous l'avez cachée pour ne pas la manger. Ça n'a pas suffi.",
     chute:"Elle commençait un régime le lendemain. Elle a caché la pizza pour tenir. Elle a tenu quarante minutes.",
-    anecdote:{ suspect:"soeur", qTH:"Vous cachez souvent de la nourriture ?", qPF:"Tu caches encore des trucs à toi-même ?",
+    anecdote:{ suspect:"gabi", qTH:"Vous cachez souvent de la nourriture ?", qPF:"Tu caches encore des trucs à toi-même ?",
       ok:"Jamais. Je n'ai rien à me cacher.", ko:"Une fois. Ça n'a pas marché.",
       pf:"On avait dit qu'on ne parlait plus de ça." } },
 
@@ -3903,7 +3914,7 @@ const SCENARIOS = [
       ok:"Une. J'ai vu passer le livreur une fois.", ko:"Une. Enfin, une à la fois.",
       pf:"Vous hésitez sur un chiffre simple." } },
 
-  { id:"bonne_nuit", tags:["dodo", "salon", "argent"], coupable:"soeur", cachettes:["frigo", "placards"],
+  { id:"bonne_nuit", tags:["dodo", "salon", "argent"], coupable:"gabi", cachettes:["frigo", "placards"],
     porteurs:["ticket", "assiette", "billet"],
     deduc:{
       ticket:[[0, "Livrée à {heure}. Juste après la tournée de Francky."],
@@ -3923,7 +3934,7 @@ const SCENARIOS = [
                 [1, "Elle a eu tout le temps du monde."]],
     contradiction:"Vous n'avez pas touché au cocktail de Francky. Vous êtes la seule.",
     chute:"Francky avait servi sa tournée « bonne nuit les petits ». Tout le monde s'est effondré. Elle, non — elle ne boit pas. Elle a mangé tranquillement et rangé la boîte.",
-    anecdote:{ suspect:"soeur", qTH:"Vous avez bu quelque chose ce soir ?", qPF:"Tu as bu, toi ?",
+    anecdote:{ suspect:"gabi", qTH:"Vous avez bu quelque chose ce soir ?", qPF:"Tu as bu, toi ?",
       ok:"Un verre d'eau. Je conduis demain.", ko:"Rien du tout. Je suis la seule à m'en souvenir.",
       pf:"Tu sais bien que je ne bois pas non plus. Enfin, presque." } },
 
@@ -3977,7 +3988,7 @@ const SCENARIOS = [
       ok:"Un filet d'eau. On a épongé.", ko:"Une vraie fuite. J'ai tout sorti de ce placard.",
       pf:"Tu bricoles toujours quand il ne faut pas." } },
 
-  { id:"le_placard_haut", tags:["hauteur", "porte"], coupable:"soeur",
+  { id:"le_placard_haut", tags:["hauteur", "porte"], coupable:"gabi",
     cachettes:["placards"],
     porteurs:["ticket", "menu", "miettes"],
     deduc:{
@@ -3998,7 +4009,7 @@ const SCENARIOS = [
                 [1, "Il a donc fallu quelqu'un de grand. Ou de l'aide."]],
     contradiction:"Vous n'atteignez pas ce placard. Quelqu'un l'a fait pour vous.",
     chute:"Elle a demandé un coup de main à la femme de Jojo, qui attendait en bas et qui atteint tout sans monter sur rien. Deux personnes pour cacher une pizza : c'est une organisation.",
-    anecdote:{ suspect:"soeur", qTH:"Qui vous a aidée à ranger, en haut ?", qPF:"Tu as fait ça toute seule ?",
+    anecdote:{ suspect:"gabi", qTH:"Qui vous a aidée à ranger, en haut ?", qPF:"Tu as fait ça toute seule ?",
       ok:"Personne. Je ne range jamais en haut.", ko:"On m'a tendu la boîte. Je n'ai fait que la pousser.",
       pf:"Tu ne montes jamais sur un tabouret, je le sais." } },
 
@@ -4052,7 +4063,7 @@ const SCENARIOS = [
       ok:"Je regarde, je ne touche pas.", ko:"Un joint. Deux minutes. Et j'avais faim.",
       pf:"Tu vas finir par inonder l'immeuble." } },
 
-  { id:"la_bassine", temoinCle:"soeur", tags:["plomberie", "porte"], coupable:null,
+  { id:"la_bassine", temoinCle:"gabi", tags:["plomberie", "porte"], coupable:null,
     cachettes:["evier", "poubelle"],
     porteurs:["ticket", "boite", "serviette"],
     deduc:{
@@ -4073,7 +4084,7 @@ const SCENARIOS = [
                 [1, "Personne ne l'a volée. Elle a fini par terre, sous une fuite."]],
     contradiction:"Vous avez pris la boîte pour la fuite. Vous n'avez pas regardé dedans.",
     chute:"Ça gouttait. La première chose plate à portée de main était la boîte. Elle a servi de bassine pendant vingt minutes, avec la pizza encore dedans.",
-    anecdote:{ suspect:"soeur", qTH:"Qu'avez-vous mis sous la fuite ?", qPF:"Tu as mis quoi sous la fuite ?",
+    anecdote:{ suspect:"gabi", qTH:"Qu'avez-vous mis sous la fuite ?", qPF:"Tu as mis quoi sous la fuite ?",
       ok:"Une casserole. Comme tout le monde.", ko:"Ce qui traînait. Je n'ai pas regardé quoi.",
       pf:"Tu ne regardes jamais ce que tu prends." } },
 
@@ -4153,7 +4164,7 @@ const SCENARIOS = [
       pf:"Tu ne comptes jamais, et c'est bien le problème." } },
 
   /* --- le maire --- */
-  { id:"inauguration", temoinCle:"soeur", tags:["officiel", "porte"], coupable:null,
+  { id:"inauguration", temoinCle:"gabi", tags:["officiel", "porte"], coupable:null,
     cachettes:["commode", "manteaux"],
     porteurs:["ticket", "menu", "serviette"],
     deduc:{
@@ -4174,7 +4185,7 @@ const SCENARIOS = [
                 [1, "Personne ne l'a volée. Elle a été classée."]],
     contradiction:"On n'inaugure pas un dîner. Vous avez pourtant signé quelque chose.",
     chute:"Marini est monté serrer des mains, a fait signer un registre à tout le monde, a posé son parapheur sur la boîte et l'a oubliée là. Le document, lui, est parfaitement en règle.",
-    anecdote:{ suspect:"soeur", qTH:"Qui vous a fait signer quelque chose ?", qPF:"Tu as signé un truc, toi ?",
+    anecdote:{ suspect:"gabi", qTH:"Qui vous a fait signer quelque chose ?", qPF:"Tu as signé un truc, toi ?",
       ok:"Le maire. Il fait signer tout le monde.", ko:"J'ai signé sans lire. Comme d'habitude.",
       pf:"Tu signes vraiment n'importe quoi." } },
 
@@ -4229,7 +4240,7 @@ const SCENARIOS = [
       pf:"Vous aviez à faire quoi, exactement ?" } },
 
   /* --- l'agent de sécurité --- */
-  { id:"le_registre", tags:["securite", "porte"], coupable:"soeur",
+  { id:"le_registre", tags:["securite", "porte"], coupable:"gabi",
     cachettes:["commode", "portant", "lit"],
     porteurs:["ticket", "menu", "assiette"],
     deduc:{
@@ -4250,7 +4261,7 @@ const SCENARIOS = [
                 [1, "Le registre ne se trompe pas. Les gens, si."]],
     contradiction:"Vous n'êtes jamais descendue. Le registre est formel.",
     chute:"Martin note tout, en bas, depuis neuf ans de comptabilité et trois ans de sécurité. Le registre disait qui était encore là. Il ne restait qu'une personne à qui poser la question.",
-    anecdote:{ suspect:"soeur", qTH:"Vous êtes descendue à un moment ?", qPF:"Tu es sortie, toi ?",
+    anecdote:{ suspect:"gabi", qTH:"Vous êtes descendue à un moment ?", qPF:"Tu es sortie, toi ?",
       ok:"Deux fois. Le gardien vous le dira.", ko:"Pas une fois. Pourquoi je serais descendue ?",
       pf:"Tu n'aimes pas les escaliers, je sais." } },
 
@@ -4304,7 +4315,7 @@ const SCENARIOS = [
       ok:"Une. Peut-être une et demie.", ko:"Je n'ai pas compté. Ça se compte, une pizza ?",
       pf:"Ça se compte très bien, figure-toi." } },
 
-  { id:"la_tarte", temoinCle:"soeur", tags:["porte", "chat"], coupable:null, cachettes:["placards", "evier"],
+  { id:"la_tarte", temoinCle:"gabi", tags:["porte", "chat"], coupable:null, cachettes:["placards", "evier"],
     porteurs:["ticket", "chorizo", "assiette"],
     deduc:{
       ticket:[[0, "Livrée à {heure}. Et pourtant, une odeur de citron flotte encore."],
@@ -4324,7 +4335,7 @@ const SCENARIOS = [
                 [1, "Il y avait une tarte au citron ici. Plus maintenant."]],
     contradiction:"Personne n'a volé. Quelqu'un a troqué.",
     chute:"Hortense est passée. Elle a laissé une tarte au citron et emporté l'idée. La pizza, elle, n'a jamais bougé." ,
-    anecdote:{ suspect:"soeur", qTH:"Qu'est-ce qui a disparu du placard ?", qPF:"Qu'est-ce qui a disparu du placard ?", ok:"Une tarte au citron. Ma sœur adore ça.", ko:"Elle a donc échangé.", pf:"Elle passe, elle prend, elle repart." }
+    anecdote:{ suspect:"gabi", qTH:"Qu'est-ce qui a disparu du placard ?", qPF:"Qu'est-ce qui a disparu du placard ?", ok:"Une tarte au citron. Ma sœur adore ça.", ko:"Elle a donc échangé.", pf:"Elle passe, elle prend, elle repart." }
   },
 ];
 
@@ -4564,7 +4575,7 @@ const HortenseApp = {
     p.x = melange(p.x0, fin, a);
     p.y = 0.52 - Math.sin(Math.PI * Math.min(1, a)) * 0.10 + a * 0.05;
     p.rot += dt * 9;
-    Enquete.esquiveOuverte = p.etat === "vol" && this.resteAvantImpact() <= 0.45;
+    Enquete.esquiveOuverte = p.etat === "vol" && this.resteAvantImpact() <= ENQ_ESQUIVE_FENETRE;
     if (p.etat === "vol" && a >= 1){
       p.etat = "fini";
       Enquete.recevoirTarte(this.cible);
@@ -4575,7 +4586,7 @@ const HortenseApp = {
   esquiver(){
     const p = this.tarte;
     if (!p || p.etat !== "vol") return false;
-    if (this.resteAvantImpact() > 0.45) return false;
+    if (this.resteAvantImpact() > ENQ_ESQUIVE_FENETRE) return false;
     p.etat = "esquivee";
     Enquete.esquiveOuverte = false;
     return true;
@@ -4630,6 +4641,22 @@ const VISITEURS = [
       argent:["Cinq euros ? Dans ma commune, on ne se déplace pas pour moins.",
               "L'argent laisse toujours une trace. C'est bien le problème.",
               "Regardez qui a payé. Vous saurez qui a mangé."],
+    } },
+  { id:"mathilde", nom:"MATHILDE", sprite:"pers_mathilde", cote:-1, taille:0.96,
+    banal:["Je cherche Thibaut. On m'a dit qu'il enquêtait. J'ai des doutes.",
+           "Prof d'histoire. Je passe mes journées à reconstituer des trucs. Ça aide.",
+           "J'ai couru dix kilomètres ce matin. Vous, vous avez couru après une pizza.",
+           "Si vous ne trouvez rien, on fait une fête. Ça marche aussi."],
+    lie:{
+      /* Elle enseigne la méthode : sources, chronologie, recoupement.
+         C'est la seule visiteuse qui parle de la FAÇON d'enquêter. */
+      alcool:["Une soirée, ça se reconstitue comme une bataille : qui était où, et à quelle heure.",
+              "Personne ne se souvient de rien après le deuxième verre. C'est documenté.",
+              "J'ai vu la tournée passer. J'ai arrêté au premier, moi. Enfin, au deuxième.",
+              "Cherchez qui a bu le moins. C'est lui qui se souvient — et c'est lui qui a mangé."],
+      chat:["Ce chat a une tête de coupable, mais un chat n'a pas de mobile. Retenez ça.",
+            "Il m'a regardée droit dans les yeux. Un innocent détourne le regard.",
+            "Suivez les poils. Un animal laisse toujours son passage."],
     } },
   { id:"martin", nom:"MARTIN, AGENT DE SÉCURITÉ", sprite:"pers_martin", cote:1, taille:1.0,
     banal:["Je ne bois pas. Je ne mange pas en service. Je note.",
@@ -5119,7 +5146,7 @@ const Enquete = {
 
     /* Parler à la sœur d'Hortense revient à la prévenir. Elle le dit
        elle-même, pour qu'on comprenne ce qui va suivre. */
-    if (s.id === "soeur" && HortenseApp.provoquer()){
+    if (s.id === "gabi" && HortenseApp.provoquer()){
       this.dialogue([[{ temoin:is }, piocher([
         "Je viens de prévenir ma sœur, au fait.",
         "Ma sœur adore ce genre d'histoires. Je lui envoie un message.",
@@ -5145,7 +5172,7 @@ const Enquete = {
     if (pf){
       if (!s.gene){
         s.gene = true;
-        this.dire(s.id === "soeur" ? "C'est sa belle-sœur. Thibaut ferait mieux."
+        this.dire(s.id === "gabi" ? "C'est sa belle-sœur. Thibaut ferait mieux."
                 : s.id === "teo"   ? "C'est son ami. Thibaut ferait mieux."
                 : "Thibaut poserait de meilleures questions.", 2.4);
       }
@@ -6141,14 +6168,23 @@ function poseBar(champion, pose){ return champion.prefixe + "_" + pose; }
    traîne trop longtemps sous leur nez finit dans leur main. Ils ne
    touchent JAMAIS un verre d'eau : personne ne vole de l'eau, et ça
    devient un indice — un verre que personne ne chipe est suspect. */
+/* Les habitués. `prefixe` déclare une planche, `gestes` dit si cette
+   planche sait attraper et boire. Sans planche, la silhouette suffit :
+   poseClient() se rabat proprement, et le jour où une planche arrive il
+   n'y a qu'une ligne à changer. */
 const BAR_CLIENTS = [
-  { id:"soeur",  sprite:"pers_soeur",  nom:"LA SŒUR",  taille:0.86 },
-  /* Le maire a sa planche : il marche, il se sert, il boit. Les autres
-     n'ont qu'une silhouette — poseClient() s'en accommode, et le jour
-     où leur planche arrive il suffit de leur donner un `prefixe`. */
-  { id:"marini", sprite:"pers_marini", nom:"LE MAIRE", taille:0.84, prefixe:"bar_marini" },
-  { id:"martin", sprite:"pers_martin", nom:"MARTIN",   taille:0.90 },
+  { id:"gabi", sprite:"pers_gabi", nom:"GABI", taille:0.88,
+    prefixe:"bar_gabi", gestes:true },
+  { id:"marini", sprite:"pers_marini", nom:"LE MAIRE", taille:0.84,
+    prefixe:"bar_marini", gestes:true },
+  { id:"martin", sprite:"pers_martin", nom:"MARTIN", taille:0.92,
+    prefixe:"bar_martin", gestes:false },
+  { id:"mathilde", sprite:"pers_mathilde", nom:"MATHILDE", taille:0.88,
+    prefixe:"bar_mathilde", gestes:false },
 ];
+const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
+const BAR_ESQUIVE_PTS = 200;
+const BAR_TARTE_CHANCE = 0.55;      /* une visite sur deux finit par un lancer */
 const BAR_CLIENT_SEUIL = 0.55;      /* un verre entamé à plus de 55 % de sa vie est chipable */
 
 /* Les boissons. `bonne` dit s'il faut la boire ; l'eau se jette. */
@@ -6171,8 +6207,11 @@ const BARMANS = [
     prepare:["bar_francky_choisit", "bar_francky_verse", "bar_francky_shake",
              "bar_francky_remue", "bar_francky_decore"] },
   { id:"jojo", nom:"JOJO", x:0.66, sert:"jager",
-    poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_montre" },
-    prepare:["bar_jojo_mesure", "bar_jojo_shot", "bar_jojo_verse"] },
+    poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_sert" },
+    /* trois temps seulement : un Jägerbomb se monte plus vite qu'un
+       cocktail, et cette différence de LONGUEUR est en soi une
+       information — on reconnaît le barman à son rythme. */
+    prepare:["bar_jojo_dose", "bar_jojo_verse", "bar_jojo_shake"] },
 ];
 
 const ETAT_VERRE = { PREPARE:"PREPARE", POSE:"POSE", PRIS:"PRIS", TRAINE:"TRAINE" };
@@ -6186,6 +6225,7 @@ const Tournee = {
   gele:0, secousse:0, invite:null, prochainClin:0,
   bus:[], bourre:0, deborde:false,
   clients:[], prochainClient:0, flash:0, boitTotal:1, freinT:0, dureeMarche:0,
+  tarte:null, esquiveOuverte:false, tarteEsquivee:0, tarteRecue:0,
   restant:BAR_DUREE,
 
   /* --------- montage --------- */
@@ -6218,6 +6258,8 @@ const Tournee = {
     this.bus = []; this.bourre = 0; this.deborde = false;
     this.clients = []; this.prochainClient = hasard(8, 14);
     this.flash = 0; this.boitTotal = 1; this.freinT = 0; this.dureeMarche = 0;
+    this.tarte = null; this.esquiveOuverte = false;
+    this.tarteEsquivee = 0; this.tarteRecue = 0;
     this.restant = BAR_DUREE;
     this.ambiance = BAR_AMBIANCE_DEBUT;
     this.stats = { cocktails:0, jagers:0, eauxJetees:0, eauxBues:0, sacrileges:0, rates:0,
@@ -6356,7 +6398,12 @@ const Tournee = {
     return -1;
   },
 
-  boire(){ return this.decider(true); },
+  boire(){
+    /* Une tarte en vol passe devant tout : le geste utile n'est plus de
+       boire. Même règle qu'au niveau 2, et le bouton dédié reste là. */
+    if (this.esquiveOuverte) return this.esquiver();
+    return this.decider(true);
+  },
   jeter(){ return this.decider(false); },
 
   decider(boit){
@@ -6464,6 +6511,67 @@ const Tournee = {
     return true;
   },
 
+  /* --------- la tarte d'Hortense, au bar aussi ---------
+     Elle traverse, s'arrête, montre la tarte — et une fois sur deux
+     elle la lance vraiment. La fenêtre d'esquive est la même qu'au
+     niveau 2 ; le bouton ESQUIVER, lui, s'allume dès qu'une tarte
+     existe, pas seulement pendant la fenêtre : on doit pouvoir se
+     préparer. */
+  lancerTarte(){
+    const iv = this.invite;
+    if (!iv || iv.qui !== "hortense" || this.tarte) return false;
+    this.tarte = {
+      x:iv.x, y:0.50, x0:iv.x, but:this.x, t:0, rot:0, etat:"vol",
+      duree:Math.max(0.85, Math.abs(iv.x - this.x) * 4.2),
+    };
+    this.esquiveOuverte = false;
+    Sons.tarteLancee();
+    this.dire("ATTENTION !", 1.0);
+    return true;
+  },
+  resteAvantTarte(){
+    const p = this.tarte;
+    if (!p) return 1e9;
+    return Math.max(0, (1 - Math.min(1, p.t / p.duree)) * p.duree);
+  },
+  majTarte(dt){
+    const p = this.tarte;
+    if (!p) return;
+    if (p.etat === "fini"){ this.tarte = null; this.esquiveOuverte = false; return; }
+    p.t += dt;
+    const a = Math.min(1.3, p.t / p.duree);
+    const fin = p.but + Math.sign(p.but - p.x0) * 0.04;
+    p.x = melange(p.x0, fin, a);
+    p.y = 0.50 - Math.sin(Math.PI * Math.min(1, a)) * 0.09 + a * 0.06;
+    p.rot += dt * 9;
+    this.esquiveOuverte = p.etat === "vol" && this.resteAvantTarte() <= BAR_ESQUIVE_FENETRE;
+    if (p.etat === "vol" && a >= 1){ p.etat = "fini"; this.recevoirTarte(); }
+    else if (p.etat === "esquivee" && a >= 1.25) p.etat = "fini";
+  },
+  esquiver(){
+    const p = this.tarte;
+    if (!p || p.etat !== "vol" || this.resteAvantTarte() > BAR_ESQUIVE_FENETRE) return false;
+    p.etat = "esquivee";
+    this.esquiveOuverte = false;
+    this.tarteEsquivee++;
+    Score.points += BAR_ESQUIVE_PTS;
+    this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + 5);
+    this.flash = 0.22;
+    this.dire("PAS AUJOURD'HUI !  +" + BAR_ESQUIVE_PTS, 1.4);
+    Sons.tarteEsquive();
+    return true;
+  },
+  recevoirTarte(){
+    this.tarteRecue++;
+    this.combo = 0;
+    this.gele = 0.9;
+    this.secousse = 0.7;
+    this.marche = 0;
+    this.ambiance = Math.max(0, this.ambiance - 10);
+    this.dire("EN PLEINE POIRE !", 1.8);
+    Sons.tarteImpact();
+  },
+
   /* --------- coup de feu et tournée finale --------- */
   avancerFinale(){
     this.finaleReste--;
@@ -6500,7 +6608,7 @@ const Tournee = {
     if (this.enChoix || !this.actif) return;
     this.temps += dt;
     this.restant = Math.max(0, BAR_DUREE - this.temps);
-    if (this.gele > 0){ this.gele -= dt; return; }
+    if (this.gele > 0){ this.gele -= dt; this.majTarte(dt); return; }
     if (this.flash > 0) this.flash = Math.max(0, this.flash - dt * 3);
     if (this.freinT > 0) this.freinT = Math.max(0, this.freinT - dt);
     if (this.marche !== 0 && this.boitT <= 0) this.dureeMarche += dt;
@@ -6588,7 +6696,7 @@ const Tournee = {
     if (this.prochainClin <= 0 && !this.invite){
       this.prochainClin = hasard(24, 44);
       this.invite = { qui:Math.random() < 0.72 ? "chat" : "hortense",
-                      x:-0.06, dir:1, t:0, pause:0, foulee:0 };
+                      x:-0.06, dir:1, t:0, pause:0, foulee:0, vue:false, jete:false };
     }
     if (this.invite){
       const iv = this.invite;
@@ -6598,12 +6706,20 @@ const Tournee = {
       } else {
         /* Hortense traverse, s'arrête au milieu, montre la tarte, et
            repart sans la lancer. C'est la menace qui fait le gag. */
-        if (!iv.pause && iv.x >= 0.46){ iv.pause = 1.6; }
-        if (iv.pause > 0){ iv.pause -= dt; iv.foulee = iv.foulee || 0; }
-        else { iv.x += iv.dir * dt * 0.085; iv.foulee = (iv.foulee || 0) + dt * 7; }
+        if (!iv.vue && iv.x >= 0.46){ iv.vue = true; iv.pause = 1.6; }
+        if (iv.pause > 0){
+          iv.pause -= dt; iv.foulee = iv.foulee || 0;
+          /* à la fin de la pause, elle lance — ou pas */
+          if (iv.pause <= 0 && !iv.jete){
+            iv.jete = true;
+            if (Math.random() < BAR_TARTE_CHANCE) this.lancerTarte();
+          }
+        } else { iv.x += iv.dir * dt * 0.085; iv.foulee = (iv.foulee || 0) + dt * 7; }
       }
-      if (iv.x > 1.08) this.invite = null;
+      /* elle ne disparaît pas avant que sa tarte ait fini son vol */
+      if (iv.x > 1.08 && !this.tarte) this.invite = null;
     }
+    this.majTarte(dt);
 
     Camera.suivreBar(this.x, dt);
   },
@@ -6677,9 +6793,11 @@ const Tournee = {
   poseClient(cl){
     if (!cl.ref.prefixe) return cl.ref.sprite;
     const p = cl.ref.prefixe;
-    if (cl.etat === "prend") return cl.t < 0.30 ? p + "_attrape" : p + "_boit";
+    /* Martin et Mathilde n'ont pas de poses de consommation : ils gardent
+       leur air immobile en se servant, ce qui passe très bien. */
+    if (cl.etat === "prend") return cl.ref.gestes ? (cl.t < 0.30 ? p + "_attrape" : p + "_boit") : p + "_idle";
     if (cl.etat === "attend") return p + "_idle";
-    if (cl.etat === "repart" && cl.verreEnMain) return p + "_vide";
+    if (cl.etat === "repart" && cl.verreEnMain && cl.ref.gestes) return p + "_vide";
     return (Math.floor(cl.foulee * 0.9) % 2) ? p + "_marche2" : p + "_marche1";
   },
 
@@ -6742,6 +6860,7 @@ const BarVue = {
     if (T.invite) this.dessinerInvite();
     this.dessinerClients();
     this.dessinerHeros();
+    if (T.tarte) this.dessinerTarte();
 
     /* Le coup de feu réchauffe la salle. */
     if (T.coupDeFeu){
@@ -7031,6 +7150,30 @@ const BarVue = {
     }
   },
 
+  /* La tarte réutilise les images du niveau 1 : c'est la même tarte,
+     et on veut qu'elle soit reconnue tout de suite. */
+  dessinerTarte(){
+    const T = Tournee, H = Camera.H;
+    const p = T.tarte;
+    const nom = p.etat === "esquivee" ? "tarte_ecrasee" : "tarte" + (Math.floor(p.rot) % 4);
+    const spr = Images.table[nom];
+    if (!spr || !spr.naturalWidth) return;
+    const sh = H * 0.085, sl = sh * spr.naturalWidth / spr.naturalHeight;
+    const x = this.ex(p.x), y = this.ey(p.y);
+    ctx.save();
+    if (p.etat === "vol"){
+      /* halo d'alerte pendant la fenêtre : la seule aide qu'on donne */
+      if (T.esquiveOuverte){
+        ctx.globalCompositeOperation = "lighter";
+        this.halo(x, y, H * 0.10, [255, 210, 120], 0.9);
+        ctx.globalCompositeOperation = "source-over";
+      }
+      ctx.translate(x, y); ctx.rotate(p.rot); ctx.translate(-x, -y);
+    }
+    ctx.drawImage(spr, x - sl / 2, y - sh / 2, sl, sh);
+    ctx.restore();
+  },
+
   /* --------- ce qui se passe hors de l'écran ---------
      Le comptoir fait trois écrans de large : un barman qui prépare à
      l'autre bout ne se voit pas, et tout le niveau repose sur le fait
@@ -7169,7 +7312,7 @@ const BarVue = {
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","c3E","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -7416,7 +7559,10 @@ const Interface = {
     if (E.hud) E.hud.classList.toggle("on", Jeu.niveau === 1);
     if (E.pupitre) E.pupitre.classList.toggle("on", Jeu.niveau === 1);
     if (E.pupitre2) E.pupitre2.classList.toggle("on", Jeu.niveau === 2);
-    if (E.pupitre3) E.pupitre3.classList.toggle("on", Jeu.niveau === 3);
+    /* Le pupitre du niveau 3 n'apparaît qu'une fois le champion choisi :
+       pendant la sélection, les flèches et BOIRE/JETER n'ont rien à
+       piloter et encombrent l'écran de choix. */
+    if (E.pupitre3) E.pupitre3.classList.toggle("on", Jeu.niveau === 3 && !Tournee.enChoix);
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
     if (E.pleinBtn) E.pleinBtn.classList.add("on");
     if (E.pauseBtn) E.pauseBtn.classList.add("on");
@@ -7447,8 +7593,13 @@ const Interface = {
     if (E.c2A) E.c2A.classList.toggle("esquive", !!esq);
     if (E.c2DosN) E.c2DosN.textContent = String(Dossier.compte());
     /* Les deux commandes disent chacune si elles ont quelque chose à
-       faire : plus de doute sur ce qui va se passer. */
-    if (E.c2A) E.c2A.classList.toggle("eteint", Enquete.zoneProche() < 0);
+       faire : plus de doute sur ce qui va se passer.
+       MAIS l'esquive passe devant : le bouton affichait « ESQUIVER ! »
+       et se grisait dans la même passe, parce qu'aucun meuble n'était à
+       portée. On voyait un bouton mort au moment précis où il fallait
+       appuyer — l'esquive du niveau 2 est restée injouable une version
+       entière. Une invite à agir ne s'éteint jamais. */
+    if (E.c2A) E.c2A.classList.toggle("eteint", !esq && Enquete.zoneProche() < 0);
     if (E.c2Int) E.c2Int.classList.toggle("eteint", Enquete.suspectProche() < 0);
     /* Le bouton CHANGER porte le visage de CELUI QU'ON VA PRENDRE : on
        sait d'un coup d'œil qui on a en main et qui on récupère. */
@@ -7493,9 +7644,23 @@ const Interface = {
      restent cliquables — un appui à vide répond « PAS DE VERRE ICI ». */
   majActionBar(){
     if (Jeu.niveau !== 3) return;
-    const pret = !Tournee.enChoix && Tournee.actif && Tournee.verreAPortee() >= 0 && Tournee.boitT <= 0;
-    if (E.c3B) E.c3B.classList.toggle("eteint", !pret && !Tournee.enChoix);
+    /* L'écran de choix se joue au doigt sur le canevas : on range le
+       pupitre tant qu'il n'y a pas de champion. */
+    if (E.pupitre3) E.pupitre3.classList.toggle("on", !Tournee.enChoix);
+    if (Tournee.enChoix) return;
+    const pret = Tournee.actif && Tournee.verreAPortee() >= 0 && Tournee.boitT <= 0;
+    if (E.c3B) E.c3B.classList.toggle("eteint", !pret);
     if (E.c3J) E.c3J.classList.toggle("eteint", !pret);
+    /* ESQUIVER apparaît dès qu'une tarte est en l'air — pas seulement
+       pendant la fenêtre — et il n'est JAMAIS éteint : c'est une invite
+       à agir, et une invite éteinte ne se presse pas (l'esquive du
+       niveau 2 en est morte pendant une version). */
+    const tarte = !!Tournee.tarte && Tournee.tarte.etat === "vol";
+    if (E.c3E){
+      E.c3E.classList.toggle("on", tarte);
+      E.c3E.classList.toggle("alerte", !!Tournee.esquiveOuverte);
+      E.c3E.classList.remove("eteint");
+    }
   },
 
   afficherFinBar(){
@@ -7740,6 +7905,8 @@ const Entrees = {
         if (Tournee.enChoix) Tournee.lancer(); else Tournee.boire();
       } else if (t === "j"){
         e.preventDefault(); Sons.reveiller(); Tournee.jeter();
+      } else if (t === "a"){
+        e.preventDefault(); Sons.reveiller(); Tournee.esquiver();
       } else if (Debug.autorise && Debug.ouvert){
         /* les quatre commandes de service du mode debug */
         if (t === "1") Debug.servirBar("francky", "cocktail");
@@ -7850,7 +8017,10 @@ const Entrees = {
       ev.preventDefault(); Sons.reveiller();
       if (!Tournee.enChoix) Tournee.jeter();
     });
-    for (const b of [E.c3G, E.c3D, E.c3B, E.c3J]) if (b) b.addEventListener("click", ev => ev.preventDefault());
+    if (E.c3E) E.c3E.addEventListener("pointerdown", ev => {
+      ev.preventDefault(); Sons.reveiller(); Tournee.esquiver();
+    });
+    for (const b of [E.c3G, E.c3D, E.c3B, E.c3J, E.c3E]) if (b) b.addEventListener("click", ev => ev.preventDefault());
     if (E.c2A) E.c2A.addEventListener("pointerdown", ev => {
       ev.preventDefault(); Sons.reveiller();
       if (Intro.actif) Intro.passer(); else Enquete.action();
@@ -8070,8 +8240,8 @@ globalThis.DTOUR = {
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
-  POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL,
-  ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, SUJETS, Progres, Intro,
+  POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE,
+  ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, ENQ_ESQUIVE_FENETRE, SUJETS, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, HORTENSE_ECART, TARTE_DUREE,
   __dessiner:() => dessiner(),

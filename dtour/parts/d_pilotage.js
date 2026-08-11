@@ -3,7 +3,7 @@
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","niveaux","marque","vign1","vign2","pause","pauseNiv","pauseBtn","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","pupitre3","c3G","c3D","c3B","c3J","c3E","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -250,7 +250,10 @@ const Interface = {
     if (E.hud) E.hud.classList.toggle("on", Jeu.niveau === 1);
     if (E.pupitre) E.pupitre.classList.toggle("on", Jeu.niveau === 1);
     if (E.pupitre2) E.pupitre2.classList.toggle("on", Jeu.niveau === 2);
-    if (E.pupitre3) E.pupitre3.classList.toggle("on", Jeu.niveau === 3);
+    /* Le pupitre du niveau 3 n'apparaît qu'une fois le champion choisi :
+       pendant la sélection, les flèches et BOIRE/JETER n'ont rien à
+       piloter et encombrent l'écran de choix. */
+    if (E.pupitre3) E.pupitre3.classList.toggle("on", Jeu.niveau === 3 && !Tournee.enChoix);
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
     if (E.pleinBtn) E.pleinBtn.classList.add("on");
     if (E.pauseBtn) E.pauseBtn.classList.add("on");
@@ -281,8 +284,13 @@ const Interface = {
     if (E.c2A) E.c2A.classList.toggle("esquive", !!esq);
     if (E.c2DosN) E.c2DosN.textContent = String(Dossier.compte());
     /* Les deux commandes disent chacune si elles ont quelque chose à
-       faire : plus de doute sur ce qui va se passer. */
-    if (E.c2A) E.c2A.classList.toggle("eteint", Enquete.zoneProche() < 0);
+       faire : plus de doute sur ce qui va se passer.
+       MAIS l'esquive passe devant : le bouton affichait « ESQUIVER ! »
+       et se grisait dans la même passe, parce qu'aucun meuble n'était à
+       portée. On voyait un bouton mort au moment précis où il fallait
+       appuyer — l'esquive du niveau 2 est restée injouable une version
+       entière. Une invite à agir ne s'éteint jamais. */
+    if (E.c2A) E.c2A.classList.toggle("eteint", !esq && Enquete.zoneProche() < 0);
     if (E.c2Int) E.c2Int.classList.toggle("eteint", Enquete.suspectProche() < 0);
     /* Le bouton CHANGER porte le visage de CELUI QU'ON VA PRENDRE : on
        sait d'un coup d'œil qui on a en main et qui on récupère. */
@@ -327,9 +335,23 @@ const Interface = {
      restent cliquables — un appui à vide répond « PAS DE VERRE ICI ». */
   majActionBar(){
     if (Jeu.niveau !== 3) return;
-    const pret = !Tournee.enChoix && Tournee.actif && Tournee.verreAPortee() >= 0 && Tournee.boitT <= 0;
-    if (E.c3B) E.c3B.classList.toggle("eteint", !pret && !Tournee.enChoix);
+    /* L'écran de choix se joue au doigt sur le canevas : on range le
+       pupitre tant qu'il n'y a pas de champion. */
+    if (E.pupitre3) E.pupitre3.classList.toggle("on", !Tournee.enChoix);
+    if (Tournee.enChoix) return;
+    const pret = Tournee.actif && Tournee.verreAPortee() >= 0 && Tournee.boitT <= 0;
+    if (E.c3B) E.c3B.classList.toggle("eteint", !pret);
     if (E.c3J) E.c3J.classList.toggle("eteint", !pret);
+    /* ESQUIVER apparaît dès qu'une tarte est en l'air — pas seulement
+       pendant la fenêtre — et il n'est JAMAIS éteint : c'est une invite
+       à agir, et une invite éteinte ne se presse pas (l'esquive du
+       niveau 2 en est morte pendant une version). */
+    const tarte = !!Tournee.tarte && Tournee.tarte.etat === "vol";
+    if (E.c3E){
+      E.c3E.classList.toggle("on", tarte);
+      E.c3E.classList.toggle("alerte", !!Tournee.esquiveOuverte);
+      E.c3E.classList.remove("eteint");
+    }
   },
 
   afficherFinBar(){
@@ -574,6 +596,8 @@ const Entrees = {
         if (Tournee.enChoix) Tournee.lancer(); else Tournee.boire();
       } else if (t === "j"){
         e.preventDefault(); Sons.reveiller(); Tournee.jeter();
+      } else if (t === "a"){
+        e.preventDefault(); Sons.reveiller(); Tournee.esquiver();
       } else if (Debug.autorise && Debug.ouvert){
         /* les quatre commandes de service du mode debug */
         if (t === "1") Debug.servirBar("francky", "cocktail");
@@ -684,7 +708,10 @@ const Entrees = {
       ev.preventDefault(); Sons.reveiller();
       if (!Tournee.enChoix) Tournee.jeter();
     });
-    for (const b of [E.c3G, E.c3D, E.c3B, E.c3J]) if (b) b.addEventListener("click", ev => ev.preventDefault());
+    if (E.c3E) E.c3E.addEventListener("pointerdown", ev => {
+      ev.preventDefault(); Sons.reveiller(); Tournee.esquiver();
+    });
+    for (const b of [E.c3G, E.c3D, E.c3B, E.c3J, E.c3E]) if (b) b.addEventListener("click", ev => ev.preventDefault());
     if (E.c2A) E.c2A.addEventListener("pointerdown", ev => {
       ev.preventDefault(); Sons.reveiller();
       if (Intro.actif) Intro.passer(); else Enquete.action();
@@ -904,8 +931,8 @@ globalThis.DTOUR = {
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
-  POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL,
-  ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, SUJETS, Progres, Intro,
+  POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE,
+  ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, ENQ_ESQUIVE_FENETRE, SUJETS, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, HORTENSE_ECART, TARTE_DUREE,
   __dessiner:() => dessiner(),

@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.4";
+const VERSION = "6.5";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -107,7 +107,7 @@ const SPRITES_PNJ = Array.from({ length:NB_PNJ }, (_, i) => "pnj" + String(i + 1
    quartier. Seuls ceux qui sont DEBOUT et ENTIERS y ont leur place —
    Teo est assis par terre sur son sprite et Charles n'a pas de jambes,
    ils ne peuvent pas marcher. Ils tiennent la terrasse. */
-const PERSOS_DEBOUT = ["pers_soeur", "pers_francky", "pers_jojo", "pers_marini", "pers_martin"];
+const PERSOS_DEBOUT = ["pers_gabi", "pers_francky", "pers_jojo", "pers_marini", "pers_martin", "pers_mathilde"];
 const PERSOS_ASSIS = ["pers_teo", "pers_charles"];
 for (const p of PERSOS_DEBOUT) SPRITES_PNJ.push(p);
 const POSES_HEROS = ["idle","attente","marche","regarde","surpris","stress","tendue","victoire"];
@@ -509,8 +509,8 @@ const SPRITES_TARTE = ["tarte0","tarte1","tarte2","tarte3","tarte_boom","tarte_e
 /* Les habitants et le chat servent aux niveaux 1 ET 2 : ils vivent
    dans le dossier commun, pas dans celui d'un niveau. */
 const PERSONNAGES_MAISON = [
-  "pers_teo", "pers_charles", "pers_soeur", "pers_francky", "pers_jojo",
-  "pers_marini", "pers_martin", "susp_chat",
+  "pers_teo", "pers_charles", "pers_gabi", "pers_francky", "pers_jojo",
+  "pers_marini", "pers_martin", "pers_mathilde", "susp_chat",
 ];
 
 const IMAGES_NIVEAU2 = [
@@ -537,11 +537,15 @@ const IMAGES_NIVEAU3 = [
      niveau, donc le plus lisible — on voit venir un cocktail de loin. */
   "bar_francky_idle", "bar_francky_choisit", "bar_francky_verse", "bar_francky_shake",
   "bar_francky_remue", "bar_francky_decore", "bar_francky_sert", "bar_francky_essuie",
-  "bar_jojo_idle", "bar_jojo_mesure", "bar_jojo_shot", "bar_jojo_verse", "bar_jojo_montre", "bar_jojo_attend", "bar_jojo_essuie",
+  "bar_jojo_idle", "bar_jojo_dose", "bar_jojo_verse", "bar_jojo_shake", "bar_jojo_sert", "bar_jojo_essuie",
   "bar_cocktail", "bar_jager", "bar_eau",
   /* les habitués animés, et le passage d'Hortense */
   "bar_marini_idle", "bar_marini_marche1", "bar_marini_marche2",
   "bar_marini_attrape", "bar_marini_boit", "bar_marini_vide",
+  "bar_gabi_idle", "bar_gabi_marche1", "bar_gabi_marche2",
+  "bar_gabi_attrape", "bar_gabi_boit", "bar_gabi_vide",
+  "bar_martin_idle", "bar_martin_marche1", "bar_martin_marche2",
+  "bar_mathilde_idle", "bar_mathilde_marche1", "bar_mathilde_marche2",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 

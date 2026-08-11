@@ -71,6 +71,8 @@ queue au niveau 1) — `n1` doit les EXCLURE, ils vivent dans commun/.
 | Postes des barmans | 0,34 et 0,66 | plus écartés, on n'en voyait aucun |
 | Télégraphe Francky | 5 poses ; Jojo 3 | plus c'est long, plus ça se lit |
 | Habitués | chipent un verre après 55 % de sa vie, jamais l'eau | ménage gratuit, points perdus |
+| Tarte au bar | 55 % des passages d'Hortense, fenêtre 0,62 s, +200 / −10 | même fenêtre qu'au niveau 2 |
+| Télégraphe Jojo | 3 poses contre 5 à Francky | la longueur est une information |
 | Verre raté | il TRAÎNE (grisé) au lieu de disparaître | jeter = +10, boire = « ÉVENTÉ… » |
 | Débordement | 5 traînes → ambiance −1.2/s | le ménage fait partie du service |
 | Pompette | 3 verres bus en < 9 s → 5 s à vitesse ×0.55 | l'eau bue dessoûle instantanément |
@@ -88,6 +90,35 @@ jouaient hors champ. Deux corrections : les postes rapprochés à 0,34 et
 ce qui se prépare ailleurs. Un test refuse un écartement supérieur à
 0,34. La leçon générale : une mécanique d'anticipation se vérifie sur
 une image rendue, pas sur le schéma.
+
+### Un garde-fou par position finit par manger du bon
+La boîte « VUE ORIGINALE » des planches s'exclut par sa position
+(x > 1230). Sur la planche de Jojo, la sixième pose de la rangée 1
+commence à x = 1290 : parfaitement légitime, et écartée sans bruit. Le
+compte a sauvé la mise (« exportés 18/19 »). Un filtre par position ne
+vaut que pour la rangée où la boîte se trouve — et tout export se
+termine par un comptage attendu/obtenu.
+
+### Un fragment du voisin suit dans la découpe
+Deux sprites emportaient un bout de comptoir de la pose d'à côté. On ne
+garde alors que la **composante connexe principale**. À réserver aux
+sprites concernés : ailleurs, les petites composantes sont les gouttes
+et les éclaboussures, et il faut les garder.
+
+### demarrer() sans argument garde le niveau courant
+Un test ajouté juste avant la section « Rythme d'Hortense » laissait le
+jeu au niveau 2 ; `Jeu.demarrer()` sans argument conserve `this.niveau`,
+donc le rythme d'Hortense se mesurait dans un appartement — zéro
+apparition. Tout test qui change de niveau le rend avant de sortir
+(`Jeu.retourTitre()`).
+
+### Renommer un personnage : le nom oui, la parenté non
+« La sœur d'Hortense » devient Gabi : l'identifiant, le sprite et le nom
+affiché changent, mais « ma sœur », « belle-sœur de Pierre-François »
+sont des LIENS et restent. Le renommage se fait par motifs distincts
+(`"soeur"`, `soeur:`, `.soeur`, `pers_soeur`, le nom affiché), chacun
+compté, et on relit ce qui reste pour vérifier que ce n'est que de la
+parenté.
 
 ### Les planches annotées piègent le découpage
 Les nouvelles planches portent des cadres blancs et des légendes
@@ -135,6 +166,18 @@ groupes, `space-between`, `pointer-events:none` sur le conteneur et
 `auto` sur les groupes : le milieu redevient du décor cliquable. Un
 style hérité d'un autre niveau se revérifie sur l'écran du niveau, pas
 sur le papier.
+
+### Une invite à agir ne s'éteint jamais — deuxième fois
+Le bouton d'action du niveau 2 devient « ESQUIVER ! » quand une tarte
+arrive. Trois lignes plus bas, la même fonction l'éteignait parce
+qu'aucun meuble n'était à portée : le joueur voyait un bouton grisé au
+moment exact où il fallait appuyer, et l'esquive de l'appartement est
+restée injouable **une version entière** sans qu'aucun test ne bronche —
+la mécanique, elle, fonctionnait parfaitement dans le bac. C'est la même
+faute que sur le pupitre du niveau 3, à un mois d'écart. Règle : quand
+l'interface CHANGE pour réclamer une action, cet état passe devant tous
+les autres. Et un test doit lire l'état RÉEL du bouton dans le DOM, pas
+seulement l'état du jeu — d'où `domBac` dans la suite.
 
 ### Éteint ne veut pas dire invisible
 `opacity:.40; filter:grayscale(.5)` sur une pastille translucide, sur

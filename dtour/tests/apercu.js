@@ -469,6 +469,28 @@ function jouerJusqua(D, condition, limite){
     dessinerVia(D, canevas);
     ecrire(canevas, "17_bar_figurants_844");
   }
+
+  /* 18. niveau 3 : la tarte en vol, fenêtre d'esquive ouverte, la salle pleine */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(3);
+    D.Tournee.lancer();
+    D.Tournee.x = 0.56; D.Tournee.temps = 62; D.Tournee.combo = 9;
+    D.Tournee.ambiance = 88; D.Score.points = 5240;
+    D.Tournee.verres.push({ type:"cocktail", x:0.50, etat:D.ETAT_VERRE.POSE, t:1.0, vie:7.5, barman:"francky" });
+    D.Tournee.clients = [
+      { ref:D.BAR_CLIENTS[0], x:0.47, dir:1, etat:"attend", t:1, cible:0.47, verre:null, foulee:0, verreEnMain:false },
+      { ref:D.BAR_CLIENTS[3], x:0.66, dir:-1, etat:"entre", t:1, cible:0.66, verre:null, foulee:1.4, verreEnMain:false },
+    ];
+    D.Tournee.invite = { qui:"hortense", x:0.44, dir:1, t:2, pause:0, foulee:0, vue:true, jete:true };
+    D.Tournee.lancerTarte();
+    /* on avance jusqu'à la fenêtre d'esquive */
+    for (let i = 0; i < 60 * 6 && !D.Tournee.esquiveOuverte; i++) D.Jeu.pas(1 / 60);
+    for (let i = 0; i < 20; i++) D.Camera.suivreBar(D.Tournee.x, 1 / 30);
+    dessinerVia(D, canevas);
+    ecrire(canevas, "18_bar_tarte_844");
+  }
 })();
 
 /* dessiner() n'est pas exporté : on le rejoint par la boucle du jeu,

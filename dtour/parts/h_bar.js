@@ -55,14 +55,23 @@ function poseBar(champion, pose){ return champion.prefixe + "_" + pose; }
    traîne trop longtemps sous leur nez finit dans leur main. Ils ne
    touchent JAMAIS un verre d'eau : personne ne vole de l'eau, et ça
    devient un indice — un verre que personne ne chipe est suspect. */
+/* Les habitués. `prefixe` déclare une planche, `gestes` dit si cette
+   planche sait attraper et boire. Sans planche, la silhouette suffit :
+   poseClient() se rabat proprement, et le jour où une planche arrive il
+   n'y a qu'une ligne à changer. */
 const BAR_CLIENTS = [
-  { id:"soeur",  sprite:"pers_soeur",  nom:"LA SŒUR",  taille:0.86 },
-  /* Le maire a sa planche : il marche, il se sert, il boit. Les autres
-     n'ont qu'une silhouette — poseClient() s'en accommode, et le jour
-     où leur planche arrive il suffit de leur donner un `prefixe`. */
-  { id:"marini", sprite:"pers_marini", nom:"LE MAIRE", taille:0.84, prefixe:"bar_marini" },
-  { id:"martin", sprite:"pers_martin", nom:"MARTIN",   taille:0.90 },
+  { id:"gabi", sprite:"pers_gabi", nom:"GABI", taille:0.88,
+    prefixe:"bar_gabi", gestes:true },
+  { id:"marini", sprite:"pers_marini", nom:"LE MAIRE", taille:0.84,
+    prefixe:"bar_marini", gestes:true },
+  { id:"martin", sprite:"pers_martin", nom:"MARTIN", taille:0.92,
+    prefixe:"bar_martin", gestes:false },
+  { id:"mathilde", sprite:"pers_mathilde", nom:"MATHILDE", taille:0.88,
+    prefixe:"bar_mathilde", gestes:false },
 ];
+const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
+const BAR_ESQUIVE_PTS = 200;
+const BAR_TARTE_CHANCE = 0.55;      /* une visite sur deux finit par un lancer */
 const BAR_CLIENT_SEUIL = 0.55;      /* un verre entamé à plus de 55 % de sa vie est chipable */
 
 /* Les boissons. `bonne` dit s'il faut la boire ; l'eau se jette. */
@@ -85,8 +94,11 @@ const BARMANS = [
     prepare:["bar_francky_choisit", "bar_francky_verse", "bar_francky_shake",
              "bar_francky_remue", "bar_francky_decore"] },
   { id:"jojo", nom:"JOJO", x:0.66, sert:"jager",
-    poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_montre" },
-    prepare:["bar_jojo_mesure", "bar_jojo_shot", "bar_jojo_verse"] },
+    poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_sert" },
+    /* trois temps seulement : un Jägerbomb se monte plus vite qu'un
+       cocktail, et cette différence de LONGUEUR est en soi une
+       information — on reconnaît le barman à son rythme. */
+    prepare:["bar_jojo_dose", "bar_jojo_verse", "bar_jojo_shake"] },
 ];
 
 const ETAT_VERRE = { PREPARE:"PREPARE", POSE:"POSE", PRIS:"PRIS", TRAINE:"TRAINE" };
@@ -100,6 +112,7 @@ const Tournee = {
   gele:0, secousse:0, invite:null, prochainClin:0,
   bus:[], bourre:0, deborde:false,
   clients:[], prochainClient:0, flash:0, boitTotal:1, freinT:0, dureeMarche:0,
+  tarte:null, esquiveOuverte:false, tarteEsquivee:0, tarteRecue:0,
   restant:BAR_DUREE,
 
   /* --------- montage --------- */
@@ -132,6 +145,8 @@ const Tournee = {
     this.bus = []; this.bourre = 0; this.deborde = false;
     this.clients = []; this.prochainClient = hasard(8, 14);
     this.flash = 0; this.boitTotal = 1; this.freinT = 0; this.dureeMarche = 0;
+    this.tarte = null; this.esquiveOuverte = false;
+    this.tarteEsquivee = 0; this.tarteRecue = 0;
     this.restant = BAR_DUREE;
     this.ambiance = BAR_AMBIANCE_DEBUT;
     this.stats = { cocktails:0, jagers:0, eauxJetees:0, eauxBues:0, sacrileges:0, rates:0,
@@ -270,7 +285,12 @@ const Tournee = {
     return -1;
   },
 
-  boire(){ return this.decider(true); },
+  boire(){
+    /* Une tarte en vol passe devant tout : le geste utile n'est plus de
+       boire. Même règle qu'au niveau 2, et le bouton dédié reste là. */
+    if (this.esquiveOuverte) return this.esquiver();
+    return this.decider(true);
+  },
   jeter(){ return this.decider(false); },
 
   decider(boit){
@@ -378,6 +398,67 @@ const Tournee = {
     return true;
   },
 
+  /* --------- la tarte d'Hortense, au bar aussi ---------
+     Elle traverse, s'arrête, montre la tarte — et une fois sur deux
+     elle la lance vraiment. La fenêtre d'esquive est la même qu'au
+     niveau 2 ; le bouton ESQUIVER, lui, s'allume dès qu'une tarte
+     existe, pas seulement pendant la fenêtre : on doit pouvoir se
+     préparer. */
+  lancerTarte(){
+    const iv = this.invite;
+    if (!iv || iv.qui !== "hortense" || this.tarte) return false;
+    this.tarte = {
+      x:iv.x, y:0.50, x0:iv.x, but:this.x, t:0, rot:0, etat:"vol",
+      duree:Math.max(0.85, Math.abs(iv.x - this.x) * 4.2),
+    };
+    this.esquiveOuverte = false;
+    Sons.tarteLancee();
+    this.dire("ATTENTION !", 1.0);
+    return true;
+  },
+  resteAvantTarte(){
+    const p = this.tarte;
+    if (!p) return 1e9;
+    return Math.max(0, (1 - Math.min(1, p.t / p.duree)) * p.duree);
+  },
+  majTarte(dt){
+    const p = this.tarte;
+    if (!p) return;
+    if (p.etat === "fini"){ this.tarte = null; this.esquiveOuverte = false; return; }
+    p.t += dt;
+    const a = Math.min(1.3, p.t / p.duree);
+    const fin = p.but + Math.sign(p.but - p.x0) * 0.04;
+    p.x = melange(p.x0, fin, a);
+    p.y = 0.50 - Math.sin(Math.PI * Math.min(1, a)) * 0.09 + a * 0.06;
+    p.rot += dt * 9;
+    this.esquiveOuverte = p.etat === "vol" && this.resteAvantTarte() <= BAR_ESQUIVE_FENETRE;
+    if (p.etat === "vol" && a >= 1){ p.etat = "fini"; this.recevoirTarte(); }
+    else if (p.etat === "esquivee" && a >= 1.25) p.etat = "fini";
+  },
+  esquiver(){
+    const p = this.tarte;
+    if (!p || p.etat !== "vol" || this.resteAvantTarte() > BAR_ESQUIVE_FENETRE) return false;
+    p.etat = "esquivee";
+    this.esquiveOuverte = false;
+    this.tarteEsquivee++;
+    Score.points += BAR_ESQUIVE_PTS;
+    this.ambiance = Math.min(BAR_AMBIANCE_BUT, this.ambiance + 5);
+    this.flash = 0.22;
+    this.dire("PAS AUJOURD'HUI !  +" + BAR_ESQUIVE_PTS, 1.4);
+    Sons.tarteEsquive();
+    return true;
+  },
+  recevoirTarte(){
+    this.tarteRecue++;
+    this.combo = 0;
+    this.gele = 0.9;
+    this.secousse = 0.7;
+    this.marche = 0;
+    this.ambiance = Math.max(0, this.ambiance - 10);
+    this.dire("EN PLEINE POIRE !", 1.8);
+    Sons.tarteImpact();
+  },
+
   /* --------- coup de feu et tournée finale --------- */
   avancerFinale(){
     this.finaleReste--;
@@ -414,7 +495,7 @@ const Tournee = {
     if (this.enChoix || !this.actif) return;
     this.temps += dt;
     this.restant = Math.max(0, BAR_DUREE - this.temps);
-    if (this.gele > 0){ this.gele -= dt; return; }
+    if (this.gele > 0){ this.gele -= dt; this.majTarte(dt); return; }
     if (this.flash > 0) this.flash = Math.max(0, this.flash - dt * 3);
     if (this.freinT > 0) this.freinT = Math.max(0, this.freinT - dt);
     if (this.marche !== 0 && this.boitT <= 0) this.dureeMarche += dt;
@@ -502,7 +583,7 @@ const Tournee = {
     if (this.prochainClin <= 0 && !this.invite){
       this.prochainClin = hasard(24, 44);
       this.invite = { qui:Math.random() < 0.72 ? "chat" : "hortense",
-                      x:-0.06, dir:1, t:0, pause:0, foulee:0 };
+                      x:-0.06, dir:1, t:0, pause:0, foulee:0, vue:false, jete:false };
     }
     if (this.invite){
       const iv = this.invite;
@@ -512,12 +593,20 @@ const Tournee = {
       } else {
         /* Hortense traverse, s'arrête au milieu, montre la tarte, et
            repart sans la lancer. C'est la menace qui fait le gag. */
-        if (!iv.pause && iv.x >= 0.46){ iv.pause = 1.6; }
-        if (iv.pause > 0){ iv.pause -= dt; iv.foulee = iv.foulee || 0; }
-        else { iv.x += iv.dir * dt * 0.085; iv.foulee = (iv.foulee || 0) + dt * 7; }
+        if (!iv.vue && iv.x >= 0.46){ iv.vue = true; iv.pause = 1.6; }
+        if (iv.pause > 0){
+          iv.pause -= dt; iv.foulee = iv.foulee || 0;
+          /* à la fin de la pause, elle lance — ou pas */
+          if (iv.pause <= 0 && !iv.jete){
+            iv.jete = true;
+            if (Math.random() < BAR_TARTE_CHANCE) this.lancerTarte();
+          }
+        } else { iv.x += iv.dir * dt * 0.085; iv.foulee = (iv.foulee || 0) + dt * 7; }
       }
-      if (iv.x > 1.08) this.invite = null;
+      /* elle ne disparaît pas avant que sa tarte ait fini son vol */
+      if (iv.x > 1.08 && !this.tarte) this.invite = null;
     }
+    this.majTarte(dt);
 
     Camera.suivreBar(this.x, dt);
   },
@@ -591,9 +680,11 @@ const Tournee = {
   poseClient(cl){
     if (!cl.ref.prefixe) return cl.ref.sprite;
     const p = cl.ref.prefixe;
-    if (cl.etat === "prend") return cl.t < 0.30 ? p + "_attrape" : p + "_boit";
+    /* Martin et Mathilde n'ont pas de poses de consommation : ils gardent
+       leur air immobile en se servant, ce qui passe très bien. */
+    if (cl.etat === "prend") return cl.ref.gestes ? (cl.t < 0.30 ? p + "_attrape" : p + "_boit") : p + "_idle";
     if (cl.etat === "attend") return p + "_idle";
-    if (cl.etat === "repart" && cl.verreEnMain) return p + "_vide";
+    if (cl.etat === "repart" && cl.verreEnMain && cl.ref.gestes) return p + "_vide";
     return (Math.floor(cl.foulee * 0.9) % 2) ? p + "_marche2" : p + "_marche1";
   },
 
