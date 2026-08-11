@@ -1023,9 +1023,10 @@ if (D){
     "un habitant dans la file redemanderait un bras peint");
   verifier("et la file est assez fournie pour s'en passer",
     D.SPRITES_PNJ.length >= 24, D.SPRITES_PNJ.length + " clients");
-  verifier("les deux assis tiennent la terrasse", D.TERRASSE.length === 2);
-  verifier("et ce sont bien Charles et Teo",
-    D.TERRASSE.map(t2 => t2.sprite).sort().join(",") === "pers_charles,pers_teo");
+  /* La terrasse a été vidée en v6.17 : Teo et Charles appartiennent à
+     l'appartement du niveau 2 et n'avaient aucun rôle au niveau 1. */
+  verifier("la terrasse du niveau 1 ne montre plus les habitants",
+    D.TERRASSE.length === 0, D.TERRASSE.map(t => t.sprite).join(", "));
   verifier("ils ne marchent pas dans la file",
     !D.TERRASSE.some(t2 => D.SPRITES_PNJ.indexOf(t2.sprite) >= 0),
     "leurs sprites les montrent assis : ils ne peuvent pas marcher");

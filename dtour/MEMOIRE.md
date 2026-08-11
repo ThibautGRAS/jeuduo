@@ -108,6 +108,16 @@ CHAUSSURES au milieu de l'image et la ligne de sol en bas ; le rendu
 dessine alors bêtement en `x - largeur/2`, `y - hauteur`, et tout tombe
 juste.
 
+### La teinte ne suffit pas : le fond est aussi CLAIR
+Suite de la leçon précédente, et elle m'a coûté un personnage fantôme en
+jeu. Le test « min(r-g, b-g) élevé » reconnaît le magenta — mais aussi
+un **tissu violacé sombre** : le manteau patchwork d'un client passait
+pour du fond à demi effacé, et il apparaissait translucide, à 20 %
+d'opacité. Le fond, lui, est TOUJOURS clair sur ses deux canaux : on
+exige `r > 140 et b > 140` avant de rendre transparent. Mesure de
+contrôle après découpe : l'opacité moyenne du corps doit être ≥ 0,99 —
+c'est ce chiffre qui a désigné le coupable parmi cent quarante sprites.
+
 ### Le magenta se reconnaît à sa TEINTE, pas à sa clarté
 Une planche est arrivée avec deux petites ombres portées sous les pieds.
 Le test de fond « rouge et bleu hauts, vert bas » ne les voyait pas :

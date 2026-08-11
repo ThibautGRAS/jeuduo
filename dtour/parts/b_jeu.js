@@ -172,10 +172,12 @@ const File = {
    Ils sont posés là où les tables sont peintes sur le décor ; quand la
    file s'allonge, elle finit par passer devant eux, ce qui est
    exactement ce que fait une file. */
-const TERRASSE = [
-  { sprite:"pers_teo",     x:498, taille:0.56, recul:0.20 },
-  { sprite:"pers_charles", x:592, taille:0.50, recul:0.24 },
-];
+/* La terrasse est vide depuis la v6.17 : Teo et Charles y étaient
+   affichés au niveau 1 alors qu'ils appartiennent à l'appartement du
+   niveau 2. Leurs sprites sont assis, sans jambes pour Charles, et ils
+   traînaient au bord de la file sans y jouer aucun rôle. Le tableau
+   reste : c'est le point d'entrée si on veut y remettre du monde. */
+const TERRASSE = [];
 
 /* ================= héros ================= */
 /* L'ordre du tableau est celui des COMMANDES : 0 = pastille verte à
