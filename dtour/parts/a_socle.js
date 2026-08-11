@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.22";
+const VERSION = "6.23";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -561,8 +561,12 @@ const IMAGES_NIVEAU2 = [
    s'enchaînent. Deux planches séparées — une par personnage — parce que
    les mettre côte à côte avait déjà fait glisser un Thibaut en polo
    vert dans la rangée de PF, deux fois. */
-const POSES_BAR = ["idle", "marche1", "marche2", "course", "frein",
-                   "attrape", "boit", "vide", "jette", "titube"];
+/* Quatorze poses depuis la v6.23 : la marche a quatre temps au lieu de
+   deux, la course en a deux, et la descente se joue en quatre gestes —
+   il attrape, il tient, il boit, il repose le verre vide. */
+const POSES_BAR = ["idle", "marche1", "marche2", "marche3", "marche4",
+                   "course1", "course2", "frein",
+                   "attrape", "tient", "boit", "vide", "jette", "titube"];
 const PREFIXES_BAR = ["bar_th", "bar_pf"];
 
 const IMAGES_NIVEAU3 = [

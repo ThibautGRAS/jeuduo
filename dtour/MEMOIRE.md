@@ -108,6 +108,17 @@ CHAUSSURES au milieu de l'image et la ligne de sol en bas ; le rendu
 dessine alors bêtement en `x - largeur/2`, `y - hauteur`, et tout tombe
 juste.
 
+### Le fond se reconnaît à sa CONNEXITÉ, pas à sa couleur
+Troisième version du détourage, et la bonne. La teinte seule gardait les
+ombres portées ; ajouter « et clair » a rendu un manteau violet fantôme.
+Les deux critères sont chromatiques et un vêtement peut toujours les
+imiter. Le bon test est topologique : **le fond et ses ombres touchent le
+bord de l'image, un vêtement violet est enclos dans le personnage**. On
+étiquette les composantes de teinte magenta, on garde celles qui
+atteignent un bord, et le reste est du personnage quelle que soit sa
+couleur. C'est la méthode des toutes premières planches sur damier —
+j'en étais parti, j'y reviens, et cette fois pour de bon.
+
 ### La teinte ne suffit pas : le fond est aussi CLAIR
 Suite de la leçon précédente, et elle m'a coûté un personnage fantôme en
 jeu. Le test « min(r-g, b-g) élevé » reconnaît le magenta — mais aussi

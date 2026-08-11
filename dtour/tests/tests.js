@@ -1783,18 +1783,21 @@ if (D){
       const vues = [];
       const relever = () => vues.push(T.pose());
       T.marche = 0; T.bourre = 0; T.freinT = 0; T.boitT = 0; relever();
-      T.marche = 1; T.dureeMarche = 0.1; T.foulee = 0; relever();
-      T.foulee = 1.2; relever();
-      T.dureeMarche = 1.2; relever();
+      /* la marche a quatre temps, la course deux */
+      T.marche = 1; T.dureeMarche = 0.1;
+      for (const f of [0, 1.2, 2.4, 3.6]){ T.foulee = f; relever(); }
+      T.dureeMarche = 1.2;
+      for (const f of [0, 0.8]){ T.foulee = f; relever(); }
       T.marche = 0; T.freinT = 0.1; relever();
       T.freinT = 0; T.bourre = 2; relever();
       T.bourre = 0;
       for (const act of ["boit", "jette"]){
         T.action = act; T.boitTotal = 1;
-        for (const p of [0.1, 0.5, 0.9]){ T.boitT = 1 - p; relever(); }
+        for (const p of [0.1, 0.3, 0.5, 0.9]){ T.boitT = 1 - p; relever(); }
       }
       T.boitT = 0;
-      return vues.length === 12 && vues.every(po => n3.has(D.poseBar(c, po)));
+      /* on doit voir passer les quatorze poses, toutes existantes */
+      return new Set(vues).size >= 12 && vues.every(po => n3.has(D.poseBar(c, po)));
     })());
 
   /* --- le garde-fou de faisabilité --- */

@@ -691,7 +691,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.22</div>
+  <div id="version">CALLAGHAN v6.23</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -763,7 +763,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.22";
+const VERSION = "6.23";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1306,8 +1306,12 @@ const IMAGES_NIVEAU2 = [
    s'enchaînent. Deux planches séparées — une par personnage — parce que
    les mettre côte à côte avait déjà fait glisser un Thibaut en polo
    vert dans la rangée de PF, deux fois. */
-const POSES_BAR = ["idle", "marche1", "marche2", "course", "frein",
-                   "attrape", "boit", "vide", "jette", "titube"];
+/* Quatorze poses depuis la v6.23 : la marche a quatre temps au lieu de
+   deux, la course en a deux, et la descente se joue en quatre gestes —
+   il attrape, il tient, il boit, il repose le verre vide. */
+const POSES_BAR = ["idle", "marche1", "marche2", "marche3", "marche4",
+                   "course1", "course2", "frein",
+                   "attrape", "tient", "boit", "vide", "jette", "titube"];
 const PREFIXES_BAR = ["bar_th", "bar_pf"];
 
 const IMAGES_NIVEAU3 = [
@@ -6622,13 +6626,16 @@ const Tournee = {
     if (this.boitT > 0 && this.boitTotal > 0){
       const p = 1 - this.boitT / this.boitTotal;
       if (this.action === "jette") return p < 0.35 ? "attrape" : "jette";
-      return p < 0.25 ? "attrape" : p < 0.75 ? "boit" : "vide";
+      /* quatre temps : il attrape, il regarde ce qu'il tient, il boit,
+         il reste avec le verre vide. C'est ce dernier temps qui donne
+         son poids à la descente de Thibaut. */
+      return p < 0.18 ? "attrape" : p < 0.36 ? "tient" : p < 0.78 ? "boit" : "vide";
     }
     if (this.bourre > 0) return "titube";
     if (this.freinT > 0) return "frein";
     if (this.marche !== 0){
-      if (this.dureeMarche > 0.6) return "course";
-      return (Math.floor(this.foulee * 0.9) % 2) ? "marche2" : "marche1";
+      if (this.dureeMarche > 0.6) return (Math.floor(this.foulee * 1.4) % 2) ? "course2" : "course1";
+      return "marche" + (1 + Math.floor(this.foulee * 0.9) % 4);
     }
     return "idle";
   },
@@ -7262,7 +7269,9 @@ const BarVue = {
       ctx.lineWidth = choisi ? 4 : 2;
       ctx.strokeStyle = choisi ? Heros[c.heros].couleur : "rgba(255,255,255,.25)";
       ctx.stroke();
-      const spr = Images.table[poseBar(c, "idle")];
+      /* Le champion choisi lève son verre, l'autre attend : l'écran de
+         choix montre enfin ce qui les distingue. */
+      const spr = Images.table[poseBar(c, choisi ? "tient" : "idle")];
       if (spr && spr.naturalWidth){
         const sh = cadreH * 0.52, sl = sh * spr.naturalWidth / spr.naturalHeight;
         ctx.drawImage(spr, cx - sl / 2, cy - cadreH * 0.44, sl, sh);

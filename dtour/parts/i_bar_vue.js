@@ -112,7 +112,9 @@ const BarVue = {
       ctx.lineWidth = choisi ? 4 : 2;
       ctx.strokeStyle = choisi ? Heros[c.heros].couleur : "rgba(255,255,255,.25)";
       ctx.stroke();
-      const spr = Images.table[poseBar(c, "idle")];
+      /* Le champion choisi lève son verre, l'autre attend : l'écran de
+         choix montre enfin ce qui les distingue. */
+      const spr = Images.table[poseBar(c, choisi ? "tient" : "idle")];
       if (spr && spr.naturalWidth){
         const sh = cadreH * 0.52, sl = sh * spr.naturalWidth / spr.naturalHeight;
         ctx.drawImage(spr, cx - sl / 2, cy - cadreH * 0.44, sl, sh);

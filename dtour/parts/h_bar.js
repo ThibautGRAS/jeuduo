@@ -201,13 +201,16 @@ const Tournee = {
     if (this.boitT > 0 && this.boitTotal > 0){
       const p = 1 - this.boitT / this.boitTotal;
       if (this.action === "jette") return p < 0.35 ? "attrape" : "jette";
-      return p < 0.25 ? "attrape" : p < 0.75 ? "boit" : "vide";
+      /* quatre temps : il attrape, il regarde ce qu'il tient, il boit,
+         il reste avec le verre vide. C'est ce dernier temps qui donne
+         son poids à la descente de Thibaut. */
+      return p < 0.18 ? "attrape" : p < 0.36 ? "tient" : p < 0.78 ? "boit" : "vide";
     }
     if (this.bourre > 0) return "titube";
     if (this.freinT > 0) return "frein";
     if (this.marche !== 0){
-      if (this.dureeMarche > 0.6) return "course";
-      return (Math.floor(this.foulee * 0.9) % 2) ? "marche2" : "marche1";
+      if (this.dureeMarche > 0.6) return (Math.floor(this.foulee * 1.4) % 2) ? "course2" : "course1";
+      return "marche" + (1 + Math.floor(this.foulee * 0.9) % 4);
     }
     return "idle";
   },

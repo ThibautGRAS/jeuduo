@@ -203,6 +203,13 @@ appartient à l'affaire, pas à l'indice :
   PENSE » suit le raisonnement : l'hypothèse, puis la piste, puis la
   contradiction. On sait toujours où en sont les têtes.
 
+**Les champions du bar ont quatorze poses** (v6.23) : marche à quatre
+temps, course à deux, et la descente en quatre gestes — il attrape, il
+regarde ce qu'il tient, il boit, il reste avec le verre vide. C'est ce
+dernier temps qui donne son poids à la lenteur de Thibaut. Sur l'écran
+de choix, le champion sélectionné lève son verre pendant que l'autre
+attend.
+
 **Neuf poses assises en réserve** (v6.21). Teo et Charles s'en servent
 déjà — l'un avachi sur le canapé, l'autre attablé —, les sept autres
 attendent les places génériques de l'appartement. Elles ont été
