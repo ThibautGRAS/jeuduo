@@ -74,6 +74,10 @@ const BAR_CLIENTS = [
      au bar, lunettes noires comprises. */
   { id:"charles", sprite:"pers_charles", nom:"CHARLES", taille:0.90,
     prefixe:"bar_charles", gestes:true },
+  /* Tristan n'a pas de sprite d'appartement : il n'existe qu'au bar,
+     donc sa silhouette de repli est sa propre pose de repos. */
+  { id:"tristan", sprite:"bar_tristan_idle", nom:"TRISTAN", taille:0.92,
+    prefixe:"bar_tristan", gestes:true },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;

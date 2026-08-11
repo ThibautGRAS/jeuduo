@@ -2062,7 +2062,9 @@ if (D){
   /* --- les habitués --- */
   verifier("les habitués sortent des sprites déjà dessinés",
     (() => {
-      const dispo = new Set(D.IMG_PAR_DOSSIER.commun);
+      /* La silhouette de repli vit dans commun/ pour les habitants de
+         l'appartement, dans n3 pour ceux qui n'existent qu'au bar. */
+      const dispo = new Set(D.IMG_PAR_DOSSIER.commun.concat(D.IMG_PAR_DOSSIER.n3));
       return D.BAR_CLIENTS.length >= 3 && D.BAR_CLIENTS.every(c => dispo.has(c.sprite));
     })());
   verifier("un verre frais ne se fait pas chiper sous le nez du joueur",
@@ -2143,7 +2145,7 @@ if (D){
       const n3 = new Set(D.IMG_PAR_DOSSIER.n3);
       const commun = new Set(D.IMG_PAR_DOSSIER.commun);
       return D.BAR_CLIENTS.every(c => {
-        if (!commun.has(c.sprite)) return false;
+        if (!commun.has(c.sprite) && !n3.has(c.sprite)) return false;
         if (!c.prefixe) return true;
         const base = ["idle", "marche1", "marche2"];
         const plus = c.gestes ? ["attrape", "boit", "vide"] : [];
@@ -2448,6 +2450,37 @@ if (D){
   verifier("et le clavier aussi",
     (source.match(/Enquete\.avancerDialogue\(\)/g) || []).length >= 3,
     "canevas + touche E + ESPACE");
+
+  /* --- le chargement en deux vagues --- */
+  titre("Chargement");
+  verifier("la première vague suffit à jouer la file",
+    (() => {
+      const ess = new Set(D.imagesEssentielles());
+      return D.IMG_PAR_DOSSIER.n1.every(n => ess.has(n)) &&
+             D.IMG_PAR_DOSSIER.commun.every(n => ess.has(n));
+    })());
+  verifier("l'écran titre a ses trois vignettes et son fond dès la première vague",
+    (() => {
+      const ess = new Set(D.imagesEssentielles());
+      return ["logo", "fond_bar", "pizza_boite_ouverte", "bar_cocktail"].every(n => ess.has(n));
+    })(), "sans elles, le menu s'ouvre sur des cadres vides");
+  verifier("les deux vagues couvrent exactement toutes les images",
+    (() => {
+      const tout = D.listeImages().slice().sort();
+      const deux = D.imagesEssentielles().concat(D.imagesDifferees());
+      return new Set(deux).size === deux.length &&
+             JSON.stringify([...new Set(deux)].sort()) === JSON.stringify([...new Set(tout)].sort());
+    })(), "une image dans aucune vague ne se chargerait jamais");
+  verifier("la seconde vague porte bien l'appartement et le bar",
+    (() => {
+      const dif = new Set(D.imagesDifferees());
+      return D.IMG_PAR_DOSSIER.n2.filter(n => dif.has(n)).length > 30 &&
+             D.IMG_PAR_DOSSIER.n3.filter(n => dif.has(n)).length > 60;
+    })());
+  verifier("on ne lance pas un niveau dont les images manquent",
+    /lancerNiveau\(niv\)\{[\s\S]*?dossierPret\(cle\)/.test(source) &&
+    /data-niv[\s\S]{0,400}?Interface\.lancerNiveau/.test(source),
+    "le bouton doit passer par lancerNiveau, pas par demarrer");
 
   /* --- la pause doit être atteignable, et visible --- */
   titre("La pause");

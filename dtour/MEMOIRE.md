@@ -523,6 +523,18 @@ La réserve sert au calcul de la hauteur utile, pas à poser les pieds —
 le sol descend à `H - basUI * 0,45`. Les commandes du niveau 1 sont des
 pastilles dans les coins, elles ne cachent pas le centre.
 
+### Charger en vagues, et refuser de jouer sans les images
+Les images pèsent 5,7 Mo, dont 3 Mo pour le seul niveau 1. Tout attendre
+avant le premier écran, c'était plusieurs secondes de barre de
+chargement sur un téléphone. Deux vagues : l'essentiel (commun + n1 +
+les trois vignettes et le fond du titre) bloque, le reste suit en tâche
+de fond. Le piège évident serait de lancer le niveau 2 avant que son
+dossier soit arrivé — on afficherait des trous noirs. `lancerNiveau()`
+vérifie `dossierPret()`, rouvre l'écran de chargement si besoin, et
+garde un filet de trente secondes pour ne jamais bloquer le joueur. Un
+test vérifie que les deux vagues couvrent EXACTEMENT toutes les images :
+une image dans aucune vague ne se chargerait jamais.
+
 ### Un script d'édition qui abandonne laisse le travail à moitié fait
 Le pire de la série, et il a survécu cinq versions. À la v6.12 j'ai
 annoncé « taper dans le décor passe la bulle » : le script éditait trois

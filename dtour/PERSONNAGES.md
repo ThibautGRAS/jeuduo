@@ -148,6 +148,28 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 
 ---
 
+### TRISTAN
+- **Ami de Thibaut, pote de PF aussi.** Boxe et course à pied, et il aime
+  la fête autant que le sport — les deux sans contradiction, comme
+  Mathilde.
+- **Petit ami de Solène**, elle-même amie de Mathilde. C'est Solène qui a
+  **adopté Risoto**, le chat roux.
+- Habitué du bar au niveau 3, entièrement animé :
+  `bar_tristan_{idle,marche1,marche2,attrape,boit,vide}` (n3). Chemise
+  blanche à bananes, pantalon gris, baskets blanches.
+- Il n'a **pas** de sprite d'appartement : il n'existe qu'au bar pour
+  l'instant. Sa silhouette de repli est sa propre pose de repos.
+
+### SOLÈNE
+- **Petite amie de Tristan**, amie de Mathilde, et **c'est elle qui a
+  adopté Risoto**. Ce lien rattache le chat au groupe d'amis plutôt qu'au
+  seul appartement du niveau 2 — les deux se tiennent, le chat va où il
+  veut.
+- Pas encore de planche : elle n'existe que dans les fiches. À dessiner
+  si on veut la voir au bar ou dans la file.
+
+---
+
 ## Les visiteurs (niveau 2)
 
 ### MARINI, MAIRE DE COMPIÈGNE
@@ -185,6 +207,8 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 | Hortense | attaque aux fenêtres | frappe à la porte | traverse, rare |
 | Gabi | fait la queue | habitante | habituée du bar (animée) |
 | Mathilde | fait la queue | visiteuse | habituée du bar |
+| Tristan | — | — | habitué du bar (animé) |
+| Solène | — | — | — (pas encore dessinée) |
 | Teo | terrasse | habitant | — |
 | Charles | terrasse | habitant (assis) | habitué du bar (animé) |
 | Risoto | — | suspect | traverse, clin d'œil |

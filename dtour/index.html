@@ -691,7 +691,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.18</div>
+  <div id="version">CALLAGHAN v6.19</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -763,7 +763,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.18";
+const VERSION = "6.19";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1317,6 +1317,8 @@ const IMAGES_NIVEAU3 = [
   "bar_mathilde_attrape", "bar_mathilde_boit", "bar_mathilde_vide",
   "bar_charles_idle", "bar_charles_marche1", "bar_charles_marche2",
   "bar_charles_attrape", "bar_charles_boit", "bar_charles_vide",
+  "bar_tristan_idle", "bar_tristan_marche1", "bar_tristan_marche2",
+  "bar_tristan_attrape", "bar_tristan_boit", "bar_tristan_vide",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 
@@ -1370,8 +1372,27 @@ function ancreDe(nom){
   return 0.5;
 }
 
-function charger(surAvance){
-  const noms = listeImages();
+/* Ce qu'il faut avoir en main pour afficher l'écran titre et jouer le
+   niveau 1 : le commun, le décor et les gens de la file, plus les trois
+   vignettes et le fond du titre. Le reste — l'appartement et le bar —
+   arrive en tâche de fond pendant qu'on choisit. */
+function imagesEssentielles(){
+  return IMG_PAR_DOSSIER.commun
+    .concat(IMG_PAR_DOSSIER.n1)
+    .concat(["fond_bar", "pizza_boite_ouverte", "bar_cocktail"]);
+}
+function imagesDifferees(){
+  const dejà = new Set(imagesEssentielles());
+  return listeImages().filter(n => !dejà.has(n));
+}
+/* Un dossier est-il complètement en main ? demarrer() s'en sert pour
+   savoir s'il peut lancer le niveau tout de suite. */
+function dossierPret(cle){
+  const l = IMG_PAR_DOSSIER[cle] || [];
+  return l.every(n => Images.table[n] && Images.table[n].naturalWidth);
+}
+
+function charger(noms, surAvance){
   let faits = 0;
   return Promise.all(noms.map(nom => new Promise(resoudre => {
     const img = new Image();
@@ -1386,7 +1407,7 @@ function charger(surAvance){
        aurait resservi les anciennes depuis son cache — boutons neufs sur
        sprites périmés. */
     img.src = cheminImage(nom) + "?v=" + VERSION;
-  }))).then(() => { Images.pret = true; });
+  })));
 }
 
 /* ================= DifficultyManager -> Difficulte ================= */
@@ -6446,6 +6467,10 @@ const BAR_CLIENTS = [
      au bar, lunettes noires comprises. */
   { id:"charles", sprite:"pers_charles", nom:"CHARLES", taille:0.90,
     prefixe:"bar_charles", gestes:true },
+  /* Tristan n'a pas de sprite d'appartement : il n'existe qu'au bar,
+     donc sa silhouette de repli est sa propre pose de repos. */
+  { id:"tristan", sprite:"bar_tristan_idle", nom:"TRISTAN", taille:0.92,
+    prefixe:"bar_tristan", gestes:true },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;
@@ -7825,6 +7850,33 @@ const Interface = {
   avancement(f){ if (E.jauge) E.jauge.style.width = Math.round(f * 100) + "%"; },
   fermerIntro(){ if (E.intro) E.intro.classList.add("parti"); },
 
+  /* Lancer un niveau dont les images ne sont pas encore là afficherait
+     des trous noirs. On rouvre alors l'écran de chargement — le même —
+     et on démarre dès que le dossier est complet. */
+  lancerNiveau(niv){
+    const cle = "n" + niv;
+    if (dossierPret(cle)){ Jeu.demarrer(niv); return; }
+    if (E.intro) E.intro.classList.remove("parti");
+    this.avancement(0);
+    const debut = Date.now();
+    const guetter = () => {
+      if (dossierPret(cle)){
+        this.fermerIntro();
+        Jeu.demarrer(niv);
+        return;
+      }
+      /* la barre avance avec ce qui est réellement arrivé */
+      const l = IMG_PAR_DOSSIER[cle] || [];
+      const faits = l.filter(n => Images.table[n] && Images.table[n].naturalWidth).length;
+      this.avancement(l.length ? faits / l.length : 1);
+      if (Date.now() - debut > 30000){   /* filet : on ne bloque jamais le joueur */
+        this.fermerIntro(); Jeu.demarrer(niv); return;
+      }
+      setTimeout(guetter, 120);
+    };
+    guetter();
+  },
+
   entrerTitre(){
     this.finAffichee = false;
     if (E.releve) E.releve.style.display = "";
@@ -8263,7 +8315,7 @@ const Entrees = {
       const b = ev.target.closest("button[data-niv]");
       if (!b) return;
       Sons.reveiller(); Sons.clic(); Ecran.demander();
-      Jeu.demarrer(Number(b.dataset.niv));
+      Interface.lancerNiveau(Number(b.dataset.niv));
     });
     if (E.btnRejouer) E.btnRejouer.addEventListener("click", () => { Sons.clic(); Jeu.demarrer(); });
     if (E.pleinBtn) E.pleinBtn.addEventListener("click", () => { Sons.clic(); Ecran.basculer(); });
@@ -8515,11 +8567,17 @@ function amorcer(){
   Interface.pensePivot();
   Jeu.retourTitre();
   Boucle.demarrer();
-  charger(f => Interface.avancement(f)).then(() => {
+  /* Deux vagues. La première seule bloque l'écran de chargement : c'est
+     de quoi voir le titre et jouer la file. La seconde — l'appartement
+     et le bar — se charge pendant qu'on choisit son niveau, et
+     lancerNiveau() attend poliment si on va plus vite qu'elle. */
+  charger(imagesEssentielles(), f => Interface.avancement(f)).then(() => {
+    Images.pret = true;
     Interface.preparer();
     Jeu.retourTitre();          /* les sprites sont là : on repeuple la file du titre */
     ajusterCanevas();
     setTimeout(() => Interface.fermerIntro(), 120);
+    charger(imagesDifferees()).then(() => { Images.toutPret = true; });
   });
 }
 
@@ -8534,7 +8592,7 @@ globalThis.DTOUR = {
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
-  Heros, Interface, Pause, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
+  Heros, Interface, Pause, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
   POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE, BAR_TAILLE_BARMAN, BAR_COPIES,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, ENQ_ESQUIVE_FENETRE, SUJETS, Progres, Intro,

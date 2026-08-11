@@ -240,6 +240,33 @@ const Interface = {
   avancement(f){ if (E.jauge) E.jauge.style.width = Math.round(f * 100) + "%"; },
   fermerIntro(){ if (E.intro) E.intro.classList.add("parti"); },
 
+  /* Lancer un niveau dont les images ne sont pas encore là afficherait
+     des trous noirs. On rouvre alors l'écran de chargement — le même —
+     et on démarre dès que le dossier est complet. */
+  lancerNiveau(niv){
+    const cle = "n" + niv;
+    if (dossierPret(cle)){ Jeu.demarrer(niv); return; }
+    if (E.intro) E.intro.classList.remove("parti");
+    this.avancement(0);
+    const debut = Date.now();
+    const guetter = () => {
+      if (dossierPret(cle)){
+        this.fermerIntro();
+        Jeu.demarrer(niv);
+        return;
+      }
+      /* la barre avance avec ce qui est réellement arrivé */
+      const l = IMG_PAR_DOSSIER[cle] || [];
+      const faits = l.filter(n => Images.table[n] && Images.table[n].naturalWidth).length;
+      this.avancement(l.length ? faits / l.length : 1);
+      if (Date.now() - debut > 30000){   /* filet : on ne bloque jamais le joueur */
+        this.fermerIntro(); Jeu.demarrer(niv); return;
+      }
+      setTimeout(guetter, 120);
+    };
+    guetter();
+  },
+
   entrerTitre(){
     this.finAffichee = false;
     if (E.releve) E.releve.style.display = "";
@@ -678,7 +705,7 @@ const Entrees = {
       const b = ev.target.closest("button[data-niv]");
       if (!b) return;
       Sons.reveiller(); Sons.clic(); Ecran.demander();
-      Jeu.demarrer(Number(b.dataset.niv));
+      Interface.lancerNiveau(Number(b.dataset.niv));
     });
     if (E.btnRejouer) E.btnRejouer.addEventListener("click", () => { Sons.clic(); Jeu.demarrer(); });
     if (E.pleinBtn) E.pleinBtn.addEventListener("click", () => { Sons.clic(); Ecran.basculer(); });
@@ -930,11 +957,17 @@ function amorcer(){
   Interface.pensePivot();
   Jeu.retourTitre();
   Boucle.demarrer();
-  charger(f => Interface.avancement(f)).then(() => {
+  /* Deux vagues. La première seule bloque l'écran de chargement : c'est
+     de quoi voir le titre et jouer la file. La seconde — l'appartement
+     et le bar — se charge pendant qu'on choisit son niveau, et
+     lancerNiveau() attend poliment si on va plus vite qu'elle. */
+  charger(imagesEssentielles(), f => Interface.avancement(f)).then(() => {
+    Images.pret = true;
     Interface.preparer();
     Jeu.retourTitre();          /* les sprites sont là : on repeuple la file du titre */
     ajusterCanevas();
     setTimeout(() => Interface.fermerIntro(), 120);
+    charger(imagesDifferees()).then(() => { Images.toutPret = true; });
   });
 }
 
@@ -949,7 +982,7 @@ globalThis.DTOUR = {
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
   Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
-  Heros, Interface, Pause, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
+  Heros, Interface, Pause, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
   POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE, BAR_TAILLE_BARMAN, BAR_COPIES,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, ENQ_ESQUIVE_FENETRE, SUJETS, Progres, Intro,

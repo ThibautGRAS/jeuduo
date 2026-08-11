@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.18";
+const VERSION = "6.19";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -572,6 +572,8 @@ const IMAGES_NIVEAU3 = [
   "bar_mathilde_attrape", "bar_mathilde_boit", "bar_mathilde_vide",
   "bar_charles_idle", "bar_charles_marche1", "bar_charles_marche2",
   "bar_charles_attrape", "bar_charles_boit", "bar_charles_vide",
+  "bar_tristan_idle", "bar_tristan_marche1", "bar_tristan_marche2",
+  "bar_tristan_attrape", "bar_tristan_boit", "bar_tristan_vide",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 
@@ -625,8 +627,27 @@ function ancreDe(nom){
   return 0.5;
 }
 
-function charger(surAvance){
-  const noms = listeImages();
+/* Ce qu'il faut avoir en main pour afficher l'écran titre et jouer le
+   niveau 1 : le commun, le décor et les gens de la file, plus les trois
+   vignettes et le fond du titre. Le reste — l'appartement et le bar —
+   arrive en tâche de fond pendant qu'on choisit. */
+function imagesEssentielles(){
+  return IMG_PAR_DOSSIER.commun
+    .concat(IMG_PAR_DOSSIER.n1)
+    .concat(["fond_bar", "pizza_boite_ouverte", "bar_cocktail"]);
+}
+function imagesDifferees(){
+  const dejà = new Set(imagesEssentielles());
+  return listeImages().filter(n => !dejà.has(n));
+}
+/* Un dossier est-il complètement en main ? demarrer() s'en sert pour
+   savoir s'il peut lancer le niveau tout de suite. */
+function dossierPret(cle){
+  const l = IMG_PAR_DOSSIER[cle] || [];
+  return l.every(n => Images.table[n] && Images.table[n].naturalWidth);
+}
+
+function charger(noms, surAvance){
   let faits = 0;
   return Promise.all(noms.map(nom => new Promise(resoudre => {
     const img = new Image();
@@ -641,7 +662,7 @@ function charger(surAvance){
        aurait resservi les anciennes depuis son cache — boutons neufs sur
        sprites périmés. */
     img.src = cheminImage(nom) + "?v=" + VERSION;
-  }))).then(() => { Images.pret = true; });
+  })));
 }
 
 /* ================= DifficultyManager -> Difficulte ================= */

@@ -203,6 +203,15 @@ appartient à l'affaire, pas à l'indice :
   PENSE » suit le raisonnement : l'hypothèse, puis la piste, puis la
   contradiction. On sait toujours où en sont les têtes.
 
+**Le jeu démarre sans tout attendre** (v6.19). Le chargement se fait en
+deux vagues : la première — le commun, le décor et les gens de la file,
+plus les trois vignettes et le fond du titre — est la seule qui bloque
+l'écran de chargement. L'appartement et le bar arrivent en tâche de fond
+pendant qu'on choisit son niveau, et si on va plus vite que le réseau,
+l'écran de chargement revient le temps qu'il faut plutôt que d'afficher
+des trous noirs. Environ 2,3 Mo de moins à attendre au premier
+lancement.
+
 **Le décor du niveau 1 annonce sa ligne de sol** (v6.18) : le trottoir
 dégagé est à 88 % de la hauteur de l'image, et `ANCRE_FOND_Y` l'aligne
 sur la ligne où marchent les gens. Les trois moments — jour, soir, nuit —
