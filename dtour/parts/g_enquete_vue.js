@@ -67,14 +67,22 @@ const EnqVue = {
        on remonte celles qui se recouvrent jusqu'à ce que plus aucune n'en
        touche une autre. L'empilement à l'estime laissait encore la
        question et la réponse l'une sur l'autre. */
+    /* Le dossier est un écran plein. Les bulles dessinées avant lui se
+       voyaient en fantômes sous le voile, et le bandeau de message,
+       dessiné après, recouvrait son titre. Quand il est ouvert, il est
+       seul. */
     const bulles = [];
-    for (const p of Effets.paroles){
+    if (!E2.dossierOuvert) for (const p of Effets.paroles){
       if (p.cible.heros !== undefined){
         const ins = E2.inspecteurs[p.cible.heros];
         if (!ins) continue;
+        /* Un liseré de couleur ne suffisait pas : on ne savait pas qui
+           parlait. Le prénom est écrit sur la bulle, comme pour les
+           autres — c'est la question qui revenait le plus souvent. */
         bulles.push({ p, px:this.ex(ins.x) + trem,
           base:this.ey(ENQ_LIGNE) - H * ENQ_TAILLE,
-          style:{ bord:Heros[ins.heros].couleur } });
+          style:{ bord:Heros[ins.heros].couleur, nom:Heros[ins.heros].court,
+                  nomCouleur:Heros[ins.heros].couleur } });
       } else if (p.cible.visiteur){
         if (!Visiteurs.visible()) continue;
         bulles.push({ p, px:this.ex(Visiteurs.x) + trem,
@@ -91,7 +99,12 @@ const EnqVue = {
     /* Les plus anciennes gardent leur place : une réponse qui arrive ne
        fait pas sauter la question qu'on est en train de lire. */
     bulles.sort((a, b) => b.p.t - a.p.t);
-    const posees = [];
+    /* On sème le calage avec ce qui occupe DÉJÀ l'écran : le badge, au
+       centre à H*0,30, et les plaques de nom au-dessus des têtes. Ils
+       n'entraient pas dans le calcul, et c'est de là que venait
+       l'essentiel de l'enchevêtrement — « SUSPECT ! » se retrouvait
+       sous une bulle, illisible. */
+    const posees = this.obstacles();
     const marge = Math.max(4, H * 0.014);
     /* Plafond : au-dessus, on passerait sous le chrono et le compteur
        d'indices. Une bulle cachée par le bandeau ne vaut pas mieux
@@ -157,10 +170,14 @@ const EnqVue = {
 
     if (Enquete.actif) this.dessinerBandeau();
     if (E2.dossierOuvert) this.dessinerDossier();
+    /* Le dossier est un écran plein : le badge et le bandeau de message
+       étaient dessinés APRÈS lui et recouvraient son titre. L'esquive,
+       elle, passe devant tout — une tarte n'attend pas qu'on referme le
+       dossier. */
     if (E2.accusation) this.dessinerAccusation();
     if (E2.esquiveOuverte) this.dessinerEsquive();
-    if (E2.badge) this.dessinerBadge();
-    if (E2.message) this.dessinerMessage();
+    if (!E2.dossierOuvert && E2.badge) this.dessinerBadge();
+    if (!E2.dossierOuvert && E2.message) this.dessinerMessage();
   },
 
   /* --------- meubles --------- */
@@ -216,7 +233,9 @@ const EnqVue = {
     ctx.drawImage(img, -l / 2, -h, l, h);
     ctx.restore();
 
-    /* son nom, tant qu'il est là */
+    /* Son nom, tant qu'il est là — mais pas s'il parle : sa bulle le
+       porte déjà, et les deux étiquettes se chevauchaient. */
+    if (Effets.paroles.some(p2 => p2.cible.visiteur)) return;
     const taille = Math.max(9, H * 0.032);
     ctx.save();
     ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
@@ -284,6 +303,37 @@ const EnqVue = {
   /* --------- les noms, par-dessus tout le monde ---------
      Posés après les inspecteurs : glissés derrière eux, ils étaient
      illisibles au moment précis où l'on parlait au suspect. */
+  /* Les boîtes déjà occupées à l'écran, dans la MÊME convention que le
+     calage des bulles : y = bord du bas, bh = hauteur. Le badge et les
+     plaques de nom sont dessinés ailleurs dans le fichier ; tant qu'ils
+     n'entraient pas ici, aucune bulle ne pouvait les éviter. */
+  obstacles(){
+    const H = Camera.H, L = Camera.L, out = [];
+    if (Enquete.badge){
+      const t = Enquete.badgeT / 1.2;
+      const ech = 1 + (1 - Math.min(1, t * 5)) * 0.5;
+      const h = H * 0.13 * ech;
+      const l = h * 1.6;                       /* les badges sont plus larges que hauts */
+      out.push({ x0:L / 2 - l / 2, bl:l, y:H * 0.30 + h * 0.9, bh:h * 1.4 });
+    }
+    if (Enquete.actif){
+      for (const s2 of SUSPECTS){
+        const px = this.ex(s2.x);
+        if (px < -140 || px > L + 140) continue;
+        const pres = Math.abs(Enquete.actifIns().x - s2.x) < ENQ_PORTEE_GENS;
+        if (!pres && !s2.vus) continue;
+        const h = H * (s2.taille || 0.30);
+        const taille = Math.max(9, H * 0.034);
+        const py = this.ey(s2.bas) - h - H * 0.018;
+        /* la plaque, plus le point d'interrogation qui la surmonte */
+        const haut = pres ? taille * 3.4 : taille * 0.86;
+        const larg = Math.max(taille * 5, H * 0.12);
+        out.push({ x0:px - larg / 2, bl:larg, y:py + taille * 0.86, bh:haut + taille * 0.86 });
+      }
+    }
+    return out;
+  },
+
   dessinerNoms(){
     const H = Camera.H;
     for (const s of SUSPECTS){
@@ -291,6 +341,10 @@ const EnqVue = {
       if (px < -140 || px > Camera.L + 140) continue;
       const pres = Math.abs(Enquete.actifIns().x - s.x) < ENQ_PORTEE_GENS;
       if (!pres && !s.vus) continue;
+      /* Si cette personne est en train de parler, sa bulle porte déjà son
+         nom : deux étiquettes pour la même bouche se chevauchaient. */
+      const i = SUSPECTS.indexOf(s);
+      if (Effets.paroles.some(p => p.cible.temoin === i)) continue;
       const h = H * (s.taille || 0.30);
       const bas = this.ey(s.bas);
       const taille = Math.max(9, H * 0.034);
@@ -545,42 +599,49 @@ const EnqVue = {
   /* --------- dossier d'enquête --------- */
   dessinerDossier(){
     const L = Camera.L, H = Camera.H;
+    /* La barre de commandes du niveau 2 est en HTML, par-dessus le
+       canevas : elle mange les 19 % du bas. Le dossier s'y écrivait
+       quand même, et ses deux dernières lignes — « il manque encore… »
+       et « touchez pour refermer » — étaient purement invisibles. Tout
+       le dossier se compose donc dans la hauteur UTILE. */
+    const hu = H * (1 - ENQ_BANDE_CMD);
+    const y = f => hu * f;
     ctx.save();
-    ctx.fillStyle = "rgba(8,13,24,.86)"; ctx.fillRect(0, 0, L, H);
-    const taille = Math.max(12, H * 0.050);
+    ctx.fillStyle = "rgba(8,13,24,.90)"; ctx.fillRect(0, 0, L, H);
+    const taille = Math.max(12, hu * 0.050);
     ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillStyle = "#F7B32B";
-    ctx.fillText("DOSSIER D'ENQUÊTE", L / 2, H * 0.13);
+    ctx.fillText("DOSSIER D'ENQUÊTE", L / 2, y(0.13));
 
     const n = Math.max(1, Dossier.cartes.length);
-    const cw = Math.min(L * 0.15, H * 0.30);
+    const cw = Math.min(L * 0.15, hu * 0.30);
     const total = n * (cw + 10) - 10;
     let x = L / 2 - total / 2;
     for (const c of Dossier.cartes){
       const img = Images.table[c.sprite];
       ctx.fillStyle = "rgba(252,250,244,.95)";
-      arrondi(x, H * 0.28, cw, cw * 1.32, 8); ctx.fill();
+      arrondi(x, y(0.28), cw, cw * 1.32, 8); ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,.3)"; ctx.lineWidth = 1.5; ctx.stroke();
       if (img && img.naturalWidth){
         const ih = cw * 0.62, il = ih * img.naturalWidth / img.naturalHeight;
-        ctx.drawImage(img, x + cw / 2 - Math.min(il, cw * 0.8) / 2, H * 0.30,
+        ctx.drawImage(img, x + cw / 2 - Math.min(il, cw * 0.8) / 2, y(0.30),
                       Math.min(il, cw * 0.8), ih * Math.min(1, cw * 0.8 / il));
       }
       const t2 = Math.max(8, cw * 0.105);
       ctx.font = "800 " + Math.round(t2) + "px 'Baloo 2', system-ui, sans-serif";
       ctx.fillStyle = "#1A1420";
-      ctx.fillText(c.nom, x + cw / 2, H * 0.28 + cw * 1.00);
+      ctx.fillText(c.nom, x + cw / 2, y(0.28) + cw * 1.00);
       /* L'endroit compte autant que l'objet. */
       ctx.font = "700 " + Math.round(t2 * 0.86) + "px 'Baloo 2', system-ui, sans-serif";
       ctx.fillStyle = "#6B5F52";
-      ctx.fillText(c.ou || "", x + cw / 2, H * 0.28 + cw * 1.15);
+      ctx.fillText(c.ou || "", x + cw / 2, y(0.28) + cw * 1.15);
       x += cw + 10;
     }
     if (!Dossier.cartes.length){
       ctx.font = "700 " + Math.round(taille * 0.7) + "px 'Baloo 2', system-ui, sans-serif";
       ctx.fillStyle = "#8496B6";
-      ctx.fillText("Rien pour l'instant.", L / 2, H * 0.45);
+      ctx.fillText("Rien pour l'instant.", L / 2, y(0.45));
     }
     /* Où en sont les têtes : le dossier raconte le raisonnement, pas
        seulement l'inventaire. */
@@ -588,7 +649,7 @@ const EnqVue = {
     if (theorie.length){
       ctx.font = "800 " + Math.round(taille * 0.50) + "px 'Baloo 2', system-ui, sans-serif";
       ctx.fillStyle = "#F7B32B";
-      ctx.fillText("CE QU'ON EN PENSE", L / 2, H * 0.70);
+      ctx.fillText("CE QU'ON EN PENSE", L / 2, y(0.70));
       /* Les théories sont des phrases entières : on réduit la police
          jusqu'à ce que la plus longue tienne, plutôt que de déborder. */
       let tTh = taille * 0.62;
@@ -597,15 +658,15 @@ const EnqVue = {
       if (plusLarge > L * 0.92) tTh *= L * 0.92 / plusLarge;
       ctx.font = "700 " + Math.round(Math.max(9, tTh)) + "px 'Baloo 2', system-ui, sans-serif";
       ctx.fillStyle = "#E8DFC8";
-      theorie.forEach((t, i) => ctx.fillText(t, L / 2, H * (0.745 + i * 0.048)));
+      theorie.forEach((t, i) => ctx.fillText(t, L / 2, y(0.745 + i * 0.048)));
     }
     ctx.font = "700 " + Math.round(taille * 0.6) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillStyle = "#8496B6";
     const manque2 = Enquete.cePquiManque();
     ctx.fillStyle = manque2 ? "#8496B6" : "#8FD79B";
-    ctx.fillText(manque2 || "Tout y est : ACCUSER.", L / 2, H * 0.86);
+    ctx.fillText(manque2 || "Tout y est : ACCUSER.", L / 2, y(0.86));
     ctx.fillStyle = "#8496B6";
-    ctx.fillText("Touchez l'écran pour refermer", L / 2, H * 0.93);
+    ctx.fillText("Touchez l'écran pour refermer", L / 2, y(0.93));
     ctx.restore();
   },
 
@@ -682,7 +743,11 @@ function mesurerParole(p, style){
   }
   ctx.restore();
   const pad = taille * 0.62;
-  const hNom = (st.temoin || st.visiteur) ? taille * 0.86 : 0;
+  /* Le bandeau de nom n'était réservé qu'aux témoins et aux visiteurs :
+     les inspecteurs n'avaient qu'un liseré de couleur, et on ne savait
+     pas lequel des deux venait de parler. Maintenant : qui a un nom
+     l'affiche. */
+  const hNom = st.nom ? taille * 0.86 : 0;
   const interligne = taille * 1.14;
   return { bl:p._largeur + pad * 2, bh:taille * 1.72 + hNom + (p._lignes.length - 1) * interligne,
            taille, hNom, lignes:p._lignes, interligne };
@@ -698,7 +763,10 @@ function dessinerParoleLibre(p, px, pyBas, style, x0){
   const by = pyBas - bh - monte * Camera.H * 0.012;
 
   ctx.save();
-  ctx.globalAlpha = borne(1 - Math.pow(t, 4), 0, 1) * (0.35 + 0.65 * monte);
+  /* t^8 au lieu de t^4 : la bulle reste franche jusqu'aux 85 derniers
+     pour-cent de sa vie, au lieu de pâlir dès la moitié. On la voyait
+     translucide sur presque toutes les captures. */
+  ctx.globalAlpha = borne(1 - Math.pow(t, 8), 0, 1) * (0.35 + 0.65 * monte);
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
 
   /* Trois papiers : blanc pour les inspecteurs, crème pour les gens de
@@ -722,9 +790,9 @@ function dessinerParoleLibre(p, px, pyBas, style, x0){
   ctx.fillStyle = fond; ctx.fill();
   ctx.strokeStyle = "#23181A"; ctx.lineWidth = Math.max(1.5, taille * 0.10); ctx.stroke();
 
-  if ((st.temoin || st.visiteur) && st.nom){
+  if (st.nom){
     ctx.font = "800 " + Math.round(taille * 0.56) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillStyle = st.visiteur ? "#5B4A8C" : "#8A6B34";
+    ctx.fillStyle = st.nomCouleur ? st.nomCouleur : st.visiteur ? "#5B4A8C" : "#8A6B34";
     ctx.fillText(st.nom, bx + bl / 2, by + hNom * 0.62);
   }
   ctx.font = ((st.temoin || st.visiteur) ? "700 " : "800 ") + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";

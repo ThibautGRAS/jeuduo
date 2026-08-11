@@ -823,7 +823,10 @@ if (D){
   D.Enquete.dialogue([[0, "Un."], [1, "Deux."]], 0);
   for (let i = 0; i < 6; i++) D.Jeu.pas(1 / 60);
   egal("la première réplique part tout de suite", D.Effets.paroles.length, 1);
-  for (let i = 0; i < 60 * 2; i++) D.Jeu.pas(1 / 60);
+  /* L'espacement dans une salve suit dureeLecture() : depuis que le
+     plancher est passé à 3 s, deux secondes ne suffisent plus à écouler
+     la file. On attend le temps de lecture, pas une durée en dur. */
+  for (let i = 0; i < 60 * (D.Enquete.dureeLecture("Un.") + 1); i++) D.Jeu.pas(1 / 60);
   verifier("la seconde arrive après, pas en même temps",
     D.Enquete.fileDial.length === 0, "il reste " + D.Enquete.fileDial.length + " réplique(s)");
   verifier("dix-sept affaires au moins", D.SCENARIOS.length >= 17, D.SCENARIOS.length + " scénarios");

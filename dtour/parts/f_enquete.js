@@ -38,6 +38,9 @@ const ENQ_FOUILLE = 0.75;
 const ENQ_ACCUSATIONS = 2;         /* on n'a droit qu'à deux noms */
 const ENQ_MAUVAISE = 20;            /* secondes perdues sur une accusation ratée */
 const ENQ_TARTE = 10;               /* secondes perdues sur une tarte reçue */
+/* Part de la hauteur mangée par la barre de commandes HTML du niveau 2.
+   Tout ce que le canevas écrit en dessous est invisible. */
+const ENQ_BANDE_CMD = 0.19;
 const ENQ_ESQUIVE_FENETRE = 0.62;   /* fenêtre d'esquive : 0,45 s était trop court au pouce */
 const ENQ_ESQUIVE_PTS = 100;
 
@@ -1732,7 +1735,10 @@ const Enquete = {
   /* Le temps de lire une réplique dépend de sa longueur : une cadence
      fixe faisait disparaître les longues avant qu'on les ait finies, et
      traîner les courtes. */
-  dureeLecture(txt){ return borne(1.4 + (txt ? txt.length : 0) * 0.055, 2.2, 5.2); },
+  /* Le plancher est passé de 2,2 s à 3,0 s : une réplique courte comme
+     « Non. » disparaissait avant qu'on ait eu le temps de voir QUI
+     l'avait dite. Le plafond monte aussi : une phrase longue se lit. */
+  dureeLecture(txt){ return borne(2.0 + (txt ? txt.length : 0) * 0.060, 3.0, 6.4); },
   dialogue(paires, delai){
     /* À l'intérieur d'une salve, chaque réplique attend la fin de
        lecture de la précédente : la salve s'étire d'elle-même quand les

@@ -479,6 +479,48 @@ inspecteur seul ne peut pas réunir tous les indices. Quand la place
 manque, on raccourcit un libellé ou on passe en pastille ; on ne retire
 pas la commande. Un test refuse désormais toute règle qui masque `#c2C`.
 
+### Un calage ne vaut que s'il connaît TOUT ce qui est à l'écran
+Le calage des bulles était juste, et l'écran restait un fouillis :
+il ne connaissait que les bulles. Le badge (« SUSPECT ! », « SPLAT ! »)
+est dessiné au centre à H*0,30, en plein milieu de la zone des bulles,
+et les plaques de nom au-dessus des têtes — ni l'un ni les autres
+n'entraient dans le calcul. Le calage part maintenant d'une liste
+d'`obstacles()` qui décrit ces boîtes dans la même convention, et les
+bulles les évitent comme elles s'évitent entre elles. Corollaire : deux
+étiquettes pour la même bouche, c'est une de trop — une personne qui
+parle n'affiche plus sa plaque de nom, sa bulle le fait.
+
+### On ne savait pas qui parlait
+Les bulles des inspecteurs n'avaient qu'un mince liseré de couleur ;
+seuls les témoins et les visiteurs portaient un nom, parce que le
+gabarit du bandeau de nom était conditionné à `st.temoin || st.visiteur`.
+La condition est devenue « qui a un nom l'affiche ». Une information
+d'attribution ne se code pas en couleur seule : sur un téléphone, deux
+liserés de 3 px ne se distinguent pas.
+
+### Un écran plein doit être SEUL
+Le dossier posait un voile sur toute la surface — mais les bulles,
+dessinées avant, apparaissaient en fantômes dessous, et le bandeau de
+message, dessiné après, recouvrait son titre. Quand un panneau prend
+tout l'écran, il faut décider ce qui passe devant : ici l'esquive de
+tarte, et rien d'autre.
+
+### Ce que le canevas écrit sous la barre de commandes n'existe pas
+La barre du niveau 2 est en HTML, par-dessus le canevas : elle mange les
+19 % du bas. Le dossier y écrivait ses deux dernières lignes — « il
+manque encore… » et « touchez pour refermer » — parfaitement invisibles
+sur téléphone, et parfaitement visibles dans le harnais, qui ne dessine
+pas le DOM. Tout panneau plein écran se compose dans la hauteur UTILE
+(`ENQ_BANDE_CMD`).
+
+### Une regex sur du code attrape ce qu'elle matche, pas ce qu'on veut
+En convertissant les ordonnées du dossier en hauteur utile, mon
+remplacement `H * 0.xx` a raté `H * (0.745 + i * 0.048)` — entre
+parenthèses. Résultat : les lignes de théorie sont passées SOUS le
+message final et l'ont chevauché. Même famille que la reconstruction de
+listes par regex. Après toute transformation mécanique du code, on
+compte ce qui reste ET on regarde l'image.
+
 ### Empiler des bulles finit toujours par les cacher
 Le premier calage les remontait d'un étage par collision. Sur un écran
 de 318 px, la deuxième passait sous le chrono. Le calage résout

@@ -204,9 +204,19 @@ appartient à l'affaire, pas à l'indice :
   contradiction. On sait toujours où en sont les têtes.
 
 **Les bulles se lisent** : multi-lignes (42 % de l'écran au plus), une
-durée de vie qui suit la longueur du texte, et un calage qui cherche un
-trou rangée par rangée plutôt que d'empiler au petit bonheur — quatre
-répliques simultanées trouvent quatre places.
+durée de vie qui suit la longueur du texte — de 3 à 6,4 secondes, et le
+fondu n'entame que les derniers pour-cent —, et un calage qui cherche un
+trou rangée par rangée. **Chaque bulle porte le nom de qui parle**, les
+inspecteurs compris : un liseré de couleur de trois pixels ne se
+distingue pas sur un téléphone. Le calage connaît aussi les autres
+étiquettes de l'écran — le badge central, les plaques de nom — et les
+évite ; et une personne qui parle n'affiche plus sa plaque, sa bulle
+suffit.
+
+**Le dossier occupe tout l'écran, et rien ne passe devant** sauf une
+tarte à esquiver. Il se compose dans la hauteur utile, au-dessus de la
+barre de commandes : ses dernières lignes s'écrivaient dessous, donc
+dans le vide.
 
 **Les deux ne servent pas à la même chose, et il faut les deux.**
 Pierre-François lit les traces : certains indices ne se lisent qu'avec

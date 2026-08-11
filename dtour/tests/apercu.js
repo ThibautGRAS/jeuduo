@@ -471,6 +471,45 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "17_bar_figurants_844");
   }
 
+  /* 19. niveau 2 : le pire cas signalé — plusieurs bulles, un badge au
+         centre, des plaques de nom, tout en même temps */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(2); D.Intro.finir();
+    D.Enquete.indices = 3;
+    for (const s of D.SUSPECTS) s.vus = true;
+    D.Visiteurs.declencher();
+    D.Visiteurs.etat = "PARLE"; D.Visiteurs.x = 0.62;
+    D.Effets.parole({ heros:D.Enquete.inspecteurs[0].heros }, "Ce n'est pas la pizza non plus.", 4);
+    D.Effets.parole({ heros:D.Enquete.inspecteurs[1].heros }, "Sa sœur l'a prévenue, c'est certain.", 4);
+    D.Effets.parole({ temoin:0 }, "Non.", 4);
+    D.Effets.parole({ visiteur:true }, "Deux cocktails offerts. Vous les prenez maintenant ou après ?", 4);
+    D.Enquete.poserBadge("suspect");
+    D.Enquete.badgeT = 0.2;
+    for (let i = 0; i < 20; i++) D.Jeu.pas(1 / 60);
+    dessinerVia(D, canevas);
+    ecrire(canevas, "19_enq_bulles_844");
+  }
+
+  /* 20. niveau 2 : le dossier ouvert, six cartes */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(2); D.Intro.finir();
+    for (let k = 0; k < 6; k++){
+      const z = D.Enquete.zones.find(z2 => z2.indice && !z2.fouillee);
+      if (!z) break;
+      D.Enquete.actifIns().x = z.ref.x;
+      D.Enquete.inspecter();
+      for (let i = 0; i < 80; i++) D.Jeu.pas(1 / 60);
+    }
+    D.Enquete.dossierOuvert = true;
+    D.Jeu.pas(1 / 60);
+    dessinerVia(D, canevas);
+    ecrire(canevas, "20_enq_dossier_844");
+  }
+
   /* 18. niveau 3 : la tarte en vol, fenêtre d'esquive ouverte, la salle pleine */
   {
     const { D, canevas } = await preparer(844, 318);
