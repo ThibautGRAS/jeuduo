@@ -203,6 +203,13 @@ appartient à l'affaire, pas à l'indice :
   PENSE » suit le raisonnement : l'hypothèse, puis la piste, puis la
   contradiction. On sait toujours où en sont les têtes.
 
+**Neuf poses assises en réserve** (v6.21). Teo et Charles s'en servent
+déjà — l'un avachi sur le canapé, l'autre attablé —, les sept autres
+attendent les places génériques de l'appartement. Elles ont été
+découpées à partir d'une planche où chaque personnage figurait AUSSI
+debout : c'est cette pose debout qui a donné le facteur d'échelle, au
+lieu de le deviner.
+
 **Le jeu démarre sans tout attendre** (v6.19). Le chargement se fait en
 deux vagues : la première — le commun, le décor et les gens de la file,
 plus les trois vignettes et le fond du titre — est la seule qui bloque

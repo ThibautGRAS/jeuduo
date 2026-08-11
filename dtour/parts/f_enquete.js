@@ -277,14 +277,17 @@ const RIEN = {
    sur la même ligne mettait Charles debout devant sa table et faisait
    flotter Teo au-dessus du canapé. */
 const PLACES_FIXES = {
-  teo:     { x:0.292, bas:0.805, taille:0.315 },  /* avachi sur la droite du canapé */
-  charles: { x:0.660, bas:0.730, taille:0.260 },  /* attablé, place du fond */
+  /* Les poses assises de la v6.21 sont des figures ENTIÈRES, pieds
+     compris, dans une toile plus haute : la taille et la ligne du bas
+     ont dû être reprises. L'ancien sprite était recadré au bassin. */
+  teo:     { x:0.300, bas:0.845, taille:0.450 },  /* assis sur le canapé  */
+  charles: { x:0.660, bas:0.815, taille:0.430 },  /* attablé, place du fond */
   gabi:   { x:0.818, bas:0.900, taille:0.575 },  /* debout dans le couloir */
   chat:    { x:0.452, bas:0.925, taille:0.170 },  /* par terre            */
 };
 
 const SUSPECTS_BANQUE = [
-  { id:"teo", nom:"TEOPEDO", sprite:"pers_teo",
+  { id:"teo", nom:"TEOPEDO", sprite:"assis_teo",
     role:"Ami de Pierre-François. Professeur d'histoire.",
     fond:[
       "Il récite la chronologie exacte de la soirée. À la minute.",
@@ -292,7 +295,7 @@ const SUSPECTS_BANQUE = [
       "Il dit qu'un lieu se lit par couches. Comme une fouille.",
     ] },
 
-  { id:"charles", nom:"CHARLES", sprite:"pers_charles",
+  { id:"charles", nom:"CHARLES", sprite:"assis_charles",
     role:"Personne ne sait pourquoi il est là.",
     fond:[
       "Il garde ses lunettes noires à l'intérieur.",

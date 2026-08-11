@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.20";
+const VERSION = "6.21";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -518,7 +518,7 @@ const SPRITES_TARTE = ["tarte0","tarte1","tarte2","tarte3","tarte_boom","tarte_e
 /* Les habitants et le chat servent aux niveaux 1 ET 2 : ils vivent
    dans le dossier commun, pas dans celui d'un niveau. */
 const PERSONNAGES_MAISON = [
-  "pers_teo", "pers_charles", "pers_gabi", "pers_francky", "pers_jojo",
+  "pers_gabi", "pers_francky", "pers_jojo",
   "pers_marini", "pers_martin", "pers_mathilde", "susp_chat",
 ];
 
@@ -538,6 +538,12 @@ const IMAGES_NIVEAU2 = [
   "ind_sauce", "ind_assiette", "ind_ticket", "ind_pattes", "ind_billet",
   "pizza_entiere", "pizza_entamee", "pizza_part", "pizza_boite_ouverte",
   "badge_indice", "badge_suspect",
+  /* Poses assises, à échelle commune : leur pose debout figurait sur la
+     même planche, ce qui a permis de mesurer le facteur au lieu de le
+     deviner. Teo et Charles s'en servent déjà ; les sept autres
+     attendent les places génériques de l'appartement. */
+  "assis_teo", "assis_charles", "assis_gabi", "assis_marini", "assis_martin",
+  "assis_mathilde", "assis_tristan", "assis_francky", "assis_jojo",
 ];
 
 /* Les dix poses de chaque champion au bar, dans l'ordre où elles
@@ -576,6 +582,8 @@ const IMAGES_NIVEAU3 = [
   "bar_tristan_attrape", "bar_tristan_boit", "bar_tristan_vide",
   "bar_teo_idle", "bar_teo_marche1", "bar_teo_marche2",
   "bar_teo_attrape", "bar_teo_boit", "bar_teo_vide",
+  "bar_solene_idle", "bar_solene_marche1", "bar_solene_marche2",
+  "bar_solene_attrape", "bar_solene_boit", "bar_solene_vide",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 

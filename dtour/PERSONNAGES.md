@@ -174,12 +174,19 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
   l'instant. Sa silhouette de repli est sa propre pose de repos.
 
 ### SOLÈNE
-- **Petite amie de Tristan**, amie de Mathilde, et **c'est elle qui a
-  adopté Risoto**. Ce lien rattache le chat au groupe d'amis plutôt qu'au
-  seul appartement du niveau 2 — les deux se tiennent, le chat va où il
-  veut.
-- Pas encore de planche : elle n'existe que dans les fiches. À dessiner
-  si on veut la voir au bar ou dans la file.
+- **Petite amie de Tristan**, amie de Mathilde. Drôle, elle aime les
+  chats et le vélo.
+- **Le chat, c'est toute son histoire** : Risoto vit dans l'appartement
+  et appartient à Gabi — mais c'est Solène qui le nourrit, et **elle est
+  convaincue qu'il est à elle**. Ce malentendu tenace est du matériau
+  de scénario tout prêt : deux personnes revendiquent le même animal,
+  et l'une des deux ment sans le savoir.
+- Habituée du bar au niveau 3, entièrement animée :
+  `bar_solene_{idle,marche1,marche2,attrape,boit,vide}` (n3). Cheveux
+  longs châtains, lunettes de soleil relevées sur la tête, blouson noir,
+  jean clair.
+- Pas de sprite d'appartement pour l'instant : sa silhouette de repli
+  est sa propre pose de repos.
 
 ---
 
@@ -221,7 +228,7 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
 | Gabi | fait la queue | habitante | habituée du bar (animée) |
 | Mathilde | fait la queue | visiteuse | habituée du bar |
 | Tristan | — | — | habitué du bar (animé) |
-| Solène | — | — | — (pas encore dessinée) |
+| Solène | — | — | habituée du bar (animée) |
 | Teo | terrasse | habitant | — |
 | Charles | terrasse | habitant (assis) | habitué du bar (animé) |
 | Risoto | — | suspect | traverse, clin d'œil |

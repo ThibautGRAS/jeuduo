@@ -72,7 +72,7 @@ const BAR_CLIENTS = [
   /* Charles ne pouvait pas marcher : son sprite du niveau 2 est assis à
      la table, sans jambes. Sa planche lui en a donné — il descend donc
      au bar, lunettes noires comprises. */
-  { id:"charles", sprite:"pers_charles", nom:"CHARLES", taille:0.90,
+  { id:"charles", sprite:"bar_charles_idle", nom:"CHARLES", taille:0.90,
     prefixe:"bar_charles", gestes:true },
   /* Tristan n'a pas de sprite d'appartement : il n'existe qu'au bar,
      donc sa silhouette de repli est sa propre pose de repos. */
@@ -80,8 +80,10 @@ const BAR_CLIENTS = [
     prefixe:"bar_tristan", gestes:true },
   /* Teo se lève enfin : sa planche en pied lui rend des jambes. Son
      sprite assis reste pour le canapé du niveau 2. */
-  { id:"teo", sprite:"pers_teo", nom:"TEOPEDO", taille:0.94,
+  { id:"teo", sprite:"bar_teo_idle", nom:"TEOPEDO", taille:0.94,
     prefixe:"bar_teo", gestes:true },
+  { id:"solene", sprite:"bar_solene_idle", nom:"SOLÈNE", taille:0.88,
+    prefixe:"bar_solene", gestes:true },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;
