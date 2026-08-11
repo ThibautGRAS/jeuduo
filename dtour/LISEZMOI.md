@@ -203,6 +203,14 @@ appartient à l'affaire, pas à l'indice :
   PENSE » suit le raisonnement : l'hypothèse, puis la piste, puis la
   contradiction. On sait toujours où en sont les têtes.
 
+**Le dialogue se joue au doigt** (v6.12). Une seule bulle à l'écran, on
+**tape pour la suivante** — un chevron clignotant l'annonce — et **rien
+ne s'invite tant que la file n'est pas vide** : un visiteur qui débarquait
+au milieu d'un échange faisait parler trois bouches à la fois et on ne
+suivait plus rien. Le temps ne décide plus, sauf en filet : si personne
+ne tape, ça avance tout seul au bout de deux fois et demie le temps de
+lecture, pour qu'une partie laissée en plan ne se bloque jamais.
+
 **Les bulles se lisent** : multi-lignes (42 % de l'écran au plus), une
 durée de vie qui suit la longueur du texte — de 3 à 6,4 secondes, et le
 fondu n'entame que les derniers pour-cent —, et un calage qui cherche un

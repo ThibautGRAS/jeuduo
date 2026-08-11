@@ -102,7 +102,9 @@ const Effets = {
       !(p.cible.heros !== undefined && p.cible.heros === cible.heros) &&
       !(p.cible.temoin !== undefined && p.cible.temoin === cible.temoin) &&
       !(p.cible.visiteur && cible.visiteur));
-    this.paroles.push({ cible, txt, t:0, duree:duree || 1.4 });
+    const p = { cible, txt, t:0, duree:duree || 1.4 };
+    this.paroles.push(p);
+    return p;                 /* la file du niveau 2 doit pouvoir la retrouver */
   },
 
   /* L'étoile COMBO de la planche, avec le multiplicateur écrit dessous. */

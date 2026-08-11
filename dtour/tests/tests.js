@@ -729,6 +729,28 @@ if (D){
 
   /* --- une partie menée jusqu'au bout --- */
   titre("Enquête complète");
+  /* Le dialogue du niveau 2 s'avance au DOIGT depuis la v6.12 : les
+     tests doivent taper, comme un joueur. On laisse passer un peu de
+     temps entre deux tapes, à cause du garde-fou anti-double-tape. */
+  const taperDialogue = (n) => {
+    for (let k = 0; k < (n || 12); k++){
+      for (let i = 0; i < 20; i++) D.Jeu.pas(1 / 60);
+      if (!D.Enquete.avancerDialogue()) break;
+    }
+  };
+  /* On tape jusqu'à ce que la condition soit remplie : le nombre de
+     répliques d'un échange dépend de l'affaire tirée, le fixer rendrait
+     le test dépendant du hasard. */
+  const taperJusqua = (pred, n) => {
+    for (let k = 0; k < (n || 14); k++){
+      /* laisser le temps, REGARDER, puis taper : dans l'autre ordre on
+         jette la bulle qu'on attendait. */
+      for (let i = 0; i < 20; i++) D.Jeu.pas(1 / 60);
+      if (pred()) return true;
+      if (!D.Enquete.avancerDialogue()) break;
+    }
+    return pred();
+  };
   const lancer2 = () => { D.Jeu.demarrer(2); D.Intro.finir(); D.Camera.mesurer(1280, 620, 1); };
   lancer2();
   egal("on est bien au niveau 2", D.Jeu.niveau, 2);
@@ -826,9 +848,12 @@ if (D){
   /* L'espacement dans une salve suit dureeLecture() : depuis que le
      plancher est passé à 3 s, deux secondes ne suffisent plus à écouler
      la file. On attend le temps de lecture, pas une durée en dur. */
-  for (let i = 0; i < 60 * (D.Enquete.dureeLecture("Un.") + 1); i++) D.Jeu.pas(1 / 60);
-  verifier("la seconde arrive après, pas en même temps",
-    D.Enquete.fileDial.length === 0, "il reste " + D.Enquete.fileDial.length + " réplique(s)");
+  verifier("la seconde attend qu'on tape, elle ne sort pas d'elle-même",
+    D.Enquete.fileDial.length === 1, "il reste " + D.Enquete.fileDial.length + " réplique(s)");
+  taperDialogue();
+  verifier("et elle sort quand on tape",
+    D.Enquete.fileDial.length === 0 && !D.Enquete.dialCourante,
+    "il reste " + D.Enquete.fileDial.length + " réplique(s)");
   verifier("dix-sept affaires au moins", D.SCENARIOS.length >= 17, D.SCENARIOS.length + " scénarios");
   verifier("celle du billet de cinq euros existe",
     D.SCENARIOS.some(sc => sc.porteurs.indexOf("billet") >= 0),
@@ -1087,9 +1112,8 @@ if (D){
   verifier("la réponse est différée, pas simultanée",
     !D.Effets.paroles.some(p => p.cible.temoin !== undefined) &&
     D.Enquete.fileDial.some(r => r.qui && r.qui.temoin !== undefined));
-  for (let i = 0; i < 90; i++) D.Jeu.pas(1 / 60);
   verifier("puis la réplique sort de la bouche du témoin",
-    D.Effets.paroles.some(p => p.cible.temoin !== undefined),
+    taperJusqua(() => D.Effets.paroles.some(p => p.cible.temoin !== undefined)),
     "elle sortait de celle de l'inspecteur, on ne savait plus qui parlait");
   /* on peut aborder quelqu'un dès que son nom s'affiche */
   verifier("on parle d'aussi loin que le nom s'affiche",
@@ -1272,7 +1296,7 @@ if (D){
   while (D.Visiteurs.etat !== "PARLE" && tv++ < 60 * 20) D.Jeu.pas(1 / 60);
   verifier("il s'arrête et parle", D.Visiteurs.etat === "PARLE");
   verifier("sa réplique sort de sa bouche",
-    D.Effets.paroles.some(p => p.cible.visiteur),
+    taperJusqua(() => D.Effets.paroles.some(p => p.cible.visiteur)),
     "elle sortait de celle de l'inspecteur");
   tv = 0;
   while (D.Visiteurs.visible() && tv++ < 60 * 30) D.Jeu.pas(1 / 60);

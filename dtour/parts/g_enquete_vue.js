@@ -72,6 +72,7 @@ const EnqVue = {
        dessiné après, recouvrait son titre. Quand il est ouvert, il est
        seul. */
     const bulles = [];
+    const suite = !!(E2.fileDial && E2.fileDial.length);
     if (!E2.dossierOuvert) for (const p of Effets.paroles){
       if (p.cible.heros !== undefined){
         const ins = E2.inspecteurs[p.cible.heros];
@@ -82,18 +83,18 @@ const EnqVue = {
         bulles.push({ p, px:this.ex(ins.x) + trem,
           base:this.ey(ENQ_LIGNE) - H * ENQ_TAILLE,
           style:{ bord:Heros[ins.heros].couleur, nom:Heros[ins.heros].court,
-                  nomCouleur:Heros[ins.heros].couleur } });
+                  nomCouleur:Heros[ins.heros].couleur, suite } });
       } else if (p.cible.visiteur){
         if (!Visiteurs.visible()) continue;
         bulles.push({ p, px:this.ex(Visiteurs.x) + trem,
           base:this.ey(ENQ_LIGNE) - H * ENQ_TAILLE * 0.92 - H * 0.05,
-          style:{ visiteur:true, nom:Visiteurs.qui.nom } });
+          style:{ visiteur:true, nom:Visiteurs.qui.nom, suite } });
       } else if (p.cible.temoin !== undefined){
         const s = SUSPECTS[p.cible.temoin];
         if (!s) continue;
         bulles.push({ p, px:this.ex(s.x) + trem,
           base:this.ey(s.bas) - H * (s.taille || 0.30) - H * 0.05,
-          style:{ temoin:true, nom:s.nom } });
+          style:{ temoin:true, nom:s.nom, suite } });
       }
     }
     /* Les plus anciennes gardent leur place : une réponse qui arrive ne
@@ -116,6 +117,11 @@ const EnqVue = {
     for (const b of bulles){
       const m = mesurerParole(b.p, b.style);
       b.bl = m.bl; b.bh = m.bh;
+      /* Une bulle déjà posée GARDE sa place. Le calage tournait à chaque
+         image : dès qu'une bulle naissait ou mourait, les autres étaient
+         replacées et sautaient à l'écran, parfois loin de la bouche. */
+      if (b.p._x0 != null){ b.x0 = b.p._x0; b.y = b.p._y; posees.push(b);
+        dessinerParoleLibre(b.p, b.px, b.y, b.style, b.x0); continue; }
       b.y = b.base - H * 0.02;
       b.x0 = borne(b.px - b.bl / 2, 4, Math.max(4, Camera.L - b.bl - 4));
       /* D'abord on remonte, tant qu'il reste de la place. Le piège
@@ -165,6 +171,7 @@ const EnqVue = {
         /* Cinq rangées pleines : la plus récente passe devant, faute de mieux. */
       }
       posees.push(b);
+      b.p._x0 = b.x0; b.p._y = b.y;
       dessinerParoleLibre(b.p, b.px, b.y, b.style, b.x0);
     }
 
@@ -798,6 +805,22 @@ function dessinerParoleLibre(p, px, pyBas, style, x0){
   ctx.font = ((st.temoin || st.visiteur) ? "700 " : "800 ") + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
   ctx.fillStyle = st.visiteur ? "#241C3A" : st.temoin ? "#2A2117" : "#1A1420";
   const lignes = m.lignes || [p.txt];
+  /* Un petit chevron dit que le doigt a la main : sans lui, on ne devine
+     pas qu'il faut taper. Il ne s'affiche qu'une fois la bulle lisible,
+     et seulement s'il reste quelque chose derrière. */
+  if (st.suite && p.t > 0.35){
+    const r = taille * 0.42;
+    const cx = bx + bl - r * 1.9, cy = by + bh - r * 1.4;
+    ctx.save();
+    ctx.globalAlpha *= 0.55 + 0.45 * Math.abs(Math.sin(p.t * 3.4));
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 0.5, cy - r * 0.7);
+    ctx.lineTo(cx + r * 0.6, cy);
+    ctx.lineTo(cx - r * 0.5, cy + r * 0.7);
+    ctx.closePath();
+    ctx.fillStyle = "#8A6B34"; ctx.fill();
+    ctx.restore();
+  }
   for (let i = 0; i < lignes.length; i++)
     ctx.fillText(lignes[i], bx + bl / 2 + (st.bord ? taille * 0.12 : 0),
                  by + hNom + taille * 0.86 + i * m.interligne);

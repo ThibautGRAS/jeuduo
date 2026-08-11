@@ -481,13 +481,18 @@ function jouerJusqua(D, condition, limite){
     for (const s of D.SUSPECTS) s.vus = true;
     D.Visiteurs.declencher();
     D.Visiteurs.etat = "PARLE"; D.Visiteurs.x = 0.62;
-    D.Effets.parole({ heros:D.Enquete.inspecteurs[0].heros }, "Ce n'est pas la pizza non plus.", 4);
-    D.Effets.parole({ heros:D.Enquete.inspecteurs[1].heros }, "Sa sœur l'a prévenue, c'est certain.", 4);
-    D.Effets.parole({ temoin:0 }, "Non.", 4);
-    D.Effets.parole({ visiteur:true }, "Deux cocktails offerts. Vous les prenez maintenant ou après ?", 4);
+    /* On passe par la FILE, comme le jeu : une seule bulle doit sortir,
+       avec le chevron qui annonce la suite. */
+    D.Enquete.dialogue([
+      [0, "Ce n'est pas la pizza non plus."],
+      [1, "Sa sœur l'a prévenue, c'est certain."],
+      [{ temoin:0 }, "Non."],
+      [{ visiteur:true }, "Deux cocktails offerts. Vous les prenez maintenant ou après ?"],
+    ], 0);
     D.Enquete.poserBadge("suspect");
     D.Enquete.badgeT = 0.2;
     for (let i = 0; i < 20; i++) D.Jeu.pas(1 / 60);
+    void 0;
     dessinerVia(D, canevas);
     ecrire(canevas, "19_enq_bulles_844");
   }

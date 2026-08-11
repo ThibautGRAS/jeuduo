@@ -1585,6 +1585,10 @@ const Visiteurs = {
   declencher(){
     if (this.etat !== ETAT_V.ABSENT || !Enquete.actif) return false;
     if (Enquete.dossierOuvert || Enquete.accusation || HortenseApp.visible()) return false;
+    /* Rien ne s'invite tant qu'on parle : l'arrivée d'un visiteur au
+       milieu d'un échange était la cause principale de confusion — trois
+       bouches d'un coup, et on ne suivait plus rien. */
+    if (Enquete.dialogueEnCours()) return false;
     if (!this.tournee) this.composer();
     const dispo = VISITEURS.filter(v => this.tournee.indexOf(v.id) >= 0 && !this.vus[v.id]);
     if (!dispo.length) return false;
@@ -1620,7 +1624,7 @@ const Visiteurs = {
       txt = remplir(piocher(this.qui.banal));
     }
     if (utile) this.utiles++;
-    Effets.parole({ visiteur:true }, txt, 2.6);
+    Enquete.direUn({ visiteur:true }, txt);
     /* Un des deux inspecteurs réagit, ce qui évite que la scène tombe
        à plat quand le passant ne sert à rien. */
     Enquete.dialogue([[Enquete.actifIdx, utile
@@ -1686,7 +1690,7 @@ const Enquete = {
     this.gele = 0; this.badge = null; this.badgeT = 0;
     this.dernier = null;
     this.actifIdx = 0;
-    this.fileDial = [];
+    this.fileDial = []; this.dialCourante = null; this.dialT = 0;
     this.accusationsRestantes = ENQ_ACCUSATIONS;
     this.piecesVues = {};
     this.prochainBavardage = hasard(18, 30);
@@ -1739,32 +1743,80 @@ const Enquete = {
      « Non. » disparaissait avant qu'on ait eu le temps de voir QUI
      l'avait dite. Le plafond monte aussi : une phrase longue se lit. */
   dureeLecture(txt){ return borne(2.0 + (txt ? txt.length : 0) * 0.060, 3.0, 6.4); },
+  /* --------- le dialogue, une bulle à la fois ---------
+     L'ancien système lâchait les répliques à l'échéance, plusieurs à la
+     fois, et le calage les déplaçait à chaque image dès qu'une nouvelle
+     arrivait : elles apparaissaient quelque part puis sautaient
+     ailleurs, parfois loin de la bouche. Et quand un visiteur débarquait
+     au milieu, on ne comprenait plus rien.
+     Désormais : UNE bulle à l'écran, on tape pour la suivante, et rien
+     ne s'invite tant que la file n'est pas vide. */
   dialogue(paires, delai){
-    /* À l'intérieur d'une salve, chaque réplique attend la fin de
-       lecture de la précédente : la salve s'étire d'elle-même quand les
-       textes s'allongent. Entre salves, chacune garde son départ — une
-       réponse de témoin ne doit pas attendre un vieux bavardage, les
-       bulles s'empilent pour ça. */
-    let quand = (delai || 0);
-    this.fileDial = (this.fileDial || []).concat(paires.map(p => {
-      const r = { qui:p[0], txt:p[1], quand, lecture:this.dureeLecture(p[1]) };
-      quand += r.lecture * 0.8;
-      return r;
-    }));
+    /* Le délai d'ouverture est ignoré : il datait du temps où les
+       répliques partaient toutes seules. Il empêchait le compteur
+       anti-double-tape d'avancer, donc bloquait le doigt. */
+    void delai;
+    this.fileDial = (this.fileDial || []).concat(
+      paires.map(p => ({ qui:p[0], txt:p[1] })));
+  },
+
+  /* Une seule réplique, de n'importe qui : elle prend la file comme les
+     autres. Rien ne doit court-circuiter la file, sinon deux bulles se
+     retrouvent à l'écran et tout le bénéfice est perdu. */
+  direUn(qui, txt){ this.dialogue([[qui, txt]], 0); },
+
+  dialogueEnCours(){
+    return !!(this.dialCourante || (this.fileDial && this.fileDial.length));
+  },
+
+  /* Appelé par le doigt et par le clavier. Rend true si quelque chose a
+     bougé : l'appelant sait alors que le geste a servi à ça. */
+  avancerDialogue(){
+    if (!this.dialogueEnCours()) return false;
+    if (this.dialCourante && this.dialT < 0.25) return false;   /* anti-double-tape */
+    this.finirCourante();
+    this.tirerSuivante();
+    return true;
+  },
+
+  finirCourante(){
+    if (!this.dialCourante) return;
+    Effets.paroles = Effets.paroles.filter(p => p !== this.dialCourante.parole);
+    this.dialCourante = null;
+  },
+
+  tirerSuivante(){
+    if (!this.fileDial || !this.fileDial.length) return;
+    const r = this.fileDial.shift();
+    /* Deux formes de cible cohabitent : un INDEX d'inspecteur (0 ou 1,
+       hérité de dialogue()) ou un OBJET déjà résolu ({heros}, {temoin},
+       {visiteur}). Ne pas traiter la seconde faisait sauter en silence
+       toutes les répliques posées par direUn — la question de
+       l'inspecteur disparaissait et seule la réponse sortait. */
+    const q = r.qui;
+    const cible = (q && typeof q === "object")
+      ? ((q.temoin !== undefined || q.visiteur || q.heros !== undefined) ? q : null)
+      : (this.inspecteurs[q] ? { heros:this.inspecteurs[q].heros } : null);
+    if (!cible) return this.tirerSuivante();
+    /* Durée volontairement longue : c'est le doigt qui décide. Le
+       compte à rebours ne sert que de filet, pour qu'une partie laissée
+       en plan ne se bloque jamais. */
+    const filet = this.dureeLecture(r.txt) * 2.6;
+    const parole = Effets.parole(cible, r.txt, filet);
+    this.dialCourante = { r, parole };
+    this.dialT = 0;
   },
   majDialogue(dt){
-    if (!this.fileDial || !this.fileDial.length) return;
-    for (const r of this.fileDial) r.quand -= dt;
-    /* On tire par échéance, pas par ordre d'insertion : une réponse de
-       témoin insérée après une déduction plus tardive partait APRÈS
-       elle — la question restait sans réponse pendant quatre secondes. */
-    const prets = this.fileDial.filter(r => r.quand <= 0).sort((a, b) => a.quand - b.quand);
-    if (!prets.length) return;
-    this.fileDial = this.fileDial.filter(r => r.quand > 0);
-    for (const r of prets){
-      if (r.qui && r.qui.temoin !== undefined) Effets.parole(r.qui, r.txt, r.lecture);
-      else if (this.inspecteurs[r.qui]) Effets.parole({ heros:this.inspecteurs[r.qui].heros }, r.txt, r.lecture);
+    if (this.dialCourante){
+      this.dialT += dt;
+      /* le filet : si personne ne tape, on avance quand même */
+      if (Effets.paroles.indexOf(this.dialCourante.parole) < 0){
+        this.dialCourante = null;
+        this.tirerSuivante();
+      }
+      return;
     }
+    this.tirerSuivante();
   },
   poserBadge(nom){ this.badge = nom; this.badgeT = 0; },
 
@@ -1817,7 +1869,7 @@ const Enquete = {
     /* la cachette : la pizza n'apparaît que là, et pas avant trois indices */
     if (z.cachette){
       if (this.indices < 3){
-        Effets.parole({ heros:ins.heros }, "Il y a quelque chose. Mais quoi ?", 2.0);
+        Enquete.direUn({ heros:ins.heros }, "Il y a quelque chose. Mais quoi ?");
         ins.cible = -1;
         return;
       }
@@ -1825,7 +1877,7 @@ const Enquete = {
       this.pizza = { t:0, zone:ins.cible };
       this.gele = 0.15;
       this.poserBadge("pizza");
-      Effets.parole({ heros:ins.heros }, "La voilà.", 2.0);
+      Enquete.direUn({ heros:ins.heros }, "La voilà.");
       this.dialogue(Affaire.trouvaille(), 1.6);
       this.dire("Il reste à désigner qui. Bouton ACCUSER.", 3.2);
       Sons.tarteEsquive(); Sons.palier();
@@ -1840,7 +1892,7 @@ const Enquete = {
          jouait tout le niveau avec Pierre-François. */
       if (ind.social && pf){
         this.fausses++;
-        Effets.parole({ heros:ins.heros }, remplir(ind.analyse), 1.8);
+        Enquete.direUn({ heros:ins.heros }, remplir(ind.analyse));
         this.dire("Thibaut connaît mieux la maison.", 2.0);
         Sons.bip(190, 0.16, "sine", 0.14, 130);
         ins.cible = -1;
@@ -1849,7 +1901,7 @@ const Enquete = {
       if (ind.expert && !pf){
         /* Thibaut voit la chose sans la comprendre : l'indice reste à prendre */
         this.fausses++;
-        Effets.parole({ heros:ins.heros }, remplir(ind.brut), 1.8);
+        Enquete.direUn({ heros:ins.heros }, remplir(ind.brut));
         this.dire("Pierre-François saurait quoi en faire.", 2.0);
         Sons.bip(190, 0.16, "sine", 0.14, 130);
         ins.cible = -1;
@@ -1864,7 +1916,7 @@ const Enquete = {
          devient une liste d'objets sans enquête. */
       this.dernier = ind.nom + " — " + z.ref.nom;
       const annonce = remplir((pf && !ind.social) ? ind.analyse : ind.brut);
-      Effets.parole({ heros:ins.heros }, annonce, this.dureeLecture(annonce));
+      Enquete.direUn({ heros:ins.heros }, annonce);
       /* Les indices porteurs se lisent dans CETTE affaire : les deux
          voix relient l'objet à l'histoire. Le garnissage garde son écho
          générique — une fausse piste ne mène nulle part, c'est le but. */
@@ -1893,7 +1945,7 @@ const Enquete = {
       this.fausses++;
       const r = RIEN[z.ref.id];
       const lecture = remplir(r ? (pf ? r.pf : r.th) : "Rien.");
-      Effets.parole({ heros:ins.heros }, lecture, this.dureeLecture(lecture));
+      Enquete.direUn({ heros:ins.heros }, lecture);
       Sons.bip(190, 0.16, "sine", 0.14, 130);
     }
     ins.cible = -1;
@@ -1940,7 +1992,7 @@ const Enquete = {
       s.confrontes[conf.id] = true;
       s.vus++;
       const q = remplir(conf.q);
-      Effets.parole({ heros:ins.heros }, q, this.dureeLecture(q));
+      Enquete.direUn({ heros:ins.heros }, q);
       Sons.bip(540, 0.08, "sine", 0.1);
       this.dialogue([[{ temoin:is }, remplir(cle ? conf.koR : conf.okR)]], 1.1);
       this.apresEntretien(s, is, pf, cle);
@@ -1955,7 +2007,7 @@ const Enquete = {
        défilaient séparément : on demandait l'heure et on s'entendait
        répondre qu'il y avait deux pizzas. */
     const q = remplir(pf ? sujet.qPF : sujet.qTH);
-    Effets.parole({ heros:ins.heros }, q, this.dureeLecture(q));
+    Enquete.direUn({ heros:ins.heros }, q);
     Sons.bip(pf ? 470 : 540, 0.08, "sine", 0.1);
     const reponse = pf ? sujet.pf : (s.coupable ? sujet.ko : sujet.ok);
     this.dialogue([[{ temoin:is }, remplir(reponse)]], 1.1);

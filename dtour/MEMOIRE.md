@@ -479,6 +479,39 @@ inspecteur seul ne peut pas réunir tous les indices. Quand la place
 manque, on raccourcit un libellé ou on passe en pastille ; on ne retire
 pas la commande. Un test refuse désormais toute règle qui masque `#c2C`.
 
+### Le meilleur calage ne remplace pas un tour de parole
+Trois versions passées à perfectionner l'empilement des bulles — remontée,
+plafond, repli par rangées, obstacles — et l'écran restait confus. La
+cause n'était pas géométrique : **plusieurs personnes parlaient en même
+temps**, et le calage se recalculait à chaque image, donc les bulles
+sautaient dès qu'une naissait ou mourait, parfois loin de la bouche. La
+vraie réponse est un tour de parole : **une bulle à la fois, on tape pour
+la suite, et rien ne s'invite tant que la file n'est pas vide**. Le
+calage devient presque inutile, ce qui est le signe qu'on tenait le
+problème par le mauvais bout. Deux compléments : une bulle déjà posée
+garde sa position (mémorisée sur l'objet), et un chevron clignotant dit
+que le doigt a la main.
+
+Corollaire de méthode : quand une amélioration est reprise trois fois
+sans que le défaut disparaisse, ce n'est pas le réglage qui est en cause,
+c'est le modèle.
+
+### Trois pièges dans une file à tour de parole
+Tous rencontrés en une heure, tous invisibles sans diagnostic :
+1. **Deux formes de cible cohabitaient.** L'ancienne file passait un
+   INDEX d'inspecteur (0 ou 1), les prises de parole isolées un OBJET
+   `{heros}`. Ne pas traiter la seconde faisait sauter les répliques **en
+   silence** : la question de l'inspecteur disparaissait et seule la
+   réponse sortait.
+2. **Un délai d'ouverture hérité bloquait le doigt.** Le vieux `delai`
+   de `dialogue()` empêchait le compteur anti-double-tape d'avancer, donc
+   la deuxième tape ne faisait rien. Supprimé : avec le doigt, un délai
+   n'a plus de sens.
+3. **Un test qui tape avant de regarder jette ce qu'il attend.** Mon
+   utilitaire de test tapait puis vérifiait : il détruisait la bulle
+   qu'il cherchait. L'ordre est : laisser passer le temps, REGARDER,
+   puis taper.
+
 ### Un calage ne vaut que s'il connaît TOUT ce qui est à l'écran
 Le calage des bulles était juste, et l'écran restait un fouillis :
 il ne connaissait que les bulles. Le badge (« SUSPECT ! », « SPLAT ! »)
