@@ -691,7 +691,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.25</div>
+  <div id="version">CALLAGHAN v6.26</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -763,7 +763,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.25";
+const VERSION = "6.26";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -3836,6 +3836,39 @@ const PLACES_FIXES = {
   chat:    { x:0.452, bas:0.925, taille:0.170 },  /* par terre            */
 };
 
+/* ---------- qui connaît qui ----------
+   La carte des liens du quartier, telle qu'elle est écrite dans
+   PERSONNAGES.md. Elle sert à deux choses : conseiller l'inspecteur qui
+   fera parler quelqu'un, et fabriquer les recoupements des affaires.
+   `pf` et `th` valent true quand l'inspecteur a une prise sur la
+   personne — amitié, parenté, ou simple connaissance. */
+const LIENS = {
+  teo:      { pf:true,  th:false, amis:["gabi", "hortense", "remy"] },
+  gabi:     { pf:true,  th:false, amis:["solene", "teo", "charles"] },
+  charles:  { pf:true,  th:false, amis:["gabi"] },
+  mathilde: { pf:false, th:true,  amis:["solene", "remy", "kevin", "tristan"] },
+  tristan:  { pf:true,  th:true,  amis:["solene", "kevin", "remy", "mathilde"] },
+  solene:   { pf:false, th:false, amis:["tristan", "mathilde", "kevin", "gabi"] },
+  kevin:    { pf:true,  th:true,  amis:["tristan", "mathilde", "solene", "remy"] },
+  remy:     { pf:true,  th:true,  amis:["mathilde", "tristan", "kevin", "teo"] },
+  marini:   { pf:false, th:false, amis:[] },
+  martin:   { pf:false, th:false, amis:[] },
+  francky:  { pf:false, th:false, amis:["mathilde"] },
+  jojo:     { pf:false, th:false, amis:[], fache:["mathilde"] },
+  chat:     { pf:false, th:false, amis:["gabi", "solene"] },
+};
+
+/* L'inspecteur qui a une prise : 0 pour PF, 1 pour Thibaut, -1 si
+   personne — et -1 aussi quand les deux l'ont, parce qu'un conseil qui
+   désigne tout le monde ne conseille rien. */
+function conseilInspecteur(id){
+  const l = LIENS[id];
+  if (!l || (l.pf && l.th)) return -1;
+  if (l.pf) return 0;
+  if (l.th) return 1;
+  return -1;
+}
+
 const SUSPECTS_BANQUE = [
   { id:"teo", nom:"TEOPEDO", sprite:"assis_teo",
     role:"Ami de Pierre-François. Professeur d'histoire.",
@@ -5991,12 +6024,25 @@ const EnqVue = {
           const bande = posees.filter(q =>
             (b.y - b.bh) < q.y + marge && (q.y - q.bh) < b.y + marge)
             .sort((q1, q2) => q1.x0 - q2.x0);
-          let x = 4, place = null;
+          /* On cherche la place la plus PROCHE DE LA BOUCHE, pas la
+             première en partant de la gauche. Une bulle se retrouvait
+             collée au bord gauche pendant que son locuteur parlait au
+             centre : la queue partait dans le vide et on ne savait plus
+             qui parlait. */
+          const ideal = borne(b.px - b.bl / 2, 4, Math.max(4, Camera.L - b.bl - 4));
+          const trous = [];
+          let x = 4;
           for (const q of bande){
-            if (x + b.bl + marge <= q.x0){ place = x; break; }
+            if (x + b.bl + marge <= q.x0) trous.push([x, q.x0 - b.bl - marge]);
             x = Math.max(x, q.x0 + q.bl + marge);
           }
-          if (place == null && x + b.bl <= Camera.L - 4) place = x;
+          if (x + b.bl <= Camera.L - 4) trous.push([x, Camera.L - b.bl - 4]);
+          let place = null, mieux = Infinity;
+          for (const [d, f] of trous){
+            const cand = borne(ideal, d, Math.max(d, f));
+            const ecart = Math.abs(cand - ideal);
+            if (ecart < mieux){ mieux = ecart; place = cand; }
+          }
           if (place != null){ b.x0 = place; cale = true; }
           else y += b.bh + marge;
         }
@@ -6204,6 +6250,18 @@ const EnqVue = {
       ctx.strokeStyle = "rgba(255,255,255,.24)"; ctx.lineWidth = 1; ctx.stroke();
       ctx.fillStyle = s.coince ? "#FFF3F2" : "#F1F5FF";
       ctx.fillText(s.nom, px, py + taille * 0.06);
+      /* Une pastille à la couleur de l'inspecteur qui a une prise sur
+         cette personne — parenté, amitié, ou simple connaissance. C'est
+         ce qui donne enfin un sens à TAB : on change d'inspecteur parce
+         qu'on voit à qui l'autre parlera mieux. */
+      const ci = conseilInspecteur(s.id);
+      if (ci >= 0){
+        const r = taille * 0.30;
+        ctx.beginPath();
+        ctx.arc(px - w / 2 - 9 - r * 1.5, py + taille * 0.02, r, 0, 6.2832);
+        ctx.fillStyle = Heros[ci].couleur; ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,.45)"; ctx.lineWidth = 1; ctx.stroke();
+      }
       /* Un signe, pas un mot : la commande INTERROGER s'allume en bas
          de l'écran, répéter le mot ici chevauchait la plaque de nom. */
       if (pres){
@@ -8881,7 +8939,7 @@ globalThis.DTOUR = {
   xPlace, borne, melange, chiffres, doux, SPRITES_PNJ, PERSOS_DEBOUT, PERSOS_ASSIS,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
-  Enquete, EnqVue, Affaire, Dossier, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
+  Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
   POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE, BAR_TAILLE_BARMAN, BAR_COPIES,

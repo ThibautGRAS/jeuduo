@@ -157,12 +157,25 @@ const EnqVue = {
           const bande = posees.filter(q =>
             (b.y - b.bh) < q.y + marge && (q.y - q.bh) < b.y + marge)
             .sort((q1, q2) => q1.x0 - q2.x0);
-          let x = 4, place = null;
+          /* On cherche la place la plus PROCHE DE LA BOUCHE, pas la
+             première en partant de la gauche. Une bulle se retrouvait
+             collée au bord gauche pendant que son locuteur parlait au
+             centre : la queue partait dans le vide et on ne savait plus
+             qui parlait. */
+          const ideal = borne(b.px - b.bl / 2, 4, Math.max(4, Camera.L - b.bl - 4));
+          const trous = [];
+          let x = 4;
           for (const q of bande){
-            if (x + b.bl + marge <= q.x0){ place = x; break; }
+            if (x + b.bl + marge <= q.x0) trous.push([x, q.x0 - b.bl - marge]);
             x = Math.max(x, q.x0 + q.bl + marge);
           }
-          if (place == null && x + b.bl <= Camera.L - 4) place = x;
+          if (x + b.bl <= Camera.L - 4) trous.push([x, Camera.L - b.bl - 4]);
+          let place = null, mieux = Infinity;
+          for (const [d, f] of trous){
+            const cand = borne(ideal, d, Math.max(d, f));
+            const ecart = Math.abs(cand - ideal);
+            if (ecart < mieux){ mieux = ecart; place = cand; }
+          }
           if (place != null){ b.x0 = place; cale = true; }
           else y += b.bh + marge;
         }
@@ -370,6 +383,18 @@ const EnqVue = {
       ctx.strokeStyle = "rgba(255,255,255,.24)"; ctx.lineWidth = 1; ctx.stroke();
       ctx.fillStyle = s.coince ? "#FFF3F2" : "#F1F5FF";
       ctx.fillText(s.nom, px, py + taille * 0.06);
+      /* Une pastille à la couleur de l'inspecteur qui a une prise sur
+         cette personne — parenté, amitié, ou simple connaissance. C'est
+         ce qui donne enfin un sens à TAB : on change d'inspecteur parce
+         qu'on voit à qui l'autre parlera mieux. */
+      const ci = conseilInspecteur(s.id);
+      if (ci >= 0){
+        const r = taille * 0.30;
+        ctx.beginPath();
+        ctx.arc(px - w / 2 - 9 - r * 1.5, py + taille * 0.02, r, 0, 6.2832);
+        ctx.fillStyle = Heros[ci].couleur; ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,.45)"; ctx.lineWidth = 1; ctx.stroke();
+      }
       /* Un signe, pas un mot : la commande INTERROGER s'allume en bas
          de l'écran, répéter le mot ici chevauchait la plaque de nom. */
       if (pres){

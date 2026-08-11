@@ -512,6 +512,39 @@ const PLACES_FIXES = {
   chat:    { x:0.452, bas:0.925, taille:0.170 },  /* par terre            */
 };
 
+/* ---------- qui connaît qui ----------
+   La carte des liens du quartier, telle qu'elle est écrite dans
+   PERSONNAGES.md. Elle sert à deux choses : conseiller l'inspecteur qui
+   fera parler quelqu'un, et fabriquer les recoupements des affaires.
+   `pf` et `th` valent true quand l'inspecteur a une prise sur la
+   personne — amitié, parenté, ou simple connaissance. */
+const LIENS = {
+  teo:      { pf:true,  th:false, amis:["gabi", "hortense", "remy"] },
+  gabi:     { pf:true,  th:false, amis:["solene", "teo", "charles"] },
+  charles:  { pf:true,  th:false, amis:["gabi"] },
+  mathilde: { pf:false, th:true,  amis:["solene", "remy", "kevin", "tristan"] },
+  tristan:  { pf:true,  th:true,  amis:["solene", "kevin", "remy", "mathilde"] },
+  solene:   { pf:false, th:false, amis:["tristan", "mathilde", "kevin", "gabi"] },
+  kevin:    { pf:true,  th:true,  amis:["tristan", "mathilde", "solene", "remy"] },
+  remy:     { pf:true,  th:true,  amis:["mathilde", "tristan", "kevin", "teo"] },
+  marini:   { pf:false, th:false, amis:[] },
+  martin:   { pf:false, th:false, amis:[] },
+  francky:  { pf:false, th:false, amis:["mathilde"] },
+  jojo:     { pf:false, th:false, amis:[], fache:["mathilde"] },
+  chat:     { pf:false, th:false, amis:["gabi", "solene"] },
+};
+
+/* L'inspecteur qui a une prise : 0 pour PF, 1 pour Thibaut, -1 si
+   personne — et -1 aussi quand les deux l'ont, parce qu'un conseil qui
+   désigne tout le monde ne conseille rien. */
+function conseilInspecteur(id){
+  const l = LIENS[id];
+  if (!l || (l.pf && l.th)) return -1;
+  if (l.pf) return 0;
+  if (l.th) return 1;
+  return -1;
+}
+
 const SUSPECTS_BANQUE = [
   { id:"teo", nom:"TEOPEDO", sprite:"assis_teo",
     role:"Ami de Pierre-François. Professeur d'histoire.",

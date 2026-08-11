@@ -264,6 +264,17 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**La carte des liens** (v6.26). Le jeu sait qui connaît qui, et une
+**pastille à la couleur d'un inspecteur** apparaît sur la plaque de nom
+de ceux sur qui il a une prise : PF pour Teopedo, Gabi et Charles ;
+Thibaut pour Mathilde. Personne n'est conseillé quand les deux ont une
+prise — un conseil qui désigne tout le monde ne conseille rien — ni
+quand aucun des deux n'en a. C'est ce qui donne enfin un sens à TAB.
+
+Trois liens sont volontairement à sens unique : Francky **adore**
+Mathilde sans réciprocité, le chat aime qui le nourrit, et Hortense
+n'habite pas l'appartement.
+
 **Cinquante indices** (v6.25) au lieu de treize. Ils ne parlent plus
 seulement de la pizza : le chat de Solène et Gabi, les paris de Rémy,
 le sport de Kevin et Tristan, la soirée elle-même, et les objets qui

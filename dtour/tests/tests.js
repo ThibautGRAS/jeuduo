@@ -2511,6 +2511,40 @@ if (D){
       return n >= 4;
     })(), "il faut au moins la déclaration et les trois lieux de rendu");
 
+  /* --- la carte des liens --- */
+  titre("Qui connaît qui");
+  verifier("chaque habitant possible a ses liens",
+    ["teo", "gabi", "charles", "mathilde", "tristan", "solene", "kevin",
+     "remy", "marini", "martin", "francky", "jojo", "chat"]
+      .every(i => D.LIENS[i] && Array.isArray(D.LIENS[i].amis)));
+  verifier("les liens d'amitié sont réciproques",
+    (() => {
+      const boiteux = [];
+      for (const [a2, l] of Object.entries(D.LIENS))
+        for (const b2 of l.amis){
+          /* Trois exceptions assumées : Hortense n'habite pas
+             l'appartement et n'a pas de fiche de liens ; Francky ADORE
+             Mathilde sans réciprocité, c'est le gag ; et le chat aime
+             qui le nourrit sans qu'on lui demande son avis. */
+          if (b2 === "hortense" || a2 === "francky" || a2 === "chat") continue;
+          if (D.LIENS[b2] && D.LIENS[b2].amis.indexOf(a2) < 0) boiteux.push(a2 + "->" + b2);
+        }
+      messageDetail = boiteux.join(", ");
+      return boiteux.length === 0;
+    })(), "une amitié à sens unique fausserait les recoupements");
+  verifier("le conseil désigne le bon inspecteur",
+    D.conseilInspecteur("mathilde") === 1 && D.conseilInspecteur("teo") === 0 &&
+    D.conseilInspecteur("gabi") === 0 && D.conseilInspecteur("charles") === 0);
+  verifier("personne n'est conseillé quand les deux ont une prise",
+    D.conseilInspecteur("remy") === -1 && D.conseilInspecteur("kevin") === -1,
+    "un conseil qui désigne tout le monde ne conseille rien");
+  verifier("ni quand personne n'en a",
+    D.conseilInspecteur("marini") === -1 && D.conseilInspecteur("martin") === -1 &&
+    D.conseilInspecteur("solene") === -1);
+  verifier("la pastille de conseil est dessinée sur la plaque",
+    /const ci = conseilInspecteur\(s\.id\)/.test(source) &&
+    /Heros\[ci\]\.couleur/.test(source));
+
   /* --- la pause doit être atteignable, et visible --- */
   titre("La pause");
   (() => {
