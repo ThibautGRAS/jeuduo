@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.52";
+const VERSION = "6.53";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -681,7 +681,25 @@ const PREFIXES_BAR = ["bar_th", "bar_pf"];
 const POSES_ENNEMI = ["run1", "run2", "run3", "run4", "run5", "run6",
                       "hit_torse", "hit_epaule", "hit_jambe", "hit_tete",
                       "chute1", "chute2", "sol"];
-const ENNEMIS_RUELLE = ["costaud"];
+const ENNEMIS_RUELLE = ["depar"];
+/* Chacun a en plus les poses de SA mécanique. Elles ne sont pas
+   communes : Depardiahree trébuche et lance une bouteille, DSKKK
+   garde son visage, personne ne fait les deux. La table les déclare
+   par personnage pour que le chargement n'aille pas chercher des
+   fichiers qui n'existent pas. */
+const POSES_PROPRES = {
+  depar: ["trebuche1", "trebuche2", "ramasse", "arme", "lance"],
+};
+/* Ce qui vole, ce qui éclate, ce qui prévient. Les projectiles ont
+   DEUX vues : de côté pendant le vol, et de face quand ils fondent
+   sur la barricade — un objet qui arrive droit sur soi ne se dessine
+   pas de profil. */
+const OBJETS_RUELLE = [
+  "obj_bouteille", "obj_pave", "obj_encensoir", "obj_conserve", "obj_bouteille_g",
+  "obj_bouteille_f", "obj_pave_f", "obj_encensoir_f", "obj_conserve_f", "obj_bouteille_gf",
+  "imp_vin", "imp_pierre", "imp_encens", "imp_conserve", "imp_bois",
+  "sig_alerte", "sig_alerte_or", "sig_cible", "sig_cible_bras", "sig_etoile",
+];
 /* Les deux héros derrière la barricade, vus de dos. Thibaut a douze
    poses, PF onze : leurs planches n'en donnaient pas autant, et rien
    n'oblige deux personnages à avoir le même nombre d'images. */
@@ -694,6 +712,8 @@ const POSES_RUEL_PF = ["accroupi", "leve1", "leve2", "arme1", "arme2", "vise",
    charger le décor et les ennemis avant la première image. */
 const IMAGES_NIVEAU4 = ["ruelle", "ruelle_flou", "duo_ruelle"]
   .concat(ENNEMIS_RUELLE.flatMap(e => POSES_ENNEMI.map(po => "enn_" + e + "_" + po)))
+  .concat(ENNEMIS_RUELLE.flatMap(e => (POSES_PROPRES[e] || []).map(po => "enn_" + e + "_" + po)))
+  .concat(OBJETS_RUELLE)
   .concat(POSES_RUEL_TH.map(po => "ruel_th_" + po))
   .concat(POSES_RUEL_PF.map(po => "ruel_pf_" + po))
   /* Les commandes sont des IMAGES depuis la v6.50 : peintes au canevas

@@ -238,8 +238,8 @@ const Interface = {
     if (E.vign2 && Images.table.pizza_boite_ouverte){
       E.vign2.src = Images.table.pizza_boite_ouverte.src; E.vign2.alt = "L'enquête de la pizza";
     }
-    if (E.vign4 && Images.table.enn_costaud_run1 && Images.table.enn_costaud_run1.naturalWidth){
-      E.vign4.src = Images.table.enn_costaud_run1.src; E.vign4.alt = "La ruelle";
+    if (E.vign4 && Images.table.enn_depar_run1 && Images.table.enn_depar_run1.naturalWidth){
+      E.vign4.src = Images.table.enn_depar_run1.src; E.vign4.alt = "La ruelle";
     }
     if (E.vign3 && Images.table.bar_cocktail && Images.table.bar_cocktail.naturalWidth){
       E.vign3.src = Images.table.bar_cocktail.src; E.vign3.alt = "La tournée du D'Tour";

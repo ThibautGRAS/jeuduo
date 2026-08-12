@@ -2902,6 +2902,107 @@ if (D){
     }
     return null;
   };
+  /* ---- la mécanique de Depardiahree ---- */
+  const unDepar = (z, attente) => {
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.couvert = false;
+    D.Ruelle.ajouterEnnemi();
+    const e = D.Ruelle.ennemis[0];
+    e.z = z; e.attente = attente;
+    return e;
+  };
+
+  verifier("il ramasse, il arme, il lance",
+    (() => {
+      unDepar(0.40, 0.05);
+      const vus = new Set();
+      for (let i = 0; i < 60 * 6; i++){
+        D.Ruelle.pas(1 / 60);
+        if (D.Ruelle.ennemis[0]) vus.add(D.Ruelle.ennemis[0].etat);
+      }
+      return ["ramasse", "arme", "lance"].every(s => vus.has(s));
+    })(), "le télégraphe doit passer par ses trois temps");
+
+  verifier("il ne lance ni trop loin ni trop près",
+    (() => {
+      const j = D.ENNEMIS.depar.jet;
+      /* hors de la fourchette, l'attente peut être écoulée sans qu'il
+         arme : trop loin la bouteille est illisible, trop près on n'a
+         plus le temps de se couvrir */
+      const e = unDepar(j.zMin - 0.12, 0);
+      for (let i = 0; i < 40; i++) D.Ruelle.pas(1 / 60);
+      return e.etat === "course" && j.zMin > 0.2 && j.zMax < 0.85;
+    })());
+
+  verifier("une bouteille part vraiment et touche la barricade",
+    (() => {
+      unDepar(0.40, 0.05);
+      const avant = D.Ruelle.barricade;
+      let enVol = 0;
+      for (let i = 0; i < 60 * 6; i++){
+        D.Ruelle.pas(1 / 60);
+        enVol = Math.max(enVol, D.Ruelle.projectiles.length);
+      }
+      return enVol >= 1 && D.Ruelle.barricade === avant - D.ENNEMIS.depar.jet.degat;
+    })());
+
+  verifier("À COUVERT protège enfin de quelque chose",
+    (() => {
+      /* Le bouton coûtait un temps de tir et ne rendait rien : les deux
+         héros s'accroupissaient devant un danger qui n'existait pas. */
+      unDepar(0.40, 0.05);
+      D.Ruelle.couvert = true;
+      const avant = D.Ruelle.barricade;
+      for (let i = 0; i < 60 * 6; i++) D.Ruelle.pas(1 / 60);
+      const intact = D.Ruelle.barricade === avant;
+      D.Ruelle.couvert = false;
+      return intact;
+    })(), "sinon la mécanique du niveau n'a pas de contrepartie");
+
+  verifier("le torse est blindé, la tête paye, et aucune ne tue d'un coup",
+    (() => {
+      const m = D.ENNEMIS.depar.mult, pv = D.ENNEMIS.depar.pv, a = D.ARMES.revolver;
+      const tete = Math.ceil(pv / (a.tete * m.tete));
+      const torse = Math.ceil(pv / (a.torse * m.torse));
+      return tete >= 2 && torse >= 3 * tete;
+    })(), "à 1,7 de multiplicateur un seul headshot suffisait");
+
+  verifier("deux balles dans les jambes le font trébucher, et il n'avance plus",
+    (() => {
+      const e = unDepar(0.50, 999);
+      const d = D.ARMES.revolver.jambes * D.ENNEMIS.depar.mult.jambes;
+      D.Ruelle.userJambes(e, "jambes", d);
+      const apresUn = e.etat;
+      D.Ruelle.userJambes(e, "jambes", d);
+      if (e.etat !== "trebuche" || apresUn === "trebuche") return false;
+      const z = e.z;
+      for (let i = 0; i < 30; i++) D.Ruelle.pas(1 / 60);
+      return e.z === z;
+    })(), "les jambes font gagner du temps, elles ne tuent pas");
+
+  verifier("le compteur de jambes repart de zéro après la chute",
+    (() => {
+      /* sans remise à zéro il trébuchait à CHAQUE balle une fois le
+         seuil franchi, et n'avançait plus jamais */
+      const e = unDepar(0.50, 999);
+      const d = D.ARMES.revolver.jambes * D.ENNEMIS.depar.mult.jambes;
+      D.Ruelle.userJambes(e, "jambes", d);
+      D.Ruelle.userJambes(e, "jambes", d);
+      return e.usure === 0;
+    })());
+
+  verifier("la vague n'enchaîne pas tant qu'une bouteille est en l'air",
+    (() => {
+      unDepar(0.40, 0.05);
+      let vagueChangee = false;
+      const v0 = D.Ruelle.vague;
+      for (let i = 0; i < 60 * 3; i++){
+        D.Ruelle.pas(1 / 60);
+        if (D.Ruelle.projectiles.length && D.Ruelle.vague !== v0) vagueChangee = true;
+      }
+      return !vagueChangee;
+    })());
+
   verifier("les huit boutons ont le même canevas et le même disque",
     (() => {
       /* Ils sont posés en dessinant le canevas ENTIER : la place du
@@ -3013,11 +3114,11 @@ if (D){
       for (let k = 0; k < 20; k++) D.Ruelle.pas(1 / 60);
       return D.Ruelle.barricade < avant;
     })());
-  verifier("le costaud vaut plus que ce qu'il coûte",
+  verifier("Depardiahree vaut plus que ce qu'il coûte",
     (() => {
       /* pv x vitesse : les types ordinaires tournent autour de 96, lui
          dépasse — c'est ce qui en fait une décision. */
-      const c = D.ENNEMIS.costaud;
+      const c = D.ENNEMIS.depar;
       return c.pv * c.vitesse * 1000 > 105;
     })());
   verifier("toutes les valeurs d'équilibrage sont au même endroit",

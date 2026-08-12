@@ -97,12 +97,52 @@ const ARMES = {
    La corpulence dicte le couple vitesse/points de vie. Pour les types
    ordinaires, pv x vitesse tourne autour de 96 : ils représentent la
    même MENACE répartie autrement — l'un laisse peu de temps, l'autre
-   demande plus de balles. Le costaud casse la règle exprès (115) :
+   demande plus de balles. Depardiahree casse la règle exprès (115) :
    c'est le seul qui vaut plus que ce qu'il coûte, donc le seul qui
    oblige à choisir. */
 const ENNEMIS = {
-  costaud: { nom:"LE COSTAUD", pv:160, vitesse:0.072, taille:1.12, sprite:"costaud" },
+  depar: {
+    nom:"DEPARDIAHREE", pv:160, vitesse:0.072, taille:1.12, sprite:"depar",
+    /* Le torse est BLINDÉ et la tête paye : c'est ce qui transforme un
+       sac à points de vie en question. Sans ces multiplicateurs, tirer
+       au hasard dans la masse restait la meilleure stratégie, parce que
+       le torse est la zone la plus large. */
+    /* 1,15 et pas 1,7 : à 1,7 le revolver faisait 170 sur 160 PV, donc
+       UN headshot suffisait à coucher le tank et la question disparaissait.
+       À 1,15 il en faut deux — deux balles dans la tête, ou neuf dans le
+       torse, ou deux dans les jambes pour gagner une seconde. */
+    mult:{ tete:1.15, torse:0.35, jambes:0.8, epaule:0.6 },
+    /* Il lance à MOYENNE distance : trop loin la bouteille serait
+       illisible, trop près le joueur n'a plus le temps de se couvrir. */
+    jet:{ zMin:0.34, zMax:0.74, attente:[2.8, 4.6], objet:"bouteille",
+          vol:1.15, degat:18 },
+    /* Les jambes ne tuent pas, elles FONT GAGNER DU TEMPS. Le seuil est
+       cumulatif : un tir de fusil dans la jambe (28 x 0,8) n'y suffit
+       pas, deux oui. */
+    trebuche:{ seuil:46, duree:1.15 },
+  },
 };
+
+/* ---------------- ce qui vole ----------------
+   Un projectile ne voyage pas dans l'espace du jeu : il voyage en Z,
+   comme tout le reste du niveau. Sa taille et sa position se déduisent
+   de sa profondeur, donc il grossit en approchant sans qu'on ait rien
+   à animer. Passé un certain point il se retourne : un objet qui fond
+   sur vous ne se voit plus de profil. */
+const PROJ_BASCULE = 0.62;         /* fraction du vol où il se retourne */
+/* L'échelle porte sur la PLUS GRANDE dimension de l'objet, et en
+   fraction de la LARGEUR d'écran. Première version : la hauteur, en
+   fraction de la hauteur d'écran — une bouteille fait 244 x 73, donc
+   demander 15 % de hauteur en donnait 50 % de largeur. Elle remplissait
+   l'écran. */
+const PROJ_ECH_LOIN = 0.075;       /* part de la largeur, au départ     */
+const PROJ_ECH_PRES = 0.340;       /* part de la largeur, à l'arrivée   */
+const PROJ_HAUTEUR = 0.085;        /* de combien il monte en cloche     */
+const PROJ_ROTATION = 6.0;
+const IMPACT_DUREE = 0.55;
+/* L'alerte doit apparaître AVANT que le bras parte, sinon elle ne
+   prévient de rien. Elle vit toute la préparation. */
+const ALERTE_TAILLE = 0.085;
 const RUELLE_JITTER = 0.08;        /* deux ennemis d'un même couloir ne
                                       doivent jamais être synchrones   */
 const RUELLE_BARRICADE_PV = 100;
@@ -148,6 +188,7 @@ const ZONES_CORPS = [
 const Ruelle = {
   actif:false, fini:null, restant:0,
   ennemis:[], vague:0, aSortir:0, prochain:0,
+  projectiles:[], impacts:[],
   barricade:RUELLE_BARRICADE_PV,
   actifIdx:0,                       /* 0 = Thibaut, 1 = PF */
   heros:[],
@@ -167,6 +208,7 @@ const Ruelle = {
   demarrer(){
     this.actif = true; this.fini = null;
     this.ennemis.length = 0; this.flashes.length = 0;
+    this.projectiles.length = 0; this.impacts.length = 0;
     this.barricade = RUELLE_BARRICADE_PV;
     this.vague = 0; this.actifIdx = 0;
     this.secousse = 0; this.hitStop = 0;
@@ -199,6 +241,9 @@ const Ruelle = {
       z:0, vitesse:ref.vitesse * v.vitesse * jitter,
       etat:"course", frame:0, tFrame:0, tEtat:0, mort:0,
       touche:null,
+      /* dégâts encaissés dans les jambes depuis le dernier trébuchement,
+         et délai avant le prochain jet */
+      usure:0, attente:ref.jet ? melange(ref.jet.attente[0], ref.jet.attente[1], Math.random()) : 0,
     });
     this.aSortir--;
   },
@@ -228,7 +273,7 @@ const Ruelle = {
     if (lui.arme === "revolver") Sons.revolver(); else Sons.fusil();
     /* Elle vise le plus avancé, et rate souvent : c'est un soutien, pas
        une seconde paire de mains parfaite. */
-    const proies = this.ennemis.filter(e => e.etat === "course" || e.etat === "touche");
+    const proies = this.ennemis.filter(e => e.etat !== "chute" && e.etat !== "sol");
     if (!proies.length) return;
     let but = proies[0];
     for (const e of proies) if (e.z > but.z) but = e;
@@ -238,8 +283,10 @@ const Ruelle = {
     const f = 0.20 + Math.random() * 0.60;     /* elle ne visait pas la tête */
     void IA_ECART;
     const zone = (ZONES_CORPS.find(z => f >= z.haut && f < z.bas) || ZONES_CORPS[1]).id;
-    const degat = zone === "tete" ? arme.tete : zone === "torse" ? arme.torse : arme.jambes;
+    const brut = zone === "tete" ? arme.tete : zone === "torse" ? arme.torse : arme.jambes;
+    const degat = brut * ((but.ref.mult && but.ref.mult[zone]) || 1);
     but.pv -= degat; but.touche = zone; Sons.impact(false);
+    this.userJambes(but, zone, degat);
     Score.points += 10;
     if (but.pv <= 0){ but.etat = "chute"; but.tEtat = 0; but.mort = 0; Score.points += 100; }
     else { but.etat = "touche"; but.tEtat = 0; }
@@ -247,6 +294,21 @@ const Ruelle = {
   },
   armeActive(){ return ARMES[this.heroActif().arme]; },
   changerHeros(){ this.actifIdx = 1 - this.actifIdx; Sons.clic(); },
+
+  /* Tirer dans les jambes ne tue pas, ça FAIT TRÉBUCHER. Le compteur est
+     cumulatif et remis à zéro à chaque chute : sans remise à zéro, une
+     fois le seuil franchi il trébuchait à chaque balle et n'avançait
+     plus jamais. Un ennemi déjà au sol ou en train de lancer ne trébuche
+     pas — interrompre un jet est le travail du tir dans le bras, pas
+     celui-ci. */
+  userJambes(e, zone, degat){
+    if (zone !== "jambes" || !e.ref.trebuche) return;
+    if (e.etat === "chute" || e.etat === "sol" || e.etat === "trebuche") return;
+    e.usure += degat;
+    if (e.usure < e.ref.trebuche.seuil) return;
+    e.usure = 0;
+    e.etat = "trebuche"; e.tEtat = 0;
+  },
 
   pas(dt){
     if (!this.actif) return;
@@ -283,6 +345,16 @@ const Ruelle = {
       e.tEtat += dt;
       if (e.etat === "course"){
         e.z += e.vitesse * dt;
+        /* Le jet : il faut être à moyenne distance, avoir attendu, et
+           qu'aucune bouteille de lui ne soit déjà en vol. */
+        const jet = e.ref.jet;
+        if (jet){
+          e.attente -= dt;
+          if (e.attente <= 0 && e.z >= jet.zMin && e.z <= jet.zMax){
+            e.etat = "ramasse"; e.tEtat = 0;
+            continue;
+          }
+        }
         /* Un lointain avance de peu de pixels : à cadence fixe il
            saccade. On lie la cadence d'animation à la vitesse APPARENTE,
            donc à la profondeur — loin il trottine, près il martèle. */
@@ -297,6 +369,27 @@ const Ruelle = {
           if (this.barricade <= 0) this.terminer(false);
           continue;
         }
+      } else if (e.etat === "ramasse"){
+        /* il s'ARRÊTE pour ramasser : l'arrêt est déjà une information,
+           et c'est la fenêtre où on peut le punir sans qu'il avance */
+        if (e.tEtat > 0.45){ e.etat = "arme"; e.tEtat = 0; }
+      } else if (e.etat === "arme"){
+        /* le télégraphe : bras en arrière, alerte au-dessus de la tête */
+        if (e.tEtat > 1.05){
+          e.etat = "lance"; e.tEtat = 0;
+          this.lancerProjectile(e);
+        }
+      } else if (e.etat === "lance"){
+        if (e.tEtat > 0.30){
+          e.etat = "course"; e.tEtat = 0;
+          const j = e.ref.jet;
+          e.attente = melange(j.attente[0], j.attente[1], Math.random());
+        }
+      } else if (e.etat === "trebuche"){
+        /* il ne recule pas, il PERD DU TEMPS : c'est tout l'intérêt de
+           lui tirer dans les jambes plutôt que de vider un chargeur
+           dans son torse blindé. */
+        if (e.tEtat > e.ref.trebuche.duree){ e.etat = "course"; e.tEtat = 0; }
       } else if (e.etat === "touche"){
         e.z += e.vitesse * dt * 0.35;   /* il ralentit, il ne s'arrête pas */
         if (e.tEtat > 0.22){ e.etat = "course"; e.tEtat = 0; }
@@ -307,6 +400,7 @@ const Ruelle = {
         if (e.mort > 1.2){ this.ennemis.splice(i, 1); continue; }
       }
     }
+    this.pasProjectiles(dt);
     for (let i = this.flashes.length - 1; i >= 0; i--){
       this.flashes[i].t -= dt;
       if (this.flashes[i].t <= 0) this.flashes.splice(i, 1);
@@ -314,10 +408,76 @@ const Ruelle = {
     /* la flamme dure un peu plus qu'une image : sinon on ne la voit
        jamais sur un écran à soixante images par seconde */
     /* vague suivante quand tout est nettoyé */
-    if (this.aSortir <= 0 && !this.ennemis.some(e => e.etat === "course" || e.etat === "touche")){
+    if (this.aSortir <= 0 && !this.projectiles.length &&
+        !this.ennemis.some(e => e.etat !== "chute" && e.etat !== "sol")){
       if (this.vague + 1 < this.VAGUES.length) this.lancerVague(this.vague + 1);
       else if (!this.fini) this.terminer(true);
     }
+  },
+
+  lancerProjectile(e){
+    const j = e.ref.jet;
+    /* On fige la hauteur de départ MAINTENANT : c'est la main du
+       lanceur, et lui va continuer d'avancer ou tomber pendant le vol. */
+    const p = Perspective.projeter(e.z, e.couloir);
+    const haut = p.hauteur * e.ref.taille;
+    this.projectiles.push({
+      objet:j.objet, couloir:e.couloir, z0:e.z, y0:p.y - haut * 0.82,
+      t:0, duree:j.vol, degat:j.degat,
+    });
+    /* le sifflement du verre qui part : court, aigu, il annonce le vol
+       sans couvrir la détonation du joueur */
+    Sons.souffle(0.16, 0.05, 900, 2.4);
+  },
+
+  /* Le seul endroit du niveau où COUVERT protège de quelque chose.
+     Jusqu'ici le bouton coûtait un temps de tir et ne rendait rien :
+     les deux héros s'accroupissaient devant un danger qui n'existait
+     pas. La bouteille est ce danger. */
+  pasProjectiles(dt){
+    for (let i = this.projectiles.length - 1; i >= 0; i--){
+      const pr = this.projectiles[i];
+      pr.t += dt;
+      if (pr.t < pr.duree) continue;
+      this.projectiles.splice(i, 1);
+      const abrite = this.couvert;
+      this.impacts.push({
+        image:abrite ? "imp_bois" : "imp_vin", t:0, couloir:pr.couloir, abrite,
+      });
+      if (abrite){
+        /* elle éclate SUR les caisses : le bruit sans la douleur */
+        this.secousse = Math.max(this.secousse, 0.35);
+        Sons.choc();
+      } else {
+        this.barricade = Math.max(0, this.barricade - pr.degat);
+        this.secousse = Math.max(this.secousse, 0.9);
+        this.hitStop = Math.max(this.hitStop, 0.05);
+        Sons.choc();
+        if (this.barricade <= 0) this.terminer(false);
+      }
+    }
+    for (let i = this.impacts.length - 1; i >= 0; i--){
+      this.impacts[i].t += dt;
+      if (this.impacts[i].t > IMPACT_DUREE) this.impacts.splice(i, 1);
+    }
+  },
+
+  /* Où en est une bouteille à l'écran. La profondeur va du lanceur à la
+     barricade ; la cloche est une simple parabole retirée à la hauteur,
+     ce qui suffit à ne pas donner un tir tendu. */
+  posProjectile(pr){
+    const av = borne(pr.t / pr.duree, 0, 1);
+    const z = melange(pr.z0, 1, av);
+    const p = Perspective.projeter(z, pr.couloir);
+    /* La trajectoire va de la MAIN du lanceur à la barricade, et non
+       d'une hauteur arbitraire : c'est ce qui fait qu'on la voit partir
+       de lui. La cloche est retirée par-dessus, modérément — à 0,30 de
+       hauteur d'écran elle sortait par le haut. */
+    const yArrivee = Camera.H * RUELLE_PREMIER_PLAN;
+    const cloche = Math.sin(av * Math.PI) * Camera.H * PROJ_HAUTEUR;
+    const y = melange(pr.y0, yArrivee, av) - cloche;
+    const taille = Camera.L * melange(PROJ_ECH_LOIN, PROJ_ECH_PRES, courbeZ(z));
+    return { x:p.x, y, taille, av };
   },
 
   terminer(gagne){
@@ -375,10 +535,12 @@ Ruelle.tirer = function(fx, fy){
   const cible = this.viser(fx, fy, arme.tolerance);
   if (!cible) return false;
   const e = cible.ennemi;
-  const degat = cible.zone === "tete" ? arme.tete
-              : cible.zone === "torse" ? arme.torse : arme.jambes;
+  const brut = cible.zone === "tete" ? arme.tete
+             : cible.zone === "torse" ? arme.torse : arme.jambes;
+  const degat = brut * ((e.ref.mult && e.ref.mult[cible.zone]) || 1);
   e.pv -= degat;
   e.touche = cible.zone;
+  this.userJambes(e, cible.zone, degat);
   Sons.impact(cible.zone === "tete");
   Score.points += cible.zone === "tete" ? 40 : 10;
   if (e.pv <= 0){
@@ -396,8 +558,15 @@ Ruelle.tirer = function(fx, fy){
 
 /* La pose d'un ennemi se déduit de son état, comme partout ailleurs. */
 Ruelle.poseEnnemi = function(e){
+  /* Le harnais force une pose pour photographier la planche entière à
+     la taille du jeu. Rien d'autre ne pose ce champ. */
+  if (e.poseForcee) return e.poseForcee;
   if (e.etat === "sol") return "sol";
   if (e.etat === "chute") return e.tEtat < 0.21 ? "chute1" : "chute2";
+  if (e.etat === "ramasse") return "ramasse";
+  if (e.etat === "arme") return "arme";
+  if (e.etat === "lance") return "lance";
+  if (e.etat === "trebuche") return e.tEtat < 0.34 ? "trebuche1" : "trebuche2";
   if (e.etat === "touche"){
     return e.touche === "tete" ? "hit_tete"
          : e.touche === "jambes" ? "hit_jambe"
@@ -472,14 +641,25 @@ const RuelleVue = {
       const spr = Images.table["enn_" + e.ref.sprite + "_" + Ruelle.poseEnnemi(e)];
       if (!spr || !spr.naturalWidth) continue;
       const b = Ruelle.boiteEnnemi(e);
-      const l = b.h * spr.naturalWidth / spr.naturalHeight;
+      /* ANCRAGE PAR LES PIEDS. Toutes les poses n'ont pas le même
+         canevas : une bouteille brandie fait dépasser Depardiahree de
+         60 px au-dessus de sa hauteur debout. Dessiner l'image entière
+         dans la boîte l'écraserait d'autant, et rehausser le canevas
+         des treize autres poses décalerait les zones de corps — la
+         tête ne serait plus dans la bande « tête ». On garde donc le
+         canevas de `run1` comme référence, et le surplus de hauteur
+         d'une pose pousse VERS LE HAUT, pieds fixes. */
+      const ref = Images.table["enn_" + e.ref.sprite + "_run1"];
+      const k = ref && ref.naturalHeight ? spr.naturalHeight / ref.naturalHeight : 1;
+      const hp = b.h * k;
+      const l = hp * spr.naturalWidth / spr.naturalHeight;
       ctx.globalAlpha = e.etat === "sol" ? borne(1 - (e.mort - 0.7) / 0.5, 0, 1) : 1;
-      ctx.drawImage(spr, b.x + (b.l - l) / 2, b.y, l, b.h);
+      ctx.drawImage(spr, b.x + (b.l - l) / 2, b.y + b.h - hp, l, hp);
       ctx.globalAlpha = 1;
       /* Une barre de vie, mais SEULEMENT sur les ennemis entamés et
          assez proches pour être lus : au fond elles feraient un
          chapelet de traits illisibles, et sur un ennemi intact elles
-         n'apprennent rien. C'est le costaud qu'il faut voir résister. */
+         n'apprennent rien. C'est Depardiahree qu'il faut voir résister. */
       if (e.pv < e.pvMax && e.etat !== "chute" && e.etat !== "sol" && b.ordre > 0.10){
         const lv = Math.max(14, b.l * 0.44), hv = Math.max(2.5, b.h * 0.022);
         const xv = b.x + b.l / 2 - lv / 2, yv = b.y - hv * 2.4;
@@ -489,6 +669,43 @@ const RuelleVue = {
         ctx.fillStyle = part > 0.55 ? "#4CC46A" : part > 0.25 ? "#F7B32B" : "#E2453D";
         ctx.fillRect(xv, yv, lv * part, hv);
       }
+      /* L'ALERTE, pendant toute la préparation du jet. Elle est à taille
+         d'écran FIXE, pas à la taille de l'ennemi : au fond de la rue
+         elle serait de six pixels, donc invisible, et c'est précisément
+         de loin qu'il faut prévenir. Elle bat pour attirer l'œil sans
+         clignoter — un clignotement disparaît une image sur deux. */
+      if (e.etat === "ramasse" || e.etat === "arme"){
+        const al = Images.table[e.etat === "arme" ? "sig_alerte" : "sig_alerte_or"];
+        if (al && al.naturalWidth){
+          const ha = H * ALERTE_TAILLE * (1 + 0.10 * Math.sin(e.tEtat * 11));
+          const la = ha * al.naturalWidth / al.naturalHeight;
+          ctx.drawImage(al, b.x + b.l / 2 - la / 2, b.y - ha * 1.25, la, ha);
+        }
+      }
+    }
+
+    /* LES BOUTEILLES EN VOL, avant que la barricade repasse devant :
+       elles doivent disparaître derrière les caisses en arrivant, comme
+       les ennemis. Passé PROJ_BASCULE l'objet se retourne — de profil
+       jusque-là, puis de face, parce qu'un objet qui fond sur vous ne se
+       voit plus de côté. */
+    for (const pr of Ruelle.projectiles){
+      const q = Ruelle.posProjectile(pr);
+      const nom = "obj_" + pr.objet + (q.av > PROJ_BASCULE ? "_f" : "");
+      const im = Images.table[nom];
+      if (!im || !im.naturalWidth) continue;
+      /* la taille porte sur la plus grande dimension : un objet long ne
+         doit pas devenir large comme l'écran */
+      const grand = Math.max(im.naturalWidth, im.naturalHeight);
+      const lp = q.taille * im.naturalWidth / grand;
+      const hp2 = q.taille * im.naturalHeight / grand;
+      ctx.save();
+      ctx.translate(q.x, q.y);
+      /* elle tourne, mais seulement de profil : de face, une rotation
+         se lit comme un tremblement */
+      if (q.av <= PROJ_BASCULE) ctx.rotate(pr.t * PROJ_ROTATION);
+      ctx.drawImage(im, -lp / 2, -hp2 / 2, lp, hp2);
+      ctx.restore();
     }
     /* La barricade repasse DEVANT : les ennemis arrivés au contact
        doivent disparaître derrière les caisses, pas marcher dessus. */
@@ -508,6 +725,23 @@ const RuelleVue = {
       ctx.drawImage(fond, f.x, f.y, f.l, f.h);
       ctx.restore();
     }
+    /* LES ÉCLATS, après que la barricade est repassée devant : la
+       bouteille éclate SUR les caisses, pas derrière. Du bois quand on
+       était couvert, du vin quand on a encaissé — l'image dit à elle
+       seule si on s'en est sorti. */
+    for (const im2 of Ruelle.impacts){
+      const img = Images.table[im2.image];
+      if (!img || !img.naturalWidth) continue;
+      const av = im2.t / IMPACT_DUREE;
+      const hi = H * melange(0.10, 0.20, av);
+      const li = hi * img.naturalWidth / img.naturalHeight;
+      const xi = L * (0.5 + RUELLE_COULOIRS[im2.couloir] * 0.55);
+      const yi = H * RUELLE_PREMIER_PLAN;
+      ctx.globalAlpha = borne(1 - (av - 0.45) / 0.55, 0, 1);
+      ctx.drawImage(img, xi - li / 2, yi - hi * 0.62, li, hi);
+      ctx.globalAlpha = 1;
+    }
+
     /* La vie de la barricade, posée sur la barricade elle-même : les
        héros passent devant, les ennemis derrière. Elle suit la COURBE
        des caisses — un trait droit sur un décor en perspective a l'air

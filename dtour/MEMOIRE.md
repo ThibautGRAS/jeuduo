@@ -1071,6 +1071,39 @@ D'où la règle : **canevas 320, disque 304, centré**, pour les huit.
 exactement huit boutons ; un test relit l'en-tête WebP et compare les
 huit tailles.
 
+### Une échelle de projectile ne se prend pas sur la hauteur
+
+Première version du vol de bouteille : taille demandée en fraction de la
+HAUTEUR d'écran, appliquée à la hauteur de l'image. Or la bouteille fait
+244 x 73 — demander 15 % de hauteur en donnait 50 % de largeur, et elle
+remplissait l'écran. L'échelle porte donc sur la PLUS GRANDE dimension
+de l'image, en fraction de la LARGEUR d'écran : 0,075 au départ, 0,34 à
+l'arrivée.
+
+Même correction sur la cloche : 0,30 de hauteur d'écran la faisait
+sortir par le haut. 0,085 suffit à ce que la trajectoire ne soit pas
+tendue. Et le départ est figé à la MAIN du lanceur au moment du lancer —
+pas recalculé pendant le vol, puisque lui continue d'avancer ou tombe.
+
+Les deux défauts étaient invisibles aux tests : le projectile partait,
+volait et touchait la barricade avec les bonnes valeurs. Seule l'image
+les a montrés.
+
+### Un multiplicateur de zone doit être vérifié contre les PV
+
+`mult.tete = 1.7` sur 160 PV donnait 170 de dégât au revolver : UN
+headshot couchait le tank, et la question « tête pour tuer ou jambes
+pour ralentir ? » disparaissait. À 1,15 il en faut deux. Un test compare
+désormais le nombre de balles à la tête et au torse, et exige au moins
+deux à la tête et un rapport de trois entre les deux.
+
+### Un compteur cumulatif se remet à zéro, sinon il déclenche en boucle
+
+Le trébuchement se déclenche quand les dégâts encaissés aux jambes
+passent un seuil. Sans remise à zéro, une fois le seuil franchi il
+trébuchait à CHAQUE balle et n'avançait plus jamais — l'ennemi devenait
+inoffensif pour deux balles de revolver.
+
 ### L'opacité des commandes ne se juge que sur le décor
 
 Sur fond uni, toutes les valeurs se valent. Sur le décor, c'est le

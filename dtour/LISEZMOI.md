@@ -264,6 +264,26 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Depardiahree lance sa bouteille** (v6.53) : le premier ennemi à
+mécanique complète, et le premier danger du niveau. Il s'arrête à
+moyenne distance, ramasse, arme — un point d'exclamation bat au-dessus
+de sa tête pendant toute la préparation — puis lance. La bouteille
+tourne en vol, se retourne aux deux tiers du trajet parce qu'un objet
+qui fond sur vous ne se voit plus de profil, et éclate sur les caisses.
+
+**Et À COUVERT protège enfin de quelque chose.** Le bouton existait
+depuis trois versions : il coûtait un temps de tir et ne rendait rien,
+les deux héros s'accroupissaient devant un danger qui n'existait pas.
+Couvert, la bouteille éclate en gerbe de bois et la barricade est
+intacte ; découvert, c'est du vin et 18 points de moins.
+
+**Son torse est blindé** : 0,35 de multiplicateur contre 1,15 à la tête.
+Deux balles de revolver dans la tête, neuf dans le torse — tirer dans la
+masse n'est plus la meilleure stratégie, alors que le torse est la zone
+la plus large. Et deux balles dans les jambes le font **trébucher** : ça
+ne le tue pas, ça fait gagner une seconde et quart. Le costaud est
+devenu Depardiahree, ses treize fichiers renommés.
+
 **Les boutons sont normalisés** (v6.52) : les huit commandes du niveau
 4 passent par un découpage qui garantit trois choses — pas un pixel de
 magenta, le même diamètre pour tous, et le disque centré au pixel dans

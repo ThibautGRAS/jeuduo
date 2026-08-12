@@ -428,7 +428,7 @@ function jouerJusqua(D, condition, limite){
     /* du plus lointain au plus proche : l'ordre de rendu suit Z */
     for (const [z, couloir] of essais){
       const p = D.Perspective.projeter(z, couloir);
-      const spr = D.Images.table["enn_costaud_run" + (1 + Math.floor(z * 6) % 6)];
+      const spr = D.Images.table["enn_depar_run" + (1 + Math.floor(z * 6) % 6)];
       const h = p.hauteur, l = h * spr.naturalWidth / spr.naturalHeight;
       ctx.drawImage(spr, p.x - l / 2, p.y - h, l, h);
     }
@@ -483,6 +483,75 @@ function jouerJusqua(D, condition, limite){
     D.Ruelle.couvert = true; D.Ruelle.barricade = 28; D.Ruelle.secousse = 0;
     D.RuelleVue.dessiner();
     ecrire(canevas, "26_ruelle_couvert");
+  }
+
+  /* 28-29. le jet de Depardiahree : l'alerte pendant la préparation,
+     puis la bouteille en vol. Ce sont les deux instants que le joueur
+     doit lire, donc les deux qu'il faut regarder. */
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 4;
+    D.Ruelle.ajouterEnnemi();
+    const e = D.Ruelle.ennemis[0];
+    e.z = 0.52; e.couloir = 2; e.attente = 0.02;
+    for (let k = 0; k < 80; k++) D.Ruelle.pas(1 / 60);   /* jusqu'à "arme" */
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "28_depar_alerte");
+  }
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 4;
+    D.Ruelle.ajouterEnnemi();
+    const e = D.Ruelle.ennemis[0];
+    e.z = 0.52; e.couloir = 2; e.attente = 0.02;
+    /* on avance jusqu'à mi-vol : la bouteille est haute et déjà grosse */
+    for (let k = 0; k < 130; k++) D.Ruelle.pas(1 / 60);
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "29_depar_bouteille");
+  }
+
+  /* 30. l'éclat sur les caisses, à couvert : c'est l'image qui dit au
+     joueur qu'il s'en est sorti. Du bois quand on était couvert, du vin
+     quand on a encaissé. */
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 4;
+    D.Ruelle.ajouterEnnemi();
+    const e = D.Ruelle.ennemis[0];
+    e.z = 0.52; e.couloir = 2; e.attente = 0.02;
+    D.Ruelle.couvert = true;
+    for (let k = 0; k < 175; k++) D.Ruelle.pas(1 / 60);
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "30_depar_eclat_couvert");
+  }
+
+  /* 27. les poses propres de Depardiahree, à leur taille de jeu, sur
+     une même ligne de sol : c'est la seule façon de voir qu'une pose
+     plus haute que les autres ne fait pas grandir le personnage. */
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    /* cinq poses, cinq couloirs : une de plus et deux se recouvrent */
+    const poses = ["trebuche1", "trebuche2", "ramasse", "arme", "lance"];
+    for (let k = 0; k < poses.length; k++){
+      D.Ruelle.ajouterEnnemi();
+      const e = D.Ruelle.ennemis[k];
+      e.z = 0.62; e.couloir = k;
+      e.etat = "course"; e.frame = 0; e.poseForcee = poses[k];
+    }
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "27_depardiahree_poses");
   }
 
   /* 21. niveau 1 au format d'un téléphone en paysage plein écran : c'est
