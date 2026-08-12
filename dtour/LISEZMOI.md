@@ -264,6 +264,13 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Les commandes sont des images** (v6.50) : bouton de tir dans ses
+trois états, anneau de rechargement qui se remplit, croix
+directionnelle, pastille de pouce, bouclier et relais. Peintes au
+canevas elles avaient l'air d'un prototype — sans shadowBlur, qui reste
+interdit, on ne peut pas approcher une vraie lueur. Une image la porte
+déjà.
+
 **Les armes s'entendent** (v6.49). Chaque coup de feu tient en trois
 couches synthétisées : la **détonation** — bruit blanc très court dans
 un filtre qui s'effondre, c'est elle qui claque —, le **corps** — un

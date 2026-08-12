@@ -734,7 +734,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.49</div>
+  <div id="version">CALLAGHAN v6.50</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -806,7 +806,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.49";
+const VERSION = "6.50";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1483,7 +1483,12 @@ const POSES_RUEL_PF = ["accroupi", "leve1", "leve2", "arme1", "arme2", "vise",
 const IMAGES_NIVEAU4 = ["ruelle", "ruelle_flou", "duo_ruelle"]
   .concat(ENNEMIS_RUELLE.flatMap(e => POSES_ENNEMI.map(po => "enn_" + e + "_" + po)))
   .concat(POSES_RUEL_TH.map(po => "ruel_th_" + po))
-  .concat(POSES_RUEL_PF.map(po => "ruel_pf_" + po));
+  .concat(POSES_RUEL_PF.map(po => "ruel_pf_" + po))
+  /* Les commandes sont des IMAGES depuis la v6.50 : peintes au canevas
+     elles avaient l'air d'un prototype, et sans shadowBlur je ne pouvais
+     pas approcher une vraie lueur. */
+  .concat(["btn_tir", "btn_tir_appui", "btn_tir_vide", "btn_anneau",
+           "btn_croix", "btn_pouce", "btn_couvert", "btn_changer"]);
 
 const IMAGES_NIVEAU3 = [
   "fond_bar",
@@ -9634,184 +9639,78 @@ Object.assign(RuelleVue, {
       ctx.fillStyle = vivant ? "rgba(247,179,43,.92)" : "rgba(255,255,255,.22)";
       ctx.fill(); xp += esp;
     }
-    /* --- le viseur --- */
+    /* ---------- les commandes ----------
+       Ce sont des IMAGES, pas des dessins : le canevas ne sait pas
+       faire une lueur sans shadowBlur, qui est interdit ici. Une image
+       la porte déjà. On ne fait plus que les poser et animer ce qui
+       bouge — la pastille du pouce et l'anneau de rechargement. */
+    const poser = (nom, cx, cy, r, alpha) => {
+      const img = Images.table[nom];
+      if (!img || !img.naturalWidth) return;
+      const l2 = r * 2 * (img.naturalWidth / img.naturalHeight);
+      if (alpha != null) ctx.globalAlpha = alpha;
+      ctx.drawImage(img, cx - l2 / 2, cy - r, l2, r * 2);
+      ctx.globalAlpha = 1;
+    };
+
+    /* le viseur */
     const vx = Ruelle.viseur.x * L, vy = Ruelle.viseur.y * H;
-    const r = L * 0.052;
+    const rv = L * 0.052;
     const cible = Ruelle.viser(vx, vy, ARMES[Ruelle.heroActif().arme].tolerance);
     ctx.strokeStyle = cible ? "#E2453D" : "rgba(255,255,255,.82)";
     ctx.lineWidth = Math.max(1.5, L * 0.006);
-    ctx.beginPath(); ctx.arc(vx, vy, r, 0, 6.2832); ctx.stroke();
+    ctx.beginPath(); ctx.arc(vx, vy, rv, 0, 6.2832); ctx.stroke();
     ctx.beginPath();
     for (const [ax, ay] of [[1,0],[-1,0],[0,1],[0,-1]]){
-      ctx.moveTo(vx + ax * r * 0.45, vy + ay * r * 0.45);
-      ctx.lineTo(vx + ax * r * 1.35, vy + ay * r * 1.35);
+      ctx.moveTo(vx + ax * rv * 0.45, vy + ay * rv * 0.45);
+      ctx.lineTo(vx + ax * rv * 1.35, vy + ay * rv * 1.35);
     }
     ctx.stroke();
 
-    /* --- le champignon --- */
-    /* Le relief se fait par COUCHES, jamais par shadowBlur : un anneau
-       sombre en dessous, un dégradé au-dessus, un liseré clair en haut.
-       C'est ce qui fait qu'un bouton a l'air appuyable. */
-    /* Du verre, pas du plastique : un fond très transparent, un dégradé
-       qui s'éclaircit vers le haut, un ÉCLAT en arc sur le quart
-       supérieur et un halo intérieur qui donne l'épaisseur. Le tout par
-       couches — shadowBlur reste interdit. */
-    const pastille = (cx, cy, r, haut, bas, liseré) => {
-      ctx.fillStyle = "rgba(0,0,0,.26)";
-      ctx.beginPath(); ctx.arc(cx, cy + r * 0.05, r * 1.02, 0, 6.2832); ctx.fill();
-      const g = ctx.createLinearGradient(0, cy - r, 0, cy + r);
-      g.addColorStop(0, haut); g.addColorStop(0.55, bas); g.addColorStop(1, bas);
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.2832); ctx.fill();
-      /* halo intérieur : l'épaisseur du verre */
-      const h2 = ctx.createRadialGradient(cx, cy, r * 0.55, cx, cy, r);
-      h2.addColorStop(0, "rgba(255,255,255,0)");
-      h2.addColorStop(1, "rgba(255,255,255,.14)");
-      ctx.fillStyle = h2;
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.2832); ctx.fill();
-      /* le liseré fait tout le tour, discret, et s'illumine en haut */
-      ctx.strokeStyle = "rgba(255,255,255,.13)"; ctx.lineWidth = Math.max(1, r * 0.035);
-      ctx.beginPath(); ctx.arc(cx, cy, r * 0.98, 0, 6.2832); ctx.stroke();
-      ctx.strokeStyle = liseré; ctx.lineWidth = Math.max(1.5, r * 0.050);
-      ctx.beginPath(); ctx.arc(cx, cy, r * 0.98, -2.45, -0.75); ctx.stroke();
-      /* l'éclat : un croissant clair, en haut à gauche */
-      ctx.fillStyle = "rgba(255,255,255,.16)";
-      ctx.beginPath();
-      ctx.ellipse(cx - r * 0.26, cy - r * 0.42, r * 0.44, r * 0.20, -0.5, 0, 6.2832);
-      ctx.fill();
-    };
+    /* la croix, et la pastille qui suit le pouce */
     const zm = Ruelle.zoneManche();
-    pastille(zm.x, zm.y, zm.r, "rgba(38,33,50,.70)", "rgba(10,9,16,.70)", "rgba(247,179,43,.30)");
-    ctx.strokeStyle = "rgba(247,179,43,.45)"; ctx.lineWidth = Math.max(1.5, zm.r * 0.045);
-    ctx.beginPath(); ctx.arc(zm.x, zm.y, zm.r * 0.97, 0, 6.2832); ctx.stroke();
-    /* Quatre flèches : on lit tout de suite que ça pousse dans les
-       quatre sens, là où une pastille nue n'annonce rien. */
-    for (const [ax, ay] of [[0,-1],[0,1],[-1,0],[1,0]]){
-      const d = zm.r * 0.76, t2 = zm.r * 0.13;
-      const px2 = zm.x + ax * d, py2 = zm.y + ay * d;
-      const vif = (Ruelle.manche.dx * ax + Ruelle.manche.dy * ay) > 0.45;
-      ctx.fillStyle = vif ? "#F7B32B" : "rgba(255,255,255,.42)";
-      ctx.beginPath();
-      ctx.moveTo(px2 + ax * t2, py2 + ay * t2);
-      ctx.lineTo(px2 - ax * t2 + ay * t2, py2 - ay * t2 + ax * t2);
-      ctx.lineTo(px2 - ax * t2 - ay * t2, py2 - ay * t2 - ax * t2);
-      ctx.closePath(); ctx.fill();
-    }
-    const tx = zm.x + Ruelle.manche.dx * zm.r * 0.42;
-    const ty = zm.y + Ruelle.manche.dy * zm.r * 0.42;
-    pastille(tx, ty, zm.r * 0.34, "rgba(255,255,255,.95)", "rgba(168,168,188,.95)", "rgba(255,255,255,.9)");
+    poser("btn_croix", zm.x, zm.y, zm.r);
+    poser("btn_pouce",
+      zm.x + Ruelle.manche.dx * zm.r * 0.40,
+      zm.y + Ruelle.manche.dy * zm.r * 0.40, zm.r * 0.30);
 
-    /* --- le bouton de tir, avec les munitions autour --- */
+    /* le bouton de tir : trois états, plus l'anneau qui se remplit */
     const zt = Ruelle.zoneTir(), h = Ruelle.heroActif(), arme = ARMES[h.arme];
     const recharge = h.recharge > 0;
-    if (recharge) pastille(zt.x, zt.y, zt.r, "rgba(96,84,52,.86)", "rgba(52,44,26,.86)", "rgba(255,255,255,.20)");
-    else pastille(zt.x, zt.y, zt.r, "#F2635A", "#B32A22", "rgba(255,255,255,.42)");
-    /* Pendant le rechargement, l'anneau se remplit : on sait quand on
-       pourra tirer sans compter les secondes. */
+    const enfonce = h.repos > 1 / arme.cadence * 0.55;
+    poser(recharge ? "btn_tir_vide" : enfonce ? "btn_tir_appui" : "btn_tir",
+      zt.x, zt.y, zt.r * (enfonce ? 0.94 : 1));
     if (recharge){
+      /* l'anneau tourne : on voit le temps qui reste sans le compter */
       const av = 1 - h.recharge / arme.recharge;
-      ctx.strokeStyle = "#F7B32B"; ctx.lineWidth = Math.max(2.5, zt.r * 0.10);
+      ctx.save();
       ctx.beginPath();
-      ctx.arc(zt.x, zt.y, zt.r * 0.86, -Math.PI / 2, -Math.PI / 2 + av * 6.2832);
-      ctx.stroke();
+      ctx.moveTo(zt.x, zt.y);
+      ctx.arc(zt.x, zt.y, zt.r * 1.6, -Math.PI / 2, -Math.PI / 2 + av * 6.2832);
+      ctx.closePath(); ctx.clip();
+      poser("btn_anneau", zt.x, zt.y, zt.r * 1.06);
+      ctx.restore();
     }
-    /* Le chargeur : une couronne de FINS bâtonnets, plus une bague
-       lumineuse qui la double. Des segments épais faisaient camembert ;
-       fins et nombreux, ça fait cadran. */
-    const rInt = zt.r * 1.10, rExt = zt.r * 1.30;
-    const nSeg = Math.max(arme.chargeur, 12);
-    const remplis = Math.round(nSeg * (h.balles / arme.chargeur));
-    for (let k = 0; k < nSeg; k++){
-      const pas2 = 6.2832 / nSeg, marge = pas2 * 0.30;
-      const a0 = -Math.PI / 2 + k * pas2 + marge, a1 = a0 + pas2 - marge * 2;
-      ctx.beginPath();
-      ctx.arc(zt.x, zt.y, rExt, a0, a1);
-      ctx.arc(zt.x, zt.y, rInt, a1, a0, true);
-      ctx.closePath();
-      ctx.fillStyle = k < remplis ? "#F5C13A" : "rgba(240,240,250,.16)";
-      ctx.fill();
-    }
-    /* la bague lumineuse : trois traits de plus en plus larges et pâles,
-       c'est ce qui fait la lueur sans shadowBlur */
-    for (const [ep, al2] of [[zt.r * 0.10, 0.10], [zt.r * 0.055, 0.20], [zt.r * 0.022, 0.60]]){
-      ctx.strokeStyle = "rgba(247,193,58," + al2 + ")";
-      ctx.lineWidth = ep;
-      ctx.beginPath(); ctx.arc(zt.x, zt.y, zt.r * 1.02, 0, 6.2832); ctx.stroke();
-    }
-    /* La balle, plus haut, et le mot TIR dessous : l'un se lit de loin,
-       l'autre dit ce que ça fait. */
+    /* le compte, sous le bouton */
     ctx.save();
-    ctx.translate(zt.x, zt.y - zt.r * 0.16); ctx.rotate(-0.62);
-    const bl = zt.r * 0.72, bw = zt.r * 0.26;
-    const gb = ctx.createLinearGradient(-bw / 2, 0, bw / 2, 0);
-    gb.addColorStop(0, recharge ? "rgba(150,142,124,.5)" : "#8F6A1E");
-    gb.addColorStop(0.42, recharge ? "rgba(210,202,182,.5)" : "#FCE39B");
-    gb.addColorStop(1, recharge ? "rgba(150,142,124,.5)" : "#A87C22");
-    ctx.fillStyle = gb;
-    ctx.beginPath();
-    ctx.moveTo(-bw / 2, bl * 0.44); ctx.lineTo(bw / 2, bl * 0.44);
-    ctx.lineTo(bw / 2, -bl * 0.06);
-    ctx.quadraticCurveTo(bw / 2, -bl * 0.44, 0, -bl * 0.52);
-    ctx.quadraticCurveTo(-bw / 2, -bl * 0.44, -bw / 2, -bl * 0.06);
-    ctx.closePath(); ctx.fill();
-    ctx.fillStyle = recharge ? "rgba(120,114,100,.5)" : "#B98C2E";
-    ctx.fillRect(-bw / 2, bl * 0.12, bw, bl * 0.32);
-    ctx.restore();
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.font = "800 " + Math.round(zt.r * 0.34) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillStyle = recharge ? "rgba(255,255,255,.45)" : "#FFF";
-    ctx.fillText(recharge ? "…" : "TIR", zt.x, zt.y + zt.r * 0.48);
-    /* le compte, sous le bouton : un chiffre vaut mieux qu'un décompte
-       de bâtonnets quand il en reste peu */
-    ctx.font = "800 " + Math.round(zt.r * 0.26) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillStyle = "rgba(247,193,58,.92)";
-    ctx.fillText(h.balles + "/" + arme.chargeur, zt.x, zt.y + zt.r * 1.62);
+    ctx.font = "800 " + Math.round(zt.r * 0.30) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillStyle = "rgba(247,193,58,.94)";
+    ctx.fillText(h.balles + "/" + arme.chargeur, zt.x, zt.y + zt.r * 1.34);
+    ctx.restore();
 
-    /* --- la bascule de héros, au centre --- */
-    const zb = Ruelle.zoneBascule();
-    pastille(zb.x, zb.y, zb.r, "rgba(40,36,58,.88)", "rgba(14,12,22,.88)", "rgba(255,255,255,.18)");
-    ctx.strokeStyle = Heros[Ruelle.actifIdx] ? Heros[Ruelle.actifIdx].couleur : "#FFF";
-    ctx.lineWidth = Math.max(2.5, L * 0.010);
-    ctx.beginPath(); ctx.arc(zb.x, zb.y, zb.r * 0.94, 0, 6.2832); ctx.stroke();
-    /* Deux flèches qui tournent : le symbole du relais, plus lisible
-       qu'un prénom abrégé. */
-    ctx.strokeStyle = "#FFF"; ctx.lineWidth = Math.max(2, zb.r * 0.11);
-    ctx.lineCap = "round";
-    for (const sens of [1, -1]){
-      const rr = zb.r * 0.44, dec = sens * zb.r * 0.13;
-      ctx.beginPath();
-      ctx.arc(zb.x, zb.y + dec * 0.2, rr, sens > 0 ? 3.35 : 0.20, sens > 0 ? 5.9 : 2.8);
-      ctx.stroke();
-      const a2 = sens > 0 ? 5.9 : 2.8;
-      const px2 = zb.x + Math.cos(a2) * rr, py2 = zb.y + dec * 0.2 + Math.sin(a2) * rr;
-      const t2 = zb.r * 0.17;
-      ctx.beginPath();
-      ctx.moveTo(px2 + sens * t2, py2);
-      ctx.lineTo(px2 - sens * t2 * 0.3, py2 - t2 * 0.9);
-      ctx.lineTo(px2 - sens * t2 * 0.3, py2 + t2 * 0.9);
-      ctx.closePath(); ctx.fillStyle = "#FFF"; ctx.fill();
-    }
-    ctx.lineCap = "butt";
-    ctx.font = "800 " + Math.round(zb.r * 0.30) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillStyle = "rgba(255,255,255,.86)";
-    ctx.fillText("CHANGER", zb.x, zb.y + zb.r * 1.32);
-    /* Le bouton À COUVERT : au-dessus des autres, au centre, pour qu'on
-       le trouve sans regarder. */
+    /* à couvert et changer */
     const za = Ruelle.zoneAbri();
-    pastille(za.x, za.y, za.r,
-      Ruelle.couvert ? "rgba(76,196,106,.92)" : "rgba(40,36,58,.86)",
-      Ruelle.couvert ? "rgba(38,124,60,.92)" : "rgba(14,12,22,.86)",
-      "rgba(255,255,255,.24)");
-    /* un bouclier dessiné : le mot n'aurait pas tenu */
-    ctx.fillStyle = Ruelle.couvert ? "#0C2412" : "rgba(255,255,255,.80)";
-    ctx.beginPath();
-    ctx.moveTo(za.x, za.y - za.r * 0.52);
-    ctx.lineTo(za.x + za.r * 0.44, za.y - za.r * 0.26);
-    ctx.lineTo(za.x + za.r * 0.44, za.y + za.r * 0.14);
-    ctx.quadraticCurveTo(za.x + za.r * 0.40, za.y + za.r * 0.52, za.x, za.y + za.r * 0.58);
-    ctx.quadraticCurveTo(za.x - za.r * 0.40, za.y + za.r * 0.52, za.x - za.r * 0.44, za.y + za.r * 0.14);
-    ctx.lineTo(za.x - za.r * 0.44, za.y - za.r * 0.26);
-    ctx.closePath(); ctx.fill();
+    poser("btn_couvert", za.x, za.y, za.r, Ruelle.couvert ? 1 : 0.78);
+    if (Ruelle.couvert){
+      ctx.strokeStyle = "#4CC46A"; ctx.lineWidth = Math.max(2, za.r * 0.10);
+      ctx.beginPath(); ctx.arc(za.x, za.y, za.r * 0.94, 0, 6.2832); ctx.stroke();
+    }
+    const zb = Ruelle.zoneBascule();
+    poser("btn_changer", zb.x, zb.y, zb.r);
+    ctx.strokeStyle = Heros[Ruelle.actifIdx] ? Heros[Ruelle.actifIdx].couleur : "#FFF";
+    ctx.lineWidth = Math.max(2, L * 0.008);
+    ctx.beginPath(); ctx.arc(zb.x, zb.y, zb.r * 0.96, 0, 6.2832); ctx.stroke();
 
     /* La réplique du relais, juste au-dessus de celui qui reprend. */
     if (Ruelle.replique){

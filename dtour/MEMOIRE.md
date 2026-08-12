@@ -108,6 +108,23 @@ CHAUSSURES au milieu de l'image et la ligne de sol en bas ; le rendu
 dessine alors bêtement en `x - largeur/2`, `y - hauteur`, et tout tombe
 juste.
 
+### Un fond se MESURE, il ne se devine pas
+La planche des boutons avait un fond à **(228, 3, 216)**, pas
+`#FF00FF` : le générateur l'avait légèrement assombri. En supposant le
+magenta pur, le détourage laissait des carrés roses opaques. On lit
+désormais la couleur du fond au coin de l'image et on s'en sert comme
+référence. Deux corollaires appris sur la même planche :
+
+- Le corps des boutons est un **verre violet foncé**, donc de teinte
+  magenta : la règle de connexité échouait parce que le halo lumineux
+  fait un pont continu entre le fond et l'intérieur du bouton. Sur une
+  planche d'éléments lumineux, on trie par **distance à la couleur du
+  fond**, pas par teinte.
+- Un halo semi-transparent garde la couleur du fond mélangée à la
+  sienne. Le rendre transparent ne suffit pas : il faut **inverser le
+  mélange**, `lueur = (observé - (1-a) x fond) / a`, sinon la lueur reste
+  rose sur un décor sombre.
+
 ### Le fond se reconnaît à sa CONNEXITÉ, pas à sa couleur
 Troisième version du détourage, et la bonne. La teinte seule gardait les
 ombres portées ; ajouter « et clair » a rendu un manteau violet fantôme.

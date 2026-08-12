@@ -2879,9 +2879,15 @@ if (D){
       /* au-delà, on voit que c'est la même image qui pivote */
       return bas > -0.6 && haut < 0.6 && /Ruelle\.actifIdx && h\.recharge <= 0/.test(source);
     })());
-  verifier("les boutons ont du relief sans shadowBlur",
-    /const pastille = \(cx, cy, r/.test(source) &&
-    !/ctx\.shadowBlur/.test(source));
+  verifier("les commandes sont des images, pas des dessins",
+    (() => {
+      /* Le canevas ne sait pas faire une lueur sans shadowBlur, qui est
+         interdit ici. Une image la porte déjà. */
+      const btns = ["btn_tir", "btn_tir_appui", "btn_tir_vide", "btn_anneau",
+                    "btn_croix", "btn_pouce", "btn_couvert", "btn_changer"];
+      return btns.every(b2 => D.IMAGES_NIVEAU4.indexOf(b2) >= 0) &&
+        /poser\(recharge \? "btn_tir_vide"/.test(source) && !/ctx\.shadowBlur/.test(source);
+    })());
 
   verifier("le champignon pousse le viseur",
     (() => {

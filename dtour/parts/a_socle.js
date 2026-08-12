@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.49";
+const VERSION = "6.50";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -695,7 +695,12 @@ const POSES_RUEL_PF = ["accroupi", "leve1", "leve2", "arme1", "arme2", "vise",
 const IMAGES_NIVEAU4 = ["ruelle", "ruelle_flou", "duo_ruelle"]
   .concat(ENNEMIS_RUELLE.flatMap(e => POSES_ENNEMI.map(po => "enn_" + e + "_" + po)))
   .concat(POSES_RUEL_TH.map(po => "ruel_th_" + po))
-  .concat(POSES_RUEL_PF.map(po => "ruel_pf_" + po));
+  .concat(POSES_RUEL_PF.map(po => "ruel_pf_" + po))
+  /* Les commandes sont des IMAGES depuis la v6.50 : peintes au canevas
+     elles avaient l'air d'un prototype, et sans shadowBlur je ne pouvais
+     pas approcher une vraie lueur. */
+  .concat(["btn_tir", "btn_tir_appui", "btn_tir_vide", "btn_anneau",
+           "btn_croix", "btn_pouce", "btn_couvert", "btn_changer"]);
 
 const IMAGES_NIVEAU3 = [
   "fond_bar",
