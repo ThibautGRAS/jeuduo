@@ -23,6 +23,7 @@ const BAR_AMBIANCE_BUT = 100;
    regarder, assez court pour ne pas peser au deuxième essai — et une
    tape la passe de toute façon. */
 const BAR_INTRO_DUREE = 3.2;
+const BAR_INTRO_PALIER = 0.35;
 const BAR_AMBIANCE_DEBUT = 35;      /* on commence à mi-pente : il y a de quoi monter ET de quoi tomber */
 const BAR_AMBIANCE_FUITE = 0.35;    /* la salle se lasse toute seule, par seconde */
 const BAR_AMBIANCE_GAIN = 8;        /* ce que rapporte une bonne décision */
@@ -148,7 +149,7 @@ const Tournee = {
   stats:null, fini:null, message:null, messageT:0, messageDuree:1.6,
   gele:0, secousse:0, invite:null, prochainClin:0,
   bus:[], bourre:0, deborde:false,
-  clients:[], prochainClient:0, introT:0, flash:0, boitTotal:1, freinT:0, dureeMarche:0,
+  clients:[], prochainClient:0, introT:0, introSortie:false, flash:0, boitTotal:1, freinT:0, dureeMarche:0,
   tarte:null, esquiveOuverte:false, tarteEsquivee:0, tarteRecue:0,
   restant:BAR_DUREE,
 
@@ -160,6 +161,7 @@ const Tournee = {
        entrer. C'est l'ordre du niveau 4, et il n'y a pas de raison qu'il
        diffère ici. */
     this.introT = BAR_INTRO_DUREE;
+    this.introSortie = false;
     this.enChoix = false;      /* le choix n'ouvre qu'après l'affiche */
     this.choixChamp = 0;
     this.champion = null;
@@ -171,8 +173,11 @@ const Tournee = {
      seconde que la ruelle, sinon un doigt encore posé de l'écran
      précédent l'emporte sans qu'on l'ait vue. */
   passerIntro(){
-    if (this.introT > 0.25){ this.introT = 0.25; return true; }
-    return false;
+    if (this.introT <= 0) return false;
+    if (BAR_INTRO_DUREE - this.introT < 0.25) return true;
+    this.introSortie = true;
+    if (this.introT > BAR_INTRO_PALIER) this.introT = BAR_INTRO_PALIER;
+    return true;
   },
 
   choisir(k){
@@ -550,8 +555,13 @@ const Tournee = {
     /* L'affiche fige la soirée : rien ne bouge derrière, sinon le
        chronomètre tourne pendant qu'on regarde une image. */
     if (this.introT > 0){
-      this.introT -= dt;
-      if (this.introT < 0) this.introT = 0;
+      /* MÊME RÈGLE QU'À LA RUELLE : elle descend jusqu'au palier puis
+         attend la tape. Une affiche qui s'efface toute seule pendant
+         qu'on la regarde n'est pas une présentation, c'est un délai. */
+      if (this.introT > BAR_INTRO_PALIER || this.introSortie){
+        this.introT -= dt;
+        if (this.introT < 0) this.introT = 0;
+      }
       return;
     }
     /* LE CHOIX EST UN ÉTAT DÉDUIT, pas un front. Ouvrir sur la fin de

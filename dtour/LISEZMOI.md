@@ -283,6 +283,15 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Les deux intros attendent le clic** (v6.81) : elles s'effaçaient toutes
+seules après 2,6 s à la ruelle et 3,2 s au bar. Le joueur qui lisait
+encore se retrouvait en pleine partie sans l'avoir demandé — et le
+niveau 4 ne faisait pas exception, contrairement à ce que je croyais.
+
+Elles descendent maintenant jusqu'à un palier et **attendent**. Une tape
+lance la sortie ; le quart de seconde de garde reste, pour qu'un doigt
+encore posé de l'écran précédent ne l'emporte pas.
+
 **Le bar prend de la profondeur** (v6.80).
 
 **L'écran d'intro du niveau 3 est en PLEIN ÉCRAN**, comme celui de la

@@ -1851,8 +1851,13 @@ if (D){
          joueur juste après qu'il avait décidé — le pire moment. */
       D.Jeu.demarrer(3);
       const avant = D.Tournee.introT > 0 && !D.Tournee.enChoix;
-      for (let k = 0; k < 60 * 5; k++) D.Jeu.pas(1 / 60);
-      return avant && D.Tournee.enChoix && D.Jeu.phase === "jeu" &&
+      /* elle TIENT : dix secondes plus tard, elle est toujours là */
+      for (let k = 0; k < 60 * 10; k++) D.Jeu.pas(1 / 60);
+      const tient = D.Tournee.introT > 0 && !D.Tournee.enChoix;
+      /* et elle ne part que sur une tape */
+      D.Tournee.passerIntro();
+      for (let k = 0; k < 60 * 2; k++) D.Jeu.pas(1 / 60);
+      return avant && tient && D.Tournee.enChoix && D.Jeu.phase === "jeu" &&
         D.Tournee.introT === 0;
     })());
 
@@ -1860,13 +1865,17 @@ if (D){
     (() => {
       /* Le même quart de seconde que la ruelle : sinon un doigt encore
          posé de l'écran précédent l'emporte sans qu'on l'ait vue. */
+      /* Une tape dans le premier quart de seconde est ABSORBÉE : un
+         doigt encore posé de l'écran précédent ne doit pas emporter
+         l'affiche. */
       D.Jeu.demarrer(3);
-      const t0 = D.Tournee.introT;
-      const pris = D.Tournee.passerIntro();
-      const t1 = D.Tournee.introT;
-      D.Tournee.introT = 0.2;
-      const refus = D.Tournee.passerIntro();
-      return pris && t1 < t0 && t1 <= 0.26 && !refus;
+      D.Tournee.passerIntro();
+      const tropTot = !D.Tournee.introSortie;
+      /* passé ce délai, elle part */
+      for (let k = 0; k < 30; k++) D.Jeu.pas(1 / 60);
+      D.Tournee.passerIntro();
+      return tropTot && D.Tournee.introSortie &&
+        D.Tournee.introT <= D.BAR_INTRO_PALIER + 0.01;
     })());
   verifier("chaque barman a SA ligne de comptoir",
     (() => {
@@ -2799,11 +2808,24 @@ if (D){
       for (let k = 0; k < 30; k++) D.Ruelle.pas(1 / 60);
       return av && D.Ruelle.ennemis[0].z === z0;
     })(), "pendant l'annonce, rien ne bouge");
-  verifier("et on peut la passer d'un doigt",
+  verifier("l'intro de la ruelle TIENT jusqu'au doigt",
     (() => {
+      /* Elle descendait toute seule après 2,6 s : le joueur qui lisait
+         encore se retrouvait en pleine fusillade sans l'avoir demandé. */
       D.Jeu.demarrer(4);
+      for (let k = 0; k < 60 * 10; k++) D.Jeu.pas(1 / 60);
+      const tient = D.Ruelle.introT > 0;
       const ok = D.Ruelle.toucheDebut(1, 200, 400);
-      return ok && D.Ruelle.introT <= 0.25;
+      for (let k = 0; k < 60; k++) D.Jeu.pas(1 / 60);
+      return tient && ok && D.Ruelle.introT === 0;
+    })());
+
+  verifier("une tape trop précoce ne l'emporte pas",
+    (() => {
+      /* Un doigt encore posé de l'écran précédent. */
+      D.Jeu.demarrer(4);
+      D.Ruelle.toucheDebut(1, 200, 400);
+      return !D.Ruelle.introSortie;
     })());
 
   verifier("chaque arme a son propre son",

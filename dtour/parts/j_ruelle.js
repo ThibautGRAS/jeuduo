@@ -653,7 +653,8 @@ const Ruelle = {
     this.vague = 0; this.actifIdx = 0;
     this.secousse = 0; this.hitStop = 0;
     this.recul = 0; this.replique = null; this.iaT = 0; this.iaActive = false;
-    this.couvert = false; this.introT = RUELLE_INTRO_DUREE; this.razViseur();
+    this.couvert = false; this.introT = RUELLE_INTRO_DUREE;
+    this.introSortie = false; this.razViseur();
     this.heros = [
       { id:"thibaut", arme:"revolver", sprite:"ruel_th", balles:ARMES.revolver.chargeur,
         recharge:0, repos:0, pose:"vise1" },
@@ -1113,7 +1114,14 @@ const Ruelle = {
   pas(dt){
     if (!this.actif) return;
     /* Pendant l'annonce, rien ne bouge : ni les ennemis, ni le chrono. */
-    if (this.introT > 0){ this.introT -= dt; return; }
+    if (this.introT > 0){
+      /* elle descend jusqu'au palier, puis ATTEND */
+      if (this.introT > INTRO_PALIER || this.introSortie){
+        this.introT -= dt;
+        if (this.introT < 0) this.introT = 0;
+      }
+      return;
+    }
     if (this.hitStop > 0){ this.hitStop -= dt; return; }
     this.secousse = Math.max(0, this.secousse - dt * 2.4);
     this.pasViseur(dt);
@@ -2404,11 +2412,24 @@ Object.assign(RuelleVue, {
    charger le décor et les ennemis. Un niveau qui démarre sur un décor
    à moitié arrivé donne l'impression d'un jeu cassé. */
 const RUELLE_INTRO_DUREE = 2.6;
+/* L'INTRO TIENT JUSQU'AU CLIC. Elle descendait toute seule après 2,6 s :
+   le joueur qui lisait encore se retrouvait en pleine fusillade sans
+   l'avoir demandé. Elle s'arrête donc à ce palier et n'en repart que
+   sur une tape — le reste sert de fondu de sortie. */
+const INTRO_PALIER = 0.35;
 
 Object.assign(Ruelle, {
-  introT:0,
+  introT:0, introSortie:false,
   introEnCours(){ return this.introT > 0; },
-  passerIntro(){ if (this.introT > 0.25){ this.introT = 0.25; return true; } return false; },
+  /* Une tape lance la sortie. Le quart de seconde de garde reste : un
+     doigt encore posé de l'écran précédent ne doit pas l'emporter. */
+  passerIntro(){
+    if (this.introT <= 0) return false;
+    if (RUELLE_INTRO_DUREE - this.introT < 0.25) return true;
+    this.introSortie = true;
+    if (this.introT > INTRO_PALIER) this.introT = INTRO_PALIER;
+    return true;
+  },
 });
 
 RuelleVue.dessinerIntro = function(){
