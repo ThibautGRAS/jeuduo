@@ -2702,27 +2702,71 @@ if (D){
         /recharge > 0[\s\S]{0,200}?accroupi/.test(source);
     })());
 
-  verifier("celui qui recharge est relevé par l'autre",
+  verifier("l'équipier couvre sans qu'on change de personnage",
     (() => {
+      /* Le joueur garde SON héros : c'est l'autre que l'IA prend. */
       D.Jeu.demarrer(4);
       const av = D.Ruelle.actifIdx;
       D.Ruelle.heroActif().balles = 0;
       D.Ruelle.heroActif().recharge = 1.4;
       D.Ruelle.pas(1 / 60);
-      return D.Ruelle.actifIdx !== av && !!D.Ruelle.replique;
-    })(), "un chargeur vide n'est plus un temps mort, c'est un passage de main");
-  verifier("si les deux sont à sec, personne ne se relève",
+      return D.Ruelle.actifIdx === av && D.Ruelle.iaActive && !!D.Ruelle.replique;
+    })());
+  verifier("et elle consomme ses propres munitions",
+    (() => {
+      D.Jeu.demarrer(4); D.Ruelle.ajouterEnnemi();
+      D.Ruelle.ennemis[0].z = 0.6;
+      const lui = D.Ruelle.heros[1 - D.Ruelle.actifIdx];
+      const n0 = lui.balles;
+      D.Ruelle.heroActif().balles = 0; D.Ruelle.heroActif().recharge = 3;
+      for (let k = 0; k < 120; k++) D.Ruelle.pas(1 / 60);
+      return lui.balles < n0;
+    })());
+  verifier("elle rate à peu près la moitié de ses coups",
+    D.IA_REUSSITE > 0.3 && D.IA_REUSSITE < 0.65,
+    "sinon le rechargement ne coûterait plus rien");
+  verifier("si les deux sont à sec, personne ne couvre",
     (() => {
       D.Jeu.demarrer(4);
       for (const h of D.Ruelle.heros){ h.balles = 0; h.recharge = 1.4; }
-      const av = D.Ruelle.actifIdx;
       D.Ruelle.pas(1 / 60);
-      return D.Ruelle.actifIdx === av;
+      return !D.Ruelle.iaActive;
     })());
   verifier("ils s'appellent par leurs surnoms",
     D.RELEVE_TH.some(l => /inspecteur/i.test(l)) &&
     D.RELEVE_PF.some(l => /Callaghan/i.test(l)),
     "Thibaut dit « inspecteur », PF dit « Callaghan »");
+
+  verifier("le bouton à couvert accroupit les deux et coupe le tir",
+    (() => {
+      D.Jeu.demarrer(4); D.Camera.mesurer(390, 780, 1);
+      const za = D.Ruelle.zoneAbri();
+      D.Ruelle.toucheDebut(9, za.x, za.y);
+      const n0 = D.Ruelle.heroActif().balles;
+      const zt = D.Ruelle.zoneTir();
+      D.Ruelle.heroActif().repos = 0;
+      D.Ruelle.toucheDebut(10, zt.x, zt.y);
+      const poses = [0, 1].map(i => D.Ruelle.poseHeros(i));
+      return D.Ruelle.couvert && D.Ruelle.heroActif().balles === n0 &&
+        poses.every(po => po === "accroupi");
+    })(), "se replier volontairement servira quand ils lanceront des choses");
+  verifier("et on peut ressortir",
+    (() => {
+      const za = D.Ruelle.zoneAbri();
+      D.Ruelle.toucheDebut(11, za.x, za.y);
+      return !D.Ruelle.couvert;
+    })());
+  verifier("l'équipier ne couvre pas si on est à couvert",
+    (() => {
+      D.Jeu.demarrer(4);
+      D.Ruelle.couvert = true;
+      D.Ruelle.heroActif().balles = 0; D.Ruelle.heroActif().recharge = 2;
+      D.Ruelle.pas(1 / 60);
+      return !D.Ruelle.iaActive;
+    })());
+  verifier("le bandeau du haut laisse le coin des boutons libre",
+    /const largeHaut = L \* 0\.66/.test(source),
+    "les chiffres se mêlaient au plein écran et à la pause");
 
   verifier("les barres de vie ne s'affichent que sur les ennemis entamés",
     /e\.pv < e\.pvMax && e\.etat !== "chute"/.test(source) &&

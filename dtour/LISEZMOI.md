@@ -264,6 +264,20 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**L'équipier couvre** (v6.42) : quand ton héros recharge, l'autre se
+lève et tire **tout seul** — sans te changer de personnage. Il rate à peu
+près la moitié de ses coups, sinon le rechargement ne coûterait plus
+rien. Il le dit en se levant : « Je te couvre, inspecteur », « Laisse,
+Callaghan ».
+
+**Un bouton À COUVERT** au centre : les deux s'accroupissent, plus
+personne ne tire, et l'équipier ne se lève pas non plus. C'est le repli
+volontaire — il servira quand les ennemis lanceront des choses.
+
+Et le **bandeau du haut** ne se mêle plus aux boutons de plein écran et
+de pause : il s'arrête aux deux tiers de la largeur, la vague se lit en
+pastilles et la barricade a sa propre ligne.
+
 **Un binôme, pas deux boutons** (v6.41) : quand l'un recharge, l'autre
 se lève et prend le relais tout seul, en le disant — « Je te couvre,
 inspecteur », « Laisse, Callaghan ». Thibaut appelle PF *inspecteur*, PF

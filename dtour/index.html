@@ -706,7 +706,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.41</div>
+  <div id="version">CALLAGHAN v6.42</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -778,7 +778,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.41";
+const VERSION = "6.42";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -8891,6 +8891,13 @@ const RELEVE_PF = [
   "Souffle, Callaghan.",
 ];
 const RELEVE_DUREE = 2.0;
+/* L'IA ne prend pas TA place : elle prend celle de l'autre. Tu gardes
+   Thibaut, et pendant qu'il recharge, PF se lève et tire tout seul — en
+   ratant la moitié de ses coups, sinon le rechargement ne coûterait
+   plus rien et la relève serait un cadeau. */
+const IA_CADENCE = 0.62;            /* secondes entre deux coups        */
+const IA_REUSSITE = 0.48;           /* un coup sur deux touche          */
+const IA_ECART = 0.16;              /* de combien elle vise à côté      */
 const RUELLE_DEGAT_BARRICADE = 12;
 
 /* Les trois zones, en fraction de la hauteur du sprite depuis le haut.
@@ -8928,7 +8935,8 @@ const Ruelle = {
     this.barricade = RUELLE_BARRICADE_PV;
     this.vague = 0; this.actifIdx = 0;
     this.secousse = 0; this.hitStop = 0;
-    this.recul = 0; this.replique = null; this.razViseur();
+    this.recul = 0; this.replique = null; this.iaT = 0; this.iaActive = false;
+    this.couvert = false; this.razViseur();
     this.heros = [
       { id:"thibaut", arme:"revolver", sprite:"ruel_th", balles:ARMES.revolver.chargeur,
         recharge:0, repos:0, pose:"vise1" },
@@ -8962,16 +8970,43 @@ const Ruelle = {
 
   heroActif(){ return this.heros[this.actifIdx]; },
 
-  /* L'autre prend le relais : on bascule, et il le dit. */
-  releve(){
-    const suivant = 1 - this.actifIdx;
-    const h = this.heros[suivant];
-    if (h.recharge > 0) return false;          /* les deux à sec : on subit */
-    this.actifIdx = suivant;
-    const lignes = h.id === "thibaut" ? RELEVE_TH : RELEVE_PF;
-    this.replique = { txt:piocher(lignes), t:RELEVE_DUREE, qui:suivant };
-    Sons.clic();
-    return true;
+  /* L'équipier couvre : il se lève et tire de lui-même, sans que le
+     joueur change de personnage. */
+  iaCouvre(dt){
+    const moi = this.heroActif();
+    const lui = this.heros[1 - this.actifIdx];
+    const doitCouvrir = moi.recharge > 0 && lui.recharge <= 0 && !this.couvert;
+    if (!doitCouvrir){ this.iaT = 0; this.iaActive = false; return; }
+    if (!this.iaActive){
+      this.iaActive = true;
+      const lignes = lui.id === "thibaut" ? RELEVE_TH : RELEVE_PF;
+      this.replique = { txt:piocher(lignes), t:RELEVE_DUREE, qui:1 - this.actifIdx };
+    }
+    this.iaT -= dt;
+    if (this.iaT > 0) return;
+    this.iaT = IA_CADENCE;
+    if (lui.balles <= 0){ lui.recharge = ARMES[lui.arme].recharge; return; }
+    lui.balles--; lui.repos = 0.22;
+    this.flashes.push({ t:0.10, duree:0.10, heros:1 - this.actifIdx });
+    Sons.bip(lui.arme === "revolver" ? 120 : 90, 0.09, "square", 0.16, 60);
+    /* Elle vise le plus avancé, et rate souvent : c'est un soutien, pas
+       une seconde paire de mains parfaite. */
+    const proies = this.ennemis.filter(e => e.etat === "course" || e.etat === "touche");
+    if (!proies.length) return;
+    let but = proies[0];
+    for (const e of proies) if (e.z > but.z) but = e;
+    const b = this.boiteEnnemi(but);
+    if (Math.random() > IA_REUSSITE) return;   /* raté : le coup part dans le décor */
+    const arme = ARMES[lui.arme];
+    const f = 0.20 + Math.random() * 0.60;     /* elle ne visait pas la tête */
+    void IA_ECART;
+    const zone = (ZONES_CORPS.find(z => f >= z.haut && f < z.bas) || ZONES_CORPS[1]).id;
+    const degat = zone === "tete" ? arme.tete : zone === "torse" ? arme.torse : arme.jambes;
+    but.pv -= degat; but.touche = zone;
+    Score.points += 10;
+    if (but.pv <= 0){ but.etat = "chute"; but.tEtat = 0; but.mort = 0; Score.points += 100; }
+    else { but.etat = "touche"; but.tEtat = 0; }
+    void b;
   },
   armeActive(){ return ARMES[this.heroActif().arme]; },
   changerHeros(){ this.actifIdx = 1 - this.actifIdx; Sons.clic(); },
@@ -8988,8 +9023,9 @@ const Ruelle = {
       }
       if (h.repos > 0) h.repos -= dt;
     }
-    /* Si celui qu'on tient recharge, l'autre se lève de lui-même. */
-    if (this.heroActif().recharge > 0) this.releve();
+    /* Si celui qu'on tient recharge, l'autre couvre — sans changer de
+       personnage : le joueur garde le sien. */
+    this.iaCouvre(dt);
     if (this.replique){
       this.replique.t -= dt;
       if (this.replique.t <= 0) this.replique = null;
@@ -9128,6 +9164,7 @@ Ruelle.poseEnnemi = function(e){
    il s'accroupit pour recharger. */
 Ruelle.poseHeros = function(i){
   const h = this.heros[i], arme = ARMES[h.arme];
+  if (this.couvert) return "accroupi";
   const vise = i === this.actifIdx;
   const th = h.id === "thibaut";
   if (h.recharge > 0){
@@ -9226,7 +9263,9 @@ const RuelleVue = {
       const x = i === 0 ? L * RUELLE_ECART_HEROS : L * (1 - RUELLE_ECART_HEROS);
       /* Pendant le rechargement il se met À COUVERT : il s'enfonce
          derrière la barricade, et il n'est plus dessiné devant elle. */
-      const abri = h.recharge > 0 ? Math.sin(Math.min(1, 1 - h.recharge / ARMES[h.arme].recharge) * Math.PI) : 0;
+      const couvreTout = Ruelle.couvert ? 1 : 0;
+      const abri = Math.max(couvreTout,
+        h.recharge > 0 ? Math.sin(Math.min(1, 1 - h.recharge / ARMES[h.arme].recharge) * Math.PI) : 0);
       const yHaut = H * RUELLE_PIEDS_HEROS - haut + haut * RUELLE_ABRI * abri;
       ctx.save();
       ctx.globalAlpha = i === Ruelle.actifIdx ? 1 : 0.84;
@@ -9264,8 +9303,9 @@ const RuelleVue = {
 const VISEE_VITESSE = 0.62;         /* largeurs d'écran par seconde     */
 const VISEE_RECUL = { revolver:0.085, fusil:0.042 };
 const VISEE_RETOUR = 0.55;          /* le bras redescend tout seul      */
-const MANCHE_R = 0.155, MANCHE_X = 0.20, MANCHE_Y = 0.845;
-const TIR_R = 0.115, TIR_X = 0.80, TIR_Y = 0.845;
+const MANCHE_R = 0.150, MANCHE_X = 0.195, MANCHE_Y = 0.855;
+const TIR_R = 0.112, TIR_X = 0.805, TIR_Y = 0.855;
+const ABRI_R = 0.072, ABRI_X = 0.50, ABRI_Y = 0.745;
 
 Object.assign(Ruelle, {
   viseur:{ x:0.5, y:0.45 }, manche:{ actif:false, id:null, dx:0, dy:0 },
@@ -9275,7 +9315,10 @@ Object.assign(Ruelle, {
   /* Les trois zones du pouce, en fractions : elles suivent l'écran. */
   zoneManche(){ return { x:Camera.L * MANCHE_X, y:Camera.H * MANCHE_Y, r:Camera.L * MANCHE_R }; },
   zoneTir(){ return { x:Camera.L * TIR_X, y:Camera.H * TIR_Y, r:Camera.L * TIR_R }; },
-  zoneBascule(){ return { x:Camera.L * 0.5, y:Camera.H * 0.885, r:Camera.L * 0.085 }; },
+  zoneBascule(){ return { x:Camera.L * 0.5, y:Camera.H * 0.885, r:Camera.L * 0.082 }; },
+  /* Se replier volontairement : les deux s'accroupissent, plus personne
+     ne tire. Ça servira quand les ennemis lanceront des choses. */
+  zoneAbri(){ return { x:Camera.L * ABRI_X, y:Camera.H * ABRI_Y, r:Camera.L * ABRI_R }; },
   dans(z, x, y){ const dx = x - z.x, dy = y - z.y; return dx * dx + dy * dy <= z.r * z.r; },
 
   toucheDebut(id, x, y){
@@ -9285,6 +9328,10 @@ Object.assign(Ruelle, {
       this.majManche(x, y);
       return true;
     }
+    if (this.dans(this.zoneAbri(), x, y)){
+      this.couvert = !this.couvert; Sons.clic(); return true;
+    }
+    if (this.couvert) return true;              /* à couvert, on ne tire pas */
     if (this.dans(this.zoneTir(), x, y)){ this.tirerViseur(); return true; }
     if (this.dans(this.zoneBascule(), x, y)){ this.changerHeros(); return true; }
     return false;
@@ -9340,23 +9387,53 @@ Object.assign(RuelleVue, {
     const p = Math.round(L * 0.036);
     ctx.textBaseline = "middle";
 
-    /* --- bandeau du haut : score, vague, barricade --- */
-    const hb = Math.round(H * 0.052);
-    ctx.fillStyle = "rgba(8,7,14,.72)";
-    arrondi(p * 0.5, p * 0.5, L - p, hb, hb * 0.3); ctx.fill();
-    ctx.font = "800 " + Math.round(hb * 0.40) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.textAlign = "left"; ctx.fillStyle = "#F7B32B";
-    ctx.fillText(chiffres(Score.points), p * 1.1, p * 0.5 + hb * 0.5);
-    ctx.textAlign = "center"; ctx.fillStyle = "#EDE7FA";
-    ctx.fillText("VAGUE " + (Ruelle.vague + 1), L * 0.5, p * 0.5 + hb * 0.5);
-
-    /* la barricade : une jauge, pas un nombre */
-    const lj = L * 0.24, xj = L - p * 1.1 - lj, yj = p * 0.5 + hb * 0.5;
+    /* --- le haut ---
+       Le bandeau pleine largeur passait SOUS les boutons de plein écran
+       et de pause, qui vivent en HTML au-dessus du canevas : les
+       chiffres se mêlaient aux ronds. On garde donc le tiers droit
+       libre, et on descend la jauge de barricade sur sa propre ligne. */
+    const hb = Math.round(H * 0.048);
+    const largeHaut = L * 0.66;
+    ctx.fillStyle = "rgba(8,7,14,.66)";
+    arrondi(p * 0.5, p * 0.5, largeHaut, hb, hb * 0.5); ctx.fill();
+    /* le score, avec son étoile */
+    const cy = p * 0.5 + hb * 0.5;
+    ctx.fillStyle = "#F7B32B";
+    ctx.beginPath();
+    for (let k = 0; k < 10; k++){
+      const a2 = -Math.PI / 2 + k * Math.PI / 5;
+      const rr = k % 2 ? hb * 0.16 : hb * 0.32;
+      const px2 = p * 0.5 + hb * 0.62 + Math.cos(a2) * rr;
+      const py2 = cy + Math.sin(a2) * rr;
+      if (k) ctx.lineTo(px2, py2); else ctx.moveTo(px2, py2);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.font = "800 " + Math.round(hb * 0.44) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText(chiffres(Score.points), p * 0.5 + hb * 1.05, cy);
+    /* la vague, et sa progression en pastilles : on sait combien il en
+       reste à sortir sans lire un chiffre */
+    ctx.textAlign = "right"; ctx.fillStyle = "#EDE7FA";
+    ctx.fillText("VAGUE " + (Ruelle.vague + 1), largeHaut - hb * 0.4, cy);
+    const vg = Ruelle.VAGUES[Math.min(Ruelle.vague, Ruelle.VAGUES.length - 1)];
+    const restants = Ruelle.aSortir + Ruelle.ennemis.filter(e => e.etat === "course" || e.etat === "touche").length;
+    const nb = Math.min(10, vg.nombre);
+    const rp = Math.max(2.5, hb * 0.10), esp = rp * 3.4;
+    let xp = p * 0.5 + hb * 1.05;
+    const yp = p * 0.5 + hb * 1.35;
+    for (let k = 0; k < nb; k++){
+      const vivant = k < Math.ceil(restants * nb / Math.max(1, vg.nombre));
+      ctx.beginPath(); ctx.arc(xp, yp, rp, 0, 6.2832);
+      ctx.fillStyle = vivant ? "rgba(247,179,43,.92)" : "rgba(255,255,255,.22)";
+      ctx.fill(); xp += esp;
+    }
+    /* la barricade, sur sa propre ligne, loin des boutons */
+    const lj = L * 0.30, xj = p * 0.5, yj = p * 0.5 + hb * 1.90;
     const part = Ruelle.barricade / RUELLE_BARRICADE_PV;
-    ctx.fillStyle = "rgba(255,255,255,.16)";
-    arrondi(xj, yj - hb * 0.16, lj, hb * 0.32, hb * 0.16); ctx.fill();
+    ctx.fillStyle = "rgba(8,7,14,.55)";
+    arrondi(xj - 2, yj - hb * 0.15, lj + 4, hb * 0.30, hb * 0.15); ctx.fill();
     ctx.fillStyle = part > 0.6 ? "#4CC46A" : part > 0.3 ? "#F7B32B" : "#E2453D";
-    arrondi(xj, yj - hb * 0.16, Math.max(2, lj * part), hb * 0.32, hb * 0.16); ctx.fill();
+    arrondi(xj, yj - hb * 0.11, Math.max(2, (lj - 2) * part), hb * 0.22, hb * 0.11); ctx.fill();
 
     /* --- le viseur --- */
     const vx = Ruelle.viseur.x * L, vy = Ruelle.viseur.y * H;
@@ -9478,6 +9555,24 @@ Object.assign(RuelleVue, {
     ctx.font = "800 " + Math.round(zb.r * 0.30) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillStyle = "rgba(255,255,255,.86)";
     ctx.fillText("CHANGER", zb.x, zb.y + zb.r * 1.32);
+    /* Le bouton À COUVERT : au-dessus des autres, au centre, pour qu'on
+       le trouve sans regarder. */
+    const za = Ruelle.zoneAbri();
+    pastille(za.x, za.y, za.r,
+      Ruelle.couvert ? "rgba(76,196,106,.92)" : "rgba(40,36,58,.86)",
+      Ruelle.couvert ? "rgba(38,124,60,.92)" : "rgba(14,12,22,.86)",
+      "rgba(255,255,255,.24)");
+    /* un bouclier dessiné : le mot n'aurait pas tenu */
+    ctx.fillStyle = Ruelle.couvert ? "#0C2412" : "rgba(255,255,255,.80)";
+    ctx.beginPath();
+    ctx.moveTo(za.x, za.y - za.r * 0.52);
+    ctx.lineTo(za.x + za.r * 0.44, za.y - za.r * 0.26);
+    ctx.lineTo(za.x + za.r * 0.44, za.y + za.r * 0.14);
+    ctx.quadraticCurveTo(za.x + za.r * 0.40, za.y + za.r * 0.52, za.x, za.y + za.r * 0.58);
+    ctx.quadraticCurveTo(za.x - za.r * 0.40, za.y + za.r * 0.52, za.x - za.r * 0.44, za.y + za.r * 0.14);
+    ctx.lineTo(za.x - za.r * 0.44, za.y - za.r * 0.26);
+    ctx.closePath(); ctx.fill();
+
     /* La réplique du relais, juste au-dessus de celui qui reprend. */
     if (Ruelle.replique){
       const r2 = Ruelle.replique;
@@ -10535,7 +10630,7 @@ globalThis.DTOUR = {
   xPlace, borne, melange, chiffres, doux, SPRITES_PNJ, PERSOS_DEBOUT, PERSOS_ASSIS,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, portraitOk, ecranOk, orientationVoulue, ORIENTATION, Ecran, Interface, Pause, Boucle,
-  Perspective, courbeZ, POSES_ENNEMI, ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
+  Perspective, courbeZ, POSES_ENNEMI, ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, IA_REUSSITE, IA_CADENCE, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
   POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE, BAR_TAILLE_BARMAN, BAR_COPIES,
