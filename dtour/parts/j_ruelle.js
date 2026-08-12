@@ -310,8 +310,18 @@ const RuelleVue = {
        doit rester en place, pas le ciel */
     const fond = Images.table.ruelle;
     if (fond && fond.naturalWidth){
-      const e = Math.max(L / fond.naturalWidth, H / fond.naturalHeight);
+      /* Le décor COUVRE l'écran, ancré en bas : la barricade doit rester
+         en place, c'est le ciel qu'on peut perdre. Mais si l'écran est
+         plus large que haut — un joueur qui n'a pas tourné son
+         téléphone — couvrir cadrerait sur la barricade en gros plan. On
+         se rabat alors sur un ajustement en hauteur, quitte à laisser du
+         noir sur les côtés : mieux vaut une ruelle étroite qu'un mur de
+         caisses. */
+      const couvre = Math.max(L / fond.naturalWidth, H / fond.naturalHeight);
+      const tient = Math.min(L / fond.naturalWidth, H / fond.naturalHeight);
+      const e = (L > H) ? tient : couvre;
       const l = fond.naturalWidth * e, h = fond.naturalHeight * e;
+      if (L > H){ ctx.fillStyle = "#0A0710"; ctx.fillRect(0, 0, L, H); }
       ctx.drawImage(fond, (L - l) / 2, H - h, l, h);
     }
     /* les ennemis, du plus lointain au plus proche */

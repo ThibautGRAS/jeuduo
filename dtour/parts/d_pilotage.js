@@ -309,6 +309,11 @@ const Interface = {
   },
   entrerJeu(){
     this.finAffichee = false;
+    /* L'orientation dépend du NIVEAU depuis la v6.33 : entrer dans un
+       niveau doit la réévaluer. Sans ça, on passait du titre en paysage
+       à la ruelle sans que rien ne vérifie — et le décor portrait se
+       retrouvait cadré sur la barricade, en gros plan. */
+    setTimeout(() => { ajusterCanevas(); this.pensePivot(); }, 0);
     if (E.titre) E.titre.classList.add("parti");
     if (E.fin) E.fin.classList.remove("on");
     /* Le bandeau SCORE / COMBO / FILE appartient au niveau 1. Le niveau 2

@@ -2671,6 +2671,10 @@ if (D){
     D.ENNEMIS_RUELLE.every(e => D.POSES_ENNEMI.length === 13 &&
       D.POSES_ENNEMI.every(po => D.IMAGES_NIVEAU4.indexOf("enn_" + e + "_" + po) >= 0)));
 
+  verifier("entrer dans un niveau réévalue l'orientation",
+    /entrerJeu\(\)\{[\s\S]{0,400}?this\.pensePivot\(\)/.test(source),
+    "sans ça, on passe du titre en paysage à la ruelle sans rien vérifier");
+
   /* --- la ruelle se joue --- */
   verifier("le niveau 4 démarre et peuple ses vagues",
     (() => {
