@@ -378,14 +378,46 @@ change, c'est la QUESTION posée au joueur.
 - Sa question : **« je tire dans son bras, ou je me mets à couvert ? »**
 - Sprites : `enn_jubi_*`, 18 poses.
 
-### Ceux qui restent à faire
+### L'ABBÉ FORCEUR — le bombardier
 
-Écrits dans le document de conception, pas encore construits : **L'ABBÉ
-FORCEUR**, prêtre maigre qui bombarde en cloche par-dessus les autres, et
-**PATRICK BRUHELL**, qui reste au fond et lance des salves de trois. Tous
-deux réutilisent la cible du bras, qui existe désormais. Et un **GÉANT**
-toutes les trois hordes : un des personnages déjà rencontrés, 2,2 fois plus
-grand, avec sa mécanique amplifiée.
+- **Physique : homme âgé, béret noir, petites lunettes rondes cerclées,
+  barbe blanche taillée, long pardessus noir usé, pendentif en forme de
+  cœur au bout d'un cordon rouge, caleçon visible.** La description écrite
+  ici avant les planches — « prêtre maigre en soutane » — était fausse :
+  c'est le dessin qui fait foi, et cette fiche a été refaite d'après lui.
+- 95 points de vie, vitesse 0.090. **Il casse la règle pv × vitesse**
+  (8,6 contre 11), et l'exception est DÉCLARÉE dans sa fiche : sa menace
+  n'est pas d'arriver au contact.
+- **Il tient le FOND de la rue** (0,12 à 0,30) et bombarde **en cloche**
+  par-dessus les autres : trajectoire à 0,185 de hauteur d'écran contre
+  0,085 pour un pavé, et 1,35 s de vol — lent, donc on voit venir.
+- Un tir dans la cible de son bras **annule le jet** et le laisse **PLIÉ**
+  une seconde et demie, tête à 1,8 fois le tarif.
+- Sa question : **« ai-je le temps d'interrompre son lancer ? »**
+- Sprites : `enn_abbe_*`, 19 poses.
+
+### PATRICK BRUHELL — le lanceur de Molotov
+
+- **Physique : la quarantaine, cheveux noirs épais, moustache et barbe
+  courte grisonnante, veste de costume noire ouverte sur un t-shirt blanc
+  à grand cœur, baskets grises.** Là aussi, la description initiale — sac
+  en bandoulière et boîtes de conserve — ne correspondait pas aux planches.
+- 85 points de vie, vitesse 0.100, `menaceDistante` déclaré comme l'Abbé.
+- **C'est l'exact contraire de l'Abbé**, et c'est la raison de les avoir
+  tous les deux : il lance **à plat et vite** — 0,75 s de vol, cloche de
+  0,045 — depuis le **plan intermédiaire** (0,34 à 0,52). Se couvrir
+  arrive souvent trop tard contre lui : la cible du bras devient la vraie
+  réponse. En échange il frappe plus fort (22) et bien moins souvent.
+- Comme l'Abbé, un jet annulé le laisse **PLIÉ**, tête à 1,7 fois.
+- Sa question : **« couvert ou précision ? — et il ne laisse pas le temps
+  d'hésiter »**
+- Sprites : `enn_bruh_*`, 19 poses.
+
+### Ce qui reste à faire
+
+Le **GÉANT** toutes les trois hordes : un des cinq, 2,2 fois plus grand,
+mécanique amplifiée. Le champ `taille` existe déjà dans chaque fiche, donc
+le geste est court.
 
 ## Où chacun apparaît
 
@@ -410,6 +442,8 @@ grand, avec sa mécanique amplifiée.
 | Depardiahree | — | — | — | **méchant** (tank) |
 | DSKKK | — | — | — | **méchant** (garde) |
 | Jubilar | — | — | — | **méchant** (lanceur) |
+| Abbé Forceur | — | — | — | **méchant** (cloche) |
+| BruHell | — | — | — | **méchant** (Molotov) |
 
 Les trois méchants de la ruelle sont la seule exception à la règle
 ci-dessous : ils ont été inventés POUR le niveau 4 et n'apparaissent nulle

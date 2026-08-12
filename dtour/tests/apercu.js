@@ -724,6 +724,30 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "38_abbe_cloche");
   }
 
+  /* 39. LES DEUX BOMBARDIERS ENSEMBLE, chacun en pleine préparation avec
+     sa cible : c'est la horde qui justifie de les avoir tous les deux.
+     L'un lance haut et lent, l'autre à plat et vite. */
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 5;
+    const faire = (ref, z, couloir, etat) => {
+      D.Ruelle.ennemis.push({ ref, pv:ref.pv, pvMax:ref.pv, couloir, z,
+        vitesse:ref.vitesse, etat, frame:0, tFrame:0, tEtat:0.3, mort:0,
+        touche:null, usure:0, attente:99, usureGarde:0, attenteGarde:999 });
+      return D.Ruelle.ennemis[D.Ruelle.ennemis.length - 1];
+    };
+    faire(D.ENNEMIS.depar, 0.74, 2, "course");
+    /* chacun dans SA fourchette, disjointe de l'autre : c'est ce qui les
+       empêche de se superposer maintenant que les couloirs convergent */
+    faire(D.ENNEMIS.abbe, D.ENNEMIS.abbe.jet.zMin + 0.05, 1, "arme2");
+    faire(D.ENNEMIS.bruh, D.ENNEMIS.bruh.jet.zMax - 0.04, 3, "arme2");
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "39_deux_bombardiers");
+  }
+
   /* 27. les poses propres de Depardiahree, à leur taille de jeu, sur
      une même ligne de sol : c'est la seule façon de voir qu'une pose
      plus haute que les autres ne fait pas grandir le personnage. */

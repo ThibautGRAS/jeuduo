@@ -1135,6 +1135,39 @@ au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
 
+### Un script qui écrit des fichiers doit écrire ATOMIQUEMENT
+
+J'ai corrompu deux sprites, à deux reprises, en interrompant
+`reparer_sprites.py` avec un `timeout` alors qu'il écrivait — il met plus
+de deux minutes sur les 530 images. La deuxième fois, c'était le lendemain
+d'avoir écrit dans cette mémoire qu'il ne fallait pas l'interrompre : la
+consigne ne suffisait pas, il fallait rendre la faute impossible.
+
+Le script écrit désormais dans un `.tmp` puis remplace : une interruption
+laisse l'original intact. Et il accepte un sous-dossier en argument, pour
+n'avoir à traiter que ce qu'on vient de changer.
+
+### Un seuil de bruit se pose LOIN du bruit, pas à sa limite
+
+`TACHE_MIN = 25` était calé pile sur le bruit de réencodage WebP, qui
+produit des taches jusqu'à 35 px : chaque passe de réparation en corrigeait
+une et en créait une autre, indéfiniment. Les vrais défauts, eux, faisaient
+de 700 à 9 000 px. À 80, le contrôle est stable au second passage — et
+c'est ce second passage qui est le vrai test, pas le premier.
+
+### Une perspective convergente superpose ce qui se poste loin
+
+Les cinq couloirs du niveau 4 convergent : deux ennemis postés à la même
+profondeur se retrouvent à quelques pixels l'un de l'autre, avec leurs
+deux cibles de bras superposées. Ça ne se voit sur aucun test — la
+mécanique fonctionne — et ça se voit tout de suite à l'image.
+
+Deux parades, appliquées ensemble : les fourchettes de distance des deux
+bombardiers sont DISJOINTES, et une cible superposée à une autre désigne
+la plus PROCHE. La seconde compte le plus : sans règle explicite, c'était
+l'ordre du tableau d'ennemis, donc l'ordre d'apparition, qui décidait de
+qui était touché.
+
 ### Une cible se pose sur le rectangle DESSINÉ, pas sur la boîte de référence
 
 `posCibleBras` raisonnait sur la boîte de l'ennemi — celle qui vient de

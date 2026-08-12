@@ -3634,6 +3634,88 @@ if (D){
                                        v.types.indexOf("depar") >= 0);
     })());
 
+  /* ---- BruHell, le contraire de l'Abbé ---- */
+  verifier("les fourchettes des deux bombardiers ne se chevauchent pas",
+    (() => {
+      /* Postés à la même profondeur, couloirs convergés, ils se
+         superposaient à l'écran avec leurs deux cibles. */
+      const a = D.ENNEMIS.abbe.jet, b = D.ENNEMIS.bruh.jet;
+      messageDetail = "abbé " + a.zMin + "-" + a.zMax + ", bruhell " + b.zMin + "-" + b.zMax;
+      return a.zMax <= b.zMin;
+    })());
+
+  verifier("deux cibles superposées : c'est la plus PROCHE qui est touchée",
+    (() => {
+      /* Sans règle, c'était l'ordre du tableau — donc l'ordre
+         d'apparition — qui décidait. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.viser = viserVrai;
+      const mk = (ref, z) => {
+        D.Ruelle.ennemis.push({ ref, pv:ref.pv, pvMax:ref.pv, couloir:2, z,
+          vitesse:ref.vitesse, etat:"arme2", frame:0, tFrame:0, tEtat:0.2,
+          mort:0, touche:null, usure:0, attente:99, usureGarde:0, attenteGarde:999 });
+        return D.Ruelle.ennemis[D.Ruelle.ennemis.length - 1];
+      };
+      /* le LOIN est mis en premier dans le tableau, exprès */
+      const loin = mk(D.ENNEMIS.abbe, 0.20);
+      const pres = mk(D.ENNEMIS.bruh, 0.42);
+      const c = D.Ruelle.posCibleBras(pres);
+      const h = D.Ruelle.heroActif(); h.repos = 0; h.recharge = 0; h.balles = 99;
+      D.Ruelle.tirer(c.x, c.y);
+      return pres.etat === "lache" && loin.etat === "arme2";
+    })());
+
+  verifier("les deux bombardiers sont l'exact contraire l'un de l'autre",
+    (() => {
+      /* C'est toute la raison de les avoir tous les deux. L'Abbé lance
+         HAUT et LENT : on voit venir, on a le temps de se couvrir.
+         BruHell lance à PLAT et VITE : se couvrir arrive souvent trop
+         tard, la cible sur son bras devient la vraie réponse. */
+      const a = D.ENNEMIS.abbe.jet, b = D.ENNEMIS.bruh.jet;
+      messageDetail = "vol " + a.vol + " vs " + b.vol +
+                      ", cloche " + a.cloche + " vs " + b.cloche;
+      return a.vol > b.vol * 1.6 && a.cloche > b.cloche * 3 &&
+             b.degat > a.degat && b.attente[0] > a.attente[0];
+    })());
+
+  verifier("les cinq ennemis sont complets",
+    (() => {
+      const manquants = Object.keys(D.ENNEMIS_INCOMPLETS);
+      messageDetail = manquants.length ? "encore attendus : " + manquants.join(", ")
+                                       : "aucun";
+      return manquants.length === 0 &&
+        Object.keys(D.ENNEMIS).length === 5 &&
+        Object.keys(D.ENNEMIS).every(k =>
+          (D.POSES_PROPRES[k] || []).length >= 5);
+    })());
+
+  verifier("chacun pose une question DIFFÉRENTE",
+    (() => {
+      /* Le principe de conception du niveau, vérifié sur les fiches : un
+         tank au torse blindé, une garde à casser, trois lanceurs dont les
+         trajectoires et les distances diffèrent. Deux ennemis qui se
+         jouent pareil sont un ennemi de trop. */
+      const E = D.ENNEMIS;
+      const signature = k => [
+        E[k].garde ? "garde" : "",
+        E[k].trebuche ? "trebuche" : "",
+        E[k].bond ? "bond" : "",
+        E[k].plie ? "plie" : "",
+        E[k].jet ? "jet:" + E[k].jet.cloche + ":" + E[k].jet.vol +
+                   ":" + E[k].jet.zMax : "",
+        E[k].mult.torse.toFixed(2),
+      ].join("|");
+      const sigs = Object.keys(E).map(signature);
+      return new Set(sigs).size === sigs.length;
+    })());
+
+  verifier("la dernière horde les réunit tous les cinq",
+    (() => {
+      const v = D.Ruelle.VAGUES;
+      const derniere = v[v.length - 1].types;
+      return Object.keys(D.ENNEMIS).every(k => derniere.indexOf(k) >= 0);
+    })());
+
   verifier("les ennemis de contact pèsent la même menace",
     (() => {
       /* La règle pv x vitesse ne vaut que pour ceux dont la menace EST

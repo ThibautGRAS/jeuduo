@@ -151,8 +151,24 @@ const ENNEMIS = {
      tenait : les FRAGILES. Peu de points de vie, tête très payante, ce
      sont ceux qu'on abat en premier quand la rue se remplit. */
   bruh: {
-    nom:"PATRICK BRUHELL", pv:105, vitesse:0.105, taille:1.00, sprite:"bruh",
-    mult:{ tete:1.45, torse:0.70, jambes:0.90, epaule:0.80 },
+    nom:"PATRICK BRUHELL", pv:85, vitesse:0.100, taille:1.00, sprite:"bruh",
+    /* Comme l'Abbé, sa menace n'est pas d'arriver au contact : exception
+       DÉCLARÉE, et un test exige en échange qu'il reste fragile. */
+    menaceDistante:true,
+    mult:{ tete:1.50, torse:0.72, jambes:0.90, epaule:0.80 },
+    /* IL EST L'EXACT CONTRAIRE DE L'ABBÉ, et c'est là tout l'intérêt de
+       les avoir tous les deux. L'Abbé lance HAUT et LENT : on voit venir,
+       on a le temps de se couvrir. BruHell lance un cocktail Molotov à
+       plat et vite — 0,75 s de vol contre 1,35, une cloche de 0,045
+       contre 0,185. Contre lui, se couvrir arrive souvent trop tard : la
+       cible sur son bras devient la vraie réponse.
+       En échange, il frappe plus fort et beaucoup moins souvent. */
+    jet:{ zMin:0.34, zMax:0.52, attente:[3.4, 5.2], objet:"bouteille",
+          vol:0.75, degat:22, penalite:1.7, cloche:0.045,
+          /* cible mesurée sur enn_bruh_arme2 : la bouteille est à 0,33 de
+             la largeur du canevas et 0,05 de sa hauteur */
+          cible:{ x:0.33, y:0.05 } },
+    plie:{ duree:1.3, multTete:1.7 },
   },
   abbe: {
     nom:"L'ABBÉ FORCEUR", pv:95, vitesse:0.090, taille:1.02, sprite:"abbe",
@@ -171,7 +187,11 @@ const ENNEMIS = {
        trajectoire monte deux fois plus haut. C'est ce qui le rend
        intéressant en horde mixte : un mur de Depardiahree ne le protège
        pas de la cible sur son bras, mais il protège son corps. */
-    jet:{ zMin:0.14, zMax:0.52, attente:[3.0, 4.8], objet:"encensoir",
+    /* Sa fourchette ne CHEVAUCHE PAS celle de BruHell : postés à la même
+       profondeur, les couloirs ayant convergé, ils se superposaient à
+       l'écran avec leurs deux cibles. L'Abbé tient le fond, BruHell le
+       plan intermédiaire. */
+    jet:{ zMin:0.12, zMax:0.30, attente:[3.0, 4.8], objet:"encensoir",
           vol:1.35, degat:16, penalite:1.8, cloche:0.185,
           /* cible mesurée sur enn_abbe_arme2 : l'encensoir est à 0,34 de
              la largeur du canevas et 0,06 de sa hauteur */
@@ -332,8 +352,13 @@ const Ruelle = {
        choisir entre casser le mur et interrompre le bombardement. */
     { nombre:10, delai:1.3,  vitesse:1.10, types:["depar", "depar", "abbe"] },
     { nombre:12, delai:1.2,  vitesse:1.14, types:["depar", "jubi", "abbe"] },
+    { nombre:6,  delai:1.8,  vitesse:1.02, types:["bruh"] },
+    /* Les deux bombardiers ENSEMBLE : l'un haut et lent, l'autre à plat
+       et vite. Se couvrir sauve de l'un et pas de l'autre — il faut lire
+       lequel arme. */
+    { nombre:12, delai:1.2,  vitesse:1.16, types:["abbe", "bruh", "depar"] },
     { nombre:15, delai:1.0,  vitesse:1.22, types:["dsk", "jubi", "depar"] },
-    { nombre:18, delai:0.78, vitesse:1.32, types:["depar", "dsk", "jubi", "abbe"] },
+    { nombre:20, delai:0.78, vitesse:1.32, types:["depar", "dsk", "jubi", "abbe", "bruh"] },
     /* La septième mélange les cinq : c'est la horde qui pose enfin la
        question du document de conception — QUI tuer en premier. Les deux
        fragiles arrivent vite et meurent vite, les deux lanceurs
@@ -500,11 +525,23 @@ const Ruelle = {
      du temps. Rien n'entame ses points de vie — la parade fait gagner du
      temps, elle ne tue pas, sinon viser le bras dominerait tout. */
   tirerCibleBras(fx, fy){
+    /* Deux cibles peuvent se SUPERPOSER : au fond de la rue les cinq
+       couloirs ont convergé, et deux bombardiers postés loin se
+       retrouvent à quelques pixels l'un de l'autre. On prend alors le
+       PLUS PROCHE — même règle que pour les zones du corps, et surtout
+       une règle déterministe : sans elle, c'était l'ordre du tableau qui
+       décidait, donc l'ordre d'apparition. */
+    let vise = null, meilleur = -1;
     for (const e of this.ennemis){
       if (!this.cibleOuverte(e)) continue;
       const c = this.posCibleBras(e);
       const dx = fx - c.x, dy = fy - c.y, rr = c.r * CIBLE_BRAS_PRISE;
       if (dx * dx + dy * dy > rr * rr) continue;
+      if (e.z > meilleur){ meilleur = e.z; vise = e; }
+    }
+    {
+      const e = vise;
+      if (!e) return false;
       e.etat = "lache"; e.tEtat = 0;
       e.attente = e.ref.jet.attente[1] * e.ref.jet.penalite;
       Sons.impact(true);
@@ -514,7 +551,6 @@ const Ruelle = {
       if (this.bilan) this.bilan.annules++;
       return true;
     }
-    return false;
   },
 
   /* Un seul endroit compte les morts : le joueur et l'équipier tuent

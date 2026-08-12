@@ -34,7 +34,11 @@ from scipy import ndimage
 PERSONNAGES = ("bar_", "pers_", "assis_", "enn_", "ruel_", "h_", "face_",
                "hortense", "duo_", "pierre_", "thibaut_", "enq_")
 FRAG_MIN = 300        # en dessous, c'est du bruit de bord, pas un fragment
-TACHE_MIN = 25        # en dessous, un trou n'est pas visible en jeu
+# 80 et non 25. Le bruit de réencodage WebP produit des taches allant
+# jusqu'à 35 px : à 25, chaque passe de réparation en corrigeait une et en
+# créait une autre, indéfiniment. Les vrais défauts, eux, faisaient de 700
+# à 9 000 px. Le seuil doit être posé LOIN du bruit, pas à sa limite.
+TACHE_MIN = 80
 
 
 def est_personnage(nom):
@@ -123,8 +127,15 @@ def reparer(chemin):
             if decale > 0: a[:, :decale] = 0
             else: a[:, decale:] = 0
 
+    # ÉCRITURE ATOMIQUE. Écrire directement dans le fichier final le
+    # laisse tronqué si le processus est interrompu — c'est arrivé DEUX
+    # FOIS, tuant un sprite chaque fois, parce que ce script met plus de
+    # deux minutes sur les 530 images. On écrit à côté, puis on remplace :
+    # une interruption laisse alors l'original intact.
+    tmp = chemin.with_suffix(".webp.tmp")
     Image.fromarray(a.astype(np.uint8), "RGBA").save(
-        chemin, "WEBP", quality=95, method=6)
+        tmp, "WEBP", quality=95, method=6)
+    tmp.replace(chemin)
     return fragments, aire_frag, n_trous, decale
 
 

@@ -283,6 +283,28 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**BruHell complète le bestiaire** (v6.66) : cinquième et dernier ennemi,
+dix-neuf poses. **Les cinq sont complets, `ENNEMIS_INCOMPLETS` est vide.**
+
+Il lance un **cocktail Molotov**, et il est l'exact contraire de l'Abbé —
+c'est là tout l'intérêt de les avoir tous les deux. L'Abbé lance HAUT et
+LENT : on voit venir, on a le temps de se couvrir. BruHell lance À PLAT et
+VITE — 0,75 s de vol contre 1,35, une cloche de 0,045 contre 0,185. Contre
+lui, se couvrir arrive souvent trop tard : la cible sur son bras devient la
+vraie réponse. En échange il frappe plus fort et beaucoup moins souvent.
+
+**Leurs fourchettes de distance ne se chevauchent plus** : l'Abbé tient le
+fond (0,12–0,30), BruHell le plan intermédiaire (0,34–0,52). Postés à la
+même profondeur, les cinq couloirs ayant convergé, ils se superposaient à
+l'écran avec leurs deux cibles.
+
+**Et deux cibles superposées désignent maintenant la plus PROCHE** — même
+règle que pour les zones du corps. Sans elle, c'était l'ordre du tableau,
+donc l'ordre d'apparition, qui décidait.
+
+**Neuf hordes** : cinq d'apprentissage, une mécanique chacune, puis quatre
+mixtes dont la dernière réunit les cinq.
+
 **L'Abbé Forceur bombarde** (v6.65) : quatrième ennemi complet, dix-neuf
 poses, et la première mécanique qui change la GÉOMÉTRIE du niveau plutôt
 que sa cadence.

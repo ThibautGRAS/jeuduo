@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.65";
+const VERSION = "6.66";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -701,18 +701,16 @@ const POSES_PROPRES = {
      un jet annulé. C'est exactement ce que POSES_PROPRES sert à exprimer —
      tous les personnages n'ont pas la même richesse. */
   abbe: ["arret", "arme1", "arme2", "lance", "lache", "plie"],
-  /* BruHell n'a QUE sa planche de base : ses poses de préparation ne sont
-     pas encore dessinées. Il avance et frappe au contact, ce qui est déjà
-     un rôle — le plus fragile, celui qu'on abat en premier — mais ce n'est
-     pas celui qu'il aura. */
-  bruh: [],
+  bruh: ["arret", "arme1", "arme2", "lance", "lache", "plie"],
 };
 /* Ce qui manque à qui, écrit noir sur blanc : un test le récite, de
    sorte qu'un ennemi à moitié fini ne puisse pas être oublié à
    moitié fini. */
-const ENNEMIS_INCOMPLETS = {
-  bruh: "planche de mécanique : arret, arme1, arme2, lance, arme3, lache",
-};
+/* Les cinq sont complets. La table reste VIDE mais présente : c'est elle
+   qui autorise un ennemi à n'être qu'à moitié dessiné sans se faire
+   oublier, et le test la récite. La vider est le geste qui clôt un
+   personnage. */
+const ENNEMIS_INCOMPLETS = {};
 /* Plus aucune planche de base ne manque. La table reste : c'est elle qui
    autorise un ennemi à n'avoir que sa pose de course, et le test dit en
    clair lesquels sont incomplets. */
