@@ -64,6 +64,25 @@ def tete_largeur(mv):
     return int(np.median(runs))
 
 
+def tete_haut(mv, largeur):
+    """Première ligne où la silhouette atteint la largeur d'une tête.
+
+    Indispensable : un verre brandi ou une bouteille levée dépassent du
+    crâne, et la boîte englobante commence alors sur l'OBJET. Cadrer
+    dessus fait descendre la tête et remonter la coupe dans le torse — le
+    barman hoche la tête en travaillant. On cherche donc où la tête
+    commence VRAIMENT, en exigeant un segment continu d'au moins 70 % de
+    sa largeur."""
+    for y in range(mv.shape[0]):
+        best = cur = 0
+        for v in mv[y]:
+            cur = cur + 1 if v else 0
+            if cur > best: best = cur
+        if best >= largeur * 0.70:
+            return y
+    return 0
+
+
 def retirer_comptoir(vue, mv):
     """Coupe la bande de bois du bas. Deux conditions ENSEMBLE, parce que
     chacune seule se trompe : la couleur seule prendrait un vêtement brun,
@@ -135,43 +154,56 @@ def decouper(cfg):
     #    ramène toutes les poses à la même largeur de tête.
     for nom in brut:
         vue, mv, retire = brut[nom]
-        brut[nom] = (vue, mv, retire, tete_largeur(mv))
-    ref = max(v[3] for v in brut.values())
+        lt = tete_largeur(mv)
+        brut[nom] = (vue, mv, retire, lt, tete_haut(mv, lt))
 
     # 3. Puis on RECADRE AU BUSTE, en TÊTES et non en pixels : les poses
     #    en pied montreraient des jambes là où le rendu attend le
     #    comptoir. La hauteur est déclarée dans la config parce qu'elle
     #    est anatomique, pas mesurable — c'est la ligne de la ceinture, et
     #    elle doit être la même sur toutes les planches d'un personnage.
-    hauteurs = [v[1].shape[0] / v[3] for v in brut.values()]
-    bustes = cfg.get("hauteur_tetes") or min(hauteurs)
-    tailles = {}
-    for nom, (vue, mv, retire, th) in brut.items():
-        k = ref / th
-        tailles[nom] = (k, int(round(mv.shape[0] * k)), int(round(mv.shape[1] * k)))
-    hcible = int(round(bustes * ref))
-    ech = (COTE_H - MARGE_BAS) / hcible
-    largeur = max(int(round(t[2] * ech)) for t in tailles.values()) + 8
+    # la coupe se compte depuis le HAUT DE LA TÊTE, et il faut réserver
+    # au-dessus la place du plus grand objet brandi de la planche
+    bustes = cfg.get("hauteur_tetes") or min(
+        (v[1].shape[0] - v[4]) / v[3] for v in brut.values())
+    coiffe = max(v[4] / v[3] for v in brut.values())
+    total = coiffe + bustes
+    ref = (COTE_H - MARGE_BAS) / total          # largeur de tête cible, en px
+    largeur = max(int(round(v[1].shape[1] * ref / v[3])) for v in brut.values()) + 8
 
-    print(f"{'pose':12s} {'source':>11s} {'tête':>5s} {'comptoir':>9s} {'coupé':>6s} {'sortie':>11s}")
-    for nom, (vue, mv, retire, th) in brut.items():
+    print(f"{'pose':12s} {'source':>11s} {'tête':>5s} {'coiffe':>7s} {'comptoir':>9s} {'coupé':>6s} {'sortie':>11s}")
+    for nom, (vue, mv, retire, th, ht) in brut.items():
         rgb = despill(vue.astype(np.int16)).astype(np.uint8)
         alpha = np.clip(1.6 - ndimage.gaussian_filter((~mv).astype(float), 0.8) * 3.2, 0, 1)
         img = Image.fromarray(np.dstack([rgb, (alpha * 255).astype(np.uint8)]), "RGBA")
-        # d'abord à l'échelle de la tête de référence, puis à l'écran
-        k = (ref / th) * ech
+        k = ref / th
         nl, nh = max(1, int(round(img.width * k))), max(1, int(round(img.height * k)))
         img = img.resize((nl, nh), Image.LANCZOS)
+        # la ceinture tombe à `bustes` têtes SOUS le haut du crâne
+        bas = int(round(ht * k + bustes * ref))
         coupe = 0
-        if nh > COTE_H - MARGE_BAS:
-            coupe = nh - (COTE_H - MARGE_BAS)
-            img = img.crop((0, 0, nl, nh - coupe)); nh -= coupe
+        if nh > bas:
+            coupe = nh - bas
+            img = img.crop((0, 0, nl, bas)); nh = bas
+        if nh < bas - 1:
+            # LE DÉFAUT DE CALIBRATION, ATTRAPÉ ICI. Une pose plus COURTE
+            # que la cible ne peut pas être recadrée : collée par le bas,
+            # sa tête descend d'autant. Mesuré chez Jojo avec une cible à
+            # 3,7 têtes : le haut du crâne bougeait de 17 px sur 193 d'une
+            # pose à l'autre, il hochait la tête en travaillant. La cible
+            # doit être la pose la PLUS COURTE, pas une valeur choisie.
+            sys.exit(f"ABANDON : {nom} fait {nh} px de contenu pour une cible de {bas} — "
+                     f"baisser hauteur_tetes à "
+                     f"{min((v[1].shape[0] - v[4]) / v[3] for v in brut.values()):.2f} au plus")
         toile = Image.new("RGBA", (largeur, COTE_H), (0, 0, 0, 0))
+        # ancrage par la CEINTURE : le bas du contenu tombe toujours au
+        # même endroit, et la coiffe brandie occupe la marge du haut
         toile.paste(img, ((largeur - nl) // 2, COTE_H - MARGE_BAS - nh), img)
         toile.save(dst / f"{cfg['prefixe']}_{nom}.webp", "WEBP", quality=95, method=6)
         print(f"{nom:12s} {str(mv.shape[1])+'x'+str(mv.shape[0]):>11s} {th:5d} "
-              f"{retire:9d} {coupe:6d} {str(nl)+'x'+str(nh):>11s}")
-    print(f"\ncanevas {largeur}x{COTE_H}, tête de référence {ref} px, {len(brut)} poses")
+              f"{ht:7d} {retire:9d} {coupe:6d} {str(nl)+'x'+str(nh):>11s}")
+    print(f"\ncanevas {largeur}x{COTE_H}, tête {ref:.1f} px, coiffe {coiffe:.2f} tête(s), "
+          f"buste {bustes:.2f} tête(s), {len(brut)} poses")
 
 
 if __name__ == "__main__":

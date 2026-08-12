@@ -264,6 +264,22 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Jojo ne hoche plus la tête** (v6.61) : ses poses étaient calibrées sur
+le haut de leur boîte englobante. Or un verre brandi ou une bouteille
+levée dépassent du crâne : le cadrage commençait sur l'OBJET, la tête
+descendait d'autant et la coupe remontait dans le torse. Mesuré : le haut
+du crâne bougeait de **17 px sur 193** d'une pose à l'autre.
+
+Le cadrage part maintenant du **haut du crâne**, trouvé en cherchant la
+première ligne où la silhouette atteint 70 % d'une largeur de tête — un
+objet brandi ne remplit pas ce critère. La place nécessaire au plus grand
+objet de la planche est réservée au-dessus, et la ceinture tombe à une
+distance fixe sous le crâne. Après correction : **2 px d'écart sur le
+crâne, zéro sur la ceinture**.
+
+Et le découpage **refuse d'écrire** si une pose est plus courte que la
+cible : c'était exactement ce défaut, et il passait inaperçu.
+
 **Les barmans redécoupés** (v6.60) : les 17 poses de Francky et Jojo
 sortent de nouvelles planches, et trois choses changent.
 

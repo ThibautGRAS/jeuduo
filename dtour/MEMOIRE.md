@@ -1094,6 +1094,25 @@ LE TROU — teinte de corps pour un alpha effacé par erreur, noir ou
 magenta pour du fond réellement enclos. Ma première version comptait
 tout, et déclarait cassées des découpes justes.
 
+### Et le cadrage se prend sur le HAUT DU CRÂNE, pas sur la boîte
+
+Corollaire du précédent, et il a coûté une livraison. Cadrer sur le haut
+de la boîte englobante marche jusqu'à ce qu'un personnage brandisse
+quelque chose : le verre levé de Jojo devient le sommet de la boîte, sa
+tête descend d'autant, et la coupe du bas remonte dans le torse. Mesuré :
+17 px de balancement du crâne sur 193, visible en jeu comme un
+hochement de tête à chaque geste.
+
+Le haut du crâne se trouve en cherchant la première ligne où la
+silhouette atteint 70 % d'une largeur de tête : un objet brandi est trop
+étroit pour la remplir. On réserve ensuite au-dessus la place du plus
+grand objet de la planche — mesurée, pas choisie — et la ceinture tombe à
+une distance fixe SOUS le crâne.
+
+Le garde-fou qui compte : le découpage refuse d'écrire si une pose est
+plus courte que la cible. C'était le symptôme même du défaut, et il ne
+déclenchait aucune erreur.
+
 ### Une échelle de personnage se prend sur la TÊTE
 
 Normaliser des poses sur leur hauteur totale marche tant qu'elles ont le
