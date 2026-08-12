@@ -1135,6 +1135,35 @@ au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
 
+### Changer de décor pour un plus sombre oblige à traiter les SPRITES
+
+Les décors de crépuscule et de nuit sont à 0,39 et 0,35 de la luminance
+de celui de jour. Les poser tels quels laissait héros et méchants
+éclairés comme en plein jour : ils flottaient sur la nuit comme des
+découpes. Un décor n'est pas un fond interchangeable — il fixe une
+lumière, et tout ce qui se dessine dessus doit s'y plier.
+
+Le voile se pose donc APRÈS les personnages et AVANT le pupitre : la
+scène entière est teintée, l'interface reste lisible. Et il est bleu
+profond plutôt que noir — le noir écrase les couleurs, le bleu les
+refroidit en les gardant.
+
+Corollaire heureux : c'est la nuit qui donne son intérêt au coup de feu.
+En plein jour il se voit à peine ; la nuit il repeint l'écran. L'effet ne
+coûte qu'un rectangle en mode `lighter` dont l'alpha suit l'heure.
+
+### Un seul système de particules pour toutes les familles
+
+Douilles, fumée, éclats de bois, gerbe : même pas, même rendu, un objet
+plat par particule et un champ `forme` qui dit comment la peindre.
+Ajouter une famille coûte une ligne de gabarit. Le réflexe inverse — une
+boucle et un tableau par effet — donne quatre fois le même code à
+maintenir et quatre occasions d'oublier la remise à zéro.
+
+Deux règles de survie : un PLAFOND, sinon une horde chargée sème plus
+vite qu'elle ne nettoie ; et on jette les PLUS VIEILLES, parce qu'une
+explosion qui n'apparaît pas se remarque plus qu'une fumée qui s'efface.
+
 ### Une position calée sur un sprite doit suivre la POSE, pas le personnage
 
 La flamme de bouche était mesurée une fois par héros. Elle collait tant

@@ -3122,6 +3122,98 @@ if (D){
       return par.every(n => n >= 25);
     })());
 
+  /* ---- l'heure et les effets ---- */
+  verifier("le crépuscule tombe à la 3ᵉ horde, la nuit à la 6ᵉ",
+    (() => {
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
+      const img = v => { D.Ruelle.vague = v; return D.Ruelle.heure().image; };
+      const suite = [0, 1, 2, 3, 4, 5, 6].map(img);
+      messageDetail = suite.map((s, i) => (i + 1) + ":" + s.replace("ruelle", "")).join(" ");
+      return suite[0] === "ruelle" && suite[1] === "ruelle" &&
+        suite[2] === "ruelle_crepuscule" && suite[4] === "ruelle_crepuscule" &&
+        suite[5] === "ruelle_nuit" && suite[6] === "ruelle_nuit";
+    })());
+
+  verifier("les trois décors existent et font la même taille",
+    (() => {
+      /* Des tailles différentes décaleraient la barricade d'un décor à
+         l'autre : elle doit rester EXACTEMENT en place, c'est elle qui
+         cale la ligne de jeu. */
+      /* Lecture directe de l'en-tête WebP : `dimsN4` est déclaré plus
+         bas dans le fichier, et un `const` ne remonte pas. */
+      const lire = n => {
+        const b2 = fs.readFileSync(path.join(RACINE, "img", "n4", n + ".webp"));
+        const tag = b2.toString("ascii", 12, 16);
+        if (tag === "VP8 ") return { l:b2.readUInt16LE(26) & 0x3fff, h:b2.readUInt16LE(28) & 0x3fff };
+        if (tag === "VP8X") return { l:(b2.readUIntLE(24, 3) & 0xffffff) + 1,
+                                     h:(b2.readUIntLE(27, 3) & 0xffffff) + 1 };
+        const x = b2.readUInt32LE(21);
+        return { l:(x & 0x3fff) + 1, h:((x >> 14) & 0x3fff) + 1 };
+      };
+      const d = ["ruelle", "ruelle_crepuscule", "ruelle_nuit"].map(lire);
+      messageDetail = d.map(x => x.l + "x" + x.h).join(", ");
+      return d.every(x => x && x.l === d[0].l && x.h === d[0].h);
+    })());
+
+  verifier("la nuit teinte AUSSI les personnages",
+    (() => {
+      /* Les décors sombres sont à 0,35 de la luminance du décor de jour :
+         sans voile posé après les sprites, héros et méchants flottent sur
+         la nuit comme des découpes de plein jour. */
+      const i = source.indexOf("L'ÉCLAIRAGE DE LA NUIT");
+      const j = source.indexOf("dessinerHud()", i);
+      const k = source.lastIndexOf("ctx.restore();", i);
+      return i > 0 && j > i && k > 0 &&
+        /Ruelle\.heure\(\)\.nuit/.test(source.slice(i, j));
+    })());
+
+  verifier("le coup de feu éclaire d'autant plus qu'il fait nuit",
+    (() => {
+      /* C'est l'effet qui justifie la nuit : en plein jour un tir se voit
+         à peine, la nuit il repeint l'écran. */
+      return /globalAlpha = vie \* \(0\.05 \+ 0\.22 \* nuit\)/.test(source) &&
+        /globalCompositeOperation = "lighter"/.test(source);
+    })());
+
+  verifier("les particules sont plafonnées et remises à zéro",
+    (() => {
+      /* Sans plafond, une horde chargée finit par semer plus vite qu'elle
+         ne nettoie. Et sans remise à zéro, la fumée de la partie
+         précédente flotte sur la nouvelle. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
+      for (let k = 0; k < 60; k++){ D.Ruelle.fxTir(0, "fusil"); D.Ruelle.fxBarricade(2, 14); }
+      const pic = D.Ruelle.particules.length;
+      D.Jeu.demarrer(4);
+      messageDetail = "pic " + pic + ", après relance " + D.Ruelle.particules.length;
+      return pic <= D.PART_MAX && D.Ruelle.particules.length === 0;
+    })());
+
+  verifier("chaque famille d'effet a son gabarit",
+    (() => {
+      /* Un seul système pour tout : ajouter un effet coûte une ligne de
+         gabarit, pas une boucle de plus. */
+      const att = ["douille", "fumee", "bois", "gerbe"];
+      return att.every(k => D.PART_TYPES[k] &&
+        Array.isArray(D.PART_TYPES[k].couleur) &&
+        D.PART_TYPES[k].vie[0] > 0);
+    })());
+
+  verifier("les particules tombent et rebondissent",
+    (() => {
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
+      D.Ruelle.particules.length = 0;
+      D.Ruelle.semer("douille", 1, 0.5, 0.2, 0.1, -1.5708, 0.1, 1);
+      const p0 = D.Ruelle.particules[0];
+      const y0 = p0.y;
+      for (let k = 0; k < 40; k++) D.Ruelle.pasParticules(1 / 60);
+      /* la fumée, elle, MONTE */
+      D.Ruelle.semer("fumee", 1, 0.5, 0.5, 0.05, -1.5708, 0.1, 1);
+      const f0 = D.Ruelle.particules[D.Ruelle.particules.length - 1];
+      const fy0 = f0.y;
+      for (let k = 0; k < 20; k++) D.Ruelle.pasParticules(1 / 60);
+      return p0.y > y0 && f0.y < fy0;
+    })());
+
   verifier("chaque méchant a son cri",
     (() => {
       return Object.keys(D.ENNEMIS).every(k =>

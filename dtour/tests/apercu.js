@@ -806,6 +806,37 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "43_bar_affiche");
   }
 
+  /* 44-46. L'HEURE ET LES EFFETS. Trois clichés : le crépuscule, la nuit
+     avec un coup de feu qui l'éclaire, et toutes les particules en vol. */
+  const scenePart = async (nom, vague, avecFx, avecFlash) => {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
+    D.Ruelle.vague = vague;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0;
+    const faire = (ref, z, couloir, etat) => D.Ruelle.ennemis.push({
+      ref, pv:ref.pv, pvMax:ref.pv, taille:ref.taille || 1, couloir, z,
+      vitesse:ref.vitesse, etat, frame:2, tFrame:0, tEtat:0.2, mort:0,
+      touche:null, usure:0, attente:99, usureGarde:0, attenteGarde:999 });
+    faire(D.ENNEMIS.depar, 0.66, 2, "course");
+    faire(D.ENNEMIS.dsk, 0.44, 4, "course");
+    if (avecFx){
+      /* toutes les familles à la fois : douilles, fumée, bois, gerbe */
+      D.Ruelle.fxTir(0, "revolver");
+      D.Ruelle.fxTir(1, "fusil");
+      D.Ruelle.fxBarricade(2, 14);
+      D.Ruelle.semer("gerbe", 8, 0.52, 0.40, 0.22, 1.5708, 2.6, 1);
+      for (let k = 0; k < 14; k++) D.Ruelle.pasParticules(1 / 60);
+    }
+    if (avecFlash) D.Ruelle.flashes.push({ t:0.12, duree:0.13, heros:0 });
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, nom);
+  };
+  await scenePart("44_ruelle_crepuscule", 2, false, false);
+  await scenePart("45_ruelle_nuit_flash", 5, false, true);
+  await scenePart("46_ruelle_fx", 5, true, true);
+
   /* 27. les poses propres de Depardiahree, à leur taille de jeu, sur
      une même ligne de sol : c'est la seule façon de voir qu'une pose
      plus haute que les autres ne fait pas grandir le personnage. */

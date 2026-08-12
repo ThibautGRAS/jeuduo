@@ -283,6 +283,41 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**La nuit tombe sur la ruelle, et tous les effets arrivent** (v6.77).
+
+**L'heure avance avec les hordes** : le crépuscule à la troisième, la
+nuit à la sixième. Le décor dit où on en est de la soirée sans qu'aucun
+texte n'ait à le dire — même principe que l'ambiance du bar. Les trois
+décors font exactement la même taille, donc la barricade ne bouge pas
+d'un pixel d'un décor à l'autre ; un test le vérifie.
+
+**Il fallait éclairer, pas seulement assombrir.** Les deux nouveaux
+décors sont à 0,39 et 0,35 de la luminance de celui de jour (mesuré) :
+sans rien faire, héros et méchants flottaient sur la nuit comme des
+découpes de plein jour. Un voile bleu profond — pas noir, le noir écrase
+les couleurs — est posé APRÈS les personnages, donc il les teinte avec le
+décor.
+
+**Et le coup de feu éclaire la rue.** C'est l'effet qui justifie la
+nuit : en plein jour un tir se voit à peine, la nuit il repeint tout
+l'écran une fraction de seconde. L'intensité suit l'heure.
+
+**Tous les effets, dans un seul système** : ajouter une famille coûte une
+ligne de gabarit, pas une boucle de plus.
+
+- **Les douilles** sautent vers l'arrière et rebondissent une fois.
+- **La fumée** monte et grossit — sans elle, une rafale de six balles ne
+  laisse aucune trace.
+- **Les éclats de bois** partent de la barricade vers le joueur : c'est
+  ce qui fait qu'on encaisse le coup au lieu de le regarder.
+- **La gerbe** est courte et sombre, jamais rouge vif, et sa taille suit
+  la profondeur — sinon un ennemi au fond éclabousse comme s'il était à
+  un mètre. Le jeu est burlesque, pas gore.
+
+Le tout est plafonné à quatre-vingt-dix particules, et **on jette les
+plus vieilles** : une explosion qui n'apparaît pas est plus choquante
+qu'une fumée qui disparaît.
+
 **Le géant est escorté, BruHell devient l'Enfoiré** (v6.76).
 
 **Le géant n'arrive plus seul.** Seul, il n'y avait qu'à reculer et

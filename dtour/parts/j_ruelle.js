@@ -262,6 +262,52 @@ const GROGNE_DELAI = [1.1, 2.8];
 
    À REMESURER à chaque nouvelle planche de héros — c'est une position
    d'interface calée sur un dessin, elle est solidaire de ce dessin. */
+/* L'HEURE AVANCE AVEC LES HORDES. Le décor dit où on en est de la nuit
+   sans qu'aucun texte n'ait à le dire — c'est le même principe que
+   l'ambiance du bar qui monte du jour au soir.
+
+   `nuit` va de 0 à 1 : c'est lui qui pilote tout l'éclairage. Les deux
+   décors sombres sont à 0,39 et 0,35 de la luminance du décor de jour
+   (mesuré), donc les personnages, eux, restent éclairés comme en plein
+   jour : sans voile, ils flottent sur la nuit comme des découpes. */
+/* ---------------- LES PARTICULES ----------------
+   Un seul système pour tous les effets : douilles, fumée, éclats de
+   bois, gerbe. Ils partagent le même pas et le même rendu, donc ajouter
+   un effet coûte une ligne de gabarit au lieu d'une boucle de plus.
+
+   Chaque particule est un objet plat — pas de sous-classes, pas de
+   dictionnaire par type : c'est ce qui permet d'en avoir cent sans y
+   penser. Le champ `forme` dit comment la peindre. */
+const PART_MAX = 90;          /* au-delà, on jette les plus vieilles */
+const GRAVITE = 2.6;          /* en fraction de hauteur d'écran par s² */
+
+const PART_TYPES = {
+  /* La douille : elle saute du canon, rebondit une fois, s'arrête. Petite
+     et brillante — c'est le détail qui donne du poids à un tir. */
+  douille: { forme:"barre", vie:[0.9, 1.4], taille:[0.006, 0.009],
+             couleur:["#E8C25A", "#B8912F"], grav:1.0, rebond:0.42, tourne:14 },
+  /* La fumée : elle MONTE et grossit. Sans elle, une rafale de six
+     balles ne laisse aucune trace. */
+  fumee: { forme:"rond", vie:[0.5, 0.9], taille:[0.012, 0.022],
+           couleur:["#C9C6BE", "#8C8880"], grav:-0.28, rebond:0, tourne:0,
+           gonfle:2.4, opacite:0.36 },
+  /* Les éclats de bois : projetés VERS le joueur quand la barricade
+     encaisse. Ils partent large, tombent vite. */
+  bois: { forme:"barre", vie:[0.5, 0.9], taille:[0.008, 0.016],
+          couleur:["#A9773F", "#6B4A26"], grav:2.2, rebond:0.2, tourne:9 },
+  /* La gerbe : courte et sombre, jamais rouge vif. Le jeu est burlesque,
+     pas gore — une tache brève suffit à dire « touché ». */
+  gerbe: { forme:"rond", vie:[0.25, 0.45], taille:[0.005, 0.011],
+           couleur:["#8E2230", "#5A121C"], grav:2.0, rebond:0, tourne:0,
+           opacite:0.75 },
+};
+
+const HEURES = [
+  { des:0, image:"ruelle",            nuit:0.00 },
+  { des:2, image:"ruelle_crepuscule", nuit:0.55 },
+  { des:5, image:"ruelle_nuit",       nuit:1.00 },
+];
+
 const CANONS = {
   th: {
     accroupi:[0.710, 0.424], arme1:[0.764, 0.367], arme2:[0.737, 0.332],
@@ -454,6 +500,7 @@ const Ruelle = {
   /* Qui a déjà été rencontré, pour ne montrer la carte qu'une fois. */
   vus:[], annonce:null, geantCle:null,
   projectiles:[], impacts:[], blocages:[], grogneT:0, grogneReste:0,
+  particules:[],
   /* Le relevé de fin. `tues` est indexé par TYPE et pas par nom
      affichable : le nom vit dans ENNEMIS, et le dupliquer ici aurait
      dérivé au premier renommage — c'est exactement ce qui est arrivé
@@ -513,6 +560,7 @@ const Ruelle = {
   demarrer(){
     this.actif = true; this.fini = null;
     this.ennemis.length = 0; this.flashes.length = 0;
+    this.particules.length = 0;
     this.vus.length = 0; this.annonce = null; this.geantCle = null;
     /* L'ORDRE D'INTRODUCTION est tiré à chaque partie : deux parties ne
        présentent plus les cinq dans la même suite. */
@@ -741,6 +789,79 @@ const Ruelle = {
   gardeTient(e){ return !!e.ref.garde && e.etat === "garde"; },
 
   cleEnnemi(e){ return Object.keys(ENNEMIS).find(k => ENNEMIS[k] === e.ref); },
+
+  /* Sème `n` particules d'un type autour de (x, y), en fractions
+     d'écran. `dir` oriente la gerbe, `ouverture` sa dispersion. */
+  semer(type, n, x, y, vitesse, dir, ouverture, echelle){
+    const g = PART_TYPES[type];
+    if (!g) return;
+    for (let k = 0; k < n; k++){
+      const a = dir + (Math.random() * 2 - 1) * ouverture;
+      const v = vitesse * (0.55 + Math.random() * 0.9);
+      this.particules.push({
+        type, x, y,
+        vx:Math.cos(a) * v, vy:Math.sin(a) * v,
+        t:0, vie:melange(g.vie[0], g.vie[1], Math.random()),
+        r:melange(g.taille[0], g.taille[1], Math.random()) * (echelle || 1),
+        ang:Math.random() * 6.283, vang:(Math.random() * 2 - 1) * (g.tourne || 0),
+      });
+    }
+    /* On jette les plus VIEILLES, pas les nouvelles : une explosion qui
+       n'apparaît pas est plus choquante qu'une fumée qui disparaît. */
+    if (this.particules.length > PART_MAX)
+      this.particules.splice(0, this.particules.length - PART_MAX);
+  },
+
+  /* La douille et la fumée d'un tir. Le point de départ est celui de la
+     flamme : à hauteur d'arme, du côté où le héros vise. La douille part
+     vers l'ARRIÈRE et le haut — c'est ce que fait une douille éjectée —
+     et la fumée reste sur place en montant. */
+  fxTir(i, arme){
+    const cote = i === 0 ? 1 : -1;
+    const x = i === 0 ? RUELLE_ECART_HEROS : 1 - RUELLE_ECART_HEROS;
+    const y = RUELLE_PIEDS_HEROS - RUELLE_TAILLE_HEROS * 0.55;
+    const gros = arme === "fusil" ? 1.25 : 1;
+    /* vers l'arrière et le haut : -2,1 rad du côté opposé au tir */
+    this.semer("douille", 1, x + 0.02 * cote, y,
+               0.45, cote > 0 ? -2.05 : -1.09, 0.30, gros);
+    this.semer("fumee", arme === "fusil" ? 4 : 2, x + 0.05 * cote, y,
+               0.10, -1.5708, 0.9, gros);
+  },
+
+  /* Les éclats de la barricade. Ils partent du haut des caisses, en
+     éventail large vers le haut et vers le joueur. */
+  fxBarricade(couloir, n){
+    const c = RUELLE_COULOIRS[couloir] !== undefined ? RUELLE_COULOIRS[couloir] : 0;
+    const x = borne(RUELLE_FUITE + c * 0.9, 0.08, 0.92);
+    this.semer("bois", n, x, RUELLE_PREMIER_PLAN + 0.02, 0.55, -1.5708, 1.15, 1);
+  },
+
+  pasParticules(dt){
+    for (let i = this.particules.length - 1; i >= 0; i--){
+      const p = this.particules[i];
+      const g = PART_TYPES[p.type];
+      p.t += dt;
+      if (p.t >= p.vie){ this.particules.splice(i, 1); continue; }
+      p.vy += GRAVITE * (g.grav || 0) * dt;
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      p.ang += p.vang * dt;
+      /* le sol : la ligne des pieds des héros. Ce qui rebondit rebondit
+         une fois et perd l'essentiel de sa vitesse. */
+      if (g.rebond && p.y > RUELLE_PIEDS_HEROS && p.vy > 0){
+        p.y = RUELLE_PIEDS_HEROS;
+        p.vy = -p.vy * g.rebond;
+        p.vx *= 0.55;
+      }
+    }
+  },
+
+  /* L'heure de la horde en cours. Le crépuscule tombe à la troisième,
+     la nuit à la sixième — comptées à partir de 1, donc index 2 et 5. */
+  heure(){
+    let h = HEURES[0];
+    for (const x of HEURES) if (this.vague >= x.des) h = x;
+    return h;
+  },
 
   /* LES GROGNEMENTS DES VIVANTS. Ils disent qu'il y a du monde dans la
      rue avant qu'on le voie, et c'est surtout ce qui rend un bombardier
@@ -1055,6 +1176,7 @@ const Ruelle = {
     }
     if (this.annonce) this.pasAnnonce(dt);
     this.pasGrognements(dt);
+    this.pasParticules(dt);
     this.pasProjectiles(dt);
     for (let i = this.flashes.length - 1; i >= 0; i--){
       this.flashes[i].t -= dt;
@@ -1104,12 +1226,16 @@ const Ruelle = {
         /* elle éclate SUR les caisses : le bruit sans la douleur */
         if (this.bilan) this.bilan.bloquees++;
         this.secousse = Math.max(this.secousse, 0.35);
+        /* les éclats partent VERS LE JOUEUR : c'est ce qui fait qu'on
+           encaisse le coup au lieu de le regarder */
+        this.fxBarricade(pr.couloir, 8);
         Sons.choc(pr.objet);
       } else {
         if (this.bilan) this.bilan.encaissees++;
         this.barricade = Math.max(0, this.barricade - pr.degat);
         this.secousse = Math.max(this.secousse, 0.9);
         this.hitStop = Math.max(this.hitStop, 0.05);
+        this.fxBarricade(pr.couloir, 14);
         Sons.choc(pr.objet);
         if (this.barricade <= 0) this.terminer(false);
       }
@@ -1199,6 +1325,7 @@ Ruelle.tirer = function(fx, fy){
   if (h.balles <= 0){ h.recharge = arme.recharge; Sons.recharge(h.arme); }
   this.secousse = Math.max(this.secousse, arme.secousse * 0.35);
   this.flashes.push({ t:0.13, duree:0.13, heros:this.actifIdx });
+  this.fxTir(this.actifIdx, h.arme);
   if (h.arme === "revolver") Sons.revolver(); else Sons.fusil();
   if (annule) return true;
   const cible = this.viser(fx, fy, arme.tolerance);
@@ -1233,6 +1360,19 @@ Ruelle.tirer = function(fx, fy){
   e.pv -= degat;
   e.touche = cible.zone;
   this.userJambes(e, cible.zone, degat);
+  /* La gerbe part du point touché, vers le TIREUR — c'est le sens du
+     choc. Elle est courte et sombre : le jeu est burlesque, pas gore.
+     Sa taille suit la profondeur, sinon un ennemi au fond de la rue
+     éclabousse comme s'il était à un mètre. */
+  {
+    const b2 = this.boiteEnnemi(e);
+    const px = (b2.x + b2.l * 0.5) / Camera.L;
+    const hy = cible.zone === "tete" ? 0.18 : cible.zone === "jambes" ? 0.82 : 0.46;
+    const py = (b2.y + b2.h * hy) / Camera.H;
+    const ech = borne(0.35 + e.z * 0.9, 0.3, 1.3);
+    this.semer("gerbe", cible.zone === "tete" ? 7 : 4, px, py,
+               0.22 * ech, 1.5708, 2.6, ech);
+  }
   Sons.impact(cible.zone === "tete");
   Score.points += cible.zone === "tete" ? 40 : 10;
   if (e.pv <= 0){
@@ -1420,7 +1560,8 @@ const RuelleVue = {
     }
     /* le décor couvre l'écran, ancré en bas : c'est la barricade qui
        doit rester en place, pas le ciel */
-    const fond = Images.table.ruelle;
+    const heure = Ruelle.heure();
+    const fond = Images.table[heure.image] || Images.table.ruelle;
     if (fond && fond.naturalWidth){
       /* Le décor COUVRE l'écran, ancré en bas : la barricade doit rester
          en place, c'est le ciel qu'on peut perdre. Mais si l'écran est
@@ -1687,6 +1828,67 @@ const RuelleVue = {
     }
     ctx.globalAlpha = 1;
     ctx.restore();
+
+    /* ---------- LES PARTICULES ----------
+       Peintes APRÈS les personnages : une douille passe devant la
+       barricade, une gerbe devant le corps touché. Mais AVANT le voile
+       de nuit, pour qu'elles s'assombrissent avec le reste — une douille
+       en plein jour sur une rue de nuit se verrait comme une erreur. */
+    for (const p of Ruelle.particules){
+      const g = PART_TYPES[p.type];
+      const av = p.t / p.vie;
+      /* elles s'effacent sur leur dernier tiers, pas d'un coup */
+      const op = (g.opacite || 1) * borne((1 - av) / 0.34, 0, 1);
+      if (op <= 0.01) continue;
+      const r = Camera.L * p.r * (g.gonfle ? 1 + av * g.gonfle : 1);
+      const px = p.x * L, py = p.y * H;
+      ctx.save();
+      ctx.globalAlpha = op;
+      ctx.fillStyle = g.couleur[av < 0.5 ? 0 : 1];
+      if (g.forme === "rond"){
+        ctx.beginPath(); ctx.arc(px, py, r, 0, 6.2832); ctx.fill();
+      } else {
+        /* une barre orientée : c'est ce qui distingue une douille qui
+           tournoie d'un point qui tombe */
+        ctx.translate(px, py); ctx.rotate(p.ang);
+        ctx.fillRect(-r, -r * 0.34, r * 2, r * 0.68);
+      }
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+
+    /* ---------- L'ÉCLAIRAGE DE LA NUIT ----------
+       Le voile est posé APRÈS les personnages et AVANT le pupitre : il
+       doit teinter la scène entière, décor et silhouettes ensemble,
+       sinon les héros et les méchants flottent sur la nuit comme des
+       découpes de jour. Le pupitre, lui, reste lisible en toutes
+       circonstances — c'est de l'interface, pas du décor. */
+    const nuit = Ruelle.heure().nuit;
+    if (nuit > 0){
+      ctx.save();
+      /* bleu profond, pas noir : le noir écrase les couleurs, le bleu
+         les refroidit en les gardant */
+      ctx.fillStyle = "#0A1024";
+      ctx.globalAlpha = 0.34 * nuit;
+      ctx.fillRect(0, 0, L, H);
+      ctx.restore();
+    }
+
+    /* LE COUP DE FEU ÉCLAIRE LA RUE. C'est l'effet qui justifie la nuit :
+       en plein jour un tir se voit à peine, la nuit il repeint tout
+       l'écran une fraction de seconde. L'intensité suit `nuit`, donc au
+       crépuscule il est déjà là mais discret. */
+    const fl = Ruelle.flashes.length ? Ruelle.flashes[0] : null;
+    if (fl){
+      const vie = borne(fl.t / fl.duree, 0, 1);
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = vie * (0.05 + 0.22 * nuit);
+      ctx.fillStyle = "#FFD79A";
+      ctx.fillRect(0, 0, L, H);
+      ctx.restore();
+    }
+
     this.dessinerHud();
   },
 };
