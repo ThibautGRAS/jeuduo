@@ -264,6 +264,15 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Le binôme se comprend** (v6.47) : celui qui ne tire pas reste
+**accroupi derrière la barricade** — debout sans rien faire, il avait
+l'air d'attendre le bus. La vie de la barricade se lit désormais **sur
+la barricade**, juste au-dessus des caisses : en haut à gauche, on la
+confondait avec le score. Et les boutons sont en verre plutôt qu'en
+plastique — fond transparent, halo intérieur, éclat en croissant et
+liseré qui s'illumine en haut, le tout par couches puisque shadowBlur
+reste interdit.
+
 **Le menu allégé** (v6.45) : debout, le logo disparaît — il répétait
 l'enseigne juste en dessous — la légende des touches du clavier aussi,
 elle n'a aucun sens sur un téléphone, et l'enseigne CALLAGHAN se cale

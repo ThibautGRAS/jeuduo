@@ -408,6 +408,9 @@ Ruelle.poseHeros = function(i){
      vraiment — les munitions descendent, les ennemis tombent — mais il
      garde la pose au repos, et on croit que rien ne se passe. */
   const vise = i === this.actifIdx || (this.iaActive && i !== this.actifIdx);
+  /* Celui qui ne fait rien reste À COUVERT : debout derrière la
+     barricade sans tirer, il avait l'air d'attendre le bus. */
+  if (!vise && h.recharge <= 0) return "accroupi";
   const th = h.id === "thibaut";
   if (h.recharge > 0){
     const p = 1 - h.recharge / arme.recharge;
@@ -510,8 +513,9 @@ const RuelleVue = {
       const x = i === 0 ? L * RUELLE_ECART_HEROS : L * (1 - RUELLE_ECART_HEROS);
       /* Pendant le rechargement il se met À COUVERT : il s'enfonce
          derrière la barricade, et il n'est plus dessiné devant elle. */
+      const inactif = (i !== Ruelle.actifIdx && !Ruelle.iaActive) ? 1 : 0;
       const couvreTout = Ruelle.couvert ? 1 : 0;
-      const abri = Math.max(couvreTout,
+      const abri = Math.max(couvreTout, inactif,
         h.recharge > 0 ? Math.sin(Math.min(1, 1 - h.recharge / ARMES[h.arme].recharge) * Math.PI) : 0);
       const yHaut = H * RUELLE_PIEDS_HEROS - haut + haut * RUELLE_ABRI * abri;
       ctx.save();
@@ -706,13 +710,23 @@ Object.assign(RuelleVue, {
       ctx.fillStyle = vivant ? "rgba(247,179,43,.92)" : "rgba(255,255,255,.22)";
       ctx.fill(); xp += esp;
     }
-    /* la barricade, sur sa propre ligne, loin des boutons */
-    const lj = L * 0.30, xj = p * 0.5, yj = p * 0.5 + hb * 1.90;
+    /* La vie de la barricade se lit SUR la barricade : en haut à
+       gauche, on ne savait pas ce que cette jauge mesurait, et on la
+       confondait avec le score. Posée juste au-dessus des caisses, elle
+       n'a plus besoin d'être expliquée. */
     const part = Ruelle.barricade / RUELLE_BARRICADE_PV;
-    ctx.fillStyle = "rgba(8,7,14,.55)";
-    arrondi(xj - 2, yj - hb * 0.15, lj + 4, hb * 0.30, hb * 0.15); ctx.fill();
-    ctx.fillStyle = part > 0.6 ? "#4CC46A" : part > 0.3 ? "#F7B32B" : "#E2453D";
-    arrondi(xj, yj - hb * 0.11, Math.max(2, (lj - 2) * part), hb * 0.22, hb * 0.11); ctx.fill();
+    const lj = L * 0.52, xj = L * 0.5 - lj / 2;
+    const yj = H * RUELLE_PREMIER_PLAN - H * 0.018;
+    const ej = Math.max(4, H * 0.010);
+    ctx.fillStyle = "rgba(8,7,14,.62)";
+    arrondi(xj - 2, yj - 2, lj + 4, ej + 4, (ej + 4) / 2); ctx.fill();
+    const gj = ctx.createLinearGradient(xj, 0, xj + lj, 0);
+    const cj = part > 0.6 ? ["#5FD97C", "#2E9C4C"] : part > 0.3 ? ["#F7C64B", "#C98A16"] : ["#F0685E", "#B02A22"];
+    gj.addColorStop(0, cj[0]); gj.addColorStop(1, cj[1]);
+    ctx.fillStyle = gj;
+    arrondi(xj, yj, Math.max(3, lj * part), ej, ej / 2); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.20)";
+    arrondi(xj, yj, Math.max(3, lj * part), ej * 0.42, ej * 0.21); ctx.fill();
 
     /* --- le viseur --- */
     const vx = Ruelle.viseur.x * L, vy = Ruelle.viseur.y * H;
@@ -732,15 +746,33 @@ Object.assign(RuelleVue, {
     /* Le relief se fait par COUCHES, jamais par shadowBlur : un anneau
        sombre en dessous, un dégradé au-dessus, un liseré clair en haut.
        C'est ce qui fait qu'un bouton a l'air appuyable. */
+    /* Du verre, pas du plastique : un fond très transparent, un dégradé
+       qui s'éclaircit vers le haut, un ÉCLAT en arc sur le quart
+       supérieur et un halo intérieur qui donne l'épaisseur. Le tout par
+       couches — shadowBlur reste interdit. */
     const pastille = (cx, cy, r, haut, bas, liseré) => {
-      ctx.fillStyle = "rgba(0,0,0,.42)";
-      ctx.beginPath(); ctx.arc(cx, cy + r * 0.06, r, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,.26)";
+      ctx.beginPath(); ctx.arc(cx, cy + r * 0.05, r * 1.02, 0, 6.2832); ctx.fill();
       const g = ctx.createLinearGradient(0, cy - r, 0, cy + r);
-      g.addColorStop(0, haut); g.addColorStop(1, bas);
+      g.addColorStop(0, haut); g.addColorStop(0.55, bas); g.addColorStop(1, bas);
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.2832); ctx.fill();
-      ctx.strokeStyle = liseré; ctx.lineWidth = Math.max(1.5, r * 0.055);
-      ctx.beginPath(); ctx.arc(cx, cy, r * 0.985, -2.5, 0.4); ctx.stroke();
+      /* halo intérieur : l'épaisseur du verre */
+      const h2 = ctx.createRadialGradient(cx, cy, r * 0.55, cx, cy, r);
+      h2.addColorStop(0, "rgba(255,255,255,0)");
+      h2.addColorStop(1, "rgba(255,255,255,.14)");
+      ctx.fillStyle = h2;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.2832); ctx.fill();
+      /* le liseré fait tout le tour, discret, et s'illumine en haut */
+      ctx.strokeStyle = "rgba(255,255,255,.13)"; ctx.lineWidth = Math.max(1, r * 0.035);
+      ctx.beginPath(); ctx.arc(cx, cy, r * 0.98, 0, 6.2832); ctx.stroke();
+      ctx.strokeStyle = liseré; ctx.lineWidth = Math.max(1.5, r * 0.050);
+      ctx.beginPath(); ctx.arc(cx, cy, r * 0.98, -2.45, -0.75); ctx.stroke();
+      /* l'éclat : un croissant clair, en haut à gauche */
+      ctx.fillStyle = "rgba(255,255,255,.16)";
+      ctx.beginPath();
+      ctx.ellipse(cx - r * 0.26, cy - r * 0.42, r * 0.44, r * 0.20, -0.5, 0, 6.2832);
+      ctx.fill();
     };
     const zm = Ruelle.zoneManche();
     pastille(zm.x, zm.y, zm.r, "rgba(38,33,50,.70)", "rgba(10,9,16,.70)", "rgba(247,179,43,.30)");

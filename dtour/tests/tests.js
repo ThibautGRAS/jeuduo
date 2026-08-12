@@ -2742,6 +2742,18 @@ if (D){
       return ok && D.Ruelle.introT <= 0.25;
     })());
 
+  verifier("l'équipier qui ne tire pas reste accroupi",
+    (() => {
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Ruelle.iaActive = false;
+      const autre = 1 - D.Ruelle.actifIdx;
+      D.Ruelle.heros[autre].recharge = 0;
+      return D.Ruelle.poseHeros(autre) === "accroupi";
+    })(), "debout sans tirer, il avait l'air d'attendre le bus");
+  verifier("la vie de la barricade se lit sur la barricade",
+    /const yj = H \* RUELLE_PREMIER_PLAN/.test(source),
+    "en haut à gauche, on la confondait avec le score");
+
   verifier("l'équipier qui couvre JOUE l'animation de tir",
     (() => {
       /* Il tirait vraiment — munitions consommées, ennemis touchés —
