@@ -706,7 +706,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.39</div>
+  <div id="version">CALLAGHAN v6.40</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -778,7 +778,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.39";
+const VERSION = "6.40";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -8807,8 +8807,14 @@ const RUELLE_INCLINE_HEROS = 0.16;  /* radians, vers le haut de la rue  */
       et ressemblaient à des bustes posés sur les caisses.
    Quand ils rechargent, ils se baissent DERRIÈRE la barricade : c'est
    le seul moment où ils passent au second plan. */
-const RUELLE_ABRI = 0.30;           /* de combien ils s'enfoncent, en
-                                       fraction de leur hauteur        */
+/* Ils s'accroupissent, ils ne s'enfoncent pas dans le sol : les poses
+   `baisse` et `accroupi` font déjà le travail, un gros décalage vertical
+   par-dessus donnait un bonhomme qui tombe dans un trou. */
+const RUELLE_ABRI = 0.075;
+/* Le buste suit le réticule. On ne redessine pas le personnage sous un
+   autre angle — on l'incline, dans une plage étroite : au-delà, on voit
+   que c'est la même image qui pivote. */
+const VISEE_INCLINE_MIN = -0.34, VISEE_INCLINE_MAX = 0.30;
 const RUELLE_ECART_HEROS = 0.205;   /* écart au bord : plus ils sont
                                        écartés, plus les lignes de tir
                                        se croisent haut dans la ruelle */
@@ -9138,6 +9144,19 @@ const RuelleVue = {
       ctx.globalAlpha = e.etat === "sol" ? borne(1 - (e.mort - 0.7) / 0.5, 0, 1) : 1;
       ctx.drawImage(spr, b.x + (b.l - l) / 2, b.y, l, b.h);
       ctx.globalAlpha = 1;
+      /* Une barre de vie, mais SEULEMENT sur les ennemis entamés et
+         assez proches pour être lus : au fond elles feraient un
+         chapelet de traits illisibles, et sur un ennemi intact elles
+         n'apprennent rien. C'est le costaud qu'il faut voir résister. */
+      if (e.pv < e.pvMax && e.etat !== "chute" && e.etat !== "sol" && b.ordre > 0.10){
+        const lv = Math.max(14, b.l * 0.44), hv = Math.max(2.5, b.h * 0.022);
+        const xv = b.x + b.l / 2 - lv / 2, yv = b.y - hv * 2.4;
+        const part = borne(e.pv / e.pvMax, 0, 1);
+        ctx.fillStyle = "rgba(6,5,10,.68)";
+        ctx.fillRect(xv - 1, yv - 1, lv + 2, hv + 2);
+        ctx.fillStyle = part > 0.55 ? "#4CC46A" : part > 0.25 ? "#F7B32B" : "#E2453D";
+        ctx.fillRect(xv, yv, lv * part, hv);
+      }
     }
     /* La barricade repasse DEVANT : les ennemis arrivés au contact
        doivent disparaître derrière les caisses, pas marcher dessus. */
@@ -9174,10 +9193,20 @@ const RuelleVue = {
       ctx.save();
       ctx.globalAlpha = i === Ruelle.actifIdx ? 1 : 0.84;
       /* On pivote autour de l'épaule, pas du coin de l'image : sinon le
-         personnage décolle du sol en s'inclinant. */
-      ctx.translate(x, yHaut + haut * 0.34);
+         personnage décolle du sol en s'inclinant. L'inclinaison SUIT le
+         réticule pour le héros actif — c'est ce qui fait croire qu'il
+         vise vraiment là où on pointe. */
+      const ex = x, ey = yHaut + haut * 0.34;
+      let ang = RUELLE_INCLINE_HEROS;
+      if (i === Ruelle.actifIdx && h.recharge <= 0){
+        const vx2 = Ruelle.viseur.x * L, vy2 = Ruelle.viseur.y * H;
+        const dx2 = (i === 1 ? ex - vx2 : vx2 - ex);
+        const brut = Math.atan2(ey - vy2, Math.max(1, Math.abs(dx2)));
+        ang = borne(brut, VISEE_INCLINE_MIN, VISEE_INCLINE_MAX);
+      }
+      ctx.translate(ex, ey);
       if (i === 1) ctx.scale(-1, 1);
-      ctx.rotate(-RUELLE_INCLINE_HEROS);
+      ctx.rotate(-ang);
       ctx.drawImage(spr, -larg / 2, -haut * 0.34, larg, haut);
       ctx.restore();
     }
@@ -9306,24 +9335,39 @@ Object.assign(RuelleVue, {
     ctx.stroke();
 
     /* --- le champignon --- */
+    /* Le relief se fait par COUCHES, jamais par shadowBlur : un anneau
+       sombre en dessous, un dégradé au-dessus, un liseré clair en haut.
+       C'est ce qui fait qu'un bouton a l'air appuyable. */
+    const pastille = (cx, cy, r, haut, bas, liseré) => {
+      ctx.fillStyle = "rgba(0,0,0,.42)";
+      ctx.beginPath(); ctx.arc(cx, cy + r * 0.06, r, 0, 6.2832); ctx.fill();
+      const g = ctx.createLinearGradient(0, cy - r, 0, cy + r);
+      g.addColorStop(0, haut); g.addColorStop(1, bas);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.2832); ctx.fill();
+      ctx.strokeStyle = liseré; ctx.lineWidth = Math.max(1.5, r * 0.055);
+      ctx.beginPath(); ctx.arc(cx, cy, r * 0.985, -2.5, 0.4); ctx.stroke();
+    };
     const zm = Ruelle.zoneManche();
-    ctx.fillStyle = "rgba(10,8,16,.42)";
-    ctx.beginPath(); ctx.arc(zm.x, zm.y, zm.r, 0, 6.2832); ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,.20)"; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(zm.x, zm.y, zm.r, 0, 6.2832); ctx.stroke();
-    ctx.fillStyle = "rgba(255,255,255,.66)";
-    ctx.beginPath();
-    ctx.arc(zm.x + Ruelle.manche.dx * zm.r * 0.62,
-            zm.y + Ruelle.manche.dy * zm.r * 0.62, zm.r * 0.36, 0, 6.2832);
-    ctx.fill();
+    pastille(zm.x, zm.y, zm.r, "rgba(46,40,64,.62)", "rgba(12,10,20,.62)", "rgba(255,255,255,.16)");
+    const tx = zm.x + Ruelle.manche.dx * zm.r * 0.60;
+    const ty = zm.y + Ruelle.manche.dy * zm.r * 0.60;
+    pastille(tx, ty, zm.r * 0.40, "rgba(255,255,255,.92)", "rgba(176,176,196,.92)", "rgba(255,255,255,.9)");
 
     /* --- le bouton de tir, avec les munitions autour --- */
     const zt = Ruelle.zoneTir(), h = Ruelle.heroActif(), arme = ARMES[h.arme];
     const recharge = h.recharge > 0;
-    ctx.fillStyle = recharge ? "rgba(90,70,30,.55)" : "rgba(226,69,61,.80)";
-    ctx.beginPath(); ctx.arc(zt.x, zt.y, zt.r, 0, 6.2832); ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,.34)"; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(zt.x, zt.y, zt.r, 0, 6.2832); ctx.stroke();
+    if (recharge) pastille(zt.x, zt.y, zt.r, "rgba(96,84,52,.86)", "rgba(52,44,26,.86)", "rgba(255,255,255,.20)");
+    else pastille(zt.x, zt.y, zt.r, "#F2635A", "#B32A22", "rgba(255,255,255,.42)");
+    /* Pendant le rechargement, l'anneau se remplit : on sait quand on
+       pourra tirer sans compter les secondes. */
+    if (recharge){
+      const av = 1 - h.recharge / arme.recharge;
+      ctx.strokeStyle = "#F7B32B"; ctx.lineWidth = Math.max(2.5, zt.r * 0.10);
+      ctx.beginPath();
+      ctx.arc(zt.x, zt.y, zt.r * 0.86, -Math.PI / 2, -Math.PI / 2 + av * 6.2832);
+      ctx.stroke();
+    }
     ctx.textAlign = "center"; ctx.fillStyle = "#FFF";
     ctx.font = "800 " + Math.round(zt.r * 0.34) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillText(recharge ? "…" : "TIR", zt.x, zt.y);
@@ -9340,11 +9384,10 @@ Object.assign(RuelleVue, {
 
     /* --- la bascule de héros, au centre --- */
     const zb = Ruelle.zoneBascule();
-    ctx.fillStyle = "rgba(10,8,16,.62)";
-    ctx.beginPath(); ctx.arc(zb.x, zb.y, zb.r, 0, 6.2832); ctx.fill();
+    pastille(zb.x, zb.y, zb.r, "rgba(40,36,58,.88)", "rgba(14,12,22,.88)", "rgba(255,255,255,.18)");
     ctx.strokeStyle = Heros[Ruelle.actifIdx] ? Heros[Ruelle.actifIdx].couleur : "#FFF";
-    ctx.lineWidth = Math.max(2, L * 0.008);
-    ctx.beginPath(); ctx.arc(zb.x, zb.y, zb.r, 0, 6.2832); ctx.stroke();
+    ctx.lineWidth = Math.max(2.5, L * 0.010);
+    ctx.beginPath(); ctx.arc(zb.x, zb.y, zb.r * 0.94, 0, 6.2832); ctx.stroke();
     ctx.fillStyle = "#EDE7FA";
     ctx.font = "800 " + Math.round(zb.r * 0.40) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillText(Ruelle.heroActif().id === "thibaut" ? "TH" : "P-F", zb.x, zb.y - zb.r * 0.12);

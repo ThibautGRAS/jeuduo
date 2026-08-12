@@ -2694,9 +2694,29 @@ if (D){
     (() => {
       /* C'est le seul moment où ils s'enfoncent derrière la barricade :
          le reste du temps ils sont entiers, au premier plan. */
+      /* Un accroupissement, pas une chute dans un trou : les poses
+         font le travail, le décalage vertical ne fait que l'appuyer. */
       const m = source.match(/RUELLE_ABRI = ([\d.]+)/);
-      return !!m && parseFloat(m[1]) > 0.15 && /h\.recharge > 0 \?/.test(source);
+      const v = m ? parseFloat(m[1]) : -1;
+      return v > 0.02 && v < 0.14 && /h\.recharge > 0 \?/.test(source) &&
+        /recharge > 0[\s\S]{0,200}?accroupi/.test(source);
     })());
+
+  verifier("les barres de vie ne s'affichent que sur les ennemis entamés",
+    /e\.pv < e\.pvMax && e\.etat !== "chute"/.test(source) &&
+    /b\.ordre > 0\.10/.test(source),
+    "au fond elles feraient un chapelet de traits illisibles");
+  verifier("le buste suit le réticule, dans une plage étroite",
+    (() => {
+      const a2 = source.match(/VISEE_INCLINE_MIN = (-?[\d.]+), VISEE_INCLINE_MAX = ([\d.]+)/);
+      if (!a2) return false;
+      const bas = parseFloat(a2[1]), haut = parseFloat(a2[2]);
+      /* au-delà, on voit que c'est la même image qui pivote */
+      return bas > -0.6 && haut < 0.6 && /Ruelle\.actifIdx && h\.recharge <= 0/.test(source);
+    })());
+  verifier("les boutons ont du relief sans shadowBlur",
+    /const pastille = \(cx, cy, r/.test(source) &&
+    !/ctx\.shadowBlur/.test(source));
 
   verifier("le champignon pousse le viseur",
     (() => {

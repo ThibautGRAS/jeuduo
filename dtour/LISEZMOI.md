@@ -264,6 +264,15 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Le buste suit le réticule** (v6.40) : le héros actif s'incline vers
+l'endroit qu'on vise, dans une plage étroite — au-delà, on verrait que
+c'est la même image qui pivote. Le rechargement est devenu un simple
+accroupissement au sol au lieu d'une chute dans un trou, avec l'anneau
+du bouton de tir qui se remplit pour dire quand on pourra retirer. Les
+boutons ont du relief, et les ennemis **entamés** portent une barre de
+vie — seulement eux, et seulement assez près pour être lus : c'est le
+costaud qu'il faut voir résister.
+
 **On vise au pouce** (v6.39). Toucher directement l'ennemi rendait le
 niveau trop simple : c'était un jeu de temps de réaction, sans adresse.
 Un **champignon** à gauche pousse le viseur, un **bouton TIR** à droite
