@@ -1071,6 +1071,44 @@ D'où la règle : **canevas 320, disque 304, centré**, pour les huit.
 exactement huit boutons ; un test relit l'en-tête WebP et compare les
 huit tailles.
 
+### Un détourage qui rate un motif clair troue le vêtement
+
+Le détourage a pris les motifs clairs des vêtements pour du fond :
+chemise à fleurs, imprimé de t-shirt, jupe à feuilles. Jusqu'à 9 000
+pixels troués sur un sprite, visibles en jeu comme des morceaux
+manquants du personnage.
+
+**Mesurer avant de réparer a évité de tout redessiner** : les pixels
+troués avaient gardé leur COULEUR — RGB moyen (164,159,156) dans les
+trous contre (166,140,128) sur le corps, et 1 % de magenta seulement. Le
+détourage n'avait effacé que l'alpha. Remettre l'alpha sur les trous
+ENCLOS suffit donc, sans rien réinventer ; seuls les 8 % restés noirs
+sont repeints depuis leur voisin opaque.
+
+### Un fragment de la pose voisine se voit comme un personnage en double
+
+`bar_francky_verse` embarquait un Francky ENTIER en plus du bon, `shake`
+et `dose` une bande verticale de leur voisine. En jeu : deux barmans côte
+à côte et un bout de comptoir. On ne garde que la plus grosse composante
+connexe — mais attention, ce nettoyage ne vaut QUE pour les personnages :
+un impact de pierre est légitimement fait d'éclats séparés, et l'anneau
+de rechargement est un anneau.
+
+Après retrait, la figure doit être RECENTRÉE dans son canevas — sans
+changer les dimensions. Le rendu déduit la largeur du rapport de l'image :
+recadrer aurait changé la taille du personnage à l'écran.
+
+### Ce contrôle ne peut pas vivre dans la suite Node
+
+node-canvas ne lit pas le WebP, et les tests n'y lisent que l'en-tête
+pour les dimensions : aucun test JS ne peut inspecter un canal alpha.
+Le contrôle vit donc en Python, et se lance avant tout push qui touche
+aux images :
+
+    python3 dtour/reparer_sprites.py dtour/img --verifier
+
+Il rend un code non nul s'il reste un fragment ou un trou.
+
 ### Un secours qui ignore une contrainte fabrique des fantômes
 
 Le placement des habitants du niveau 2 servait une place DEBOUT en

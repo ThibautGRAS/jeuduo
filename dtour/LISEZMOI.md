@@ -264,6 +264,29 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Les sprites sont réparés** (v6.59) : deux défauts de découpage
+corrigés sur **219 sprites de personnage**, mesurés avant d'y toucher.
+
+Les **fragments** d'abord : plusieurs sprites embarquaient un morceau de
+la pose voisine de leur planche. `bar_francky_verse` contenait un Francky
+ENTIER en plus du bon — d'où les deux barmans côte à côte et le bout de
+comptoir qui traînait avec eux — `shake` et `dose` une bande verticale.
+On ne garde plus que la plus grosse composante, et la figure est
+recentrée dans son canevas sans en changer les dimensions : le rendu
+déduit la largeur du rapport de l'image, la toucher aurait changé
+l'échelle à l'écran.
+
+Les **trous** ensuite : le détourage avait pris les motifs clairs des
+vêtements pour du fond — chemise à fleurs de Tristan, imprimé du t-shirt
+de Teo, jupe de Mathilde. Jusqu'à 9 000 pixels manquants sur un seul
+sprite. La couleur était restée dessous, seul l'alpha avait été effacé :
+la réparation est sans perte, et les 8 % de pixels vraiment perdus sont
+repeints depuis leur voisin.
+
+Vérifié après coup : zéro fragment, zéro trou sur les 255 sprites de
+personnage, et aucun sprite amené au bord de son canevas par le
+recentrage.
+
 **Plus d'habitant fantôme** (v6.58) : au niveau 2, une étiquette de nom
 s'affichait parfois au-dessus d'une place vide — le personnage était
 interrogeable sans être visible, tantôt au frigo, tantôt dans le couloir.
