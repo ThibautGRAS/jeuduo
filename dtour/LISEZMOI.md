@@ -264,6 +264,17 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**L'écran titre se tient comme on veut** (v6.43) : il accepte les deux
+sens, et les quatre tuiles passent sur deux rangs en portrait. Demander
+de tourner son téléphone avant même d'avoir choisi son niveau était une
+brimade — le pivot devient une demande à l'entrée d'un niveau, avec un
+**voile de chargement** le temps que le canevas bascule : sans lui, on
+voyait la scène se contorsionner.
+
+Le bouton de pause est **plus transparent et décalé du coin** — au ras du
+bord il masquait l'enseigne du décor — et le plein écran a disparu, le
+navigateur le fait déjà.
+
 **L'équipier couvre** (v6.42) : quand ton héros recharge, l'autre se
 lève et tire **tout seul** — sans te changer de personnage. Il rate à peu
 près la moitié de ses coups, sinon le rechargement ne coûterait plus

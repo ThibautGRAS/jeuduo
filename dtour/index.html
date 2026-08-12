@@ -246,9 +246,15 @@ kbd{
   display:flex;gap:clamp(6px,1.4vw,14px);justify-content:center;align-items:stretch;
   width:min(1000px,96vw);
 }
+/* En portrait, quatre tuiles côte à côte deviennent illisibles : elles
+   passent sur deux rangs. */
+@media (max-aspect-ratio: 1/1){
+  #niveaux{flex-wrap:wrap}
+  #niveaux .niv{flex:1 1 42%}
+}
 .niv{
   flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
-  gap:clamp(3px,1vh,8px);padding:clamp(9px,2.4vh,20px) clamp(8px,1.2vw,16px);
+  gap:clamp(2px,0.7vh,6px);padding:clamp(6px,1.6vh,13px) clamp(5px,0.9vw,11px);
   cursor:pointer;text-align:center;font-family:inherit;color:var(--craie);
   background:linear-gradient(180deg,rgba(24,18,38,.80),rgba(12,9,20,.90));
   border:1px solid rgba(255,255,255,.14);border-radius:14px;
@@ -276,6 +282,9 @@ kbd{
 .niv .cadre{
   display:flex;align-items:center;justify-content:center;
   width:100%;height:clamp(38px,11.5vh,88px);
+
+  /* Tuiles réduites en v6.43 : quatre niveaux ne tenaient plus, et
+     l'écran titre accepte maintenant le portrait où la largeur manque. */
 }
 .niv .vign{
   max-height:100%;max-width:80%;width:auto;height:auto;object-fit:contain;
@@ -477,7 +486,9 @@ kbd{
    dans un coin, et chacun s'allume avec sa classe `on`. */
 #coins{
   position:absolute;z-index:30;display:flex;align-items:center;gap:6px;
-  top:calc(8px + var(--haut));right:calc(10px + var(--droite));
+  /* Décalé du coin et TRÈS transparent : au ras du bord il masquait
+     l'enseigne du décor, et opaque il tirait l'œil hors du jeu. */
+  top:calc(8px + var(--haut));right:calc(clamp(34px,9vw,64px) + var(--droite));
   pointer-events:none;
 }
 #coins > button{
@@ -486,8 +497,8 @@ kbd{
   align-items:center;justify-content:center;
   border:1px solid rgba(255,255,255,.22);border-radius:50%;cursor:pointer;
   font-family:inherit;font-size:clamp(10px,2.1vh,14px);line-height:1;
-  color:rgba(255,255,255,.80);background:rgba(10,8,16,.58);
-  backdrop-filter:blur(8px) saturate(1.2);-webkit-backdrop-filter:blur(8px) saturate(1.2);
+  color:rgba(255,255,255,.62);background:rgba(10,8,16,.24);
+  backdrop-filter:blur(5px) saturate(1.1);-webkit-backdrop-filter:blur(5px) saturate(1.1);
   transition:transform .08s ease,filter .12s ease;
   -webkit-tap-highlight-color:transparent;
 }
@@ -668,7 +679,6 @@ kbd{
 
   <div id="coins">
     <button id="outilsBtn" title="Outils">⚙</button>
-    <button id="pleinBtn" title="Plein écran">⛶</button>
     <button id="pauseBtn" title="Pause" aria-label="Pause">❚❚</button>
   </div>
 
@@ -706,7 +716,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.42</div>
+  <div id="version">CALLAGHAN v6.43</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -778,7 +788,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.42";
+const VERSION = "6.43";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -9577,15 +9587,22 @@ Object.assign(RuelleVue, {
     if (Ruelle.replique){
       const r2 = Ruelle.replique;
       const al = borne(r2.t / 0.4, 0, 1);
-      const bx = r2.qui === 0 ? L * 0.30 : L * 0.70;
-      const by = H * 0.615;
+      const bx = r2.qui === 0 ? L * 0.28 : L * 0.72;
+      const by = H * 0.600;
+      /* L'alignement était laissé à ce que le dessin précédent avait
+         posé : la pastille se calait au centre et le texte partait à
+         gauche. On le fixe ICI, juste avant d'écrire. */
+      ctx.save();
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.font = "800 " + Math.round(L * 0.036) + "px 'Baloo 2', system-ui, sans-serif";
       const w2 = ctx.measureText(r2.txt).width;
+      const bw2 = Math.min(w2 + 22, L * 0.62);
       ctx.globalAlpha = al;
-      ctx.fillStyle = "rgba(250,248,255,.94)";
-      arrondi(bx - w2 / 2 - 10, by - L * 0.036, w2 + 20, L * 0.072, L * 0.030); ctx.fill();
+      ctx.fillStyle = "rgba(250,248,255,.95)";
+      arrondi(bx - bw2 / 2, by - L * 0.038, bw2, L * 0.076, L * 0.032); ctx.fill();
       ctx.fillStyle = "#171226";
       ctx.fillText(r2.txt, bx, by);
+      ctx.restore();
       ctx.globalAlpha = 1;
     }
     ctx.textAlign = "left";
@@ -9620,14 +9637,20 @@ function accrocher(){
    barricade et les deux héros. Imposer le paysage partout y détruirait
    le niveau ; imposer le portrait partout détruirait les trois autres.
    L'orientation devient donc une propriété du niveau. */
-const ORIENTATION = { 1:"paysage", 2:"paysage", 3:"paysage", 4:"portrait" };
-function orientationVoulue(niv){ return ORIENTATION[niv || 1] || "paysage"; }
+/* L'écran titre accepte les DEUX sens : on y arrive comme on tient son
+   téléphone, et lui demander de tourner avant même d'avoir choisi son
+   niveau était une brimade. Le pivot devient une demande à l'entrée
+   d'un niveau, pas un péage à l'entrée du jeu. */
+const ORIENTATION = { 0:"libre", 1:"paysage", 2:"paysage", 3:"paysage", 4:"portrait" };
+function orientationVoulue(niv){ return ORIENTATION[niv] || "paysage"; }
 function paysageOk(L, H){ return L >= H * 1.02; }
 function portraitOk(L, H){ return H >= L * 1.02; }
 /* L'écran convient-il au niveau demandé ? Sur le titre, on reste en
    paysage : c'est là qu'on choisit, et les tuiles sont en ligne. */
 function ecranOk(L, H, niv){
-  return orientationVoulue(niv) === "portrait" ? portraitOk(L, H) : paysageOk(L, H);
+  const veut = orientationVoulue(niv);
+  if (veut === "libre") return true;
+  return veut === "portrait" ? portraitOk(L, H) : paysageOk(L, H);
 }
 
 const Ecran = {
@@ -9905,8 +9928,14 @@ const Interface = {
     /* L'orientation dépend du NIVEAU depuis la v6.33 : entrer dans un
        niveau doit la réévaluer. Sans ça, on passait du titre en paysage
        à la ruelle sans que rien ne vérifie — et le décor portrait se
-       retrouvait cadré sur la barricade, en gros plan. */
+       retrouvait cadré sur la barricade, en gros plan.
+       On pose un VOILE le temps que le canevas se redimensionne : sans
+       lui, on voyait la scène se contorsionner pendant la bascule. */
+    if (E.intro) E.intro.classList.remove("parti");
+    this.avancement(1);
     setTimeout(() => { ajusterCanevas(); this.pensePivot(); }, 0);
+    setTimeout(() => { ajusterCanevas(); this.pensePivot(); }, 240);
+    setTimeout(() => { if (E.intro) E.intro.classList.add("parti"); }, 520);
     if (E.titre) E.titre.classList.add("parti");
     if (E.fin) E.fin.classList.remove("on");
     /* Le bandeau SCORE / COMBO / FILE appartient au niveau 1. Le niveau 2
@@ -10124,7 +10153,7 @@ const Interface = {
     const L = globalThis.innerWidth || 1, H = globalThis.innerHeight || 1;
     /* Sur l'écran titre on exige le paysage : c'est là qu'on choisit son
        niveau, et les tuiles se partagent la largeur. */
-    const niv = Jeu.phase === "titre" ? 1 : Jeu.niveau;
+    const niv = Jeu.phase === "titre" ? 0 : Jeu.niveau;
     const veutPortrait = orientationVoulue(niv) === "portrait";
     const bloque = !ecranOk(L, H, niv);
     if (E.pivot) E.pivot.classList.toggle("on", bloque);

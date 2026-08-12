@@ -812,15 +812,22 @@ Object.assign(RuelleVue, {
     if (Ruelle.replique){
       const r2 = Ruelle.replique;
       const al = borne(r2.t / 0.4, 0, 1);
-      const bx = r2.qui === 0 ? L * 0.30 : L * 0.70;
-      const by = H * 0.615;
+      const bx = r2.qui === 0 ? L * 0.28 : L * 0.72;
+      const by = H * 0.600;
+      /* L'alignement était laissé à ce que le dessin précédent avait
+         posé : la pastille se calait au centre et le texte partait à
+         gauche. On le fixe ICI, juste avant d'écrire. */
+      ctx.save();
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.font = "800 " + Math.round(L * 0.036) + "px 'Baloo 2', system-ui, sans-serif";
       const w2 = ctx.measureText(r2.txt).width;
+      const bw2 = Math.min(w2 + 22, L * 0.62);
       ctx.globalAlpha = al;
-      ctx.fillStyle = "rgba(250,248,255,.94)";
-      arrondi(bx - w2 / 2 - 10, by - L * 0.036, w2 + 20, L * 0.072, L * 0.030); ctx.fill();
+      ctx.fillStyle = "rgba(250,248,255,.95)";
+      arrondi(bx - bw2 / 2, by - L * 0.038, bw2, L * 0.076, L * 0.032); ctx.fill();
       ctx.fillStyle = "#171226";
       ctx.fillText(r2.txt, bx, by);
+      ctx.restore();
       ctx.globalAlpha = 1;
     }
     ctx.textAlign = "left";

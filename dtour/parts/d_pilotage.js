@@ -27,14 +27,20 @@ function accrocher(){
    barricade et les deux héros. Imposer le paysage partout y détruirait
    le niveau ; imposer le portrait partout détruirait les trois autres.
    L'orientation devient donc une propriété du niveau. */
-const ORIENTATION = { 1:"paysage", 2:"paysage", 3:"paysage", 4:"portrait" };
-function orientationVoulue(niv){ return ORIENTATION[niv || 1] || "paysage"; }
+/* L'écran titre accepte les DEUX sens : on y arrive comme on tient son
+   téléphone, et lui demander de tourner avant même d'avoir choisi son
+   niveau était une brimade. Le pivot devient une demande à l'entrée
+   d'un niveau, pas un péage à l'entrée du jeu. */
+const ORIENTATION = { 0:"libre", 1:"paysage", 2:"paysage", 3:"paysage", 4:"portrait" };
+function orientationVoulue(niv){ return ORIENTATION[niv] || "paysage"; }
 function paysageOk(L, H){ return L >= H * 1.02; }
 function portraitOk(L, H){ return H >= L * 1.02; }
 /* L'écran convient-il au niveau demandé ? Sur le titre, on reste en
    paysage : c'est là qu'on choisit, et les tuiles sont en ligne. */
 function ecranOk(L, H, niv){
-  return orientationVoulue(niv) === "portrait" ? portraitOk(L, H) : paysageOk(L, H);
+  const veut = orientationVoulue(niv);
+  if (veut === "libre") return true;
+  return veut === "portrait" ? portraitOk(L, H) : paysageOk(L, H);
 }
 
 const Ecran = {
@@ -312,8 +318,14 @@ const Interface = {
     /* L'orientation dépend du NIVEAU depuis la v6.33 : entrer dans un
        niveau doit la réévaluer. Sans ça, on passait du titre en paysage
        à la ruelle sans que rien ne vérifie — et le décor portrait se
-       retrouvait cadré sur la barricade, en gros plan. */
+       retrouvait cadré sur la barricade, en gros plan.
+       On pose un VOILE le temps que le canevas se redimensionne : sans
+       lui, on voyait la scène se contorsionner pendant la bascule. */
+    if (E.intro) E.intro.classList.remove("parti");
+    this.avancement(1);
     setTimeout(() => { ajusterCanevas(); this.pensePivot(); }, 0);
+    setTimeout(() => { ajusterCanevas(); this.pensePivot(); }, 240);
+    setTimeout(() => { if (E.intro) E.intro.classList.add("parti"); }, 520);
     if (E.titre) E.titre.classList.add("parti");
     if (E.fin) E.fin.classList.remove("on");
     /* Le bandeau SCORE / COMBO / FILE appartient au niveau 1. Le niveau 2
@@ -531,7 +543,7 @@ const Interface = {
     const L = globalThis.innerWidth || 1, H = globalThis.innerHeight || 1;
     /* Sur l'écran titre on exige le paysage : c'est là qu'on choisit son
        niveau, et les tuiles se partagent la largeur. */
-    const niv = Jeu.phase === "titre" ? 1 : Jeu.niveau;
+    const niv = Jeu.phase === "titre" ? 0 : Jeu.niveau;
     const veutPortrait = orientationVoulue(niv) === "portrait";
     const bloque = !ecranOk(L, H, niv);
     if (E.pivot) E.pivot.classList.toggle("on", bloque);

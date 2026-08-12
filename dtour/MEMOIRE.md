@@ -533,6 +533,14 @@ ne peuvent pas tourner tant que le casting de l'appartement est figé sur
 quatre habitants. Le tirage de distribution n'est pas un raffinement à
 ajouter après les scénarios, c'est ce qui les rend possibles.
 
+### L'alignement du texte se règle JUSTE avant d'écrire
+Une bulle du niveau 4 sortait avec son texte à côté de sa pastille : le
+dessin précédent — un bouclier — avait laissé `ctx.textAlign` à sa
+valeur, et la pastille se calait au centre pendant que le texte partait
+à gauche. Le contexte de canevas est un état GLOBAL : on ne suppose
+jamais ce qu'un dessin voisin y a laissé. `save()`, on pose l'alignement
+et la ligne de base, on écrit, `restore()`.
+
 ### Un découpage ne peut pas se décaler, une recopie si
 Pour faire passer la barricade devant les combattants, j'avais recopié
 la tranche basse du décor en calculant SES coordonnées source et

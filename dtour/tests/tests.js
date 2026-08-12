@@ -2619,9 +2619,10 @@ if (D){
   verifier("le panneau de pivot dit dans quel sens tourner",
     /veutPortrait \? "Rétrécis la fenêtre" : "Élargis la fenêtre"/.test(source) &&
     /La ruelle se joue debout/.test(source));
-  verifier("l'écran titre reste en paysage",
-    /Jeu\.phase === "titre" \? 1 : Jeu\.niveau/.test(source),
-    "c'est là qu'on choisit, et les tuiles se partagent la largeur");
+  verifier("l'écran titre accepte les deux sens",
+    D.orientationVoulue(0) === "libre" &&
+    D.ecranOk(844, 390, 0) && D.ecranOk(390, 844, 0),
+    "lui demander de tourner avant d'avoir choisi était une brimade");
 
   /* --- la fausse profondeur de la ruelle --- */
   titre("La ruelle");
@@ -2675,8 +2676,11 @@ if (D){
       D.POSES_ENNEMI.every(po => D.IMAGES_NIVEAU4.indexOf("enn_" + e + "_" + po) >= 0)));
 
   verifier("entrer dans un niveau réévalue l'orientation",
-    /entrerJeu\(\)\{[\s\S]{0,400}?this\.pensePivot\(\)/.test(source),
+    /entrerJeu\(\)\{[\s\S]{0,900}?this\.pensePivot\(\)/.test(source),
     "sans ça, on passe du titre en paysage à la ruelle sans rien vérifier");
+  verifier("et pose un voile le temps que le canevas bascule",
+    /entrerJeu\(\)\{[\s\S]{0,900}?E\.intro\.classList\.remove\("parti"\)/.test(source),
+    "sans lui, on voyait la scène se contorsionner");
 
   verifier("la barricade repasse devant les ennemis",
     (() => {
