@@ -3136,6 +3136,76 @@ if (D){
              v[v.length - 1].types.length > 1;
     })());
 
+  /* ---- l'atténuation à distance ---- */
+  verifier("une tête au fond de la rue coûte plus de balles qu'au contact",
+    (() => {
+      /* Sans ça, la meilleure stratégie était de POSER le viseur sur le
+         point de fuite : les cinq couloirs y convergent, donc tous les
+         ennemis passent par ce point. */
+      const r = D.ENNEMIS.depar, a = D.ARMES.revolver;
+      const par = z => a.tete * r.mult.tete * D.attenuation(z);
+      const loin = Math.ceil(r.pv / par(0.04));
+      const pres = Math.ceil(r.pv / par(0.95));
+      messageDetail = loin + " balles au fond, " + pres + " au contact";
+      return loin >= pres * 2;
+    })());
+
+  verifier("l'atténuation n'est jamais nulle et sature avant la barricade",
+    (() => {
+      /* Nulle, le tir lointain serait interdit et non coûteux ; saturant
+         trop tard, le niveau deviendrait une salle d'attente. */
+      return D.attenuation(0) > 0.25 && D.attenuation(0) < 0.5 &&
+             D.attenuation(0.6) === 1 && D.attenuation(1) === 1;
+    })());
+
+  verifier("la garde résiste autant à distance",
+    (() => {
+      /* sinon on la cassait depuis le point de fuite au prix du contact */
+      const e1 = unDsk(); e1.z = 0.04; tirerZone(e1, "tete");
+      const loin = e1.usureGarde;
+      const e2 = unDsk(); e2.z = 0.95; tirerZone(e2, "tete");
+      return loin > 0 && loin < e2.usureGarde * 0.6;
+    })());
+
+  /* ---- le relevé de fin du niveau 4 ---- */
+  verifier("le niveau 4 tient son propre bilan",
+    (() => {
+      D.Jeu.demarrer(4);
+      const b = D.Ruelle.bilan;
+      return b && typeof b.hordes === "number" &&
+        Object.keys(D.ENNEMIS).every(k => b.tues[k] === 0);
+    })(), "il affichait PERSONNES SALUÉES à la sortie d'une fusillade");
+
+  verifier("un ennemi abattu est compté dans sa catégorie",
+    (() => {
+      const e = unDsk();
+      e.z = 0.95; e.etat = "course"; e.pv = 1;
+      const avant = D.Ruelle.bilan.tues.dsk;
+      tirerZone(e, "tete");
+      return D.Ruelle.bilan.tues.dsk === avant + 1 && D.Ruelle.bilan.tetes >= 1;
+    })());
+
+  verifier("le détail par catégorie se déduit de ENNEMIS, il n'est pas recopié",
+    (() => {
+      /* Recopier la liste des ennemis dans le HTML aurait dérivé au
+         premier ajout — c'est arrivé avec les prénoms écrits en dur. */
+      /* L'invariant exact : le conteneur est VIDE dans le HTML, et le
+         contenu se construit depuis ENNEMIS. Ma première version lisait
+         80 caractères après la balise et débordait sur le panneau
+         suivant, dont le libellé TEMPS la faisait échouer. */
+      const vide = /id="releveTues"[^>]*><\/div>/.test(html);
+      return vide && /Object\.keys\(ENNEMIS\)/.test(source) &&
+        Object.keys(D.ENNEMIS).every(k => D.ENNEMIS[k].nom && D.ENNEMIS[k].nom.length > 2);
+    })());
+
+  verifier("une horde perdue n'est pas comptée comme passée",
+    (() => {
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      /* on perd pendant la première : le compte doit rester à zéro */
+      D.Ruelle.barricade = 0; D.Ruelle.terminer(false);
+      return D.Ruelle.bilan.hordes === 0;
+    })(), "compter la horde perdue serait flatteur et faux");
+
   verifier("les huit boutons ont le même canevas et le même disque",
     (() => {
       /* Ils sont posés en dessinant le canevas ENTIER : la place du

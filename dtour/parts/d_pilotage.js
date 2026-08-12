@@ -3,7 +3,7 @@
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","legPtG","legPtD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","eRecit","niveaux","marque","vign1","vign2","titreFond","titreVoile","titreHaut","titreEnseigne","titreSst","pause","pauseNiv","pauseBtn","coins","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","vign4","niv4","pupitre3","c3G","c3D","c3B","c3J","c3E","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","legPtG","legPtD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","eRecit","niveaux","marque","vign1","vign2","titreFond","titreVoile","titreHaut","titreEnseigne","titreSst","pause","pauseNiv","pauseBtn","coins","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","vign4","niv4","pupitre3","c3G","c3D","c3B","c3J","c3E","releveRuelle","releveTues","rScore","rHordes","rTetes","rGardes","rEncaissees","rContacts","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -442,6 +442,67 @@ const Interface = {
     }
   },
 
+  /* Le niveau 4 tombait jusqu'ici sur le relevé du niveau 1 : il
+     affichait PERSONNES SALUÉES et FILE LA PLUS LONGUE à la sortie d'une
+     fusillade. Il a le sien. */
+  afficherFinRuelle(){
+    const gagne = Ruelle.fini && Ruelle.fini.gagne;
+    const b = Ruelle.bilan || { tues:{}, tetes:0, gardes:0, bloquees:0,
+                                encaissees:0, contacts:0, hordes:0 };
+    if (E.finTitre){
+      E.finTitre.innerHTML = gagne ? "LA RUELLE<em>EST À NOUS.</em>"
+                                   : "LA BARRICADE<em>A CÉDÉ.</em>";
+    }
+    if (E.releve) E.releve.style.display = "none";
+    if (E.releveBar) E.releveBar.classList.remove("on");
+    if (E.releveEnq) E.releveEnq.classList.remove("on");
+    if (E.releveRuelle) E.releveRuelle.classList.add("on");
+    if (E.rScore) E.rScore.textContent = chiffres(Score.points);
+    /* Sur une défaite, la horde en cours n'est pas passée : on affiche
+       celles qui l'ont été, sur le total. Compter la horde perdue serait
+       flatteur et faux. */
+    if (E.rHordes) E.rHordes.textContent = b.hordes + " / " + Ruelle.VAGUES.length;
+    if (E.rTetes) E.rTetes.textContent = chiffres(b.tetes);
+    if (E.rGardes) E.rGardes.textContent = chiffres(b.gardes);
+    if (E.rEncaissees) E.rEncaissees.textContent = chiffres(b.encaissees)
+      + (b.bloquees ? " / " + chiffres(b.bloquees + b.encaissees) : "");
+    if (E.rContacts) E.rContacts.textContent = chiffres(b.contacts);
+
+    /* Le détail par catégorie, construit à partir de ENNEMIS : ajouter
+       un ennemi au jeu suffit à le faire apparaître ici. */
+    if (E.releveTues){
+      const lignes = Object.keys(ENNEMIS)
+        .map(cle => ({ nom:ENNEMIS[cle].nom, n:b.tues[cle] || 0 }))
+        .filter(l => l.n > 0)
+        .sort((x, y) => y.n - x.n);
+      const total = lignes.reduce((s, l) => s + l.n, 0);
+      let html = "";
+      for (const l of lignes){
+        html += '<div class="lg"><span class="nm">' + l.nom
+             + '</span><span class="nb chiffre">' + chiffres(l.n) + '</span></div>';
+      }
+      /* zéro tué est un résultat, pas un bug : il faut le dire. */
+      html += '<div class="lg"><span class="nm">TOTAL ABATTUS</span>'
+           + '<span class="nb chiffre">' + chiffres(total) + '</span></div>';
+      E.releveTues.innerHTML = html;
+      E.releveTues.classList.add("on");
+    }
+    if (E.eCoupable) E.eCoupable.classList.remove("on");
+    if (E.eRecit) E.eRecit.classList.remove("on");
+    if (E.eChute){
+      /* On dit POURQUOI : une défaite qu'on ne comprend pas ne se
+         rejoue pas. */
+      E.eChute.textContent = gagne
+        ? "Cinq hordes, et la rue est vide. On peut aller boire un verre."
+        : b.encaissees > b.contacts
+          ? "Ce sont les jets qui ont eu la barricade. Le bouton À COUVERT existe."
+          : "Ils sont arrivés au contact. Les jambes ralentissent, la tête tue.";
+      E.eChute.classList.add("on");
+    }
+    if (E.fin) E.fin.classList.add("on");
+    if (E.btnRejouer) E.btnRejouer.focus({ preventScroll:true });
+  },
+
   afficherFinBar(){
     const gagne = Tournee.fini && Tournee.fini.gagne;
     const cause = Tournee.fini ? Tournee.fini.cause : "temps";
@@ -453,6 +514,8 @@ const Interface = {
     if (E.releve) E.releve.style.display = "none";
     if (E.releveEnq) E.releveEnq.classList.remove("on");
     if (E.releveBar) E.releveBar.classList.add("on");
+    if (E.releveRuelle) E.releveRuelle.classList.remove("on");
+    if (E.releveTues) E.releveTues.classList.remove("on");
     const st = Tournee.stats || {};
     if (E.bScore) E.bScore.textContent = chiffres(Score.points);
     if (E.bCombo) E.bCombo.textContent = "\u00D7" + Tournee.meilleurCombo;
@@ -479,8 +542,12 @@ const Interface = {
 
   afficherFin(){
     this.finAffichee = true;
+    if (Jeu.niveau === 4) return this.afficherFinRuelle();
     if (Jeu.niveau === 3) return this.afficherFinBar();
     if (Jeu.niveau === 2) return this.afficherFinEnquete();
+    if (E.releveRuelle) E.releveRuelle.classList.remove("on");
+    if (E.releveTues) E.releveTues.classList.remove("on");
+    if (E.releve) E.releve.style.display = "";
     const neuf = ecrireRecord({ score:Score.points, combo:Score.meilleurCombo,
                                 saluts:Score.saluts, file:Score.fileMax });
     const r = lireRecords();
@@ -509,6 +576,8 @@ const Interface = {
     }
     if (E.releve) E.releve.style.display = "none";
     if (E.releveEnq) E.releveEnq.classList.add("on");
+    if (E.releveRuelle) E.releveRuelle.classList.remove("on");
+    if (E.releveTues) E.releveTues.classList.remove("on");
     const pris = Math.max(0, Math.round(ENQ_DUREE - Enquete.restant));
     if (E.eTemps) E.eTemps.textContent = Math.floor(pris / 60) + ":" + (pris % 60 < 10 ? "0" : "") + (pris % 60);
     if (E.eIndices) E.eIndices.textContent = Enquete.indices + " / " + ENQ_OBJECTIF;
@@ -1059,6 +1128,7 @@ globalThis.DTOUR = {
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, portraitOk, ecranOk, orientationVoulue, ORIENTATION, Ecran, Interface, Pause, Boucle,
   Perspective, courbeZ, POSES_ENNEMI, POSES_PROPRES, POSES_BASE_MANQUANTES,
+  attenuation, PORTEE_MIN, PORTEE_PLEINE,
   ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, IA_REUSSITE, IA_CADENCE, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, RUELLE_DEGAT_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,

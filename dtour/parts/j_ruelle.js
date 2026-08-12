@@ -169,6 +169,24 @@ const ALERTE_TAILLE = 0.085;
 /* Le retour d'un tir BLOQUÉ. Blanc et non rouge, en anneau et non en
    étoile : il ne doit surtout pas ressembler à un coup qui porte. */
 const BLOCAGE_DUREE = 0.26;
+
+/* ---------------- l'atténuation à distance ----------------
+   Sans elle, la meilleure stratégie du niveau était de POSER le viseur
+   sur le point de fuite et de tirer en boucle : les cinq couloirs
+   convergent là-bas, donc tous les ennemis passent par ce point, et la
+   tête d'un lointain valait autant que celle d'un ennemi au contact.
+   Le joueur n'avait plus à viser ni à choisir.
+
+   L'atténuation ne rend pas le tir lointain inutile — elle le rend
+   COÛTEUX en munitions, ce qui remet le rechargement dans la boucle et
+   récompense d'attendre qu'ils approchent. Le seuil de plein effet est
+   volontairement bas (0,58) : passé la moitié de la rue, on tire à
+   plein tarif, sinon le niveau devient une salle d'attente. */
+const PORTEE_MIN = 0.32;           /* au fond de la ruelle              */
+const PORTEE_PLEINE = 0.58;        /* à partir d'ici, plein tarif       */
+function attenuation(z){
+  return melange(PORTEE_MIN, 1, borne(z / PORTEE_PLEINE, 0, 1));
+}
 const RUELLE_JITTER = 0.08;        /* deux ennemis d'un même couloir ne
                                       doivent jamais être synchrones   */
 const RUELLE_BARRICADE_PV = 100;
@@ -215,6 +233,11 @@ const Ruelle = {
   actif:false, fini:null, restant:0,
   ennemis:[], vague:0, aSortir:0, prochain:0,
   projectiles:[], impacts:[], blocages:[],
+  /* Le relevé de fin. `tues` est indexé par TYPE et pas par nom
+     affichable : le nom vit dans ENNEMIS, et le dupliquer ici aurait
+     dérivé au premier renommage — c'est exactement ce qui est arrivé
+     avec les prénoms écrits en dur ailleurs dans ce projet. */
+  bilan:null,
   barricade:RUELLE_BARRICADE_PV,
   actifIdx:0,                       /* 0 = Thibaut, 1 = PF */
   heros:[],
@@ -239,6 +262,9 @@ const Ruelle = {
     this.actif = true; this.fini = null;
     this.ennemis.length = 0; this.flashes.length = 0;
     this.projectiles.length = 0; this.impacts.length = 0; this.blocages.length = 0;
+    this.bilan = { tues:{}, tetes:0, gardes:0, bloquees:0, encaissees:0,
+                   contacts:0, hordes:0 };
+    for (const k of Object.keys(ENNEMIS)) this.bilan.tues[k] = 0;
     this.barricade = RUELLE_BARRICADE_PV;
     this.vague = 0; this.actifIdx = 0;
     this.secousse = 0; this.hitStop = 0;
@@ -319,18 +345,22 @@ const Ruelle = {
     void IA_ECART;
     const zone = (ZONES_CORPS.find(z => f >= z.haut && f < z.bas) || ZONES_CORPS[1]).id;
     if (this.gardeTient(but) && zone === "tete"){
-      but.usureGarde += brut;
+      but.usureGarde += brut * attenuation(but.z);
       if (but.usureGarde >= but.ref.garde.seuil){
         but.usureGarde = 0; but.etat = "garde_casse"; but.tEtat = 0;
       }
       return;
     }
     const brut = zone === "tete" ? arme.tete : zone === "torse" ? arme.torse : arme.jambes;
-    const degat = brut * ((but.ref.mult && but.ref.mult[zone]) || 1);
+    const degat = brut * ((but.ref.mult && but.ref.mult[zone]) || 1) * attenuation(but.z);
     but.pv -= degat; but.touche = zone; Sons.impact(false);
     this.userJambes(but, zone, degat);
     Score.points += 10;
-    if (but.pv <= 0){ but.etat = "chute"; but.tEtat = 0; but.mort = 0; Score.points += 100; }
+    if (but.pv <= 0){
+      but.etat = "chute"; but.tEtat = 0; but.mort = 0;
+      this.compterMort(but, zone);
+      Score.points += 100;
+    }
     else { but.etat = "touche"; but.tEtat = 0; }
     void b;
   },
@@ -344,6 +374,15 @@ const Ruelle = {
      pas — interrompre un jet est le travail du tir dans le bras, pas
      celui-ci. */
   gardeTient(e){ return !!e.ref.garde && e.etat === "garde"; },
+
+  /* Un seul endroit compte les morts : le joueur et l'équipier tuent
+     tous les deux, et deux compteurs séparés auraient divergé. */
+  compterMort(e, zone){
+    if (!this.bilan) return;
+    const cle = Object.keys(ENNEMIS).find(k => ENNEMIS[k] === e.ref);
+    if (cle) this.bilan.tues[cle] = (this.bilan.tues[cle] || 0) + 1;
+    if (zone === "tete") this.bilan.tetes++;
+  },
 
   userJambes(e, zone, degat){
     if (zone !== "jambes" || !e.ref.trebuche) return;
@@ -421,6 +460,7 @@ const Ruelle = {
         if (e.z >= 1){
           e.z = 1;
           this.barricade = Math.max(0, this.barricade - RUELLE_DEGAT_BARRICADE);
+          if (this.bilan) this.bilan.contacts++;
           this.secousse = 0.8; Sons.choc();
           this.ennemis.splice(i, 1);
           if (this.barricade <= 0) this.terminer(false);
@@ -469,6 +509,7 @@ const Ruelle = {
       } else if (e.etat === "bond"){
         if (e.tEtat > e.ref.bond.duree){
           this.barricade = Math.max(0, this.barricade - e.ref.bond.degat);
+          if (this.bilan) this.bilan.contacts++;
           this.secousse = 1.0; this.hitStop = Math.max(this.hitStop, 0.06);
           Sons.choc();
           this.ennemis.splice(i, 1);
@@ -500,6 +541,7 @@ const Ruelle = {
     /* vague suivante quand tout est nettoyé */
     if (this.aSortir <= 0 && !this.projectiles.length &&
         !this.ennemis.some(e => e.etat !== "chute" && e.etat !== "sol")){
+      if (this.bilan) this.bilan.hordes = this.vague + 1;
       if (this.vague + 1 < this.VAGUES.length) this.lancerVague(this.vague + 1);
       else if (!this.fini) this.terminer(true);
     }
@@ -536,9 +578,11 @@ const Ruelle = {
       });
       if (abrite){
         /* elle éclate SUR les caisses : le bruit sans la douleur */
+        if (this.bilan) this.bilan.bloquees++;
         this.secousse = Math.max(this.secousse, 0.35);
         Sons.choc();
       } else {
+        if (this.bilan) this.bilan.encaissees++;
         this.barricade = Math.max(0, this.barricade - pr.degat);
         this.secousse = Math.max(this.secousse, 0.9);
         this.hitStop = Math.max(this.hitStop, 0.05);
@@ -637,18 +681,22 @@ Ruelle.tirer = function(fx, fy){
      appliqué au tir : un coup sans effet visible est un bug aux yeux de
      celui qui joue. */
   if (this.gardeTient(e) && cible.zone === "tete"){
-     e.usureGarde += brut;
+     /* la garde aussi : sinon on la cassait depuis le point de fuite,
+        au même prix qu'au contact */
+     e.usureGarde += brut * attenuation(e.z);
      this.blocages.push({ x:fx, y:fy, t:0 });
      Sons.bloque();
      if (e.usureGarde >= e.ref.garde.seuil){
        e.usureGarde = 0; e.etat = "garde_casse"; e.tEtat = 0;
+       if (this.bilan) this.bilan.gardes++;
        Sons.impact(true); this.secousse = Math.max(this.secousse, 0.45);
      }
      return true;
   }
   const degat = brut * ((e.ref.mult && e.ref.mult[cible.zone]) || 1)
               * (e.etat === "sonne" && e.ref.garde && cible.zone === "tete"
-                 ? e.ref.garde.multSonne : 1);
+                 ? e.ref.garde.multSonne : 1)
+              * attenuation(e.z);
   e.pv -= degat;
   e.touche = cible.zone;
   this.userJambes(e, cible.zone, degat);
@@ -656,6 +704,7 @@ Ruelle.tirer = function(fx, fy){
   Score.points += cible.zone === "tete" ? 40 : 10;
   if (e.pv <= 0){
     e.etat = "chute"; e.tEtat = 0; e.mort = 0;
+    this.compterMort(e, cible.zone);
     Score.points += 100 + (cible.zone === "tete" ? 60 : 0);
     /* un arrêt sur image très bref rend le coup satisfaisant sans
        casser la lisibilité */
@@ -1149,7 +1198,14 @@ Object.assign(RuelleVue, {
     const vx = Ruelle.viseur.x * L, vy = Ruelle.viseur.y * H;
     const rv = L * 0.052;
     const cible = Ruelle.viser(vx, vy, ARMES[Ruelle.heroActif().arme].tolerance);
-    ctx.strokeStyle = cible ? "#E2453D" : "rgba(255,255,255,.82)";
+    /* Le viseur ANNONCE l'atténuation : ambre sur une cible trop
+       lointaine, rouge dès qu'elle est à plein tarif. Une règle
+       d'équilibrage que le joueur ne peut pas lire est une punition
+       arbitraire — il faut qu'il voie pourquoi ses balles ne portent
+       pas, sans qu'on le lui écrive. */
+    const plein = cible && attenuation(cible.ennemi.z) > 0.985;
+    ctx.strokeStyle = !cible ? "rgba(255,255,255,.82)"
+                    : plein ? "#E2453D" : "#F7B32B";
     ctx.lineWidth = Math.max(1.5, L * 0.006);
     ctx.beginPath(); ctx.arc(vx, vy, rv, 0, 6.2832); ctx.stroke();
     ctx.beginPath();

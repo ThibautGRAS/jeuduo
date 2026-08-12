@@ -1071,6 +1071,37 @@ D'où la règle : **canevas 320, disque 304, centré**, pour les huit.
 exactement huit boutons ; un test relit l'en-tête WebP et compare les
 huit tailles.
 
+### Une perspective qui converge crée un point de camping
+
+Les cinq couloirs du niveau 4 convergent vers le point de fuite : tous
+les ennemis passent donc par le MÊME pixel au fond de la rue. Viseur
+posé là, tirer en boucle touchait tout le monde à la tête sans jamais
+viser. Ce n'est pas un défaut de la visée, c'est une conséquence de la
+perspective — toute fausse profondeur convergente a ce point.
+
+Parade : une atténuation des dégâts en fonction de Z, 32 % au fond,
+plein tarif à partir de 0,58. Elle ne rend pas le tir lointain
+impossible, elle le rend COÛTEUX en munitions, ce qui remet le
+rechargement dans la boucle. À appliquer partout où le dégât dépend
+d'une distance : les points de vie, mais aussi l'usure de la garde de
+DSKKK, qu'on cassait sinon depuis le fond au prix du contact.
+
+Et la règle doit se LIRE : le viseur passe à l'ambre sur une cible
+atténuée. Un équilibrage invisible est une punition arbitraire.
+
+### Un écran de fin par niveau, sinon il mentira
+
+Le niveau 4 tombait sur le relevé du niveau 1 et affichait PERSONNES
+SALUÉES et FILE LA PLUS LONGUE à la sortie d'une fusillade. `afficherFin`
+aiguille désormais les quatre niveaux, et chaque écran commence par
+ÉTEINDRE les panneaux des autres — c'est l'oubli qui laisse deux
+tableaux empilés.
+
+Le détail par catégorie se construit depuis `Object.keys(ENNEMIS)` et le
+conteneur HTML est VIDE : recopier la liste des ennemis dans le HTML
+aurait dérivé au premier ajout, exactement comme les prénoms écrits en
+dur ailleurs. Un test vérifie que le conteneur est bien vide.
+
 ### Un seuil se compare toujours au dégât d'UN coup
 
 Deux fois le même défaut en deux versions. `mult.tete = 1.7` sur 160 PV

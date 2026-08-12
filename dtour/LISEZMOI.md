@@ -264,6 +264,29 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Les balles portent moins de loin** (v6.55) : la meilleure stratégie
+du niveau était de POSER le viseur sur le point de fuite et de tirer en
+boucle. Les cinq couloirs convergent là-bas, donc tous les ennemis
+passent par ce point, et la tête d'un lointain valait autant que celle
+d'un ennemi au contact — plus besoin de viser ni de choisir. Les dégâts
+tombent maintenant à 32 % au fond de la rue et remontent à plein tarif
+à mi-distance. Un headshot sur Depardiahree passe de deux balles à
+quatre : le tir lointain n'est pas interdit, il coûte deux chargeurs.
+La garde de DSKKK résiste dans les mêmes proportions, sinon on la
+cassait depuis le fond au prix du contact.
+
+**Et le viseur le dit** : ambre sur une cible trop lointaine, rouge dès
+qu'elle est à plein tarif. Une règle d'équilibrage que le joueur ne peut
+pas lire est une punition arbitraire.
+
+**Le niveau 4 a son relevé de fin** : il tombait jusqu'ici sur celui du
+niveau 1 et affichait PERSONNES SALUÉES et FILE LA PLUS LONGUE à la
+sortie d'une fusillade. Il montre désormais les hordes passées sur le
+total, les tirs à la tête, les gardes cassées, les jets encaissés sur le
+nombre reçu, les ennemis arrivés au contact — et le **détail des abattus
+par catégorie**, construit à partir de la table des ennemis pour qu'un
+ennemi ajouté au jeu y apparaisse sans qu'on touche au HTML.
+
 **DSKKK relève sa garde** (v6.54) : deuxième ennemi, et une question
 neuve. Il va deux fois plus vite que Depardiahree pour moitié moins de
 points de vie — même menace, répartie autrement — et il couvre son
