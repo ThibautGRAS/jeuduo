@@ -108,6 +108,16 @@ CHAUSSURES au milieu de l'image et la ligne de sol en bas ; le rendu
 dessine alors bêtement en `x - largeur/2`, `y - hauteur`, et tout tombe
 juste.
 
+### Un détourage se vérifie SUR FOND SOMBRE
+Les huit boutons paraissaient impeccables sur ma planche de contrôle
+claire. En jeu, chacun portait un **liseré rose** : l'anti-crénelage du
+halo, dont la couleur reste celle du fond même après décontamination.
+Sur du clair on ne le voit pas ; sur une ruelle au crépuscule, il saute
+aux yeux. Deux règles : on compose le contrôle sur un fond SOMBRE quand
+l'image ira sur du sombre, et on annule l'alpha des pixels dont la
+couleur décontaminée ressemble encore au fond — un pixel qui reste de la
+couleur du fond EST du fond, quelle que soit son opacité.
+
 ### Un fond se MESURE, il ne se devine pas
 La planche des boutons avait un fond à **(228, 3, 216)**, pas
 `#FF00FF` : le générateur l'avait légèrement assombri. En supposant le
