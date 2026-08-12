@@ -2702,6 +2702,28 @@ if (D){
         /recharge > 0[\s\S]{0,200}?accroupi/.test(source);
     })());
 
+  verifier("celui qui recharge est relevé par l'autre",
+    (() => {
+      D.Jeu.demarrer(4);
+      const av = D.Ruelle.actifIdx;
+      D.Ruelle.heroActif().balles = 0;
+      D.Ruelle.heroActif().recharge = 1.4;
+      D.Ruelle.pas(1 / 60);
+      return D.Ruelle.actifIdx !== av && !!D.Ruelle.replique;
+    })(), "un chargeur vide n'est plus un temps mort, c'est un passage de main");
+  verifier("si les deux sont à sec, personne ne se relève",
+    (() => {
+      D.Jeu.demarrer(4);
+      for (const h of D.Ruelle.heros){ h.balles = 0; h.recharge = 1.4; }
+      const av = D.Ruelle.actifIdx;
+      D.Ruelle.pas(1 / 60);
+      return D.Ruelle.actifIdx === av;
+    })());
+  verifier("ils s'appellent par leurs surnoms",
+    D.RELEVE_TH.some(l => /inspecteur/i.test(l)) &&
+    D.RELEVE_PF.some(l => /Callaghan/i.test(l)),
+    "Thibaut dit « inspecteur », PF dit « Callaghan »");
+
   verifier("les barres de vie ne s'affichent que sur les ennemis entamés",
     /e\.pv < e\.pvMax && e\.etat !== "chute"/.test(source) &&
     /b\.ordre > 0\.10/.test(source),

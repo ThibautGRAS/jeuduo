@@ -106,6 +106,26 @@ const ENNEMIS = {
 const RUELLE_JITTER = 0.08;        /* deux ennemis d'un même couloir ne
                                       doivent jamais être synchrones   */
 const RUELLE_BARRICADE_PV = 100;
+
+/* ---------- la relève ----------
+   Quand l'un recharge, l'autre se lève et prend le relais tout seul.
+   C'est ce qui fait des deux héros un BINÔME plutôt que deux boutons :
+   le chargeur vide n'est plus un temps mort, c'est un passage de main.
+   Ils s'appellent par leurs surnoms — Thibaut dit « inspecteur » à PF,
+   PF dit « Callaghan » à Thibaut. */
+const RELEVE_TH = [
+  "Je te couvre, inspecteur.",
+  "Bouge pas, j'ai ça.",
+  "À moi, inspecteur.",
+  "Recharge, je m'en occupe.",
+];
+const RELEVE_PF = [
+  "Je prends la suite, Callaghan.",
+  "Laisse, Callaghan.",
+  "À moi.",
+  "Souffle, Callaghan.",
+];
+const RELEVE_DUREE = 2.0;
 const RUELLE_DEGAT_BARRICADE = 12;
 
 /* Les trois zones, en fraction de la hauteur du sprite depuis le haut.
@@ -143,7 +163,7 @@ const Ruelle = {
     this.barricade = RUELLE_BARRICADE_PV;
     this.vague = 0; this.actifIdx = 0;
     this.secousse = 0; this.hitStop = 0;
-    this.recul = 0; this.razViseur();
+    this.recul = 0; this.replique = null; this.razViseur();
     this.heros = [
       { id:"thibaut", arme:"revolver", sprite:"ruel_th", balles:ARMES.revolver.chargeur,
         recharge:0, repos:0, pose:"vise1" },
@@ -176,6 +196,18 @@ const Ruelle = {
   },
 
   heroActif(){ return this.heros[this.actifIdx]; },
+
+  /* L'autre prend le relais : on bascule, et il le dit. */
+  releve(){
+    const suivant = 1 - this.actifIdx;
+    const h = this.heros[suivant];
+    if (h.recharge > 0) return false;          /* les deux à sec : on subit */
+    this.actifIdx = suivant;
+    const lignes = h.id === "thibaut" ? RELEVE_TH : RELEVE_PF;
+    this.replique = { txt:piocher(lignes), t:RELEVE_DUREE, qui:suivant };
+    Sons.clic();
+    return true;
+  },
   armeActive(){ return ARMES[this.heroActif().arme]; },
   changerHeros(){ this.actifIdx = 1 - this.actifIdx; Sons.clic(); },
 
@@ -190,6 +222,12 @@ const Ruelle = {
         if (h.recharge <= 0){ h.balles = ARMES[h.arme].chargeur; h.repos = 0.12; }
       }
       if (h.repos > 0) h.repos -= dt;
+    }
+    /* Si celui qu'on tient recharge, l'autre se lève de lui-même. */
+    if (this.heroActif().recharge > 0) this.releve();
+    if (this.replique){
+      this.replique.t -= dt;
+      if (this.replique.t <= 0) this.replique = null;
     }
     /* apparitions */
     if (this.aSortir > 0){
@@ -584,10 +622,25 @@ Object.assign(RuelleVue, {
       ctx.beginPath(); ctx.arc(cx, cy, r * 0.985, -2.5, 0.4); ctx.stroke();
     };
     const zm = Ruelle.zoneManche();
-    pastille(zm.x, zm.y, zm.r, "rgba(46,40,64,.62)", "rgba(12,10,20,.62)", "rgba(255,255,255,.16)");
-    const tx = zm.x + Ruelle.manche.dx * zm.r * 0.60;
-    const ty = zm.y + Ruelle.manche.dy * zm.r * 0.60;
-    pastille(tx, ty, zm.r * 0.40, "rgba(255,255,255,.92)", "rgba(176,176,196,.92)", "rgba(255,255,255,.9)");
+    pastille(zm.x, zm.y, zm.r, "rgba(38,33,50,.70)", "rgba(10,9,16,.70)", "rgba(247,179,43,.30)");
+    ctx.strokeStyle = "rgba(247,179,43,.45)"; ctx.lineWidth = Math.max(1.5, zm.r * 0.045);
+    ctx.beginPath(); ctx.arc(zm.x, zm.y, zm.r * 0.97, 0, 6.2832); ctx.stroke();
+    /* Quatre flèches : on lit tout de suite que ça pousse dans les
+       quatre sens, là où une pastille nue n'annonce rien. */
+    for (const [ax, ay] of [[0,-1],[0,1],[-1,0],[1,0]]){
+      const d = zm.r * 0.76, t2 = zm.r * 0.13;
+      const px2 = zm.x + ax * d, py2 = zm.y + ay * d;
+      const vif = (Ruelle.manche.dx * ax + Ruelle.manche.dy * ay) > 0.45;
+      ctx.fillStyle = vif ? "#F7B32B" : "rgba(255,255,255,.42)";
+      ctx.beginPath();
+      ctx.moveTo(px2 + ax * t2, py2 + ay * t2);
+      ctx.lineTo(px2 - ax * t2 + ay * t2, py2 - ay * t2 + ax * t2);
+      ctx.lineTo(px2 - ax * t2 - ay * t2, py2 - ay * t2 - ax * t2);
+      ctx.closePath(); ctx.fill();
+    }
+    const tx = zm.x + Ruelle.manche.dx * zm.r * 0.42;
+    const ty = zm.y + Ruelle.manche.dy * zm.r * 0.42;
+    pastille(tx, ty, zm.r * 0.34, "rgba(255,255,255,.95)", "rgba(168,168,188,.95)", "rgba(255,255,255,.9)");
 
     /* --- le bouton de tir, avec les munitions autour --- */
     const zt = Ruelle.zoneTir(), h = Ruelle.heroActif(), arme = ARMES[h.arme];
@@ -603,19 +656,34 @@ Object.assign(RuelleVue, {
       ctx.arc(zt.x, zt.y, zt.r * 0.86, -Math.PI / 2, -Math.PI / 2 + av * 6.2832);
       ctx.stroke();
     }
-    ctx.textAlign = "center"; ctx.fillStyle = "#FFF";
-    ctx.font = "800 " + Math.round(zt.r * 0.34) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillText(recharge ? "…" : "TIR", zt.x, zt.y);
-    /* une balle par munition, en couronne : on lit le chargeur d'un
-       coup d'œil sans compter */
+    /* Le chargeur est une COURONNE DE SEGMENTS autour du bouton : on
+       lit d'un coup d'œil combien il reste, sans compter des points. */
+    const rInt = zt.r * 1.06, rExt = zt.r * 1.34;
     for (let k = 0; k < arme.chargeur; k++){
-      const a = -Math.PI / 2 + (k / arme.chargeur) * 6.2832;
-      const rr = zt.r * 1.30;
+      const pas2 = 6.2832 / arme.chargeur, marge = pas2 * 0.14;
+      const a0 = -Math.PI / 2 + k * pas2 + marge, a1 = a0 + pas2 - marge * 2;
       ctx.beginPath();
-      ctx.arc(zt.x + Math.cos(a) * rr, zt.y + Math.sin(a) * rr, zt.r * 0.11, 0, 6.2832);
-      ctx.fillStyle = k < h.balles ? "#F7B32B" : "rgba(255,255,255,.18)";
+      ctx.arc(zt.x, zt.y, rExt, a0, a1);
+      ctx.arc(zt.x, zt.y, rInt, a1, a0, true);
+      ctx.closePath();
+      ctx.fillStyle = k < h.balles ? "#F7B32B" : "rgba(210,210,225,.26)";
       ctx.fill();
     }
+    /* Une balle dessinée plutôt que le mot TIR : le geste se comprend
+       sans lire. */
+    ctx.save();
+    ctx.translate(zt.x, zt.y); ctx.rotate(-0.62);
+    const bl = zt.r * 0.86, bw = zt.r * 0.30;
+    ctx.fillStyle = recharge ? "rgba(200,190,170,.45)" : "#F0C060";
+    ctx.beginPath();
+    ctx.moveTo(-bw / 2, bl * 0.42); ctx.lineTo(bw / 2, bl * 0.42);
+    ctx.lineTo(bw / 2, -bl * 0.10);
+    ctx.quadraticCurveTo(bw / 2, -bl * 0.46, 0, -bl * 0.50);
+    ctx.quadraticCurveTo(-bw / 2, -bl * 0.46, -bw / 2, -bl * 0.10);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = recharge ? "rgba(170,160,140,.45)" : "#C89A38";
+    ctx.fillRect(-bw / 2, bl * 0.10, bw, bl * 0.32);
+    ctx.restore();
 
     /* --- la bascule de héros, au centre --- */
     const zb = Ruelle.zoneBascule();
@@ -623,12 +691,43 @@ Object.assign(RuelleVue, {
     ctx.strokeStyle = Heros[Ruelle.actifIdx] ? Heros[Ruelle.actifIdx].couleur : "#FFF";
     ctx.lineWidth = Math.max(2.5, L * 0.010);
     ctx.beginPath(); ctx.arc(zb.x, zb.y, zb.r * 0.94, 0, 6.2832); ctx.stroke();
-    ctx.fillStyle = "#EDE7FA";
-    ctx.font = "800 " + Math.round(zb.r * 0.40) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillText(Ruelle.heroActif().id === "thibaut" ? "TH" : "P-F", zb.x, zb.y - zb.r * 0.12);
-    ctx.font = "700 " + Math.round(zb.r * 0.26) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillStyle = "rgba(237,231,250,.66)";
-    ctx.fillText("CHANGER", zb.x, zb.y + zb.r * 0.42);
+    /* Deux flèches qui tournent : le symbole du relais, plus lisible
+       qu'un prénom abrégé. */
+    ctx.strokeStyle = "#FFF"; ctx.lineWidth = Math.max(2, zb.r * 0.11);
+    ctx.lineCap = "round";
+    for (const sens of [1, -1]){
+      const rr = zb.r * 0.44, dec = sens * zb.r * 0.13;
+      ctx.beginPath();
+      ctx.arc(zb.x, zb.y + dec * 0.2, rr, sens > 0 ? 3.35 : 0.20, sens > 0 ? 5.9 : 2.8);
+      ctx.stroke();
+      const a2 = sens > 0 ? 5.9 : 2.8;
+      const px2 = zb.x + Math.cos(a2) * rr, py2 = zb.y + dec * 0.2 + Math.sin(a2) * rr;
+      const t2 = zb.r * 0.17;
+      ctx.beginPath();
+      ctx.moveTo(px2 + sens * t2, py2);
+      ctx.lineTo(px2 - sens * t2 * 0.3, py2 - t2 * 0.9);
+      ctx.lineTo(px2 - sens * t2 * 0.3, py2 + t2 * 0.9);
+      ctx.closePath(); ctx.fillStyle = "#FFF"; ctx.fill();
+    }
+    ctx.lineCap = "butt";
+    ctx.font = "800 " + Math.round(zb.r * 0.30) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,.86)";
+    ctx.fillText("CHANGER", zb.x, zb.y + zb.r * 1.32);
+    /* La réplique du relais, juste au-dessus de celui qui reprend. */
+    if (Ruelle.replique){
+      const r2 = Ruelle.replique;
+      const al = borne(r2.t / 0.4, 0, 1);
+      const bx = r2.qui === 0 ? L * 0.30 : L * 0.70;
+      const by = H * 0.615;
+      ctx.font = "800 " + Math.round(L * 0.036) + "px 'Baloo 2', system-ui, sans-serif";
+      const w2 = ctx.measureText(r2.txt).width;
+      ctx.globalAlpha = al;
+      ctx.fillStyle = "rgba(250,248,255,.94)";
+      arrondi(bx - w2 / 2 - 10, by - L * 0.036, w2 + 20, L * 0.072, L * 0.030); ctx.fill();
+      ctx.fillStyle = "#171226";
+      ctx.fillText(r2.txt, bx, by);
+      ctx.globalAlpha = 1;
+    }
     ctx.textAlign = "left";
   },
 });

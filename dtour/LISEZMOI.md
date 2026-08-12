@@ -264,6 +264,17 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Un binôme, pas deux boutons** (v6.41) : quand l'un recharge, l'autre
+se lève et prend le relais tout seul, en le disant — « Je te couvre,
+inspecteur », « Laisse, Callaghan ». Thibaut appelle PF *inspecteur*, PF
+appelle Thibaut *Callaghan*. Le chargeur vide n'est plus un temps mort,
+c'est un passage de main. Si les deux sont à sec, personne ne se relève
+et on subit.
+
+Le HUD prend son style : une croix directionnelle à quatre flèches, le
+chargeur en **couronne de segments** autour d'un bouton de tir en forme
+de balle, et deux flèches qui tournent pour le relais.
+
 **Le buste suit le réticule** (v6.40) : le héros actif s'incline vers
 l'endroit qu'on vise, dans une plage étroite — au-delà, on verrait que
 c'est la même image qui pivote. Le rechargement est devenu un simple
