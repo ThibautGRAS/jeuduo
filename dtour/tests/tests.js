@@ -2601,6 +2601,27 @@ if (D){
       return n >= 4;
     })(), "il faut au moins la déclaration et les trois lieux de rendu");
 
+  titre("L'orientation par niveau");
+  verifier("les trois premiers niveaux se jouent en paysage",
+    [1, 2, 3].every(n => D.orientationVoulue(n) === "paysage"));
+  verifier("la ruelle se joue debout",
+    D.orientationVoulue(4) === "portrait",
+    "une ruelle qui s'enfonce a besoin de hauteur");
+  verifier("un écran large convient aux trois premiers, pas au quatrième",
+    D.ecranOk(844, 390, 1) && D.ecranOk(844, 390, 2) &&
+    D.ecranOk(844, 390, 3) && !D.ecranOk(844, 390, 4));
+  verifier("un écran debout convient au quatrième, pas aux autres",
+    D.ecranOk(390, 844, 4) && !D.ecranOk(390, 844, 1));
+  verifier("un écran carré ne convient à personne",
+    !D.ecranOk(500, 500, 1) && !D.ecranOk(500, 500, 4),
+    "la tolérance de 2 % évite de basculer sans arrêt près du carré");
+  verifier("le panneau de pivot dit dans quel sens tourner",
+    /veutPortrait \? "Rétrécis la fenêtre" : "Élargis la fenêtre"/.test(source) &&
+    /La ruelle se joue debout/.test(source));
+  verifier("l'écran titre reste en paysage",
+    /Jeu\.phase === "titre" \? 1 : Jeu\.niveau/.test(source),
+    "c'est là qu'on choisit, et les tuiles se partagent la largeur");
+
   /* --- la carte des liens --- */
   titre("Qui connaît qui");
   verifier("chaque habitant possible a ses liens",

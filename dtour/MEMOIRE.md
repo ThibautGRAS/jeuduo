@@ -533,6 +533,21 @@ ne peuvent pas tourner tant que le casting de l'appartement est figé sur
 quatre habitants. Le tirage de distribution n'est pas un raffinement à
 ajouter après les scénarios, c'est ce qui les rend possibles.
 
+### L'orientation est une propriété du NIVEAU, pas du jeu
+Le paysage obligatoire était une règle globale depuis le premier jour.
+La ruelle du niveau 4 s'enfonce vers un point de fuite : sa profondeur a
+besoin de HAUTEUR, et son interface empile les ennemis lointains, la
+barricade et les deux héros. Imposer le paysage l'aurait tué ; imposer
+le portrait aurait tué les trois autres. `ORIENTATION` déclare donc ce
+que chaque niveau demande, `ecranOk(L, H, niv)` remplace `paysageOk`, et
+le panneau de pivot dit dans quel sens tourner. L'écran titre reste en
+paysage : c'est là qu'on choisit, et les tuiles se partagent la largeur.
+
+À retenir pour la suite : une contrainte posée quand il n'existait qu'un
+seul niveau mérite d'être requestionnée à chaque nouveau niveau. C'est
+le même motif que la liste de `entrerTitre()` qui ne rangeait qu'un
+pupitre.
+
 ### Un identifiant en double fait disparaître une affaire
 « Trente-cinq scénarios sortent sur trente-six » : j'ai cherché un
 scénario structurellement exclu pendant plusieurs essais, alors que la

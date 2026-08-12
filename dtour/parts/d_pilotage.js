@@ -19,7 +19,23 @@ function accrocher(){
    l'orientation quand l'appareil le permet. Quand il ne le permet pas
    (Safari sur iPhone n'expose ni l'un ni l'autre), on bloque l'écran
    tant que le téléphone est debout. */
+/* ---------- l'orientation, niveau par niveau ----------
+   Les trois premiers niveaux se jouent en PAYSAGE : il faut voir la
+   file entière, l'appartement en enfilade, le bar dans sa longueur. La
+   ruelle du niveau 4, elle, s'enfonce vers le fond — sa profondeur a
+   besoin de HAUTEUR, et l'interface empile les ennemis lointains, la
+   barricade et les deux héros. Imposer le paysage partout y détruirait
+   le niveau ; imposer le portrait partout détruirait les trois autres.
+   L'orientation devient donc une propriété du niveau. */
+const ORIENTATION = { 1:"paysage", 2:"paysage", 3:"paysage", 4:"portrait" };
+function orientationVoulue(niv){ return ORIENTATION[niv || 1] || "paysage"; }
 function paysageOk(L, H){ return L >= H * 1.02; }
+function portraitOk(L, H){ return H >= L * 1.02; }
+/* L'écran convient-il au niveau demandé ? Sur le titre, on reste en
+   paysage : c'est là qu'on choisit, et les tuiles sont en ligne. */
+function ecranOk(L, H, niv){
+  return orientationVoulue(niv) === "portrait" ? portraitOk(L, H) : paysageOk(L, H);
+}
 
 const Ecran = {
   estPlein(){
@@ -505,14 +521,21 @@ const Interface = {
 
   pensePivot(){
     const L = globalThis.innerWidth || 1, H = globalThis.innerHeight || 1;
-    const bloque = !paysageOk(L, H);
+    /* Sur l'écran titre on exige le paysage : c'est là qu'on choisit son
+       niveau, et les tuiles se partagent la largeur. */
+    const niv = Jeu.phase === "titre" ? 1 : Jeu.niveau;
+    const veutPortrait = orientationVoulue(niv) === "portrait";
+    const bloque = !ecranOk(L, H, niv);
     if (E.pivot) E.pivot.classList.toggle("on", bloque);
     if (bloque && E.pivotTitre && E.pivotTexte){
       const doigt = globalThis.matchMedia && globalThis.matchMedia("(pointer:coarse)").matches;
-      E.pivotTitre.textContent = doigt ? "Tourne ton téléphone" : "Élargis la fenêtre";
-      E.pivotTexte.textContent = doigt
-        ? "La file du D'Tour se joue en paysage : il faut voir la file entière."
-        : "La file du D'Tour se joue dans une fenêtre plus large que haute.";
+      E.pivotTitre.textContent = doigt ? "Tourne ton téléphone"
+        : veutPortrait ? "Rétrécis la fenêtre" : "Élargis la fenêtre";
+      E.pivotTexte.textContent = veutPortrait
+        ? (doigt ? "La ruelle se joue debout : sa profondeur a besoin de hauteur."
+                 : "La ruelle se joue dans une fenêtre plus haute que large.")
+        : (doigt ? "La file du D'Tour se joue en paysage : il faut voir la file entière."
+                 : "La file du D'Tour se joue dans une fenêtre plus large que haute.");
     }
     /* Deux raisons possibles de suspendre : l'écran debout et la pause
        demandée. On ne relance que si aucune des deux ne tient. */
@@ -988,7 +1011,7 @@ globalThis.DTOUR = {
   REACT_DEBUT, REACT_PLANCHER, VIES,
   xPlace, borne, melange, chiffres, doux, SPRITES_PNJ, PERSOS_DEBOUT, PERSOS_ASSIS,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
-  mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, Ecran, Interface, Pause, Boucle,
+  mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, portraitOk, ecranOk, orientationVoulue, ORIENTATION, Ecran, Interface, Pause, Boucle,
   Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
