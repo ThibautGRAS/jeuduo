@@ -2742,6 +2742,23 @@ if (D){
       return ok && D.Ruelle.introT <= 0.25;
     })());
 
+  verifier("l'équipier qui couvre JOUE l'animation de tir",
+    (() => {
+      /* Il tirait vraiment — munitions consommées, ennemis touchés —
+         mais gardait la pose au repos : on croyait que rien ne se
+         passait. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Ruelle.iaActive = true;
+      const autre = 1 - D.Ruelle.actifIdx;
+      D.Ruelle.heros[autre].repos = 0.05;
+      const po = D.Ruelle.poseHeros(autre);
+      return po !== "arme2" && po !== "vise1" && po !== "vise";
+    })());
+  verifier("la flamme de bouche est peinte, pas prise dans la planche",
+    /const fx4 = h\.id === "thibaut" \? 0\.894 : 0\.945/.test(source) &&
+    /Ruelle\.flashes\.find\(f => f\.heros === i\)/.test(source),
+    "celle de PF partait à l'autre bout de l'écran une fois retourné");
+
   verifier("l'équipier couvre sans qu'on change de personnage",
     (() => {
       /* Le joueur garde SON héros : c'est l'autre que l'IA prend. */

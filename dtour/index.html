@@ -734,7 +734,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.45</div>
+  <div id="version">CALLAGHAN v6.46</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -806,7 +806,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.45";
+const VERSION = "6.46";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -9019,7 +9019,7 @@ const Ruelle = {
     this.iaT = IA_CADENCE;
     if (lui.balles <= 0){ lui.recharge = ARMES[lui.arme].recharge; return; }
     lui.balles--; lui.repos = 0.22;
-    this.flashes.push({ t:0.10, duree:0.10, heros:1 - this.actifIdx });
+    this.flashes.push({ t:0.13, duree:0.13, heros:1 - this.actifIdx });
     Sons.bip(lui.arme === "revolver" ? 120 : 90, 0.09, "square", 0.16, 60);
     /* Elle vise le plus avancé, et rate souvent : c'est un soutien, pas
        une seconde paire de mains parfaite. */
@@ -9106,6 +9106,8 @@ const Ruelle = {
       this.flashes[i].t -= dt;
       if (this.flashes[i].t <= 0) this.flashes.splice(i, 1);
     }
+    /* la flamme dure un peu plus qu'une image : sinon on ne la voit
+       jamais sur un écran à soixante images par seconde */
     /* vague suivante quand tout est nettoyé */
     if (this.aSortir <= 0 && !this.ennemis.some(e => e.etat === "course" || e.etat === "touche")){
       if (this.vague + 1 < this.VAGUES.length) this.lancerVague(this.vague + 1);
@@ -9159,7 +9161,7 @@ Ruelle.tirer = function(fx, fy){
   h.balles--; h.repos = 1 / arme.cadence;
   if (h.balles <= 0) h.recharge = arme.recharge;
   this.secousse = Math.max(this.secousse, arme.secousse * 0.35);
-  this.flashes.push({ t:0.10, duree:0.10, heros:this.actifIdx });
+  this.flashes.push({ t:0.13, duree:0.13, heros:this.actifIdx });
   Sons.bip(h.arme === "revolver" ? 120 : 90, 0.10, "square", 0.22, 60);
   const cible = this.viser(fx, fy, arme.tolerance);
   if (!cible) return false;
@@ -9199,16 +9201,24 @@ Ruelle.poseEnnemi = function(e){
 Ruelle.poseHeros = function(i){
   const h = this.heros[i], arme = ARMES[h.arme];
   if (this.couvert) return "accroupi";
-  const vise = i === this.actifIdx;
+  /* L'équipier qui couvre DOIT jouer l'animation de tir : sinon il tire
+     vraiment — les munitions descendent, les ennemis tombent — mais il
+     garde la pose au repos, et on croit que rien ne se passe. */
+  const vise = i === this.actifIdx || (this.iaActive && i !== this.actifIdx);
   const th = h.id === "thibaut";
   if (h.recharge > 0){
     const p = 1 - h.recharge / arme.recharge;
     return p < 0.3 ? "baisse" : p < 0.7 ? "accroupi" : (th ? "arme1" : "arme1");
   }
   if (!vise) return th ? "arme2" : "arme2";
-  const t = 1 / arme.cadence - h.repos;
+  const plein = i === this.actifIdx ? 1 / arme.cadence : 0.34;
+  const t = plein - h.repos;
   if (h.repos > 0){
-    if (t < 0.09) return "tir";
+    /* PF n'utilise PAS sa pose `tir` : sa planche y dessine un éclair de
+       bouche qui, une fois le personnage retourné, se retrouve à l'autre
+       bout de l'écran. On garde sa pose de visée et on peint la flamme
+       nous-mêmes, au bon endroit. */
+    if (t < 0.09) return th ? "tir" : "vise";
     if (t < 0.18) return th ? "recul1" : "fumee";
     return th ? "recul2" : "recul1";
   }
@@ -9319,6 +9329,37 @@ const RuelleVue = {
       if (i === 1) ctx.scale(-1, 1);
       ctx.rotate(-ang);
       ctx.drawImage(spr, -larg / 2, -haut * 0.34, larg, haut);
+      /* La flamme de bouche est PEINTE, pas dessinée dans la planche :
+         celle de PF partait à l'autre bout de l'écran une fois le
+         personnage retourné, et une flamme peinte suit l'inclinaison
+         sans qu'on ait à y penser. On est encore dans le repère du
+         héros — inclinaison et miroir compris. */
+      const flash = Ruelle.flashes.find(f => f.heros === i);
+      if (flash){
+        const vie = borne(flash.t / flash.duree, 0, 1);
+        /* Position MESURÉE sur les sprites : le point le plus à droite
+           de la moitié haute, c'est la bouche du canon. 0,894 de la
+           largeur pour le revolver, 0,945 pour le fusil ; 0,153 et
+           0,126 de la hauteur depuis le sommet de la toile.
+           Le sprite est dessiné à partir de (-larg/2, -haut*0,34). */
+        const fx4 = h.id === "thibaut" ? 0.894 : 0.945;
+        const fy4 = h.id === "thibaut" ? 0.153 : 0.126;
+        const mx = -larg / 2 + larg * fx4;
+        const my = -haut * 0.34 + haut * fy4;
+        const r0 = haut * (h.id === "thibaut" ? 0.075 : 0.105) * (0.55 + vie * 0.45);
+        ctx.globalAlpha = vie;
+        for (const [rr, col] of [[r0, "#F7B32B"], [r0 * 0.58, "#FFF3D0"]]){
+          ctx.beginPath();
+          for (let k = 0; k < 12; k++){
+            const a3 = k * Math.PI / 6;
+            const d3 = (k % 2 ? rr * 0.38 : rr) * (k === 0 ? 1.45 : 1);
+            const px3 = mx + Math.cos(a3) * d3, py3 = my + Math.sin(a3) * d3;
+            if (k) ctx.lineTo(px3, py3); else ctx.moveTo(px3, py3);
+          }
+          ctx.closePath(); ctx.fillStyle = col; ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
       ctx.restore();
     }
     ctx.globalAlpha = 1;

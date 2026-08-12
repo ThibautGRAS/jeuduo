@@ -548,6 +548,23 @@ sur son INTENTION — « la pause a rendu la main » plutôt que « la boucle
 tourne », parce que la boucle peut légitimement être arrêtée par autre
 chose.
 
+### Un effet dessiné DANS la planche ne survit pas au miroir
+La pose de tir de PF contenait son éclair de bouche. Une fois le
+personnage retourné pour qu'il vise vers le centre de la ruelle, la
+flamme se retrouvait à l'autre bout de l'écran. Un effet qui doit rester
+solidaire d'un point précis se PEINT, dans le repère du personnage —
+inclinaison et miroir compris — jamais dans le sprite. Position mesurée
+sur l'image plutôt que devinée : le point le plus à droite de la moitié
+haute, c'est la bouche du canon (0,894 de la largeur pour le revolver,
+0,945 pour le fusil).
+
+### Une animation qui ne se voit pas passe pour une mécanique cassée
+L'équipier tirait vraiment pendant le rechargement — munitions
+consommées, ennemis qui tombaient — mais `poseHeros` ne donnait la pose
+de tir qu'au héros ACTIF. Il restait au repos, et le joueur en concluait
+que la fonction ne marchait pas. Une mécanique invisible est une
+mécanique absente.
+
 ### L'alignement du texte se règle JUSTE avant d'écrire
 Une bulle du niveau 4 sortait avec son texte à côté de sa pastille : le
 dessin précédent — un bouclier — avait laissé `ctx.textAlign` à sa
