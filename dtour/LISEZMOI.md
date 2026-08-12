@@ -264,6 +264,13 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Les héros visent la ruelle** (v6.38) : ils sont inclinés vers le point
+de fuite, la coupe de la barricade descend dans les caisses là où elles
+couvrent partout, et la course des ennemis s'anime à une cadence liée à
+leur profondeur — loin ils trottinent, près ils martèlent. Le premier
+plan est redessiné sous un découpage plutôt que recopié : une couture
+rectangulaire traversait l'écran.
+
 **La ruelle prend sa place** (v6.37) : la barricade est devenue un
 **premier plan**, redessinée par-dessus les combattants. Un ennemi
 arrivé au contact disparaît derrière les caisses au lieu de marcher

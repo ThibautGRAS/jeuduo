@@ -19,12 +19,25 @@ const RUELLE_ECH_PRES = 0.330;     /* hauteur d'un ennemi à la barricade */
    ennemis : sans ça, un homme arrivé au contact passe devant les
    caisses au lieu d'être masqué par elles, et la profondeur s'effondre
    au moment précis où elle compte le plus. */
-const RUELLE_PREMIER_PLAN = 0.660;  /* fraction du décor qui passe devant */
+/* Mesuré sur le décor : le bord haut des caisses est IRRÉGULIER et
+   laisse des trouées. Couper au plus haut laissait une bande de rue
+   entre les héros coupés et le bois. On descend la coupe DANS les
+   caisses, là où elles couvrent partout. */
+const RUELLE_PREMIER_PLAN = 0.700;  /* fraction du décor qui passe devant */
 /* Les héros CHEVAUCHENT la barricade : leurs pieds sont sous le bord de
    l'écran et la palissade les coupe à la taille. C'est ce qui les met
    vraiment derrière l'abri au lieu de les poser devant. */
-const RUELLE_TAILLE_HEROS = 0.560;
-const RUELLE_PIEDS_HEROS = 1.070;   /* fraction de hauteur : sous l'écran */
+const RUELLE_TAILLE_HEROS = 0.480;
+const RUELLE_PIEDS_HEROS = 1.020;   /* fraction de hauteur : sous l'écran */
+/* Les planches dessinent les héros de PROFIL, arme à l'horizontale. Or
+   les ennemis arrivent du fond, donc d'en haut : à plat, les deux se
+   visaient l'un l'autre par-dessus la barricade. On les incline
+   légèrement vers le point de fuite — c'est un mensonge de perspective,
+   mais c'est celui que l'œil attend. */
+const RUELLE_INCLINE_HEROS = 0.20;  /* radians, vers le haut de la rue  */
+const RUELLE_ECART_HEROS = 0.205;   /* écart au bord : plus ils sont
+                                       écartés, plus les lignes de tir
+                                       se croisent haut dans la ruelle */
 const RUELLE_FUITE = 0.500;        /* le point de fuite, en largeur      */
 
 /* Les cinq trajectoires convergent vers le point de fuite. La valeur
@@ -157,7 +170,7 @@ const Ruelle = {
     for (const h of this.heros){
       if (h.recharge > 0){
         h.recharge -= dt;
-        if (h.recharge <= 0) h.balles = ARMES[h.arme].chargeur;
+        if (h.recharge <= 0){ h.balles = ARMES[h.arme].chargeur; h.repos = 0.12; }
       }
       if (h.repos > 0) h.repos -= dt;
     }
@@ -175,8 +188,12 @@ const Ruelle = {
       e.tEtat += dt;
       if (e.etat === "course"){
         e.z += e.vitesse * dt;
+        /* Un lointain avance de peu de pixels : à cadence fixe il
+           saccade. On lie la cadence d'animation à la vitesse APPARENTE,
+           donc à la profondeur — loin il trottine, près il martèle. */
         e.tFrame += dt;
-        if (e.tFrame > 0.10){ e.tFrame = 0; e.frame = (e.frame + 1) % 6; }
+        const cad = melange(0.165, 0.075, courbeZ(e.z));
+        if (e.tFrame > cad){ e.tFrame -= cad; e.frame = (e.frame + 1) % 6; }
         if (e.z >= 1){
           e.z = 1;
           this.barricade = Math.max(0, this.barricade - RUELLE_DEGAT_BARRICADE);
@@ -355,21 +372,35 @@ const RuelleVue = {
       if (!spr || !spr.naturalWidth) continue;
       const haut = H * RUELLE_TAILLE_HEROS;
       const larg = haut * spr.naturalWidth / spr.naturalHeight;
-      const x = i === 0 ? L * 0.24 : L * 0.76;
+      const x = i === 0 ? L * RUELLE_ECART_HEROS : L * (1 - RUELLE_ECART_HEROS);
+      const yHaut = H * RUELLE_PIEDS_HEROS - haut;
       ctx.save();
       ctx.globalAlpha = i === Ruelle.actifIdx ? 1 : 0.84;
-      ctx.translate(x, H * RUELLE_PIEDS_HEROS - haut);
-      if (i === 1){ ctx.scale(-1, 1); }
-      ctx.drawImage(spr, -larg / 2, 0, larg, haut);
+      /* On pivote autour de l'épaule, pas du coin de l'image : sinon le
+         personnage décolle du sol en s'inclinant. */
+      ctx.translate(x, yHaut + haut * 0.34);
+      if (i === 1) ctx.scale(-1, 1);
+      ctx.rotate(-RUELLE_INCLINE_HEROS);
+      ctx.drawImage(spr, -larg / 2, -haut * 0.34, larg, haut);
       ctx.restore();
     }
     /* La barricade repasse DEVANT : les ennemis arrivés au contact
        doivent disparaître derrière les caisses, pas marcher dessus. */
     const f = this._fond;
     if (fond && f){
-      const coupe = Math.round(fond.naturalHeight * RUELLE_PREMIER_PLAN);
-      ctx.drawImage(fond, 0, coupe, fond.naturalWidth, fond.naturalHeight - coupe,
-        f.x, f.y + f.h * RUELLE_PREMIER_PLAN, f.l, f.h * (1 - RUELLE_PREMIER_PLAN));
+      /* On REDESSINE le décor entier, découpé au ciseau sous la ligne de
+         barricade. Ma première version recopiait une tranche en
+         calculant ses coordonnées source ET destination : deux
+         arithmétiques à tenir d'accord, et une couture rectangulaire en
+         plein milieu de l'écran dès que l'une dérivait. Un découpage ne
+         peut pas se décaler : c'est la même image, au même endroit. */
+      const yBarr = f.y + f.h * RUELLE_PREMIER_PLAN;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, yBarr, L, H - yBarr);
+      ctx.clip();
+      ctx.drawImage(fond, f.x, f.y, f.l, f.h);
+      ctx.restore();
     }
     ctx.globalAlpha = 1;
     ctx.restore();

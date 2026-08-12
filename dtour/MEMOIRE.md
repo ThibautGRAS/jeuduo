@@ -533,6 +533,23 @@ ne peuvent pas tourner tant que le casting de l'appartement est figé sur
 quatre habitants. Le tirage de distribution n'est pas un raffinement à
 ajouter après les scénarios, c'est ce qui les rend possibles.
 
+### Un découpage ne peut pas se décaler, une recopie si
+Pour faire passer la barricade devant les combattants, j'avais recopié
+la tranche basse du décor en calculant SES coordonnées source et
+destination. Deux arithmétiques à tenir d'accord — et une couture
+rectangulaire en plein milieu de l'écran dès que l'une dérivait. La
+bonne façon : redessiner l'image ENTIÈRE, au même endroit, sous un
+`clip()`. Même image, mêmes coordonnées, aucun décalage possible.
+
+Deux mesures dans la foulée : le bord haut des caisses est IRRÉGULIER,
+donc couper au plus haut laissait une bande de rue entre les héros
+coupés et le bois — la coupe descend dans les caisses, là où elles
+couvrent partout. Et les planches dessinent les héros de PROFIL, arme à
+l'horizontale, alors que les ennemis arrivent d'en haut : à plat, les
+deux se visaient l'un l'autre par-dessus la barricade. Une inclinaison
+de 0,20 radian vers le point de fuite suffit — c'est un mensonge de
+perspective, mais c'est celui que l'œil attend.
+
 ### L'orientation est une propriété du NIVEAU, pas du jeu
 Le paysage obligatoire était une règle globale depuis le premier jour.
 La ruelle du niveau 4 s'enfonce vers un point de fuite : sa profondeur a
