@@ -139,7 +139,21 @@ def verifier(racine):
     """
     racine = pathlib.Path(racine)
     fautifs = []
+    illisibles = []
     for p in sorted(racine.rglob("*.webp")):
+        # UN FICHIER VIDE OU ILLISIBLE PASSAIT INAPERÇU. La suite Node ne
+        # lit que l'en-tête WebP de quelques images ; un fichier de zéro
+        # octet — écrit par une réparation interrompue en plein vol, ce
+        # qui est arrivé — ne déclenchait rien et serait parti en
+        # production. Ce contrôle ouvre TOUS les fichiers, personnages ou
+        # non, et c'est gratuit puisqu'il faut les décoder de toute façon.
+        try:
+            if p.stat().st_size == 0:
+                raise ValueError("fichier vide")
+            Image.open(p).convert("RGBA").load()
+        except Exception as e:
+            illisibles.append((str(p.relative_to(racine)), type(e).__name__))
+            continue
         if not est_personnage(p.stem):
             continue
         a = np.asarray(Image.open(p).convert("RGBA")).astype(int)
@@ -152,6 +166,11 @@ def verifier(racine):
         trous = int(trous_fautifs(a, vis).sum())
         if frag or trous:
             fautifs.append((str(p.relative_to(racine)), frag, trous))
+    if illisibles:
+        print(f"{len(illisibles)} fichier(s) ILLISIBLE(S) :")
+        for f, e in illisibles:
+            print(f"  {f}  ({e})")
+        sys.exit(1)
     if fautifs:
         print(f"{len(fautifs)} sprite(s) de personnage à réparer :")
         for f, fr, tr in fautifs[:20]:

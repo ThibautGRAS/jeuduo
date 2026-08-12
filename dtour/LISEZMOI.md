@@ -264,6 +264,50 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**L'Abbé et BruHell entrent dans la rue** (v6.64) : leurs planches de
+base sont découpées, treize poses chacune, et une **septième horde**
+mélange enfin les cinq — c'est celle qui pose la question du document de
+conception : qui tuer en premier ?
+
+Leur mécanique de lancer n'est pas encore dessinée. Plutôt que de les
+garder sur une étagère, ils prennent une place que personne ne tenait :
+les **fragiles**. L'Abbé arrive vite (0,150) pour 70 points de vie et une
+tête à 1,60 ; BruHell tient un peu mieux. Ce sont ceux qu'on abat en
+premier quand la rue se remplit. Une table `ENNEMIS_INCOMPLETS` dit qui
+attend quoi, et un test la récite — un ennemi à moitié fini est nommé,
+pas oublié.
+
+**Deux fichiers d'image étaient VIDES** — zéro octet — écrits par une
+réparation interrompue en plein vol. Rien ne les signalait : la suite Node
+ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
+désormais TOUS les fichiers et rend un code non nul sur le premier
+illisible. Il en a trouvé un second dans la seconde qui a suivi.
+
+**L'Abbé Forceur bombarde** (v6.65) : quatrième ennemi complet, dix-neuf
+poses, et la première mécanique qui change la GÉOMÉTRIE du niveau plutôt
+que sa cadence.
+
+Il s'arrête **plus loin que tous les autres** — entre 0,14 et 0,52 de
+profondeur, là où les autres n'ont pas encore commencé — lève son
+encensoir droit vers le ciel et **bombarde en cloche par-dessus eux**.
+Sa trajectoire monte à 0,185 de hauteur d'écran contre 0,085 pour un
+pavé : c'est un nombre, pas un dessin.
+
+D'où la horde qui fait tout le niveau : **un mur de Depardiahree protège
+son corps mais pas la cible sur son bras**. Il faut choisir entre casser
+le mur et interrompre le bombardement.
+
+**Et un jet annulé le laisse PLIÉ**, tête offerte pendant une seconde et
+demie, à 1,8 fois le tarif — comme DSKKK après une garde cassée. C'est ce
+qui rend le tir de précision préférable au simple À COUVERT contre lui.
+Sa pose `plie` est déclarée dans `POSES_PROPRES` : qui ne l'a pas repart
+simplement en courant, et un test le vérifie.
+
+**Il casse la règle pv × vitesse**, à 8,6 contre 11 : sa menace n'est pas
+d'arriver au contact. L'exception est **déclarée** dans sa fiche et non
+déduite d'un écart de chiffres — et un test exige en échange qu'il reste
+fragile, sinon ce drapeau deviendrait un passe-droit.
+
 **Jubilar refait** (v6.63) : ses dix-huit poses viennent de deux
 nouvelles planches, et le raccord de chemise qui clochait depuis la v6.56
 est réglé — la base et la mécanique sortent enfin du même dessin.

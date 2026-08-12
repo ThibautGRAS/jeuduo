@@ -661,6 +661,69 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "36_bar_foule_derriere");
   }
 
+  /* 37. LES CINQ ENNEMIS à la même profondeur : la seule image qui dit
+     s'ils se distinguent de LOIN, ce qui est toute la question quand la
+     rue se remplit. */
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0;
+    Object.keys(D.ENNEMIS).forEach((k, i) => {
+      const ref = D.ENNEMIS[k];
+      D.Ruelle.ennemis.push({ ref, pv:ref.pv, pvMax:ref.pv, couloir:i % 5, z:0.58,
+        vitesse:ref.vitesse, etat:"course", frame:i % 6, tFrame:0, tEtat:0,
+        mort:0, touche:null, usure:0, attente:99, usureGarde:0, attenteGarde:99 });
+    });
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "37_cinq_ennemis");
+  }
+
+  /* 37-38. L'ABBÉ FORCEUR. Deux instants : l'encensoir brandi avec sa
+     cible — la pose au canevas le plus haut de tout le jeu, 509 px contre
+     346 — et la cloche en plein vol par-dessus un mur de Depardiahree,
+     qui est la raison d'être du personnage. */
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 4;
+    const abbe = D.ENNEMIS.abbe, dep = D.ENNEMIS.depar;
+    const faire = (ref, z, couloir, etat) => {
+      D.Ruelle.ennemis.push({ ref, pv:ref.pv, pvMax:ref.pv, couloir, z,
+        vitesse:ref.vitesse, etat, frame:0, tFrame:0, tEtat:0.3, mort:0,
+        touche:null, usure:0, attente:99, usureGarde:0, attenteGarde:999 });
+      return D.Ruelle.ennemis[D.Ruelle.ennemis.length - 1];
+    };
+    faire(dep, 0.72, 1, "course");
+    faire(dep, 0.66, 3, "course");
+    faire(abbe, 0.30, 2, "arme2");
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "37_abbe_encensoir");
+  }
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 4;
+    const abbe = D.ENNEMIS.abbe;
+    D.Ruelle.ennemis.push({ ref:abbe, pv:abbe.pv, pvMax:abbe.pv, couloir:2,
+      z:0.28, vitesse:abbe.vitesse, etat:"lance", frame:0, tFrame:0, tEtat:0.1,
+      mort:0, touche:null, usure:0, attente:99, usureGarde:0, attenteGarde:999 });
+    const dep = D.ENNEMIS.depar;
+    D.Ruelle.ennemis.push({ ref:dep, pv:dep.pv, pvMax:dep.pv, couloir:2, z:0.70,
+      vitesse:dep.vitesse, etat:"course", frame:2, tFrame:0, tEtat:0, mort:0,
+      touche:null, usure:0, attente:99, usureGarde:0, attenteGarde:999 });
+    D.Ruelle.lancerProjectile(D.Ruelle.ennemis[0]);
+    /* à mi-vol : c'est là que la cloche est au plus haut */
+    D.Ruelle.projectiles[0].t = abbe.jet.vol * 0.5;
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "38_abbe_cloche");
+  }
+
   /* 27. les poses propres de Depardiahree, à leur taille de jeu, sur
      une même ligne de sol : c'est la seule façon de voir qu'une pose
      plus haute que les autres ne fait pas grandir le personnage. */

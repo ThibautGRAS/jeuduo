@@ -763,7 +763,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.63</div>
+  <div id="version">CALLAGHAN v6.65</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -835,7 +835,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.63";
+const VERSION = "6.65";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1504,7 +1504,7 @@ const PREFIXES_BAR = ["bar_th", "bar_pf"];
 const POSES_ENNEMI = ["run1", "run2", "run3", "run4", "run5", "run6",
                       "hit_torse", "hit_epaule", "hit_jambe", "hit_tete",
                       "chute1", "chute2", "sol"];
-const ENNEMIS_RUELLE = ["depar", "dsk", "jubi"];
+const ENNEMIS_RUELLE = ["depar", "dsk", "jubi", "abbe", "bruh"];
 /* Chacun a en plus les poses de SA mécanique. Elles ne sont pas
    communes : Depardiahree trébuche et lance une bouteille, DSKKK
    garde son visage, personne ne fait les deux. La table les déclare
@@ -1514,6 +1514,21 @@ const POSES_PROPRES = {
   depar: ["trebuche1", "trebuche2", "ramasse", "arme", "lance"],
   dsk: ["garde1", "garde2", "garde_casse", "sonne", "bond", "sol2"],
   jubi: ["arret", "arme1", "arme2", "lance", "lache"],
+  /* L'Abbé a une pose de PLUS que Jubilar : `plie`, la tête offerte après
+     un jet annulé. C'est exactement ce que POSES_PROPRES sert à exprimer —
+     tous les personnages n'ont pas la même richesse. */
+  abbe: ["arret", "arme1", "arme2", "lance", "lache", "plie"],
+  /* BruHell n'a QUE sa planche de base : ses poses de préparation ne sont
+     pas encore dessinées. Il avance et frappe au contact, ce qui est déjà
+     un rôle — le plus fragile, celui qu'on abat en premier — mais ce n'est
+     pas celui qu'il aura. */
+  bruh: [],
+};
+/* Ce qui manque à qui, écrit noir sur blanc : un test le récite, de
+   sorte qu'un ennemi à moitié fini ne puisse pas être oublié à
+   moitié fini. */
+const ENNEMIS_INCOMPLETS = {
+  bruh: "planche de mécanique : arret, arme1, arme2, lance, arme3, lache",
 };
 /* Plus aucune planche de base ne manque. La table reste : c'est elle qui
    autorise un ennemi à n'avoir que sa pose de course, et le test dit en
@@ -9430,6 +9445,42 @@ const ENNEMIS = {
        sur la barricade, et ça coûte plus cher. */
     bond:{ z:0.90, duree:0.55, degat:22 },
   },
+  /* L'ABBÉ et BRUHELL, en attendant leur mécanique. Ils n'ont pas de
+     `jet` : leurs poses de préparation ne sont pas dessinées. Ils
+     avancent et frappent au contact — mais ils ne sont pas pour autant
+     des doublons, parce qu'ils occupent une place que personne ne
+     tenait : les FRAGILES. Peu de points de vie, tête très payante, ce
+     sont ceux qu'on abat en premier quand la rue se remplit. */
+  bruh: {
+    nom:"PATRICK BRUHELL", pv:105, vitesse:0.105, taille:1.00, sprite:"bruh",
+    mult:{ tete:1.45, torse:0.70, jambes:0.90, epaule:0.80 },
+  },
+  abbe: {
+    nom:"L'ABBÉ FORCEUR", pv:95, vitesse:0.090, taille:1.02, sprite:"abbe",
+    /* Il est le premier à CASSER la règle pv x vitesse (8,6 au lieu de
+       11) et c'est voulu : sa menace n'est pas d'arriver au contact mais
+       de rester vivant derrière les autres à bombarder. Peu résistant,
+       très gênant. */
+    mult:{ tete:1.40, torse:0.70, jambes:0.90, epaule:0.80 },
+    /* L'exception à la règle pv x vitesse est DÉCLARÉE ici, pas déduite
+       d'un écart de chiffres : sa menace n'est pas d'arriver au contact.
+       Un test vérifie en échange qu'il reste fragile — sinon ce drapeau
+       serait un passe-droit. */
+    menaceDistante:true,
+    /* Il BOMBARDE EN CLOCHE, par-dessus les autres ennemis : il s'arrête
+       LOIN — là où les autres n'ont pas encore commencé — et sa
+       trajectoire monte deux fois plus haut. C'est ce qui le rend
+       intéressant en horde mixte : un mur de Depardiahree ne le protège
+       pas de la cible sur son bras, mais il protège son corps. */
+    jet:{ zMin:0.14, zMax:0.52, attente:[3.0, 4.8], objet:"encensoir",
+          vol:1.35, degat:16, penalite:1.8, cloche:0.185,
+          /* cible mesurée sur enn_abbe_arme2 : l'encensoir est à 0,34 de
+             la largeur du canevas et 0,06 de sa hauteur */
+          cible:{ x:0.34, y:0.06 } },
+    /* Un jet annulé le laisse PLIÉ, tête offerte : c'est la récompense du
+       tir de précision, et la raison de le préférer à À COUVERT. */
+    plie:{ duree:1.5, multTete:1.8 },
+  },
   jubi: {
     nom:"JUBILAR LE FUMIER", pv:110, vitesse:0.095, taille:1.00, sprite:"jubi",
     /* pv x vitesse = 10,5 : la troisième déclinaison de la même menace. */
@@ -9576,9 +9627,20 @@ const Ruelle = {
     { nombre:5,  delai:1.9,  vitesse:1.00, types:["depar"] },
     { nombre:6,  delai:1.7,  vitesse:1.02, types:["dsk"] },
     { nombre:6,  delai:1.6,  vitesse:1.04, types:["jubi"] },
-    { nombre:10, delai:1.3,  vitesse:1.10, types:["depar", "jubi"] },
-    { nombre:14, delai:1.0,  vitesse:1.20, types:["dsk", "jubi", "depar"] },
-    { nombre:18, delai:0.78, vitesse:1.32, types:["depar", "depar", "dsk", "jubi"] },
+    { nombre:6,  delai:1.7,  vitesse:1.02, types:["abbe"] },
+    /* La combinaison qui fait tout le niveau : un mur de Depardiahree
+       protège le corps de l'Abbé mais pas la cible sur son bras. Il faut
+       choisir entre casser le mur et interrompre le bombardement. */
+    { nombre:10, delai:1.3,  vitesse:1.10, types:["depar", "depar", "abbe"] },
+    { nombre:12, delai:1.2,  vitesse:1.14, types:["depar", "jubi", "abbe"] },
+    { nombre:15, delai:1.0,  vitesse:1.22, types:["dsk", "jubi", "depar"] },
+    { nombre:18, delai:0.78, vitesse:1.32, types:["depar", "dsk", "jubi", "abbe"] },
+    /* La septième mélange les cinq : c'est la horde qui pose enfin la
+       question du document de conception — QUI tuer en premier. Les deux
+       fragiles arrivent vite et meurent vite, les deux lanceurs
+       s'arrêtent en arrière, le tank sert de mur. */
+    { nombre:22, delai:0.68, vitesse:1.40,
+      types:["depar", "dsk", "jubi", "abbe", "bruh"] },
   ],
 
   demarrer(){
@@ -9713,11 +9775,26 @@ const Ruelle = {
         || Images.table[base + "run1"];
   },
 
-  posCibleBras(e){
+  /* Le rectangle où une pose est RÉELLEMENT dessinée. Même arithmétique
+     que le rendu, et il faut qu'elle le reste : la boîte de référence ne
+     suffit pas dès qu'une pose a un canevas plus haut. L'encensoir levé
+     de l'Abbé donne à sa pose `arme2` un canevas de 509 px contre 346
+     pour sa course — raisonner sur la boîte de référence plaçait la cible
+     150 px sous l'encensoir. */
+  rectPose(e){
     const b = this.boiteEnnemi(e);
+    const spr = this.imagePose(e);
+    const ref = Images.table["enn_" + e.ref.sprite + "_run1"];
+    if (!spr || !ref || !ref.naturalHeight) return b;
+    const k = spr.naturalHeight / ref.naturalHeight;
+    const h = b.h * k, l = h * spr.naturalWidth / spr.naturalHeight;
+    return { x:b.x + (b.l - l) / 2, y:b.y + b.h - h, l, h };
+  },
+  posCibleBras(e){
+    const r = this.rectPose(e);
     const c = (e.ref.jet && typeof e.ref.jet.cible === "object")
             ? e.ref.jet.cible : CIBLE_BRAS_DEFAUT;
-    return { x:b.x + b.l * c.x, y:b.y + b.h * c.y,
+    return { x:r.x + r.l * c.x, y:r.y + r.h * c.y,
              r:Camera.L * CIBLE_BRAS_TAILLE * 0.5 };
   },
   /* Un tir dans la cible : le jet est ANNULÉ, le pavé tombe, et il perd
@@ -9848,8 +9925,15 @@ const Ruelle = {
           this.lancerProjectile(e);
         }
       } else if (e.etat === "lache"){
-        /* le pavé est tombé : il se tient le bras et repart */
-        if (e.tEtat > 0.75){ e.etat = "course"; e.tEtat = 0; }
+        /* l'objet est tombé : il se tient le bras. Qui a une pose `plie`
+           enchaîne dessus — sa tête est alors offerte, et c'est la vraie
+           récompense du tir dans le bras. Les autres repartent. */
+        if (e.tEtat > 0.75){
+          if (e.ref.plie){ e.etat = "plie"; e.tEtat = 0; }
+          else { e.etat = "course"; e.tEtat = 0; }
+        }
+      } else if (e.etat === "plie"){
+        if (e.tEtat > e.ref.plie.duree){ e.etat = "course"; e.tEtat = 0; }
       } else if (e.etat === "ramasse"){
         /* il s'ARRÊTE pour ramasser : l'arrêt est déjà une information,
            et c'est la fenêtre où on peut le punir sans qu'il avance */
@@ -9939,7 +10023,7 @@ const Ruelle = {
     const haut = p.hauteur * e.ref.taille;
     this.projectiles.push({
       objet:j.objet, couloir:e.couloir, z0:e.z, y0:p.y - haut * 0.82,
-      t:0, duree:j.vol, degat:j.degat,
+      t:0, duree:j.vol, degat:j.degat, cloche:j.cloche,
     });
     /* le sifflement du verre qui part : court, aigu, il annonce le vol
        sans couvrir la détonation du joueur */
@@ -9996,7 +10080,9 @@ const Ruelle = {
        de lui. La cloche est retirée par-dessus, modérément — à 0,30 de
        hauteur d'écran elle sortait par le haut. */
     const yArrivee = Camera.H * RUELLE_PREMIER_PLAN;
-    const cloche = Math.sin(av * Math.PI) * Camera.H * PROJ_HAUTEUR;
+    /* la hauteur de cloche est propre au lanceur : l'Abbé passe par
+       dessus les autres, un pavé va presque tendu */
+    const cloche = Math.sin(av * Math.PI) * Camera.H * (pr.cloche || PROJ_HAUTEUR);
     const y = melange(pr.y0, yArrivee, av) - cloche;
     const taille = Camera.L * melange(PROJ_ECH_LOIN, PROJ_ECH_PRES, courbeZ(z));
     return { x:p.x, y, taille, av };
@@ -10085,6 +10171,8 @@ Ruelle.tirer = function(fx, fy){
   const degat = brut * ((e.ref.mult && e.ref.mult[cible.zone]) || 1)
               * (e.etat === "sonne" && e.ref.garde && cible.zone === "tete"
                  ? e.ref.garde.multSonne : 1)
+              * (e.etat === "plie" && e.ref.plie && cible.zone === "tete"
+                 ? e.ref.plie.multTete : 1)
               * attenuation(e.z);
   e.pv -= degat;
   e.touche = cible.zone;
@@ -10122,6 +10210,7 @@ Ruelle.poseEnnemi = function(e){
   if (e.etat === "arme1") return "arme1";
   if (e.etat === "arme2") return "arme2";
   if (e.etat === "lache") return "lache";
+  if (e.etat === "plie") return "plie";
   if (e.etat === "ramasse") return "ramasse";
   if (e.etat === "arme") return "arme";
   if (e.etat === "lance") return "lance";
@@ -11938,8 +12027,8 @@ globalThis.DTOUR = {
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, portraitOk, ecranOk, orientationVoulue, ORIENTATION, Ecran, Interface, Pause, Boucle,
   FOULE_PLACES, FOULE_PAR_GRAPPE, FOULE_PHRASES, FOULE_PIEDS, FOULE_TAILLE, BAR_COMPTOIR,
   Perspective, courbeZ, POSES_ENNEMI, POSES_PROPRES, POSES_BASE_MANQUANTES,
-  REPLI_POSE,
-  attenuation, PORTEE_MIN, PORTEE_PLEINE,
+  REPLI_POSE, ENNEMIS_INCOMPLETS,
+  attenuation, PORTEE_MIN, PORTEE_PLEINE, PROJ_HAUTEUR,
   ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, IA_REUSSITE, IA_CADENCE, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, RUELLE_DEGAT_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,

@@ -1096,6 +1096,35 @@ LE TROU — teinte de corps pour un alpha effacé par erreur, noir ou
 magenta pour du fond réellement enclos. Ma première version comptait
 tout, et déclarait cassées des découpes justes.
 
+### Un fichier de zéro octet ne déclenchait RIEN
+
+Une réparation d'images interrompue en plein vol a laissé un fichier vide.
+Aucun test ne l'a vu : la suite Node ne lit que l'en-tête WebP de
+quelques images, et le jeu se replie silencieusement sur `run1` quand une
+pose manque — le repli conçu pour éviter un ennemi invisible masquait
+aussi un fichier mort.
+
+`reparer_sprites.py --verifier` ouvre maintenant TOUS les fichiers, refuse
+un fichier vide, et rend un code non nul sur le premier illisible. Il a
+trouvé le second cas dans la seconde qui a suivi — il y en avait deux, pas
+un. Le contrôle est gratuit : il faut décoder les images de toute façon.
+
+À faire avant chaque push touchant aux images, comme le reste :
+
+    python3 dtour/reparer_sprites.py dtour/img --verifier
+
+### Une règle d'équilibrage vaut pour le cas qui l'a fait naître
+
+J'ai écrit un test exigeant qu'aucune tête ne tue d'un seul coup. C'était
+généraliser à tort la leçon du TANK : là, un headshot unique effaçait la
+question « tête ou jambes ? ». Sur un ennemi FRAGILE qui arrive vite, le
+headshot unique EST le dessein — c'est la récompense d'avoir visé juste
+avant qu'il arrive.
+
+Le test dit maintenant ce qui compte vraiment : que le coût d'une tête
+DIFFÈRE d'un ennemi à l'autre, et que le tank en demande au moins deux.
+Un plancher commun aurait aplati les cinq.
+
 ### Une coupure de planche doit pouvoir être bornée en hauteur
 
 Deux poses qui se touchent se séparent en déclarant la colonne de coupe.
@@ -1105,6 +1134,39 @@ amputait le bras d'une pose de course, et le morceau détaché — 3 537 px,
 au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
+
+### Une cible se pose sur le rectangle DESSINÉ, pas sur la boîte de référence
+
+`posCibleBras` raisonnait sur la boîte de l'ennemi — celle qui vient de
+`run1`. Ça marchait tant que la pose de préparation avait le même canevas.
+L'encensoir levé de l'Abbé donne à sa pose `arme2` un canevas de **509 px
+contre 346** pour sa course : la cible se retrouvait 150 px sous
+l'encensoir. Il a fallu extraire `rectPose()` — la même arithmétique que
+le rendu, ancrage par les pieds compris — et poser la cible dessus.
+
+Corollaire pour les tests : la suite ne charge aucune image, donc
+`rectPose` y renvoie la boîte de référence. Le test qui vérifie ce calcul
+doit remplir `Images.table` depuis l'en-tête WebP, comme le font déjà les
+contrôles d'invariants d'image.
+
+### Une exception à une règle d'équilibrage se DÉCLARE
+
+L'Abbé casse la règle pv × vitesse : 8,6 contre 11. C'est voulu — sa
+menace est de rester vivant loin, pas d'arriver au contact. Mais tant que
+l'exception n'était qu'un écart de chiffres, le test ne pouvait que
+tomber ou être affaibli pour tout le monde.
+
+La parade : un drapeau `menaceDistante` dans sa fiche, le test ne mesure
+la règle que sur les ennemis de contact — ET un second test exige que
+l'exempté reste fragile et s'arrête loin. Sans ce garde-fou, le drapeau
+serait un passe-droit pour n'importe quel déséquilibre.
+
+### Deux tests qui mesurent la même chose finissent par se contredire
+
+« Les trois ennemis pèsent la même menace » et « les cinq ennemis pèsent
+la même menace » cohabitaient, écrits à deux moments différents. Les deux
+sont tombés en même temps sur l'Abbé, et il a fallu comprendre qu'il n'y
+en avait qu'un à corriger. Un invariant, un test.
 
 ### Une position d'interface calée sur un sprite se REMESURE
 

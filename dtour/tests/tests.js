@@ -3336,13 +3336,6 @@ if (D){
       return manquants.length === 0;
     })());
 
-  verifier("les trois ennemis pèsent la même menace",
-    (() => {
-      const m = Object.keys(D.ENNEMIS).map(k => D.ENNEMIS[k].pv * D.ENNEMIS[k].vitesse);
-      messageDetail = "pv x vitesse : " + m.map(x => x.toFixed(1)).join(", ");
-      return (Math.max(...m) - Math.min(...m)) / Math.max(...m) < 0.15;
-    })());
-
   /* ---- le placement des habitants (niveau 2) ---- */
   verifier("aucun habitant n'est placé sans sprite existant",
     (() => {
@@ -3538,6 +3531,164 @@ if (D){
       const iF = vue.indexOf("this.dessinerFoule()");
       return iH > 0 && iF > iH;
     })());
+
+  verifier("un ennemi à moitié fini est nommé, pas oublié",
+    (() => {
+      /* Sans cette liste, un ennemi livré sans sa mécanique reste un
+         figurant pour toujours. Elle dit qui, et ce qui manque. */
+      const att = Object.keys(D.ENNEMIS_INCOMPLETS);
+      messageDetail = att.length
+        ? att.map(k => k + " : " + D.ENNEMIS_INCOMPLETS[k]).join(" | ")
+        : "tous les ennemis sont complets";
+      /* la promesse : celui qui est annoncé incomplet n'a PAS de jet, et
+         celui qui a un jet n'est PAS annoncé incomplet */
+      return att.every(k => D.ENNEMIS[k] && !D.ENNEMIS[k].jet) &&
+        Object.keys(D.ENNEMIS).filter(k => D.ENNEMIS[k].jet)
+          .every(k => !D.ENNEMIS_INCOMPLETS[k]);
+    })());
+
+  /* ---- l'Abbé Forceur et son bombardement en cloche ---- */
+  const unAbbe = () => {
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.couvert = false;
+    D.Ruelle.projectiles.length = 0; D.Ruelle.viser = viserVrai;
+    const ref = D.ENNEMIS.abbe;
+    D.Ruelle.ennemis.push({ ref, pv:ref.pv, pvMax:ref.pv, couloir:2, z:0.30,
+      vitesse:ref.vitesse, etat:"course", frame:0, tFrame:0, tEtat:0, mort:0,
+      touche:null, usure:0, attente:0.02, usureGarde:0, attenteGarde:999 });
+    return D.Ruelle.ennemis[0];
+  };
+
+  verifier("il s'arrête PLUS LOIN que les autres lanceurs",
+    (() => {
+      /* Il bombarde par-dessus les autres : s'il s'avançait comme eux,
+         son intérêt tactique disparaîtrait. */
+      return D.ENNEMIS.abbe.jet.zMax < D.ENNEMIS.jubi.jet.zMax &&
+             D.ENNEMIS.abbe.jet.zMin < D.ENNEMIS.jubi.jet.zMin;
+    })());
+
+  verifier("sa trajectoire monte plus haut que celle d'un pavé",
+    (() => {
+      /* C'est un NOMBRE qui fait la cloche, pas un dessin. */
+      return D.ENNEMIS.abbe.jet.cloche > D.PROJ_HAUTEUR * 1.5 &&
+             !D.ENNEMIS.jubi.jet.cloche;
+    })());
+
+  verifier("la cible se pose sur le rectangle DESSINÉ, pas sur la boîte",
+    (() => {
+      /* L'encensoir levé donne à `arme2` un canevas de 509 px contre 346
+         pour sa course : raisonner sur la boîte de référence plaçait la
+         cible 150 px sous l'encensoir. */
+      /* La suite ne charge aucune image : `rectPose` a besoin des
+         DIMENSIONS des sprites pour faire son calcul. On les lui donne
+         depuis l'en-tête WebP — c'est déjà comme ça que les invariants
+         d'image sont contrôlés ici. */
+      for (const po of ["run1", "arme2"]){
+        const d = dimsN4("enn_abbe_" + po);
+        if (!d) return false;
+        D.Images.table["enn_abbe_" + po] = { naturalWidth:d.l, naturalHeight:d.h };
+      }
+      const e = unAbbe(); e.etat = "arme2";
+      const r = D.Ruelle.rectPose(e);
+      const b = D.Ruelle.boiteEnnemi(e);
+      const c = D.Ruelle.posCibleBras(e);
+      messageDetail = "rect haut " + r.h.toFixed(0) + " px, boîte " + b.h.toFixed(0) + " px";
+      return r.h > b.h * 1.3 && c.y < b.y &&
+        Math.abs((c.x - r.x) / r.l - D.ENNEMIS.abbe.jet.cible.x) < 0.01 &&
+        Math.abs((c.y - r.y) / r.h - D.ENNEMIS.abbe.jet.cible.y) < 0.01;
+    })());
+
+  verifier("un jet annulé le laisse PLIÉ, tête offerte",
+    (() => {
+      const e = unAbbe(); e.etat = "arme2"; e.tEtat = 0.2;
+      const c = D.Ruelle.posCibleBras(e);
+      const h = D.Ruelle.heroActif(); h.repos = 0; h.recharge = 0; h.balles = 99;
+      if (!D.Ruelle.tirer(c.x, c.y)) return false;
+      if (e.etat !== "lache") return false;
+      for (let i = 0; i < 60 * 2; i++) D.Ruelle.pas(1 / 60);
+      if (e.etat !== "plie") return false;
+      /* et là sa tête paye plus que la normale */
+      const pv = e.pv;
+      tirerZone(e, "tete");
+      return pv - e.pv > D.ARMES[h.arme].tete * D.ENNEMIS.abbe.mult.tete *
+                         D.attenuation(e.z) * 1.5;
+    })(), "c'est la récompense du tir dans le bras plutôt que d'À COUVERT");
+
+  verifier("qui n'a pas de pose PLIÉ repart simplement",
+    (() => {
+      /* Jubilar n'a pas cette pose : il ne doit pas entrer dans un état
+         dont il n'a pas l'image. */
+      const e = unJubi(); e.etat = "lache"; e.tEtat = 0; e.attente = 99;
+      for (let i = 0; i < 60; i++) D.Ruelle.pas(1 / 60);
+      /* `attente` à 99 sinon il repart aussitôt préparer un jet et l'état
+         lu n'est plus « course » mais « arret » : le test échouait sur sa
+         propre mise en place, pas sur le jeu. */
+      return e.etat === "course" && !D.ENNEMIS.jubi.plie;
+    })());
+
+  verifier("la horde qui mélange mur et bombardier existe",
+    (() => {
+      /* Un mur de Depardiahree protège le CORPS de l'Abbé mais pas la
+         cible sur son bras : c'est la question que le niveau voulait. */
+      return D.Ruelle.VAGUES.some(v => v.types.indexOf("abbe") >= 0 &&
+                                       v.types.indexOf("depar") >= 0);
+    })());
+
+  verifier("les ennemis de contact pèsent la même menace",
+    (() => {
+      /* La règle pv x vitesse ne vaut que pour ceux dont la menace EST
+         d'arriver au contact. L'Abbé s'arrête loin et bombarde : la
+         mesurer sur lui n'a pas de sens. Mais l'exception doit être
+         DÉCLARÉE dans sa fiche, pas déduite d'un écart de chiffres —
+         sinon n'importe quel déséquilibre passerait pour une intention. */
+      const cles = Object.keys(D.ENNEMIS);
+      const contact = cles.filter(k => !D.ENNEMIS[k].menaceDistante);
+      const m = contact.map(k => D.ENNEMIS[k].pv * D.ENNEMIS[k].vitesse);
+      messageDetail = "pv x vitesse : " + contact.map((k, i) => k + " " + m[i].toFixed(1)).join(", ");
+      return cles.length === 5 && m.length >= 3 &&
+        (Math.max(...m) - Math.min(...m)) / Math.max(...m) < 0.15;
+    })());
+
+  verifier("et celui qui échappe à la règle est FRAGILE",
+    (() => {
+      /* Le garde-fou de l'exception : celui qui bombarde de loin ne doit
+         pas être en plus le plus dur à tuer. Sans cette contrainte,
+         `menaceDistante` deviendrait un passe-droit. */
+      const loin = Object.keys(D.ENNEMIS).filter(k => D.ENNEMIS[k].menaceDistante);
+      if (!loin.length) return true;
+      const pvMax = Math.max(...Object.keys(D.ENNEMIS).map(k => D.ENNEMIS[k].pv));
+      return loin.every(k => D.ENNEMIS[k].pv <= pvMax * 0.75 &&
+                             D.ENNEMIS[k].jet && D.ENNEMIS[k].jet.zMax < 0.6);
+    })());
+
+  verifier("le coût d'une tête DIFFÈRE selon l'ennemi",
+    (() => {
+      /* Ma première version de ce test exigeait deux balles pour TOUS.
+         C'était généraliser à tort une règle écrite pour le TANK : là,
+         un headshot unique effaçait la question « tête ou jambes ? ».
+         Sur un fragile qui arrive vite, un headshot unique EST le
+         dessein — c'est la récompense d'avoir visé juste avant qu'il
+         arrive. Ce qui compte n'est pas un plancher commun, c'est que le
+         coût ne soit PAS le même pour tout le monde. */
+      const a = D.ARMES.revolver;
+      const cout = {};
+      for (const k of Object.keys(D.ENNEMIS)){
+        const e = D.ENNEMIS[k];
+        cout[k] = Math.ceil(e.pv / (a.tete * e.mult.tete * D.attenuation(1)));
+      }
+      const n = Object.values(cout);
+      messageDetail = Object.keys(cout).map(k => k + ":" + cout[k]).join("  ");
+      /* le plus dur en demande au moins deux de plus que le plus tendre,
+         et le tank en demande au moins deux */
+      return Math.max(...n) - Math.min(...n) >= 1 && cout.depar >= 2;
+    })());
+
+  verifier("la dernière horde mélange les cinq",
+    (() => {
+      const v = D.Ruelle.VAGUES;
+      const derniere = v[v.length - 1].types;
+      return new Set(derniere).size === Object.keys(D.ENNEMIS).length;
+    })(), "c'est la horde qui pose la question : qui tuer en premier ?");
 
   verifier("les huit boutons ont le même canevas et le même disque",
     (() => {

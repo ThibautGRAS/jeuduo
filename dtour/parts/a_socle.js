@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.63";
+const VERSION = "6.65";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -687,7 +687,7 @@ const PREFIXES_BAR = ["bar_th", "bar_pf"];
 const POSES_ENNEMI = ["run1", "run2", "run3", "run4", "run5", "run6",
                       "hit_torse", "hit_epaule", "hit_jambe", "hit_tete",
                       "chute1", "chute2", "sol"];
-const ENNEMIS_RUELLE = ["depar", "dsk", "jubi"];
+const ENNEMIS_RUELLE = ["depar", "dsk", "jubi", "abbe", "bruh"];
 /* Chacun a en plus les poses de SA mécanique. Elles ne sont pas
    communes : Depardiahree trébuche et lance une bouteille, DSKKK
    garde son visage, personne ne fait les deux. La table les déclare
@@ -697,6 +697,21 @@ const POSES_PROPRES = {
   depar: ["trebuche1", "trebuche2", "ramasse", "arme", "lance"],
   dsk: ["garde1", "garde2", "garde_casse", "sonne", "bond", "sol2"],
   jubi: ["arret", "arme1", "arme2", "lance", "lache"],
+  /* L'Abbé a une pose de PLUS que Jubilar : `plie`, la tête offerte après
+     un jet annulé. C'est exactement ce que POSES_PROPRES sert à exprimer —
+     tous les personnages n'ont pas la même richesse. */
+  abbe: ["arret", "arme1", "arme2", "lance", "lache", "plie"],
+  /* BruHell n'a QUE sa planche de base : ses poses de préparation ne sont
+     pas encore dessinées. Il avance et frappe au contact, ce qui est déjà
+     un rôle — le plus fragile, celui qu'on abat en premier — mais ce n'est
+     pas celui qu'il aura. */
+  bruh: [],
+};
+/* Ce qui manque à qui, écrit noir sur blanc : un test le récite, de
+   sorte qu'un ennemi à moitié fini ne puisse pas être oublié à
+   moitié fini. */
+const ENNEMIS_INCOMPLETS = {
+  bruh: "planche de mécanique : arret, arme1, arme2, lance, arme3, lache",
 };
 /* Plus aucune planche de base ne manque. La table reste : c'est elle qui
    autorise un ennemi à n'avoir que sa pose de course, et le test dit en
