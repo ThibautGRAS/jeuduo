@@ -408,8 +408,8 @@ const Jeu = {
       Tournee.monter();
       Interface.entrerJeu();
       Sons.reveiller(); Sons.lancerFondBar();
-      /* Le bar a sa musique et sa foule. Repli sur la grille synthétisée
-         si les fichiers manquent — le jeu n'est jamais muet. */
+      /* La musique part DÈS L'AFFICHE, pas au premier verre : un écran de
+         présentation silencieux se lit comme un chargement. */
       Sons.lancerMusiqueFichier("musique_bar");
       Sons.volumeMusique(0.42);
       Sons.lancerFondFichier("foule_bar", 0.30);

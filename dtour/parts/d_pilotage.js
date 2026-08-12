@@ -729,7 +729,7 @@ const Entrees = {
            trois secondes sans qu'on puisse rien y faire. */
         if (Tournee.introT > 0){
           e.preventDefault(); Sons.reveiller();
-          if (Tournee.introT > 0.30) Tournee.introT = 0.30;
+          Tournee.passerIntro();
           return;
         }
         if (Jeu.phase !== "jeu" || !Tournee.enChoix) return;
@@ -1169,6 +1169,7 @@ globalThis.DTOUR = {
   attenuation, PORTEE_MIN, PORTEE_PLEINE, PROJ_HAUTEUR, ANNONCE_CARTE_MIN, GROGNE_DELAI,
   CANONS, POSES_RUEL_TH, POSES_RUEL_PF,
   HEURES, PART_TYPES, PART_MAX, FLAQUES, MOT_DUREE,
+  BARMANS, BAR_COMPTOIR,
   ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, IA_REUSSITE, IA_CADENCE, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, RUELLE_DEGAT_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,

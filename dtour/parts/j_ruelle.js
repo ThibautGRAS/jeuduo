@@ -257,7 +257,11 @@ const GROGNE_DELAI = [1.1, 2.8];
 /* La réplique de combat : sa durée à l'écran, le repos avant la
    suivante, et la chance qu'elle sorte. Une phrase à chaque mort se lit
    deux fois puis ne se voit plus. */
-const MOT_DUREE = 1.9, MOT_REPOS = 7.0, MOT_CHANCE = 0.34;
+/* Une chance sur cinq et douze secondes de repos : à une sur trois et
+   sept secondes, une horde de dix morts en lâchait trois ou quatre et le
+   sel devenait du bavardage. Et `mot` est unique par construction — il
+   ne peut jamais y en avoir deux à l'écran. */
+const MOT_DUREE = 2.0, MOT_REPOS = 12.0, MOT_CHANCE = 0.20;
 
 /* LA BOUCHE DU CANON, POSE PAR POSE. Mesurée sur chaque sprite : le
    point le plus à droite de la moitié haute de la silhouette. Fractions

@@ -177,7 +177,10 @@ const BarVue = {
       const sh = H * BAR_TAILLE_BARMAN * echellePerso(b.ref.id);
       const sl = sh * spr.naturalWidth / spr.naturalHeight;
       const x = this.ex(b.ref.x);
-      ctx.drawImage(spr, x - sl / 2, this.ey(BAR_COMPTOIR) - sh * 0.98, sl, sh);
+      /* SA ligne de comptoir, pas la moyenne : le plateau descend de
+         0,538 à 0,610 entre les deux postes. */
+      const plateau = b.ref.comptoir || BAR_COMPTOIR;
+      ctx.drawImage(spr, x - sl / 2, this.ey(plateau) - sh * 0.98, sl, sh);
       if (b.etat === "prepare"){
         /* petit indicateur au-dessus : quelque chose arrive */
         const p = borne(b.t / b.duree, 0, 1);

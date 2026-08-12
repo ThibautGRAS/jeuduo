@@ -116,14 +116,20 @@ const BARMANS = [
      copie, devant les toilettes et le frigo — techniquement visibles,
      visuellement faux. Ce qu'on voit hors champ est traité par les
      chevrons de bord, pas en déplaçant les gens. */
-  { id:"francky", nom:"FRANCKY", x:0.24, sert:"cocktail",
+  /* LE COMPTOIR N'EST PAS HORIZONTAL. Mesuré sur le fond, par le plus
+     fort gradient vertical : son arête est à 0,538 sous Francky et à
+     0,610 sous Jojo — sept centièmes de hauteur d'écran d'écart. Une
+     constante unique à 0,555 laissait donc Jojo flotter au-dessus de son
+     comptoir, ce qui se voyait tout de suite et ne s'expliquait pas.
+     Chaque poste porte désormais SA ligne. */
+  { id:"francky", nom:"FRANCKY", x:0.24, comptoir:0.538, sert:"cocktail",
     poses:{ repos:"bar_francky_idle", eau:"bar_francky_essuie", sert:"bar_francky_sert" },
     /* cinq temps : il choisit, il dose, il verse, il shake, il remplit,
        il décore. Plus la séquence est longue, plus le joueur a le temps
        de LIRE ce qui arrive — c'est là que se gagne le niveau. */
     prepare:["bar_francky_choisit", "bar_francky_dose", "bar_francky_verse",
              "bar_francky_shake", "bar_francky_remplit", "bar_francky_decore"] },
-  { id:"jojo", nom:"JOJO", x:0.76, sert:"jager",
+  { id:"jojo", nom:"JOJO", x:0.76, comptoir:0.610, sert:"jager",
     poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_serie" },
     /* quatre temps : il choisit, il dose, il verse, il superpose. Un peu
        plus court que Francky, et cette différence de RYTHME est en soi
@@ -148,11 +154,25 @@ const Tournee = {
 
   /* --------- montage --------- */
   monter(){
-    this.enChoix = true;
+    /* L'AFFICHE VIENT AVANT LE CHOIX. Posée après, elle interrompait le
+       joueur juste après qu'il avait décidé — le pire moment. Avant, elle
+       fait ce qu'une affiche doit faire : présenter le lieu, puis laisser
+       entrer. C'est l'ordre du niveau 4, et il n'y a pas de raison qu'il
+       diffère ici. */
+    this.introT = BAR_INTRO_DUREE;
+    this.enChoix = false;      /* le choix n'ouvre qu'après l'affiche */
     this.choixChamp = 0;
     this.champion = null;
     this.fini = null;
     this.actif = false;
+  },
+
+  /* L'affiche se passe d'une tape, mais pas trop vite : le même quart de
+     seconde que la ruelle, sinon un doigt encore posé de l'écran
+     précédent l'emporte sans qu'on l'ait vue. */
+  passerIntro(){
+    if (this.introT > 0.25){ this.introT = 0.25; return true; }
+    return false;
   },
 
   choisir(k){
@@ -175,7 +195,6 @@ const Tournee = {
     this.prochainClin = hasard(14, 26);
     this.bus = []; this.bourre = 0; this.deborde = false;
     this.clients = []; this.prochainClient = hasard(8, 14);
-    this.introT = BAR_INTRO_DUREE;
     this.composerFoule();
     this.flash = 0; this.boitTotal = 1; this.freinT = 0; this.dureeMarche = 0;
     this.tarte = null; this.esquiveOuverte = false;
@@ -530,7 +549,16 @@ const Tournee = {
     if (this.fini){ this.fini.t += dt; return; }
     /* L'affiche fige la soirée : rien ne bouge derrière, sinon le
        chronomètre tourne pendant qu'on regarde une image. */
-    if (this.introT > 0){ this.introT -= dt; return; }
+    if (this.introT > 0){
+      this.introT -= dt;
+      if (this.introT < 0) this.introT = 0;
+      return;
+    }
+    /* LE CHOIX EST UN ÉTAT DÉDUIT, pas un front. Ouvrir sur la fin de
+       l'affiche marchait tant qu'on passait par la décrémentation ; posé
+       à zéro autrement, le choix ne s'ouvrait jamais et le pupitre
+       s'affichait sur un niveau qu'on n'avait pas encore commencé. */
+    if (!this.actif && !this.fini) this.enChoix = true;
     if (this.enChoix || !this.actif) return;
     this.temps += dt;
     this.restant = Math.max(0, BAR_DUREE - this.temps);

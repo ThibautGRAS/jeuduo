@@ -283,6 +283,31 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Jojo enfin d'aplomb, et l'affiche avant le choix** (v6.79).
+
+**LE COMPTOIR N'EST PAS HORIZONTAL.** C'était ça, le bug de Jojo, et il
+se mesure : l'arête du plateau est à **0,538 sous Francky et 0,610 sous
+Jojo** — sept centièmes de hauteur d'écran d'écart. Le code posait les
+deux sur une constante unique à 0,555, donc Jojo flottait au-dessus du
+sien. Chaque poste porte désormais SA ligne.
+
+**L'affiche du bar passe AVANT le choix du champion.** Posée après, elle
+interrompait le joueur juste après qu'il avait décidé — le pire moment.
+Elle se passe d'une tape, avec le même quart de seconde de garde que la
+ruelle, et **la musique part dès l'affiche** : un écran de présentation
+silencieux se lit comme un chargement.
+
+Défaut trouvé en le faisant : j'ouvrais le choix sur le FRONT de fin
+d'affiche. Posé à zéro autrement, le choix ne s'ouvrait jamais et le
+pupitre s'affichait sur un niveau pas encore commencé. C'est un état
+déduit, maintenant, pas un front.
+
+**Les répliques de combat sont plus rares** : une chance sur cinq et
+douze secondes de repos, contre une sur trois et sept. À l'ancien
+réglage, une horde de dix morts en lâchait trois ou quatre. Et il ne peut
+jamais y en avoir deux à l'écran — un test le vérifie sur une horde
+entière qui tombe d'un coup.
+
 **Les pavés s'éclairent, les balles perdues marquent, les méchants ont
 un caractère** (v6.78).
 

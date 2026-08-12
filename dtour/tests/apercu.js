@@ -837,6 +837,25 @@ function jouerJusqua(D, condition, limite){
   await scenePart("45_ruelle_nuit_flash", 5, false, true);
   await scenePart("46_ruelle_fx", 5, true, true);
 
+  /* 47. JOJO À SON POSTE. Le comptoir n'est pas horizontal : son arête
+     est à 0,538 sous Francky et 0,610 sous Jojo. Une constante unique
+     laissait Jojo flotter au-dessus du sien. */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(3); D.Tournee.introT = 0; D.Tournee.lancer(); D.Tournee.introT = 0;
+    /* La caméra doit être RECALÉE explicitement : la poser en déplaçant
+       le champion ne suffit pas dans le harnais, elle rattrape sur
+       plusieurs images de jeu. On la place donc à la main sur Jojo. */
+    D.Tournee.x = 0.76; D.Tournee.marche = 0;
+    for (let i = 0; i < 8; i++) D.Jeu.pas(1 / 60);
+    D.Camera.xBar = D.BarVue.larg() * 0.76 - D.Camera.L * 0.5;
+    D.Tournee.barmans[1].pose = "bar_jojo_idle";
+    D.Tournee.secousse = 0;
+    dessinerVia(D, canevas);
+    ecrire(canevas, "47_jojo_poste");
+  }
+
   /* 27. les poses propres de Depardiahree, à leur taille de jeu, sur
      une même ligne de sol : c'est la seule façon de voir qu'une pose
      plus haute que les autres ne fait pas grandir le personnage. */

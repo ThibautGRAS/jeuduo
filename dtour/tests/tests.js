@@ -1845,8 +1845,42 @@ if (D){
     D.Tournee.choixChamp = champ === undefined ? 0 : champ;
     D.Tournee.lancer(); D.Tournee.introT = 0;
   };
-  verifier("demarrer(3) ouvre le choix du champion",
-    (() => { D.Jeu.demarrer(3); return D.Tournee.enChoix && D.Jeu.phase === "jeu"; })());
+  verifier("demarrer(3) montre l'AFFICHE, puis ouvre le choix",
+    (() => {
+      /* L'affiche vient AVANT le choix. Posée après, elle interrompait le
+         joueur juste après qu'il avait décidé — le pire moment. */
+      D.Jeu.demarrer(3);
+      const avant = D.Tournee.introT > 0 && !D.Tournee.enChoix;
+      for (let k = 0; k < 60 * 5; k++) D.Jeu.pas(1 / 60);
+      return avant && D.Tournee.enChoix && D.Jeu.phase === "jeu" &&
+        D.Tournee.introT === 0;
+    })());
+
+  verifier("une tape passe l'affiche du bar, pas trop vite",
+    (() => {
+      /* Le même quart de seconde que la ruelle : sinon un doigt encore
+         posé de l'écran précédent l'emporte sans qu'on l'ait vue. */
+      D.Jeu.demarrer(3);
+      const t0 = D.Tournee.introT;
+      const pris = D.Tournee.passerIntro();
+      const t1 = D.Tournee.introT;
+      D.Tournee.introT = 0.2;
+      const refus = D.Tournee.passerIntro();
+      return pris && t1 < t0 && t1 <= 0.26 && !refus;
+    })());
+  verifier("chaque barman a SA ligne de comptoir",
+    (() => {
+      /* Le plateau n'est pas horizontal : mesuré sur le fond par le plus
+         fort gradient vertical, son arête est à 0,538 sous Francky et
+         0,610 sous Jojo. Une constante unique à 0,555 laissait Jojo
+         flotter au-dessus du sien — sept centièmes de hauteur d'écran. */
+      const c = D.BARMANS.map(b => b.comptoir);
+      messageDetail = D.BARMANS.map(b => b.id + " " + b.comptoir).join(", ");
+      return c.every(x => typeof x === "number" && x > 0.4 && x < 0.7) &&
+        Math.abs(c[0] - c[1]) > 0.04 &&
+        /b\.ref\.comptoir \|\| BAR_COMPTOIR/.test(source);
+    })());
+
   verifier("les deux champions existent et se distinguent",
     D.BAR_CHAMPIONS.length === 2 &&
     D.BAR_CHAMPIONS[0].vitesse !== D.BAR_CHAMPIONS[1].vitesse &&
@@ -2454,7 +2488,8 @@ if (D){
     (() => {
       const pup = domBac.getElementById("pupitre3");
       D.Jeu.demarrer(3);
-      D.Jeu.pas(1 / 60);
+      /* l'affiche passe d'abord, puis le choix s'ouvre */
+      D.Tournee.introT = 0; D.Jeu.pas(1 / 60);
       const cache = !pup.classList.contains("on");
       D.Tournee.lancer(); D.Tournee.introT = 0;
       D.Jeu.pas(1 / 60);
@@ -3273,7 +3308,7 @@ if (D){
         if (D.Ruelle.mot) dits++;
       }
       messageDetail = dits + " répliques sur 200 morts";
-      return dits > 40 && dits < 130;
+      return dits > 20 && dits < 70;
     })());
 
   verifier("deux morts rapprochées ne font pas deux bulles",
@@ -3290,6 +3325,22 @@ if (D){
       const premier = D.Ruelle.mot;
       D.Ruelle.motDeCombat("jubi");
       return pose === 1 && D.Ruelle.mot === premier && D.Ruelle.motT > 0;
+    })());
+
+  verifier("jamais deux répliques à l'écran en même temps",
+    (() => {
+      /* `mot` est unique par construction : une deuxième écraserait la
+         première au lieu de s'ajouter. On le vérifie sur une horde
+         entière qui tombe d'un coup. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
+      D.Ruelle.mot = null; D.Ruelle.motT = 0;
+      let maxi = 0;
+      for (let k = 0; k < 400; k++){
+        D.Ruelle.motDeCombat(["depar", "dsk", "jubi", "abbe", "bruh"][k % 5]);
+        maxi = Math.max(maxi, D.Ruelle.mot ? 1 : 0);
+        D.Ruelle.pasMot(1 / 60);
+      }
+      return maxi === 1;
     })());
 
   verifier("une réplique de combat ne passe jamais sur une annonce",

@@ -772,7 +772,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.78</div>
+  <div id="version">CALLAGHAN v6.79</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -844,7 +844,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.78";
+const VERSION = "6.79";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -2370,8 +2370,8 @@ const Jeu = {
       Tournee.monter();
       Interface.entrerJeu();
       Sons.reveiller(); Sons.lancerFondBar();
-      /* Le bar a sa musique et sa foule. Repli sur la grille synthétisée
-         si les fichiers manquent — le jeu n'est jamais muet. */
+      /* La musique part DÈS L'AFFICHE, pas au premier verre : un écran de
+         présentation silencieux se lit comme un chargement. */
       Sons.lancerMusiqueFichier("musique_bar");
       Sons.volumeMusique(0.42);
       Sons.lancerFondFichier("foule_bar", 0.30);
@@ -8135,14 +8135,20 @@ const BARMANS = [
      copie, devant les toilettes et le frigo — techniquement visibles,
      visuellement faux. Ce qu'on voit hors champ est traité par les
      chevrons de bord, pas en déplaçant les gens. */
-  { id:"francky", nom:"FRANCKY", x:0.24, sert:"cocktail",
+  /* LE COMPTOIR N'EST PAS HORIZONTAL. Mesuré sur le fond, par le plus
+     fort gradient vertical : son arête est à 0,538 sous Francky et à
+     0,610 sous Jojo — sept centièmes de hauteur d'écran d'écart. Une
+     constante unique à 0,555 laissait donc Jojo flotter au-dessus de son
+     comptoir, ce qui se voyait tout de suite et ne s'expliquait pas.
+     Chaque poste porte désormais SA ligne. */
+  { id:"francky", nom:"FRANCKY", x:0.24, comptoir:0.538, sert:"cocktail",
     poses:{ repos:"bar_francky_idle", eau:"bar_francky_essuie", sert:"bar_francky_sert" },
     /* cinq temps : il choisit, il dose, il verse, il shake, il remplit,
        il décore. Plus la séquence est longue, plus le joueur a le temps
        de LIRE ce qui arrive — c'est là que se gagne le niveau. */
     prepare:["bar_francky_choisit", "bar_francky_dose", "bar_francky_verse",
              "bar_francky_shake", "bar_francky_remplit", "bar_francky_decore"] },
-  { id:"jojo", nom:"JOJO", x:0.76, sert:"jager",
+  { id:"jojo", nom:"JOJO", x:0.76, comptoir:0.610, sert:"jager",
     poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_serie" },
     /* quatre temps : il choisit, il dose, il verse, il superpose. Un peu
        plus court que Francky, et cette différence de RYTHME est en soi
@@ -8167,11 +8173,25 @@ const Tournee = {
 
   /* --------- montage --------- */
   monter(){
-    this.enChoix = true;
+    /* L'AFFICHE VIENT AVANT LE CHOIX. Posée après, elle interrompait le
+       joueur juste après qu'il avait décidé — le pire moment. Avant, elle
+       fait ce qu'une affiche doit faire : présenter le lieu, puis laisser
+       entrer. C'est l'ordre du niveau 4, et il n'y a pas de raison qu'il
+       diffère ici. */
+    this.introT = BAR_INTRO_DUREE;
+    this.enChoix = false;      /* le choix n'ouvre qu'après l'affiche */
     this.choixChamp = 0;
     this.champion = null;
     this.fini = null;
     this.actif = false;
+  },
+
+  /* L'affiche se passe d'une tape, mais pas trop vite : le même quart de
+     seconde que la ruelle, sinon un doigt encore posé de l'écran
+     précédent l'emporte sans qu'on l'ait vue. */
+  passerIntro(){
+    if (this.introT > 0.25){ this.introT = 0.25; return true; }
+    return false;
   },
 
   choisir(k){
@@ -8194,7 +8214,6 @@ const Tournee = {
     this.prochainClin = hasard(14, 26);
     this.bus = []; this.bourre = 0; this.deborde = false;
     this.clients = []; this.prochainClient = hasard(8, 14);
-    this.introT = BAR_INTRO_DUREE;
     this.composerFoule();
     this.flash = 0; this.boitTotal = 1; this.freinT = 0; this.dureeMarche = 0;
     this.tarte = null; this.esquiveOuverte = false;
@@ -8549,7 +8568,16 @@ const Tournee = {
     if (this.fini){ this.fini.t += dt; return; }
     /* L'affiche fige la soirée : rien ne bouge derrière, sinon le
        chronomètre tourne pendant qu'on regarde une image. */
-    if (this.introT > 0){ this.introT -= dt; return; }
+    if (this.introT > 0){
+      this.introT -= dt;
+      if (this.introT < 0) this.introT = 0;
+      return;
+    }
+    /* LE CHOIX EST UN ÉTAT DÉDUIT, pas un front. Ouvrir sur la fin de
+       l'affiche marchait tant qu'on passait par la décrémentation ; posé
+       à zéro autrement, le choix ne s'ouvrait jamais et le pupitre
+       s'affichait sur un niveau qu'on n'avait pas encore commencé. */
+    if (!this.actif && !this.fini) this.enChoix = true;
     if (this.enChoix || !this.actif) return;
     this.temps += dt;
     this.restant = Math.max(0, BAR_DUREE - this.temps);
@@ -8938,7 +8966,10 @@ const BarVue = {
       const sh = H * BAR_TAILLE_BARMAN * echellePerso(b.ref.id);
       const sl = sh * spr.naturalWidth / spr.naturalHeight;
       const x = this.ex(b.ref.x);
-      ctx.drawImage(spr, x - sl / 2, this.ey(BAR_COMPTOIR) - sh * 0.98, sl, sh);
+      /* SA ligne de comptoir, pas la moyenne : le plateau descend de
+         0,538 à 0,610 entre les deux postes. */
+      const plateau = b.ref.comptoir || BAR_COMPTOIR;
+      ctx.drawImage(spr, x - sl / 2, this.ey(plateau) - sh * 0.98, sl, sh);
       if (b.etat === "prepare"){
         /* petit indicateur au-dessus : quelque chose arrive */
         const p = borne(b.t / b.duree, 0, 1);
@@ -9849,7 +9880,11 @@ const GROGNE_DELAI = [1.1, 2.8];
 /* La réplique de combat : sa durée à l'écran, le repos avant la
    suivante, et la chance qu'elle sorte. Une phrase à chaque mort se lit
    deux fois puis ne se voit plus. */
-const MOT_DUREE = 1.9, MOT_REPOS = 7.0, MOT_CHANCE = 0.34;
+/* Une chance sur cinq et douze secondes de repos : à une sur trois et
+   sept secondes, une horde de dix morts en lâchait trois ou quatre et le
+   sel devenait du bavardage. Et `mot` est unique par construction — il
+   ne peut jamais y en avoir deux à l'écran. */
+const MOT_DUREE = 2.0, MOT_REPOS = 12.0, MOT_CHANCE = 0.20;
 
 /* LA BOUCHE DU CANON, POSE PAR POSE. Mesurée sur chaque sprite : le
    point le plus à droite de la moitié haute de la silhouette. Fractions
@@ -12735,7 +12770,7 @@ const Entrees = {
            trois secondes sans qu'on puisse rien y faire. */
         if (Tournee.introT > 0){
           e.preventDefault(); Sons.reveiller();
-          if (Tournee.introT > 0.30) Tournee.introT = 0.30;
+          Tournee.passerIntro();
           return;
         }
         if (Jeu.phase !== "jeu" || !Tournee.enChoix) return;
@@ -13175,6 +13210,7 @@ globalThis.DTOUR = {
   attenuation, PORTEE_MIN, PORTEE_PLEINE, PROJ_HAUTEUR, ANNONCE_CARTE_MIN, GROGNE_DELAI,
   CANONS, POSES_RUEL_TH, POSES_RUEL_PF,
   HEURES, PART_TYPES, PART_MAX, FLAQUES, MOT_DUREE,
+  BARMANS, BAR_COMPTOIR,
   ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, IA_REUSSITE, IA_CADENCE, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, RUELLE_DEGAT_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,

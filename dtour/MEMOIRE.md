@@ -1135,6 +1135,28 @@ au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
 
+### Une ligne de décor qui « a l'air » horizontale ne l'est pas forcément
+
+Le comptoir du bar était traité comme une constante : 0,555. Mesuré sur
+le fond par le plus fort gradient vertical, son arête est à 0,538 sous
+Francky et 0,610 sous Jojo. Sept centièmes de hauteur d'écran — assez
+pour qu'un barman flotte visiblement au-dessus de son plateau, et
+suffisamment peu pour qu'on cherche la cause ailleurs pendant trois
+séances.
+
+La règle : toute grandeur prise sur un décor se mesure LÀ OÙ ELLE SERT,
+pas une fois au milieu. Si deux personnages sont à deux endroits, il faut
+deux mesures.
+
+### Un état déduit vaut mieux qu'un front
+
+L'affiche du bar ouvrait le choix du champion à l'instant précis où son
+chrono passait à zéro. Posé à zéro autrement — par un test, par une
+reprise —, l'événement n'avait jamais lieu et le choix restait fermé pour
+toujours, pupitre affiché sur un niveau pas commencé. Écrire la condition
+comme un ÉTAT (« pas d'affiche en cours et pas encore lancé ») au lieu
+d'un front la rend vraie quel que soit le chemin.
+
 ### Changer de décor pour un plus sombre oblige à traiter les SPRITES
 
 Les décors de crépuscule et de nuit sont à 0,39 et 0,35 de la luminance
