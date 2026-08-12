@@ -399,7 +399,7 @@ const Jeu = {
          tension continue. Repli sur la boucle synthétisée si le fichier
          n'est pas chargé. */
       Sons.lancerMusiqueFichier("musique_ruelle");
-      Sons.volumeMusique(0.55);
+      Sons.volumeMusique(0.68);
       return;
     }
     if (this.niveau === 3){

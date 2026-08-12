@@ -251,6 +251,28 @@ const BLOCAGE_DUREE = 0.26;
    au contact, le second quand ils sont au fond. */
 const GROGNE_DELAI = [1.1, 2.8];
 
+/* LA BOUCHE DU CANON, POSE PAR POSE. Mesurée sur chaque sprite : le
+   point le plus à droite de la moitié haute de la silhouette. Fractions
+   de la largeur et de la hauteur du canevas, le sprite étant dessiné à
+   partir de (-larg/2, -haut*0,34).
+
+   À REMESURER à chaque nouvelle planche de héros — c'est une position
+   d'interface calée sur un dessin, elle est solidaire de ce dessin. */
+const CANONS = {
+  th: {
+    accroupi:[0.710, 0.424], arme1:[0.764, 0.367], arme2:[0.737, 0.332],
+    baisse:[0.701, 0.421],   debout:[0.834, 0.496], leve1:[0.562, 0.407],
+    leve2:[0.671, 0.393],    recul1:[0.825, 0.136], recul2:[0.725, 0.186],
+    tir:[0.964, 0.160],      vise1:[0.894, 0.153],  vise2:[0.906, 0.167],
+  },
+  pf: {
+    accroupi:[0.701, 0.451], arme1:[0.911, 0.240], arme2:[0.958, 0.093],
+    baisse:[0.729, 0.411],   fumee:[0.864, 0.128], leve1:[0.571, 0.492],
+    leve2:[0.601, 0.494],    recul1:[0.787, 0.192], recul2:[0.751, 0.342],
+    tir:[0.939, 0.140],      vise:[0.945, 0.126],
+  },
+};
+
 /* ---------------- le bestiaire ----------------
    Une entrée par méchant : le sous-titre de sa carte, et les deux
    répliques de son arrivée. Le sous-titre doit dire COMMENT LE JOUER en
@@ -398,7 +420,7 @@ const Ruelle = {
   ennemis:[], vague:0, aSortir:0, prochain:0,
   /* Qui a déjà été rencontré, pour ne montrer la carte qu'une fois. */
   vus:[], annonce:null, geantCle:null,
-  projectiles:[], impacts:[], blocages:[], grogneT:0,
+  projectiles:[], impacts:[], blocages:[], grogneT:0, grogneReste:0,
   /* Le relevé de fin. `tues` est indexé par TYPE et pas par nom
      affichable : le nom vit dans ENNEMIS, et le dupliquer ici aurait
      dérivé au premier renommage — c'est exactement ce qui est arrivé
@@ -699,6 +721,17 @@ const Ruelle = {
     const qui = piocher(vivants);
     const cle = this.cleEnnemi(qui);
     if (cle) Sons.grogne(cle);
+
+    /* EN RAFALE. Un éclat isolé toutes les deux secondes s'entend comme
+       un accident ; deux ou trois rapprochés s'entendent comme une bête
+       qui grogne. C'est le haché — et il ne coûte rien de plus, c'est le
+       même échantillon découpé ailleurs à chaque fois. */
+    if (this.grogneReste > 0){
+      this.grogneReste--;
+      this.grogneT = 0.10 + Math.random() * 0.12;
+      return;
+    }
+    this.grogneReste = Math.floor(Math.random() * 3);   /* 0, 1 ou 2 de plus */
     /* plus ils sont près, plus ça revient souvent */
     const proche = Math.max(...vivants.map(e => e.z));
     this.grogneT = melange(GROGNE_DELAI[1], GROGNE_DELAI[0], borne(proche, 0, 1))
@@ -1031,13 +1064,13 @@ const Ruelle = {
         /* elle éclate SUR les caisses : le bruit sans la douleur */
         if (this.bilan) this.bilan.bloquees++;
         this.secousse = Math.max(this.secousse, 0.35);
-        Sons.choc();
+        Sons.choc(pr.objet);
       } else {
         if (this.bilan) this.bilan.encaissees++;
         this.barricade = Math.max(0, this.barricade - pr.degat);
         this.secousse = Math.max(this.secousse, 0.9);
         this.hitStop = Math.max(this.hitStop, 0.05);
-        Sons.choc();
+        Sons.choc(pr.objet);
         if (this.barricade <= 0) this.terminer(false);
       }
     }
@@ -1584,13 +1617,16 @@ const RuelleVue = {
       const flash = Ruelle.flashes.find(f => f.heros === i);
       if (flash){
         const vie = borne(flash.t / flash.duree, 0, 1);
-        /* Position MESURÉE sur les sprites : le point le plus à droite
-           de la moitié haute, c'est la bouche du canon. 0,894 de la
-           largeur pour le revolver, 0,945 pour le fusil ; 0,153 et
-           0,126 de la hauteur depuis le sommet de la toile.
-           Le sprite est dessiné à partir de (-larg/2, -haut*0,34). */
-        const fx4 = h.id === "thibaut" ? 0.894 : 0.945;
-        const fy4 = h.id === "thibaut" ? 0.153 : 0.126;
+        /* La bouche du canon est mesurée POSE PAR POSE, pas une fois
+           pour toutes. Une seule position fixe collait tant que le héros
+           visait ; dès qu'il tirait puis reculait, l'arme partait en
+           arrière et la flamme restait devant — elle se retrouvait à
+           côté du personnage, du mauvais côté de sa main. Mesuré chez
+           Thibaut : 0,964 de la largeur en plein tir, 0,725 au deuxième
+           temps de recul, soit près d'un quart de sa largeur d'écart. */
+        const mesure = CANONS[h.id === "thibaut" ? "th" : "pf"][h.pose]
+                    || CANONS[h.id === "thibaut" ? "th" : "pf"].tir;
+        const fx4 = mesure[0], fy4 = mesure[1];
         const mx = -larg / 2 + larg * fx4;
         const my = -haut * 0.34 + haut * fy4;
         const r0 = haut * (h.id === "thibaut" ? 0.075 : 0.105) * (0.55 + vie * 0.45);

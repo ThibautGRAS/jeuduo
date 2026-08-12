@@ -772,7 +772,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.74</div>
+  <div id="version">CALLAGHAN v6.75</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -844,7 +844,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.74";
+const VERSION = "6.75";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1003,7 +1003,17 @@ const Sons = {
     this.ac = new C();
     this.maitre = this.ac.createGain();
     this.maitre.gain.value = this.actif ? 0.9 : 0;
-    this.maitre.connect(this.ac.destination);
+    /* UN LIMITEUR EN SORTIE. Les détonations sont montées à 1,55 et 1,60
+       pour qu'elles dominent — c'est ce qu'on veut d'un jeu de tir — mais
+       une somme de gains supérieurs à 1 sature en sortie, et une
+       saturation numérique s'entend comme un grésillement, pas comme de
+       la puissance. Le compresseur rattrape les crêtes sans qu'on ait à
+       brider chaque son. */
+    const lim = this.ac.createDynamicsCompressor();
+    lim.threshold.value = -6; lim.knee.value = 4;
+    lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.16;
+    this.maitre.connect(lim);
+    lim.connect(this.ac.destination);
   },
   reveiller(){ this.init(); if (this.ac && this.ac.state === "suspended") this.ac.resume(); },
   basculer(){
@@ -1129,6 +1139,11 @@ const Sons = {
        Elle est plus lourde que les effets (234 Ko contre 10) mais elle
        est chargée une fois et jouée en boucle. */
     "musique_ruelle",
+    /* Deux matières d'impact : le bois qui éclate quand un projectile
+       frappe la barricade ou qu'un pavé s'écrase, le verre quand c'est
+       une bouteille. La matière dit ce qui vient d'arriver mieux qu'un
+       message. */
+    "impact_bois", "impact_bouteille",
     "cri_depar", "cri_dsk", "cri_jubi", "cri_abbe", "cri_bruh",
   ],
 
@@ -1172,7 +1187,7 @@ const Sons = {
   },
 
   revolver(){
-    this.echant("tir_revolver", 0.85, () => {
+    this.echant("tir_revolver", 1.55, () => {
       /* sec, claquant, très haut à l'attaque : on doit sentir la précision */
       this.claque(0.16, 0.42, 7200, 220, 0.8);
       this.bip(150, 0.09, "sine", 0.30, 62);
@@ -1182,7 +1197,7 @@ const Sons = {
     this.echoRuelle(0.22, 0.075, 1400);
   },
   fusil(){
-    this.echant("tir_fusil", 0.85, () => {
+    this.echant("tir_fusil", 1.60, () => {
       /* plus grave, plus large, une queue plus longue */
       this.claque(0.24, 0.46, 4200, 130, 1.2);
       this.bip(104, 0.14, "sine", 0.34, 44);
@@ -1238,19 +1253,24 @@ const Sons = {
                            serait pire que le silence */
     const duree = 0.18 + Math.random() * 0.12;
     const de = Math.random() * Math.max(0, buf.duration - duree);
-    this.echant("cri_" + cle, 0.30, null,
+    this.echant("cri_" + cle, 0.46, null,
                 { de, duree, taux:0.92 + Math.random() * 0.22 });
   },
   criMort(cle){
-    this.echant("cri_" + cle, 1.0, () => {
+    this.echant("cri_" + cle, 0.55, () => {
       this.claque(0.26, 0.24, 800, 130, 1.6);
       this.bip(110 + Math.random() * 30, 0.34, "sawtooth", 0.14, 62);
     }, { taux:0.78 });
   },
-  /* La barricade encaisse : un choc de bois, grave et court. */
-  choc(){
-    this.claque(0.14, 0.30, 900, 110, 1.1);
-    this.bip(76, 0.16, "sine", 0.26, 40);
+  /* La barricade encaisse. `objet` dit la MATIÈRE : une bouteille éclate
+     en verre, un pavé et un encensoir font du bois. Sans échantillon, le
+     même choc synthétisé qu'avant pour tout le monde. */
+  choc(objet){
+    const verre = objet === "bouteille";
+    this.echant(verre ? "impact_bouteille" : "impact_bois", verre ? 0.85 : 0.9, () => {
+      this.claque(0.14, 0.30, 900, 110, 1.1);
+      this.bip(76, 0.16, "sine", 0.26, 40);
+    });
   },
 
   /* --- lit d'ambiance : rue + terrasse --- */
@@ -2301,7 +2321,7 @@ const Jeu = {
          tension continue. Repli sur la boucle synthétisée si le fichier
          n'est pas chargé. */
       Sons.lancerMusiqueFichier("musique_ruelle");
-      Sons.volumeMusique(0.55);
+      Sons.volumeMusique(0.68);
       return;
     }
     if (this.niveau === 3){
@@ -9777,6 +9797,28 @@ const BLOCAGE_DUREE = 0.26;
    au contact, le second quand ils sont au fond. */
 const GROGNE_DELAI = [1.1, 2.8];
 
+/* LA BOUCHE DU CANON, POSE PAR POSE. Mesurée sur chaque sprite : le
+   point le plus à droite de la moitié haute de la silhouette. Fractions
+   de la largeur et de la hauteur du canevas, le sprite étant dessiné à
+   partir de (-larg/2, -haut*0,34).
+
+   À REMESURER à chaque nouvelle planche de héros — c'est une position
+   d'interface calée sur un dessin, elle est solidaire de ce dessin. */
+const CANONS = {
+  th: {
+    accroupi:[0.710, 0.424], arme1:[0.764, 0.367], arme2:[0.737, 0.332],
+    baisse:[0.701, 0.421],   debout:[0.834, 0.496], leve1:[0.562, 0.407],
+    leve2:[0.671, 0.393],    recul1:[0.825, 0.136], recul2:[0.725, 0.186],
+    tir:[0.964, 0.160],      vise1:[0.894, 0.153],  vise2:[0.906, 0.167],
+  },
+  pf: {
+    accroupi:[0.701, 0.451], arme1:[0.911, 0.240], arme2:[0.958, 0.093],
+    baisse:[0.729, 0.411],   fumee:[0.864, 0.128], leve1:[0.571, 0.492],
+    leve2:[0.601, 0.494],    recul1:[0.787, 0.192], recul2:[0.751, 0.342],
+    tir:[0.939, 0.140],      vise:[0.945, 0.126],
+  },
+};
+
 /* ---------------- le bestiaire ----------------
    Une entrée par méchant : le sous-titre de sa carte, et les deux
    répliques de son arrivée. Le sous-titre doit dire COMMENT LE JOUER en
@@ -9924,7 +9966,7 @@ const Ruelle = {
   ennemis:[], vague:0, aSortir:0, prochain:0,
   /* Qui a déjà été rencontré, pour ne montrer la carte qu'une fois. */
   vus:[], annonce:null, geantCle:null,
-  projectiles:[], impacts:[], blocages:[], grogneT:0,
+  projectiles:[], impacts:[], blocages:[], grogneT:0, grogneReste:0,
   /* Le relevé de fin. `tues` est indexé par TYPE et pas par nom
      affichable : le nom vit dans ENNEMIS, et le dupliquer ici aurait
      dérivé au premier renommage — c'est exactement ce qui est arrivé
@@ -10225,6 +10267,17 @@ const Ruelle = {
     const qui = piocher(vivants);
     const cle = this.cleEnnemi(qui);
     if (cle) Sons.grogne(cle);
+
+    /* EN RAFALE. Un éclat isolé toutes les deux secondes s'entend comme
+       un accident ; deux ou trois rapprochés s'entendent comme une bête
+       qui grogne. C'est le haché — et il ne coûte rien de plus, c'est le
+       même échantillon découpé ailleurs à chaque fois. */
+    if (this.grogneReste > 0){
+      this.grogneReste--;
+      this.grogneT = 0.10 + Math.random() * 0.12;
+      return;
+    }
+    this.grogneReste = Math.floor(Math.random() * 3);   /* 0, 1 ou 2 de plus */
     /* plus ils sont près, plus ça revient souvent */
     const proche = Math.max(...vivants.map(e => e.z));
     this.grogneT = melange(GROGNE_DELAI[1], GROGNE_DELAI[0], borne(proche, 0, 1))
@@ -10557,13 +10610,13 @@ const Ruelle = {
         /* elle éclate SUR les caisses : le bruit sans la douleur */
         if (this.bilan) this.bilan.bloquees++;
         this.secousse = Math.max(this.secousse, 0.35);
-        Sons.choc();
+        Sons.choc(pr.objet);
       } else {
         if (this.bilan) this.bilan.encaissees++;
         this.barricade = Math.max(0, this.barricade - pr.degat);
         this.secousse = Math.max(this.secousse, 0.9);
         this.hitStop = Math.max(this.hitStop, 0.05);
-        Sons.choc();
+        Sons.choc(pr.objet);
         if (this.barricade <= 0) this.terminer(false);
       }
     }
@@ -11110,13 +11163,16 @@ const RuelleVue = {
       const flash = Ruelle.flashes.find(f => f.heros === i);
       if (flash){
         const vie = borne(flash.t / flash.duree, 0, 1);
-        /* Position MESURÉE sur les sprites : le point le plus à droite
-           de la moitié haute, c'est la bouche du canon. 0,894 de la
-           largeur pour le revolver, 0,945 pour le fusil ; 0,153 et
-           0,126 de la hauteur depuis le sommet de la toile.
-           Le sprite est dessiné à partir de (-larg/2, -haut*0,34). */
-        const fx4 = h.id === "thibaut" ? 0.894 : 0.945;
-        const fy4 = h.id === "thibaut" ? 0.153 : 0.126;
+        /* La bouche du canon est mesurée POSE PAR POSE, pas une fois
+           pour toutes. Une seule position fixe collait tant que le héros
+           visait ; dès qu'il tirait puis reculait, l'arme partait en
+           arrière et la flamme restait devant — elle se retrouvait à
+           côté du personnage, du mauvais côté de sa main. Mesuré chez
+           Thibaut : 0,964 de la largeur en plein tir, 0,725 au deuxième
+           temps de recul, soit près d'un quart de sa largeur d'écart. */
+        const mesure = CANONS[h.id === "thibaut" ? "th" : "pf"][h.pose]
+                    || CANONS[h.id === "thibaut" ? "th" : "pf"].tir;
+        const fx4 = mesure[0], fy4 = mesure[1];
         const mx = -larg / 2 + larg * fx4;
         const my = -haut * 0.34 + haut * fy4;
         const r0 = haut * (h.id === "thibaut" ? 0.075 : 0.105) * (0.55 + vie * 0.45);
@@ -12661,6 +12717,7 @@ globalThis.DTOUR = {
   Perspective, courbeZ, POSES_ENNEMI, POSES_PROPRES, POSES_BASE_MANQUANTES,
   REPLI_POSE, ENNEMIS_INCOMPLETS, BESTIAIRE, ANNONCE_CARTE, ANNONCE_MOT, ENNEMIS_INCOMPLETS,
   attenuation, PORTEE_MIN, PORTEE_PLEINE, PROJ_HAUTEUR, ANNONCE_CARTE_MIN, GROGNE_DELAI,
+  CANONS, POSES_RUEL_TH, POSES_RUEL_PF,
   ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, IA_REUSSITE, IA_CADENCE, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, RUELLE_DEGAT_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,

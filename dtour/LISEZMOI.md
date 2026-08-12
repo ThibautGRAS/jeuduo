@@ -283,6 +283,34 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**La flamme suit le canon, et le son prend du muscle** (v6.75).
+
+**LA FLAMME DE BOUCHE ÉTAIT POSÉE À UNE POSITION FIXE** alors que le
+canon bouge. Ça tenait tant que le héros visait ; dès qu'il tirait puis
+reculait, l'arme partait en arrière et la flamme restait devant — à côté
+du personnage, du mauvais côté de sa main. Mesuré chez Thibaut :
+**0,964 de sa largeur en plein tir contre 0,725 au deuxième temps de
+recul**, près d'un quart d'écart. La bouche est maintenant mesurée
+**pose par pose**, pour les vingt-trois poses des deux héros, et un test
+vérifie qu'aucune pose jouée ne manque à la table.
+
+**Les impacts ont une matière** : le verre quand une bouteille éclate, le
+bois quand un pavé ou un encensoir s'écrase. La matière dit ce qui vient
+d'arriver mieux qu'un message.
+
+**Les volumes sont revus** : détonations montées à 1,55 et 1,60 pour
+qu'elles dominent, musique de 0,55 à 0,68, cri de mort **baissé** de 1,0
+à 0,55 — il écrasait les grognements des vivants — et grognement remonté
+de 0,30 à 0,46.
+
+Un **limiteur** protège la sortie : des gains au-dessus de 1 saturent, et
+une saturation numérique s'entend comme un grésillement, pas comme de la
+puissance.
+
+**Les grognements partent en rafale** : un éclat isolé toutes les deux
+secondes s'entend comme un accident, deux ou trois rapprochés s'entendent
+comme une bête. Même échantillon, découpé ailleurs à chaque fois.
+
 **Les bombardiers se postent, et les monstres grognent** (v6.74).
 
 **BruHell ne lançait effectivement jamais.** Sa fenêtre de jet ne dure

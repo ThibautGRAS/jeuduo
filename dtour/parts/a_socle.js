@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.74";
+const VERSION = "6.75";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -177,7 +177,17 @@ const Sons = {
     this.ac = new C();
     this.maitre = this.ac.createGain();
     this.maitre.gain.value = this.actif ? 0.9 : 0;
-    this.maitre.connect(this.ac.destination);
+    /* UN LIMITEUR EN SORTIE. Les détonations sont montées à 1,55 et 1,60
+       pour qu'elles dominent — c'est ce qu'on veut d'un jeu de tir — mais
+       une somme de gains supérieurs à 1 sature en sortie, et une
+       saturation numérique s'entend comme un grésillement, pas comme de
+       la puissance. Le compresseur rattrape les crêtes sans qu'on ait à
+       brider chaque son. */
+    const lim = this.ac.createDynamicsCompressor();
+    lim.threshold.value = -6; lim.knee.value = 4;
+    lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.16;
+    this.maitre.connect(lim);
+    lim.connect(this.ac.destination);
   },
   reveiller(){ this.init(); if (this.ac && this.ac.state === "suspended") this.ac.resume(); },
   basculer(){
@@ -303,6 +313,11 @@ const Sons = {
        Elle est plus lourde que les effets (234 Ko contre 10) mais elle
        est chargée une fois et jouée en boucle. */
     "musique_ruelle",
+    /* Deux matières d'impact : le bois qui éclate quand un projectile
+       frappe la barricade ou qu'un pavé s'écrase, le verre quand c'est
+       une bouteille. La matière dit ce qui vient d'arriver mieux qu'un
+       message. */
+    "impact_bois", "impact_bouteille",
     "cri_depar", "cri_dsk", "cri_jubi", "cri_abbe", "cri_bruh",
   ],
 
@@ -346,7 +361,7 @@ const Sons = {
   },
 
   revolver(){
-    this.echant("tir_revolver", 0.85, () => {
+    this.echant("tir_revolver", 1.55, () => {
       /* sec, claquant, très haut à l'attaque : on doit sentir la précision */
       this.claque(0.16, 0.42, 7200, 220, 0.8);
       this.bip(150, 0.09, "sine", 0.30, 62);
@@ -356,7 +371,7 @@ const Sons = {
     this.echoRuelle(0.22, 0.075, 1400);
   },
   fusil(){
-    this.echant("tir_fusil", 0.85, () => {
+    this.echant("tir_fusil", 1.60, () => {
       /* plus grave, plus large, une queue plus longue */
       this.claque(0.24, 0.46, 4200, 130, 1.2);
       this.bip(104, 0.14, "sine", 0.34, 44);
@@ -412,19 +427,24 @@ const Sons = {
                            serait pire que le silence */
     const duree = 0.18 + Math.random() * 0.12;
     const de = Math.random() * Math.max(0, buf.duration - duree);
-    this.echant("cri_" + cle, 0.30, null,
+    this.echant("cri_" + cle, 0.46, null,
                 { de, duree, taux:0.92 + Math.random() * 0.22 });
   },
   criMort(cle){
-    this.echant("cri_" + cle, 1.0, () => {
+    this.echant("cri_" + cle, 0.55, () => {
       this.claque(0.26, 0.24, 800, 130, 1.6);
       this.bip(110 + Math.random() * 30, 0.34, "sawtooth", 0.14, 62);
     }, { taux:0.78 });
   },
-  /* La barricade encaisse : un choc de bois, grave et court. */
-  choc(){
-    this.claque(0.14, 0.30, 900, 110, 1.1);
-    this.bip(76, 0.16, "sine", 0.26, 40);
+  /* La barricade encaisse. `objet` dit la MATIÈRE : une bouteille éclate
+     en verre, un pavé et un encensoir font du bois. Sans échantillon, le
+     même choc synthétisé qu'avant pour tout le monde. */
+  choc(objet){
+    const verre = objet === "bouteille";
+    this.echant(verre ? "impact_bouteille" : "impact_bois", verre ? 0.85 : 0.9, () => {
+      this.claque(0.14, 0.30, 900, 110, 1.1);
+      this.bip(76, 0.16, "sine", 0.26, 40);
+    });
   },
 
   /* --- lit d'ambiance : rue + terrasse --- */

@@ -3032,6 +3032,48 @@ if (D){
       return m && g && parseFloat(m[1]) < parseFloat(g[1]) && parseFloat(m[1]) < 0.9;
     })());
 
+  verifier("les détonations dominent, la mort ne couvre pas les grognements",
+    (() => {
+      /* Réglage demandé : les armes fort, le cri de mort baissé — il
+         écrasait les grognements des vivants — et le grognement remonté. */
+      const vol = (motif) => {
+        const m = source.match(motif);
+        return m ? parseFloat(m[1]) : -1;
+      };
+      const tirR = vol(/echant\("tir_revolver", ([\d.]+)/);
+      const tirF = vol(/echant\("tir_fusil", ([\d.]+)/);
+      const mort = vol(/criMort\(cle\)\{[\s\S]{0,200}?echant\("cri_" \+ cle, ([\d.]+)/);
+      const grog = vol(/grogne\(cle\)\{[\s\S]{0,600}?echant\("cri_" \+ cle, ([\d.]+)/);
+      messageDetail = `tirs ${tirR}/${tirF}, mort ${mort}, grognement ${grog}`;
+      return tirR > 1.3 && tirF > 1.3 && mort < 0.7 && grog > 0.35 && mort > grog;
+    })());
+
+  verifier("un limiteur protège la sortie",
+    (() => {
+      /* Des gains au-dessus de 1 saturent en sortie, et une saturation
+         numérique s'entend comme un grésillement, pas comme de la
+         puissance. */
+      return /createDynamicsCompressor/.test(source) &&
+        /this\.maitre\.connect\(lim\)/.test(source) &&
+        /lim\.connect\(this\.ac\.destination\)/.test(source);
+    })());
+
+  verifier("l'impact a la MATIÈRE de ce qui frappe",
+    (() => {
+      /* Une bouteille éclate en verre, un pavé et un encensoir font du
+         bois. La matière dit ce qui vient d'arriver mieux qu'un
+         message. */
+      const objets = Object.keys(D.ENNEMIS)
+        .filter(k => D.ENNEMIS[k].jet).map(k => D.ENNEMIS[k].jet.objet);
+      return /choc\(objet\)\{/.test(source) &&
+        /objet === "bouteille"/.test(source) &&
+        /Sons\.choc\(pr\.objet\)/.test(source) &&
+        objets.indexOf("bouteille") >= 0 &&
+        ["impact_bois", "impact_bouteille"].every(
+          n => D.Sons.ECHANTILLONS.indexOf(n) >= 0 &&
+               fs.existsSync(path.join(RACINE, "son", n + ".ogg")));
+    })());
+
   verifier("chaque méchant a son cri",
     (() => {
       return Object.keys(D.ENNEMIS).every(k =>
@@ -3071,9 +3113,44 @@ if (D){
       return po !== "arme2" && po !== "vise1" && po !== "vise";
     })());
   verifier("la flamme de bouche est peinte, pas prise dans la planche",
-    /const fx4 = h\.id === "thibaut" \? 0\.894 : 0\.945/.test(source) &&
+    /const mesure = CANONS\[/.test(source) &&
     /Ruelle\.flashes\.find\(f => f\.heros === i\)/.test(source),
     "celle de PF partait à l'autre bout de l'écran une fois retourné");
+
+  verifier("la bouche du canon est mesurée POSE PAR POSE",
+    (() => {
+      /* Une position fixe collait tant que le héros visait ; dès qu'il
+         tirait puis reculait, l'arme partait en arrière et la flamme
+         restait devant — à côté du personnage, du mauvais côté de sa
+         main. Mesuré chez Thibaut : 0,964 en plein tir contre 0,725 au
+         deuxième temps de recul, près d'un quart de sa largeur. */
+      const th = D.CANONS.th, pf = D.CANONS.pf;
+      const ecart = o => Math.max(...Object.values(o).map(v => v[0]))
+                       - Math.min(...Object.values(o).map(v => v[0]));
+      messageDetail = "écart th " + ecart(th).toFixed(2) + ", pf " + ecart(pf).toFixed(2);
+      /* toutes les poses jouées doivent y être, sinon la flamme retombe
+         sur celle du tir et se décale */
+      const manque = [];
+      for (const [cle, poses] of [["th", D.POSES_RUEL_TH], ["pf", D.POSES_RUEL_PF]])
+        for (const po of poses)
+          if (!D.CANONS[cle][po]) manque.push(cle + "_" + po);
+      return manque.length === 0 && ecart(th) > 0.15;
+    })());
+
+  verifier("chaque héros a son côté, et il ne change pas",
+    (() => {
+      /* Thibaut est TOUJOURS à l'index 0 et PF à l'index 1, et c'est
+         l'index qui décide du miroir. Si l'ordre pouvait changer, le
+         miroir et la position du canon se contrediraient — une flamme
+         du mauvais côté. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
+      const avant = D.Ruelle.heros.map(h => h.id).join(",");
+      D.Ruelle.changerHeros();
+      D.Ruelle.changerHeros();
+      return avant === "thibaut,pf" &&
+        D.Ruelle.heros.map(h => h.id).join(",") === avant &&
+        /if \(i === 1\) ctx\.scale\(-1, 1\)/.test(source);
+    })());
 
   verifier("l'équipier couvre sans qu'on change de personnage",
     (() => {

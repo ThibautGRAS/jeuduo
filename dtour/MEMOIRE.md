@@ -1135,6 +1135,29 @@ au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
 
+### Une position calée sur un sprite doit suivre la POSE, pas le personnage
+
+La flamme de bouche était mesurée une fois par héros. Elle collait tant
+qu'il visait, et se détachait dès qu'il tirait : le canon recule, la
+flamme restait devant. Mesuré chez Thibaut, la bouche va de 0,964 de sa
+largeur en plein tir à 0,725 au deuxième temps de recul — un quart de sa
+largeur.
+
+La règle générale, troisième formulation sur ce projet : **une position
+d'interface calée sur un dessin est solidaire de CE dessin** — donc de la
+pose, pas seulement du personnage. Quand un personnage a vingt-trois
+poses, il faut vingt-trois mesures, et un test qui vérifie qu'aucune pose
+jouée ne manque à la table. Sans ce test, ajouter une pose plus tard
+ferait retomber la flamme sur celle du tir sans erreur visible.
+
+### Monter un son au-dessus de 1 demande un limiteur, pas du courage
+
+Les détonations devaient dominer. Passer leur gain de 0,85 à 1,55 sature
+la sortie dès que deux sons se superposent, et une saturation numérique
+s'entend comme un grésillement — l'inverse de la puissance recherchée. Un
+compresseur en fin de chaîne rattrape les crêtes et permet de régler
+chaque son pour son RÔLE plutôt que pour éviter le plafond.
+
 ### Une fenêtre d'action ne vaut rien si rien n'arrête celui qui la traverse
 
 BruHell ne lançait jamais son cocktail. Le réflexe aurait été de raccourcir
