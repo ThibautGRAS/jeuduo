@@ -606,7 +606,7 @@ const Ruelle = {
     if (this.iaT > 0) return;
     this.iaT = IA_CADENCE;
     if (lui.balles <= 0){
-      lui.recharge = ARMES[lui.arme].recharge; Sons.recharge(lui.arme !== "revolver"); return;
+      lui.recharge = ARMES[lui.arme].recharge; Sons.recharge(lui.arme); return;
     }
     lui.balles--; lui.repos = 0.22;
     this.flashes.push({ t:0.13, duree:0.13, heros:1 - this.actifIdx });
@@ -1046,7 +1046,7 @@ Ruelle.tirer = function(fx, fy){
   if (h.recharge > 0 || h.repos > 0) return false;
   if (h.balles <= 0){
     /* le clic à vide, puis le rechargement : on l'entend avant de le lire */
-    h.recharge = arme.recharge; Sons.aVide(); Sons.recharge(h.arme !== "revolver");
+    h.recharge = arme.recharge; Sons.aVide(); Sons.recharge(h.arme);
     return false;
   }
   h.balles--; h.repos = 1 / arme.cadence;
@@ -1054,7 +1054,7 @@ Ruelle.tirer = function(fx, fy){
      à la silhouette, et le joueur qui la vise ne veut pas toucher le
      torse par accident. */
   const annule = this.tirerCibleBras(fx, fy);
-  if (h.balles <= 0){ h.recharge = arme.recharge; Sons.recharge(h.arme !== "revolver"); }
+  if (h.balles <= 0){ h.recharge = arme.recharge; Sons.recharge(h.arme); }
   this.secousse = Math.max(this.secousse, arme.secousse * 0.35);
   this.flashes.push({ t:0.13, duree:0.13, heros:this.actifIdx });
   if (h.arme === "revolver") Sons.revolver(); else Sons.fusil();

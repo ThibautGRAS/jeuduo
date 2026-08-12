@@ -1135,6 +1135,29 @@ au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
 
+### La crête d'un encodage se vérifie sur le FICHIER LIVRÉ, en bouclant
+
+Troisième rencontre avec ce piège, et cette fois il est réglé pour de
+bon. Le dépassement du Vorbis dépend du CONTENU : mesuré de 1,47 à 1,72
+fois sur un enregistrement de pistolet déjà saturé à la source, contre
+1,16 sur de la synthèse. Aucune marge fixe ne convient aux deux.
+
+La parade est une boucle : encoder, décoder le fichier écrit, mesurer,
+baisser le gain, recommencer. Six essais suffisent et bornent le coût.
+C'est le même principe que le contrôle visuel avant push — on vérifie
+l'artefact livré, pas l'intention.
+
+### Un échantillon ne doit pas dépasser le geste qu'il accompagne
+
+Le rechargement du pistolet fourni dure 1,68 s de son utile, le geste en
+jeu 1,5 s. Tronquer emportait le troisième des trois claquements en plein
+milieu : un rechargement qui s'arrête au deuxième temps ne se lit plus
+comme un rechargement. On ACCÉLÈRE donc pour faire tenir.
+
+Le test lit la durée réelle dans le conteneur OGG — la dernière page
+porte la position de granule, donc le nombre d'échantillons. Estimer
+d'après le poids du fichier ne marche pas : le débit est variable.
+
 ### Un son fréquent doit FATIGUER moins, pas sonner mieux
 
 L'échantillon d'impact sur un corps a été retiré au profit de la

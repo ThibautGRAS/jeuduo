@@ -1,6 +1,6 @@
 # son/ — les échantillons du jeu
 
-Huit fichiers OGG mono, 45 Ko au total.
+Neuf fichiers OGG mono, 65 Ko au total.
 
 ## Remplacer un son
 
@@ -12,7 +12,8 @@ Huit fichiers OGG mono, 45 Ko au total.
 |---|---|
 | `tir_revolver.ogg` | Thibaut tire |
 | `tir_fusil.ogg` | Pierre-François tire |
-| `recharge.ogg` | rechargement, les deux armes |
+| `recharge_revolver.ogg` | Thibaut recharge (1,5 s) |
+| `recharge_fusil.ogg` | Pierre-François recharge (2,0 s) |
 | `cri_depar.ogg` | Depardiahree tombe |
 | `cri_dsk.ogg` | DSKKK tombe |
 | `cri_jubi.ogg` | Jubilar tombe |
@@ -44,7 +45,26 @@ Les instants retenus et la transformation de chacun sont écrits dans
 CC-BY et CC-BY-NC ; si celui-ci demande une attribution, elle doit
 figurer quelque part dans le jeu ou le dépôt.
 
-## Les détonations et le rechargement
+## Les rechargements viennent d'enregistrements
+
+Fournis, puis préparés par `python3 dtour/recharges.py dtour/son`. Quatre
+choses sont faites, et chacune répare un défaut mesuré :
+
+- **Ils tiennent dans la durée du geste** — 1,5 s au revolver, 2,0 s au
+  fusil. Un échantillon plus long claque encore alors que le héros tire
+  déjà. Le pistolet est un geste en TROIS claquements étalés sur 1,68 s :
+  il est ACCÉLÉRÉ de 13 % pour que les trois y soient, pas tronqué.
+- **Le vide est coupé** : le fichier pistolet ne commençait qu'à 0,14 s.
+- **Ils sont mis au même niveau** que les détonations : le fusil sortait
+  quatre fois plus faible que le pistolet.
+- **La crête est vérifiée SUR LE FICHIER LIVRÉ**, en bouclant. Le
+  dépassement du Vorbis dépend du contenu : mesuré de 1,47 à 1,72 fois
+  sur ce pistolet déjà saturé à la source. Deviner une marge ne marche
+  pas.
+
+Les sources ne sont pas versionnées (`.gitignore`).
+
+## Les détonations
 
 Une **synthèse hors ligne** (`python3 dtour/sons.py dtour/son`), plus
 riche que ce que le WebAudio produit en temps réel — on peut empiler

@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.71";
+const VERSION = "6.72";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -294,7 +294,11 @@ const Sons = {
   /* Les noms de fichiers attendus dans `son/`. Déposer un .ogg à ce nom
      suffit à remplacer le son : aucune ligne de code à toucher. */
   ECHANTILLONS:[
-    "tir_revolver", "tir_fusil", "recharge",
+    "tir_revolver", "tir_fusil",
+    /* Un rechargement PAR ARME : le barillet d'un revolver et la culasse
+       d'un fusil ne font pas le même bruit, et c'est un des rares moments
+       où le joueur sait quelle arme il tient sans regarder. */
+    "recharge_revolver", "recharge_fusil",
     "cri_depar", "cri_dsk", "cri_jubi", "cri_abbe", "cri_bruh",
   ],
 
@@ -352,8 +356,12 @@ const Sons = {
 
   /* Rechargement : le barillet claque, puis la fermeture. Deux temps,
      parce qu'un rechargement est un geste en deux temps. */
-  recharge(long){
-    if (this.echant("recharge", 0.8, null)) return;
+  /* `arme` est la clé de l'arme ("revolver" ou "fusil"). L'ancien
+     paramètre était un booléen « c'est le long » : il disait la DURÉE du
+     geste, pas l'arme, et ne permettait donc pas de choisir le son. */
+  recharge(arme){
+    const long = arme !== "revolver";
+    if (this.echant("recharge_" + (long ? "fusil" : "revolver"), 0.9, null)) return;
     this.claque(0.05, 0.16, 2600, 700, 2.0);
     const ac = this.ac; if (!ac) return;
     const self = this;

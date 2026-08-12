@@ -772,7 +772,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.71</div>
+  <div id="version">CALLAGHAN v6.72</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -844,7 +844,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.71";
+const VERSION = "6.72";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1120,7 +1120,11 @@ const Sons = {
   /* Les noms de fichiers attendus dans `son/`. Déposer un .ogg à ce nom
      suffit à remplacer le son : aucune ligne de code à toucher. */
   ECHANTILLONS:[
-    "tir_revolver", "tir_fusil", "recharge",
+    "tir_revolver", "tir_fusil",
+    /* Un rechargement PAR ARME : le barillet d'un revolver et la culasse
+       d'un fusil ne font pas le même bruit, et c'est un des rares moments
+       où le joueur sait quelle arme il tient sans regarder. */
+    "recharge_revolver", "recharge_fusil",
     "cri_depar", "cri_dsk", "cri_jubi", "cri_abbe", "cri_bruh",
   ],
 
@@ -1178,8 +1182,12 @@ const Sons = {
 
   /* Rechargement : le barillet claque, puis la fermeture. Deux temps,
      parce qu'un rechargement est un geste en deux temps. */
-  recharge(long){
-    if (this.echant("recharge", 0.8, null)) return;
+  /* `arme` est la clé de l'arme ("revolver" ou "fusil"). L'ancien
+     paramètre était un booléen « c'est le long » : il disait la DURÉE du
+     geste, pas l'arme, et ne permettait donc pas de choisir le son. */
+  recharge(arme){
+    const long = arme !== "revolver";
+    if (this.echant("recharge_" + (long ? "fusil" : "revolver"), 0.9, null)) return;
     this.claque(0.05, 0.16, 2600, 700, 2.0);
     const ac = this.ac; if (!ac) return;
     const self = this;
@@ -10053,7 +10061,7 @@ const Ruelle = {
     if (this.iaT > 0) return;
     this.iaT = IA_CADENCE;
     if (lui.balles <= 0){
-      lui.recharge = ARMES[lui.arme].recharge; Sons.recharge(lui.arme !== "revolver"); return;
+      lui.recharge = ARMES[lui.arme].recharge; Sons.recharge(lui.arme); return;
     }
     lui.balles--; lui.repos = 0.22;
     this.flashes.push({ t:0.13, duree:0.13, heros:1 - this.actifIdx });
@@ -10493,7 +10501,7 @@ Ruelle.tirer = function(fx, fy){
   if (h.recharge > 0 || h.repos > 0) return false;
   if (h.balles <= 0){
     /* le clic à vide, puis le rechargement : on l'entend avant de le lire */
-    h.recharge = arme.recharge; Sons.aVide(); Sons.recharge(h.arme !== "revolver");
+    h.recharge = arme.recharge; Sons.aVide(); Sons.recharge(h.arme);
     return false;
   }
   h.balles--; h.repos = 1 / arme.cadence;
@@ -10501,7 +10509,7 @@ Ruelle.tirer = function(fx, fy){
      à la silhouette, et le joueur qui la vise ne veut pas toucher le
      torse par accident. */
   const annule = this.tirerCibleBras(fx, fy);
-  if (h.balles <= 0){ h.recharge = arme.recharge; Sons.recharge(h.arme !== "revolver"); }
+  if (h.balles <= 0){ h.recharge = arme.recharge; Sons.recharge(h.arme); }
   this.secousse = Math.max(this.secousse, arme.secousse * 0.35);
   this.flashes.push({ t:0.13, duree:0.13, heros:this.actifIdx });
   if (h.arme === "revolver") Sons.revolver(); else Sons.fusil();

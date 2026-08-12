@@ -1,3 +1,4 @@
-# Le source des cris : 4,9 Mo que le jeu ne charge jamais.
-# Voir son/LISEZMOI.md pour le refabriquer.
+# Les sources des échantillons : lourdes, et le jeu ne les charge
+# jamais. Voir son/LISEZMOI.md pour refabriquer.
 son/*.wav
+son/*.mp3

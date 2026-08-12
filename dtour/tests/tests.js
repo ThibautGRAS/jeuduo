@@ -2784,8 +2784,58 @@ if (D){
     })());
   verifier("le tir à vide et le rechargement s'entendent",
     /Sons\.aVide\(\); Sons\.recharge/.test(source) &&
-    /recharge\(long\)\{[\s\S]{0,400}?setTimeout/.test(source),
-    "un rechargement est un geste en deux temps");
+    /recharge\(arme\)\{[\s\S]{0,500}?setTimeout/.test(source),
+    "le repli synthétisé reste un geste en deux temps");
+
+  verifier("chaque arme a SON rechargement",
+    (() => {
+      /* Le barillet d'un revolver et la culasse d'un fusil ne font pas le
+         même bruit — et c'est un des rares moments où le joueur sait
+         quelle arme il tient sans regarder. L'ancien paramètre était un
+         booléen « c'est le long » : il disait la DURÉE du geste, pas
+         l'arme, donc ne permettait pas de choisir le son. */
+      const noms = Object.keys(D.ARMES).map(k => "recharge_" + k);
+      const manquants = noms.filter(
+        n => D.Sons.ECHANTILLONS.indexOf(n) < 0 ||
+             !fs.existsSync(path.join(RACINE, "son", n + ".ogg")));
+      messageDetail = manquants.length ? manquants.join(", ") : "";
+      return manquants.length === 0 && /Sons\.recharge\(h\.arme\)/.test(source);
+    })());
+
+  /* La durée RÉELLE d'un OGG, lue dans son conteneur : la dernière page
+     Ogg porte la position de granule finale, c'est-à-dire le nombre
+     d'échantillons. Divisé par la fréquence, c'est la durée. Estimer
+     d'après le poids du fichier ne marche pas — le débit est variable et
+     les en-têtes pèsent. */
+  const dureeOgg = chemin => {
+    const b2 = fs.readFileSync(chemin);
+    let granule = 0, taux = 0;
+    for (let i = 0; i + 27 < b2.length; i++){
+      if (b2[i] !== 0x4F || b2[i+1] !== 0x67 || b2[i+2] !== 0x67 || b2[i+3] !== 0x53) continue;
+      granule = Number(b2.readBigUInt64LE(i + 6));
+      /* l'en-tête d'identification Vorbis porte la fréquence */
+      const seg = b2[i + 26];
+      const corps = i + 27 + seg;
+      if (!taux && b2.slice(corps + 1, corps + 7).toString("latin1") === "vorbis"){
+        taux = b2.readUInt32LE(corps + 12);
+      }
+    }
+    return taux ? granule / taux : 0;
+  };
+
+  verifier("un rechargement ne dure pas plus que le geste",
+    (() => {
+      /* Un échantillon plus long continue de claquer alors que le héros
+         tire déjà : le son ment sur l'état du jeu. */
+      const trop = Object.keys(D.ARMES).filter(k => {
+        const d = dureeOgg(path.join(RACINE, "son", "recharge_" + k + ".ogg"));
+        return d === 0 || d > D.ARMES[k].recharge + 0.05;
+      });
+      messageDetail = Object.keys(D.ARMES).map(k =>
+        k + " " + dureeOgg(path.join(RACINE, "son", "recharge_" + k + ".ogg")).toFixed(2)
+        + "s / " + D.ARMES[k].recharge + "s").join(", ");
+      return trop.length === 0;
+    })());
   verifier("le headshot sonne autrement",
     /impact\(tete\)\{[\s\S]{0,400}?if \(tete\)/.test(source) &&
     /Sons\.impact\(cible\.zone === "tete"\)/.test(source));

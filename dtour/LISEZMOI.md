@@ -283,6 +283,24 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Chaque arme a son rechargement** (v6.72) : deux enregistrements
+remplacent le son unique. Le barillet d'un revolver et la culasse d'un
+fusil ne font pas le même bruit — et c'est un des rares moments où le
+joueur sait quelle arme il tient sans regarder.
+
+L'ancien paramètre disait la DURÉE du geste (« c'est le long ») et non
+l'arme : il ne permettait donc pas de choisir le son. Il porte maintenant
+la clé de l'arme.
+
+**Le pistolet est ACCÉLÉRÉ, pas tronqué.** C'est un geste en trois
+claquements étalés sur 1,68 s, alors que le rechargement dure 1,5 s :
+couper emportait le troisième en plein milieu, et un rechargement qui
+s'arrête au deuxième temps ne se lit plus comme un rechargement. Accéléré
+de 13 %, les trois y sont — vérifié, ils tombent à 0,05, 0,65 et 1,40 s.
+
+Et un test lit la **durée réelle** dans l'en-tête OGG pour vérifier
+qu'aucun échantillon ne dépasse le geste qu'il accompagne.
+
 **Les méchants grognent** (v6.71) : les cinq cris sont découpés dans un
 enregistrement de grognements de chien, plus la synthèse qui sonnait
 comme un jouet.
