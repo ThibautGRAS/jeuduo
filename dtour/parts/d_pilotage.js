@@ -547,7 +547,12 @@ const Interface = {
     const L = globalThis.innerWidth || 1, H = globalThis.innerHeight || 1;
     /* Sur l'écran titre on exige le paysage : c'est là qu'on choisit son
        niveau, et les tuiles se partagent la largeur. */
-    const niv = Jeu.phase === "titre" ? 0 : Jeu.niveau;
+    /* Tout ce qui n'est pas une partie EN COURS compte comme le menu :
+       au tout premier chargement la phase n'est pas encore « titre », et
+       le jeu réclamait le paysage une seconde avant de réclamer le
+       portrait. Deux demandes contradictoires à la suite. */
+    const enJeu = Jeu.phase === "jeu" || Jeu.phase === "fin";
+    const niv = enJeu ? Jeu.niveau : 0;
     const veutPortrait = orientationVoulue(niv) === "portrait";
     const bloque = !ecranOk(L, H, niv);
     if (E.pivot) E.pivot.classList.toggle("on", bloque);

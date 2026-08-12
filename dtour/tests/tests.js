@@ -2624,6 +2624,17 @@ if (D){
   verifier("le panneau de pivot dit dans quel sens tourner",
     /veutPortrait \? "Rétrécis la fenêtre" : "Élargis la fenêtre"/.test(source) &&
     /La ruelle se joue debout/.test(source));
+  verifier("au chargement, le jeu ne réclame pas deux sens de suite",
+    /const enJeu = Jeu\.phase === "jeu" \|\| Jeu\.phase === "fin"/.test(source),
+    "avant, il demandait le paysage puis le portrait");
+  verifier("debout, le menu cache le logo et la légende des touches",
+    /#titre #logo\{display:none\}/.test(html) &&
+    /#titre #legende\{display:none\}/.test(html),
+    "le logo répète l'enseigne, et les touches n'existent pas sur un téléphone");
+  verifier("et l'enseigne se cale sur la largeur",
+    /#titreEnseigne b\{font-size:min\(13vw/.test(html),
+    "elle débordait des deux côtés");
+
   verifier("le menu se tient debout, les niveaux 1 à 3 couchés",
     D.orientationVoulue(0) === "portrait" &&
     D.ecranOk(390, 844, 0) && !D.ecranOk(844, 390, 0) &&

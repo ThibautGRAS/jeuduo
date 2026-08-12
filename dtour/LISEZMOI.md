@@ -264,6 +264,15 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Le menu allégé** (v6.45) : debout, le logo disparaît — il répétait
+l'enseigne juste en dessous — la légende des touches du clavier aussi,
+elle n'a aucun sens sur un téléphone, et l'enseigne CALLAGHAN se cale
+désormais sur la LARGEUR au lieu de déborder des deux côtés.
+
+Et au tout premier chargement, le jeu ne réclame plus **deux sens à la
+suite** : tout ce qui n'est pas une partie en cours compte comme le
+menu, donc le portrait.
+
 **Le menu se tient debout** (v6.44) : les quatre tuiles s'empilent,
 vignette à gauche et texte à droite. On demande de tourner le téléphone
 à l'entrée des trois premiers niveaux — jamais avant d'avoir choisi — et
