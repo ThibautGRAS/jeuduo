@@ -283,6 +283,28 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Le géant est escorté, BruHell devient l'Enfoiré** (v6.76).
+
+**Le géant n'arrive plus seul.** Seul, il n'y avait qu'à reculer et
+tirer : aucune pression, aucun choix. Il vient maintenant avec une horde
+ordinaire de huit — seul le premier sorti est géant — et il faut décider
+à chaque instant qui coûte le plus cher. C'est exactement la question que
+le niveau pose partout ailleurs.
+
+**« BRUHELL L'ENFOIRÉ »**, partout. Les Enfoirés sont le nom de la troupe
+des Restos du cœur, et le personnage joue de ce décalage : le t-shirt à
+grand cœur d'un côté, la conduite de l'autre. Le surnom est la blague,
+« Patrick » ne disait rien.
+
+**Cinq répliques d'arrivée et six réponses par méchant**, soit **150
+combinaisons** contre 9 avant : à trois répliques, on les connaissait par
+cœur dès la troisième horde.
+
+**Deux réglages** : le grognement des vivants monte encore (0,46 → 0,60),
+et le bois qui éclate baisse (0,90 → 0,62) — il sortait plus fort que le
+verre à niveau égal, et il tombe à chaque projectile bloqué, donc
+souvent.
+
 **La flamme suit le canon, et le son prend du muscle** (v6.75).
 
 **LA FLAMME DE BOUCHE ÉTAIT POSÉE À UNE POSITION FIXE** alors que le

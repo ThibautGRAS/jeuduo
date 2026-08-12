@@ -396,13 +396,16 @@ change, c'est la QUESTION posée au joueur.
 - Sa question : **« ai-je le temps d'interrompre son lancer ? »**
 - Sprites : `enn_abbe_*`, 19 poses.
 
-### PATRICK BRUHELL — le lanceur de Molotov
+### BRUHELL L'ENFOIRÉ — le lanceur de Molotov
 
+- **Le surnom EST la blague** : « les Enfoirés » est le nom de la troupe
+  des Restos du cœur. Le t-shirt à grand cœur d'un côté, la conduite de
+  l'autre — c'est tout le personnage, et « Patrick » ne disait rien.
 - **Physique : la quarantaine, cheveux noirs épais, moustache et barbe
   courte grisonnante, veste de costume noire ouverte sur un t-shirt blanc
   à grand cœur, baskets grises.** Là aussi, la description initiale — sac
   en bandoulière et boîtes de conserve — ne correspondait pas aux planches.
-- 85 points de vie, vitesse 0.100, `menaceDistante` déclaré comme l'Abbé.
+- 120 points de vie, vitesse 0.100, `menaceDistante` déclaré comme l'Abbé.
 - **C'est l'exact contraire de l'Abbé**, et c'est la raison de les avoir
   tous les deux : il lance **à plat et vite** — 0,75 s de vol, cloche de
   0,045 — depuis le **plan intermédiaire** (0,34 à 0,52). Se couvrir
@@ -443,7 +446,7 @@ le geste est court.
 | DSKKK | — | — | — | **méchant** (garde) |
 | Jubilar | — | — | — | **méchant** (lanceur) |
 | Abbé Forceur | — | — | — | **méchant** (cloche) |
-| BruHell | — | — | — | **méchant** (Molotov) |
+| BruHell l'Enfoiré | — | — | — | **méchant** (Molotov) |
 
 Les trois méchants de la ruelle sont la seule exception à la règle
 ci-dessous : ils ont été inventés POUR le niveau 4 et n'apparaissent nulle

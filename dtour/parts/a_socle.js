@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.75";
+const VERSION = "6.76";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -427,7 +427,7 @@ const Sons = {
                            serait pire que le silence */
     const duree = 0.18 + Math.random() * 0.12;
     const de = Math.random() * Math.max(0, buf.duration - duree);
-    this.echant("cri_" + cle, 0.46, null,
+    this.echant("cri_" + cle, 0.60, null,
                 { de, duree, taux:0.92 + Math.random() * 0.22 });
   },
   criMort(cle){
@@ -441,7 +441,9 @@ const Sons = {
      même choc synthétisé qu'avant pour tout le monde. */
   choc(objet){
     const verre = objet === "bouteille";
-    this.echant(verre ? "impact_bouteille" : "impact_bois", verre ? 0.85 : 0.9, () => {
+    /* le bois est baissé à 0,62 : il sort plus fort que le verre à niveau
+       égal, et il tombe à chaque projectile bloqué — donc souvent */
+    this.echant(verre ? "impact_bouteille" : "impact_bois", verre ? 0.85 : 0.62, () => {
       this.claque(0.14, 0.30, 900, 110, 1.1);
       this.bip(76, 0.16, "sine", 0.26, 40);
     });

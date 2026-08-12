@@ -154,7 +154,11 @@ const ENNEMIS = {
     /* 120 et non 85, tête à 1,15 et non 1,50 : posté à 0,52, l'atténuation
        vaut 0,93 — il était à portée pleine et tombait d'une seule balle,
        alors qu'il est le plus gênant des cinq une fois installé. */
-    nom:"PATRICK BRUHELL", pv:120, vitesse:0.100, taille:1.00, sprite:"bruh",
+    /* « L'ENFOIRÉ » et non « Patrick » : les Enfoirés sont le nom de la
+       troupe des Restos du cœur, et le personnage joue de ce décalage —
+       le t-shirt à cœur d'un côté, la conduite de l'autre. Le surnom est
+       la blague, le prénom ne l'était pas. */
+    nom:"BRUHELL L'ENFOIRÉ", pv:120, vitesse:0.100, taille:1.00, sprite:"bruh",
     /* Comme l'Abbé, sa menace n'est pas d'arriver au contact : exception
        DÉCLARÉE, et un test exige en échange qu'il reste fragile. */
     menaceDistante:true,
@@ -283,43 +287,72 @@ const CANONS = {
 const BESTIAIRE = {
   depar: {
     soustitre: "Blindé devant. Les jambes le ralentissent.",
-    arrivee: ["Mon Dieu, un Depardiahree !", "Voilà un Depardiahree.",
-              "Il y a un Depardiahree qui remonte la rue."],
+    arrivee: ["Mon Dieu, un Depardiahree !",
+              "Voilà un Depardiahree.",
+              "Il y a un Depardiahree qui remonte la rue.",
+              "Un Depardiahree. Un vrai.",
+              "Ça descend, là-bas. C'est Depardiahree."],
     reponse: ["Vise pas le ventre, y'a rien à en tirer.",
               "Dans les jambes. Il tombe, il boit, il se relève.",
-              "Il a le torse d'une armoire normande."],
+              "Il a le torse d'une armoire normande.",
+              "Il encaisse comme il boit : sans compter.",
+              "Le ventre, c'est du décor. Vise plus haut.",
+              "Il lance des bouteilles. Vides, j'espère."],
   },
   dsk: {
     soustitre: "Rapide. Il se cache le visage.",
-    arrivee: ["Un DSKKK !", "Attention, DSKKK.",
-              "Mon Dieu, un DSKKK !"],
+    arrivee: ["Un DSKKK !",
+              "Attention, DSKKK.",
+              "Mon Dieu, un DSKKK !",
+              "DSKKK arrive, et il arrive vite.",
+              "Voilà DSKKK. Baisse la garde, toi."],
     reponse: ["Il met les mains devant. Casse-lui la garde.",
               "Deux fois plus vite et deux fois moins de plomb.",
-              "Vise les jambes, elles passent."],
+              "Vise les jambes, elles passent.",
+              "Il se protège la figure. C'est tout ce qui l'intéresse.",
+              "Attends qu'il baisse les bras. Il baisse toujours les bras.",
+              "Il court plus vite qu'il ne se défend."],
   },
   jubi: {
     soustitre: "Il s'arrête pour lancer. Vise son bras.",
-    arrivee: ["Voilà Jubilar le fumier.", "Un Jubilar !",
-              "Jubilar. Évidemment."],
+    arrivee: ["Voilà Jubilar le fumier.",
+              "Un Jubilar !",
+              "Jubilar. Évidemment.",
+              "Tiens, Jubilar. Ça faisait longtemps.",
+              "Jubilar, et il a ramassé quelque chose."],
     reponse: ["Quand il arme, tire dans le bras. Ça lui coupe l'envie.",
               "Le pavé ou le bras. À toi de voir.",
-              "Il s'arrête toujours avant de lancer. C'est son défaut."],
+              "Il s'arrête toujours avant de lancer. C'est son défaut.",
+              "Il annonce tout ce qu'il fait. Aucun talent pour la surprise.",
+              "Vise la main. Le reste suivra.",
+              "Un pavé dans la rue. Très parisien."],
   },
   abbe: {
     soustitre: "Il bombarde de loin, par-dessus les autres.",
-    arrivee: ["Mon Dieu, l'Abbé Forceur !", "Voilà l'Abbé.",
-              "L'Abbé Forceur, en personne."],
+    arrivee: ["Mon Dieu, l'Abbé Forceur !",
+              "Voilà l'Abbé.",
+              "L'Abbé Forceur, en personne.",
+              "L'Abbé. Il vient nous bénir, j'imagine.",
+              "Attention, l'Abbé s'est mis en tête de nous sauver."],
     reponse: ["Il lance en cloche. À couvert, ça suffit.",
               "Il reste au fond et il balance. Charmant homme.",
-              "Son encensoir monte haut. Tu as le temps."],
+              "Son encensoir monte haut. Tu as le temps.",
+              "Il ne s'approchera pas. Il faudra aller le chercher.",
+              "Il vise le ciel pour toucher nos pieds. Malin.",
+              "Deux balles dans la tête. Amen."],
   },
   bruh: {
     soustitre: "Molotov tendu. Trop rapide pour se couvrir.",
-    arrivee: ["Un Patrick BruHell !", "Voilà BruHell.",
-              "Mon Dieu, BruHell."],
+    arrivee: ["Un BruHell l'Enfoiré !", "Voilà l'Enfoiré.",
+              "Mon Dieu, BruHell l'Enfoiré.",
+              "L'Enfoiré remonte la rue.",
+              "Tiens, l'Enfoiré est de sortie."],
     reponse: ["Lui, ça arrive à plat. Te couvrir sera trop tard.",
               "Tire dans le bras. C'est la seule réponse.",
-              "Un cocktail, mais pas celui de Francky."],
+              "Un cocktail, mais pas celui de Francky.",
+              "Il porte un cœur sur le t-shirt. C'est tout ce qu'il a.",
+              "Il donne aux Restos et il prend au reste.",
+              "Le seul qui lance plus vite qu'il ne réfléchit."],
   },
 };
 
@@ -455,10 +488,14 @@ const Ruelle = {
     { nombre:6,  delai:1.9,  vitesse:1.00, simultanes:2, nbTypes:1 },
     { nombre:8,  delai:1.7,  vitesse:1.04, simultanes:3, nbTypes:2 },
     { nombre:10, delai:1.5,  vitesse:1.08, simultanes:3, nbTypes:3 },
-    { nombre:1,  delai:2.4,  vitesse:1.00, simultanes:1, nbTypes:3, geant:true },
+    /* LE GÉANT N'ARRIVE PAS SEUL. Seul, il n'y avait qu'à reculer et
+       tirer : aucune pression, aucun choix. Escorté d'une horde
+       ordinaire, il faut décider à chaque instant qui coûte le plus cher
+       — et c'est exactement la question que le niveau pose. */
+    { nombre:9,  delai:1.6,  vitesse:1.04, simultanes:3, nbTypes:3, geant:true },
     { nombre:11, delai:1.4,  vitesse:1.14, simultanes:3, nbTypes:4 },
     { nombre:12, delai:1.3,  vitesse:1.18, simultanes:3, nbTypes:5 },
-    { nombre:1,  delai:2.4,  vitesse:1.00, simultanes:1, nbTypes:5, geant:true },
+    { nombre:11, delai:1.4,  vitesse:1.12, simultanes:3, nbTypes:5, geant:true },
     { nombre:14, delai:1.1,  vitesse:1.24, simultanes:3, nbTypes:5 },
     { nombre:16, delai:0.95, vitesse:1.32, simultanes:3, nbTypes:5 },
   ],
@@ -615,7 +652,10 @@ const Ruelle = {
        juste — on a appris à le lire, il faut le refaire en tenant plus
        longtemps. Il est aussi plus LENT : sans ça, quatre fois les points
        de vie à vitesse normale ne laissait pas le temps de le travailler. */
-    const g = !!v.geant;
+    /* SEUL LE PREMIER sorti est le géant : le reste de la vague est une
+       horde ordinaire qui l'escorte. `aSortir` n'est décrémenté qu'en
+       fin de fonction, donc il vaut encore `nombre` au premier appel. */
+    const g = !!v.geant && this.aSortir === v.nombre;
     this.ennemis.push({
       ref, geant:g,
       pv:ref.pv * (g ? this.GEANT_PV : 1), pvMax:ref.pv * (g ? this.GEANT_PV : 1),

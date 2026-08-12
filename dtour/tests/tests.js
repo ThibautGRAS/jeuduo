@@ -3045,7 +3045,13 @@ if (D){
       const mort = vol(/criMort\(cle\)\{[\s\S]{0,200}?echant\("cri_" \+ cle, ([\d.]+)/);
       const grog = vol(/grogne\(cle\)\{[\s\S]{0,600}?echant\("cri_" \+ cle, ([\d.]+)/);
       messageDetail = `tirs ${tirR}/${tirF}, mort ${mort}, grognement ${grog}`;
-      return tirR > 1.3 && tirF > 1.3 && mort < 0.7 && grog > 0.35 && mort > grog;
+      /* L'invariant n'est PAS « la mort plus forte que le grognement » :
+         le cri de mort joue l'échantillon ENTIER au ralenti, le
+         grognement un éclat de 0,2 s. À gain égal, la mort est déjà bien
+         plus présente. Ce qui comptait est qu'elle n'ÉCRASE plus les
+         grognements — donc que les deux soient proches. */
+      return tirR > 1.3 && tirF > 1.3 && mort < 0.7 && grog > 0.5 &&
+        mort < grog * 1.3 && grog < mort * 1.3;
     })());
 
   verifier("un limiteur protège la sortie",
@@ -3072,6 +3078,48 @@ if (D){
         ["impact_bois", "impact_bouteille"].every(
           n => D.Sons.ECHANTILLONS.indexOf(n) >= 0 &&
                fs.existsSync(path.join(RACINE, "son", n + ".ogg")));
+    })());
+
+  verifier("le géant n'arrive JAMAIS seul",
+    (() => {
+      /* Seul, il n'y avait qu'à reculer et tirer : aucune pression,
+         aucun choix. Escorté, il faut décider qui coûte le plus cher. */
+      D.Jeu.demarrer(4);
+      const gv = D.Ruelle.VAGUES.filter(v => v.geant);
+      const ok = gv.every(v => v.nombre >= 6 && (v.simultanes || 3) >= 3);
+      /* et un seul de la vague est géant : le reste est une horde
+         ordinaire */
+      const i = D.Ruelle.VAGUES.findIndex(v => v.geant);
+      D.Ruelle.lancerVague(i); D.Ruelle.annonce = null;
+      D.Ruelle.ennemis.length = 0;
+      for (let k = 0; k < D.Ruelle.VAGUES[i].nombre; k++) D.Ruelle.ajouterEnnemi();
+      const geants = D.Ruelle.ennemis.filter(e => e.geant).length;
+      messageDetail = D.Ruelle.ennemis.length + " ennemis dont " + geants + " géant";
+      return ok && geants === 1 && D.Ruelle.ennemis.length >= 6;
+    })());
+
+  verifier("BruHell porte son surnom partout",
+    (() => {
+      /* « L'Enfoiré » est la blague — les Enfoirés sont la troupe des
+         Restos du cœur, et le personnage joue de ce décalage. Le prénom
+         ne disait rien. */
+      const nom = D.ENNEMIS.bruh.nom;
+      const dit = D.BESTIAIRE.bruh.arrivee.concat(D.BESTIAIRE.bruh.reponse);
+      messageDetail = nom;
+      return /ENFOIR/.test(nom) && !/PATRICK/.test(nom) &&
+        dit.some(s => /Enfoiré/.test(s)) &&
+        !dit.some(s => /Patrick/.test(s));
+    })());
+
+  verifier("chaque méchant a de quoi ne pas se répéter",
+    (() => {
+      /* Deux répliques par méchant, on les connaît par cœur à la
+         troisième horde. */
+      const par = Object.keys(D.BESTIAIRE)
+        .filter(k => D.ENNEMIS[k])
+        .map(k => D.BESTIAIRE[k].arrivee.length * D.BESTIAIRE[k].reponse.length);
+      messageDetail = par.join(", ") + " combinaisons";
+      return par.every(n => n >= 25);
     })());
 
   verifier("chaque méchant a son cri",
@@ -4061,8 +4109,10 @@ if (D){
       const v = D.Ruelle.VAGUES;
       const idx = v.map((x, i) => x.geant ? i : -1).filter(i => i >= 0);
       messageDetail = "géants aux hordes " + idx.map(i => i + 1).join(" et ");
-      return idx.length >= 2 && idx.every(i => (i + 1) % 3 === 1 || i > 0) &&
-        idx[1] - idx[0] === 3 && v[idx[0]].nombre === 1;
+      /* La vague géante n'a plus `nombre:1` : le géant est ESCORTÉ d'une
+         horde ordinaire, seul le premier sorti est géant. */
+      return idx.length >= 2 && idx[1] - idx[0] === 3 &&
+        v[idx[0]].nombre >= 6;
     })());
 
   verifier("jamais plus de trois méchants à l'écran",
