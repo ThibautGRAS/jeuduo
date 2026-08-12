@@ -698,6 +698,26 @@ if (D){
   /* Deux affaires qui partagent un identifiant en font disparaître une :
      le test de couverture criait au scénario manquant alors qu'aucun ne
      l'était. On vérifie donc l'unicité directement. */
+  verifier("les affaires du nouveau casting racontent ce qui s'est passé",
+    (() => {
+      /* La chute fait rire, le récit fait comprendre. Toute affaire qui
+         en a un doit l'écrire en plusieurs phrases, sinon c'est une
+         chute déguisée. */
+      const avec = D.SCENARIOS.filter(sc => sc.recit);
+      return avec.length >= 6 && avec.every(sc => sc.recit.length > 180);
+    })(), "un récit tient en trois phrases, pas en une");
+  verifier("chaque affaire qui exige quelqu'un l'obtient",
+    (() => {
+      const soucis = [];
+      for (let n = 0; n < 400; n++){
+        D.Jeu.demarrer(2); D.Intro.finir();
+        const sc = D.Affaire.scenario;
+        for (const id of (sc.requis || []))
+          if (!D.SUSPECTS.some(x => x.id === id)) soucis.push(sc.id + " sans " + id);
+      }
+      messageDetail = [...new Set(soucis)].join(", ");
+      return soucis.length === 0;
+    })(), "une affaire dont la blague repose sur quelqu'un doit l'avoir dans la pièce");
   verifier("aucune affaire ne partage l'identifiant d'une autre",
     new Set(D.SCENARIOS.map(sc => sc.id)).size === D.SCENARIOS.length,
     (() => {
@@ -1425,10 +1445,38 @@ if (D){
   verifier("elle coûte vingt secondes", tAvant - D.Enquete.restant >= 19.5);
   egal("il ne reste qu'une accusation", D.Enquete.accusationsRestantes, D.ENQ_ACCUSATIONS - 1);
   D.Enquete.ouvrirAccusation();
-  D.Enquete.choixAcc = faux();
+  /* La première piste est écartée depuis la v6.31 : on en prend une
+     autre, sinon la validation est refusée à juste titre. */
+  D.Enquete.choixAcc = (() => {
+    const b2 = noms.indexOf(D.Affaire.bonneReponse());
+    for (let i = 0; i < noms.length; i++)
+      if (i !== b2 && !D.Enquete.estEcarte(i)) return i;
+    return 0;
+  })();
   D.Enquete.valider();
   egal("la seconde erreur perd l'affaire", D.Jeu.phase, "fin");
   verifier("et elle est bien perdue", D.Enquete.fini && !D.Enquete.fini.gagne);
+  /* --- une piste écartée le reste --- */
+  lancer2();
+  D.Enquete.indices = 6;          /* l'accusation exige trois indices */
+  D.Enquete.ouvrirAccusation();
+  const nomsB = listeNoms();
+  const mauvais = nomsB.indexOf(D.Affaire.bonneReponse()) === 0 ? 1 : 0;
+  D.Enquete.choixAcc = mauvais;
+  D.Enquete.valider();
+  verifier("la piste accusée à tort est écartée", D.Enquete.estEcarte(mauvais));
+  D.Enquete.ouvrirAccusation();
+  D.Enquete.choixAcc = mauvais;
+  verifier("on ne peut plus la valider une seconde fois",
+    D.Enquete.valider() === false && D.Enquete.accusationsRestantes === D.ENQ_ACCUSATIONS - 1,
+    "accuser deux fois la même personne n'a aucun sens");
+  verifier("et le curseur ne s'y arrête plus",
+    (() => {
+      D.Enquete.choixAcc = mauvais === 0 ? nomsB.length - 1 : mauvais - 1;
+      D.Enquete.deplacerAccusation(1);
+      return D.Enquete.choixAcc !== mauvais;
+    })());
+
 
   /* Hortense doit intervenir, une fois, au milieu */
   titre("Hortense au niveau 2");

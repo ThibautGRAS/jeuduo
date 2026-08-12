@@ -879,6 +879,90 @@ function composerSuspects(){
    de la SOLUTION puis distribue ses indices : une enquête impossible ne
    peut donc pas sortir. */
 const SCENARIOS = [
+  /* --- le nœud : les amants --- */
+  { id:"les_amants", tags:["porte"], coupable:"charles", cachettes:["portant", "manteaux"],
+    porteurs:["lunettes_noires", "cles", "cendrier"],
+    requis:["gabi"],
+    deduc:{
+      lunettes_noires:[[0, "Des lunettes de soleil, pliées, à l'intérieur, à 22 h."],
+              [1, "Il les enlève pour manger. Ou pour être vu autrement."]],
+      cles:[[1, "Les clés sur la table, pas au crochet."],
+              [0, "Quelqu'un est entré les mains prises. Ou pressé."]],
+      cendrier:[[0, "Un seul mégot, fumé jusqu'au filtre."],
+              [1, "Quelqu'un attendait. Et quelqu'un se cachait de quelqu'un."]],
+    },
+    hypothese:[[1, "Je dis : il a volé la pizza pour la revendre."],
+               [0, "Personne ne revend une pizza. Il cache autre chose que la pizza."]],
+    nerfs:["Je n'étais pas dans le couloir. Enfin, j'y passais.",
+           "Demandez-lui, à elle. Non. Ne lui demandez pas."],
+    piste:[[0, "Deux personnes mentent, et pas sur la même chose."],
+           [1, "Alors l'une des deux ment sur la pizza. Et l'autre ?"]],
+    trouvaille:[[0, "{Ou}. Posée sur un manteau qui n'est pas le sien."],
+                [1, "Il l'a emportée là où il n'aurait pas dû être."]],
+    contradiction:"Vous étiez avec Gabi. Vous avez pris la pizza pour ne pas revenir les mains vides.",
+    chute:"Il l'a emportée dans le couloir. Il n'y était pas seul, et c'est ça qu'il cachait.",
+    recit:"Charles et Gabi se voient en secret depuis des mois, sous le même toit et sans que personne le sache. Ce soir-là, il a filé dans le couloir avec la pizza pour ne pas arriver les mains vides. Les deux ont menti aux inspecteurs — elle pour le couvrir, lui pour la protéger — et aucun des deux ne mentait sur le vol.",
+    anecdote:{ suspect:"charles", qTH:"Vous restez tard, d'habitude ?", qPF:"Vous partez à quelle heure ?",
+      ok:"Ça dépend des soirs. Celui-là, j'allais rester.",
+      ko:"Je pars toujours tôt. Toujours. Enfin, ce soir, non.",
+      pf:"Il a regardé le couloir avant de répondre." } },
+
+  /* --- le nœud : les trois profs --- */
+  { id:"les_trois_profs", tags:["salon"], coupable:"mathilde", cachettes:["biblio", "basse"],
+    porteurs:["carnet", "montre", "stylo"],
+    requis:["teo", "remy"],
+    deduc:{
+      carnet:[[0, "Une page arrachée. L'empreinte des traces suivantes reste lisible."],
+              [1, "Une chronologie. Écrite, puis retirée."]],
+      montre:[[0, "Montre arrêtée à 21 h 52. Détachée d'un coup."],
+              [1, "Trois personnes donnent la même heure. À la minute près."]],
+      stylo:[[1, "Un stylo mordillé, toujours du même côté."],
+              [0, "Le même stylo que la page arrachée. Une seule main."]],
+    },
+    hypothese:[[1, "Je dis : ils se sont mis d'accord. Tous les trois."],
+               [0, "Trois versions identiques, c'est une seule version répétée trois fois."]],
+    nerfs:["On a reconstitué la soirée ensemble. C'est notre métier.",
+           "Si on dit tous la même chose, c'est peut-être que c'est vrai. Peut-être."],
+    piste:[[0, "Quelqu'un a écrit la chronologie avant de la raconter."],
+           [1, "Et l'a arrachée quand elle est devenue gênante."]],
+    trouvaille:[[0, "{Ou}. Derrière les livres, à la place d'un volume manquant."],
+                [1, "Elle range les choses là où elle sait les retrouver."]],
+    contradiction:"Vous avez écrit la chronologie, puis vous l'avez arrachée. Parce qu'elle vous plaçait ici.",
+    chute:"Elle l'a mise à l'abri le temps d'une reconstitution. Elle a oublié de la remettre.",
+    recit:"Mathilde, Teo et Rémy enseignent l'histoire, et ils ont reconstitué la soirée à trois, à voix haute, comme un exercice. Elle avait mis la pizza derrière les livres pour que personne n'y touche pendant la démonstration. Sa propre chronologie la plaçait devant la bibliothèque à la mauvaise minute : elle a arraché la page, ce qui l'a désignée bien mieux que la page elle-même.",
+    anecdote:{ suspect:"mathilde", qTH:"Vous étiez dans quelle pièce ?", qPF:"Vous étiez où quand la porte a sonné ?",
+      ok:"Dans le salon. Devant la bibliothèque, précisément.",
+      ko:"Dans la cuisine. Non, le salon. Enfin, entre les deux.",
+      pf:"Elle a donné deux pièces en trois secondes." } },
+
+  /* --- le nœud : Rémy le carrefour --- */
+  { id:"le_carrefour", tags:["argent"], coupable:"kevin", cachettes:["sac", "chaussures"],
+    porteurs:["badge_gym", "shaker_prot", "loto"],
+    requis:["remy"],
+    deduc:{
+      badge_gym:[[0, "Badge pointé à 20 h 15 en sortie de salle."],
+              [1, "Deux heures avant la livraison. Il avait le temps d'avoir faim."]],
+      shaker_prot:[[0, "Reste de poudre encore humide. Moins d'une heure."],
+              [1, "Il a bu ça pour tenir. Ça n'a pas suffi."]],
+      loto:[[1, "Une grille cochée, et quelqu'un qui jure ne pas jouer."],
+              [0, "Ce n'est pas la sienne. C'est celle de son témoin."]],
+    },
+    hypothese:[[1, "Je dis : c'est celui qui parie. Il parie, il perd, il vole."],
+               [0, "Celui qui parie a un alibi pour chaque minute. C'est bien ça qui gêne."]],
+    nerfs:["J'ai faim depuis 20 h 15. Je peux vous donner la seconde.",
+           "Rémy dira ce que vous voulez. Il connaît tout le monde, ce type."],
+    piste:[[0, "Notre témoin connaît tout le monde. Y compris celui qu'il couvre."],
+           [1, "Alors il ne ment pas. Il choisit ce qu'il raconte."]],
+    trouvaille:[[0, "{Ou}. Dans un sac de sport, sous une serviette."],
+                [1, "On cache mal quand on a très faim."]],
+    contradiction:"Rémy vous a couvert parce que vous êtes son ami. Mais il n'a jamais dit que vous étiez avec lui.",
+    chute:"Il avait faim depuis huit heures et quart. Personne ne lui a proposé une part.",
+    recit:"Kevin sortait de la salle de sport à 20 h 15 et n'avait rien mangé. Rémy, qui connaît tout le monde, l'a couvert sans mentir : il a simplement raconté autre chose, en espérant qu'on ne remarque pas ce qu'il taisait. Kevin avait glissé la pizza dans son sac de sport, sous une serviette, en attendant que le salon se vide.",
+    anecdote:{ suspect:"kevin", qTH:"Vous avez mangé, vous ?", qPF:"Vous avez faim depuis quand ?",
+      ok:"20 h 15. J'ai badgé en sortant, vous pouvez vérifier.",
+      ko:"Depuis longtemps. Je ne compte pas ces choses-là.",
+      pf:"Un professeur de mathématiques qui ne compte pas. Tiens." } },
+
   { id:"deux_maitresses", tags:["chat"], coupable:"solene", cachettes:["commode", "lit"],
     porteurs:["croquettes", "gamelle", "poils"],
     requis:["gabi"],
@@ -900,6 +984,7 @@ const SCENARIOS = [
                 [1, "On ne cache pas une pizza. On l'emporte quelque part."]],
     contradiction:"Vous l'avez emmené dans la chambre pour le nourrir. Avec la pizza.",
     chute:"Elle voulait dîner avec le chat. Le chat était d'accord. La pizza aussi.",
+    recit:"Solène passe nourrir Risoto chaque soir, et elle est persuadée que ce chat est le sien — il appartient à Gabi. Ce soir-là, elle l'a emporté dans la chambre avec la pizza pour dîner tranquillement, tous les deux. Les poils arrachés et la gamelle poussée racontaient exactement ce trajet, du salon au lit.",
     anecdote:{ suspect:"solene", qTH:"Il est à qui, ce chat ?", qPF:"Ce chat est à vous ?", ok:"Il est à moi le soir. Le reste du temps, il est à Gabi.", ko:"Bien sûr qu'il est à moi. Enfin. Il me choisit.", pf:"Elle a répondu trop vite." } },
 
   { id:"le_pari_de_remy", tags:["argent"], coupable:"remy", cachettes:["sac", "manteaux"],
@@ -922,6 +1007,7 @@ const SCENARIOS = [
                 [1, "Il ne l'a pas volée. Il l'a mise en gage."]],
     contradiction:"Vous l'aviez commandée. Vous ne pouviez plus la payer. Vous l'avez cachée.",
     chute:"Il avait tout parié sur un match. Il a perdu le match, et la pizza avec.",
+    recit:"Rémy avait commandé la pizza en misant douze euros sur un match qu'il croyait plié. Le ticket est perdant à 21 h 40 ; sept minutes plus tard, il ne décrochait déjà plus. Sans de quoi payer, il a caché la pizza dans son sac avec le ticket posé dessus, comme un gage qu'il comptait bien récupérer.",
     anecdote:{ suspect:"remy", qTH:"Tu as regardé le match ?", qPF:"Vous avez regardé le match ?", ok:"Jusqu'à la 87e. Après, j'ai éteint. Comme tout le monde.", ko:"Quel match ? Ah, ce match. Non. Enfin, un peu. La fin.", pf:"Il a répondu à la seconde." } },
 
   { id:"guerre_barmans", tags:["alcool"], coupable:"jojo", cachettes:["poubelle", "evier"],
@@ -945,6 +1031,7 @@ const SCENARIOS = [
                 [1, "On cache ce qu'on refuse de donner."]],
     contradiction:"Francky l'avait commandée pour Mathilde. Vous l'avez fait disparaître.",
     chute:"Il ne supporte pas Mathilde. Il ne supportait pas que Francky lui offre à dîner.",
+    recit:"Francky avait fait monter une pizza pour Mathilde, comme il fait monter des glaçons que personne ne demande. Jojo est monté avec lui sans dire un mot dans l'escalier. Pendant que les autres parlaient, il l'a glissée dans l'évier sous une serviette : il n'a rien volé, il a seulement empêché un cadeau.",
     anecdote:{ suspect:"jojo", qTH:"Mathilde, vous la connaissez comment ?", qPF:"Vous connaissez Mathilde ?", ok:"Je la sers. Ça ne veut pas dire que je l'apprécie.", ko:"Pas du tout. Enfin si, je la sers. Mais je ne la connais pas.", pf:"Personne ne dit non trois fois pour dire non une." } },
 
   /* --- la sœur --- */
@@ -1851,6 +1938,10 @@ const Affaire = {
   temoinCle(){ return this.coupable ? this.coupable.id : (this.scenario.temoinCle || null); },
   titreSolution(){ return this.coupable ? this.coupable.nom : "PERSONNE"; },
   chute(){ return remplir(this.scenario.chute); },
+  /* Le récit complet, pour qui a trouvé : la chute dit la blague, le
+     récit dit l'enchaînement. Les affaires qui n'en ont pas encore se
+     rabattent sur leur chute. */
+  recit(){ return this.scenario.recit ? remplir(this.scenario.recit) : ""; },
   piste(){ return this.scenario.piste.map(p => [p[0], remplir(p[1])]); },
   trouvaille(){ return this.scenario.trouvaille.map(p => [p[0], remplir(p[1])]); },
   contradiction(){ return remplir(this.scenario.contradiction); },
@@ -2273,7 +2364,7 @@ const Visiteurs = {
 const Enquete = {
   actif:false, restant:0, indices:0, fouilles:0, fausses:0, zones:[],
   inspecteurs:[], actifIdx:0, fini:null, secousse:0, message:null, messageT:0,
-  messageDuree:1.6, dossierOuvert:false, accusation:false, choixAcc:0,
+  messageDuree:1.6, dossierOuvert:false, accusation:false, choixAcc:0, ecartes:[],
   pizza:null, esquiveOuverte:false, tarteRecue:false, tarteEsquivee:false,
   gele:0, badge:null, badgeT:0,
 
@@ -2289,7 +2380,7 @@ const Enquete = {
     this.restant = ENQ_DUREE;
     this.indices = 0; this.fouilles = 0; this.fausses = 0;
     this.fini = null; this.secousse = 0; this.message = null;
-    this.dossierOuvert = false; this.accusation = false; this.choixAcc = 0;
+    this.dossierOuvert = false; this.accusation = false; this.choixAcc = 0; this.ecartes = [];
     this.pizza = null; this.esquiveOuverte = false;
     this.tarteRecue = false; this.tarteEsquivee = false;
     this.gele = 0; this.badge = null; this.badgeT = 0;
@@ -2755,13 +2846,28 @@ const Enquete = {
     if (!this.accusation) return;
     const n = SUSPECTS.length + 1;
     this.choixAcc = (this.choixAcc + d + n) % n;
+    /* on passe par-dessus les pistes déjà écartées */
+    for (let k = 0; k < n && this.estEcarte(this.choixAcc); k++){
+      this.choixAcc = (this.choixAcc + d + n) % n;
+    }
     Sons.clic();
   },
+  /* Le nom d'un choix d'accusation, et s'il a déjà été écarté. */
+  nomAcc(i){ return i < SUSPECTS.length ? SUSPECTS[i].id : "personne"; },
+  estEcarte(i){ return this.ecartes.indexOf(this.nomAcc(i)) >= 0; },
+
   valider(){
     if (!this.accusation) return false;
+    if (this.estEcarte(this.choixAcc)){
+      this.dire("On les a déjà mis hors de cause.", 2.0);
+      return false;
+    }
     const rep = this.choixAcc < SUSPECTS.length ? SUSPECTS[this.choixAcc].id : "personne";
     this.accusation = false;
     if (rep !== Affaire.bonneReponse()){
+      /* Une piste écartée le reste : accuser deux fois la même personne
+         n'aurait aucun sens, et la liste doit montrer qu'on a avancé. */
+      if (this.ecartes.indexOf(rep) < 0) this.ecartes.push(rep);
       this.accusationsRestantes--;
       this.poserBadge("suspect");
       Sons.erreur();

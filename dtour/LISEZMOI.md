@@ -264,6 +264,22 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Six affaires du nouveau casting** (v6.31), dont les trois nœuds du
+quartier : la **liaison secrète de Gabi et Charles** — deux innocents qui
+mentent, et pas sur le vol —, les **trois professeurs d'histoire** qui
+reconstituent la soirée à voix haute jusqu'à ce que la chronologie
+désigne celle qui l'a écrite, et **Rémy le carrefour**, qui couvre un ami
+sans mentir une seule fois, simplement en racontant autre chose.
+
+**Quand on trouve, on comprend** : l'écran de fin donne désormais le
+**récit** en trois phrases, pas seulement la chute. La chute fait rire,
+le récit dit l'enchaînement.
+
+**Une piste écartée le reste** : accuser quelqu'un à tort le barre
+définitivement de la liste. Le curseur ne s'y arrête plus, et la
+validation la refuse — accuser deux fois la même personne n'aurait aucun
+sens, et voir ce qu'on a éliminé fait partie du raisonnement.
+
 **L'appartement change de monde** (v6.29). Treize habitants possibles,
 **cinq tirés à chaque partie** plus le chat, sur cinq places — entrée,
 cuisine, chambre, canapé, table. Le tirage garde toujours le coupable de

@@ -726,12 +726,21 @@ const EnqVue = {
     for (let i = 0; i < noms.length; i++){
       const y = y0 + i * hl;
       const choisi = i === Enquete.choixAcc;
+      /* Une piste écartée reste affichée, barrée : voir ce qu'on a déjà
+         éliminé fait partie du raisonnement. */
+      const ecarte = Enquete.estEcarte(i);
       const w = Math.min(L * 0.7, 460);
-      ctx.fillStyle = choisi ? "rgba(247,179,43,.94)" : "rgba(255,255,255,.06)";
+      ctx.fillStyle = ecarte ? "rgba(255,255,255,.03)"
+        : choisi ? "rgba(247,179,43,.94)" : "rgba(255,255,255,.06)";
       arrondi(L / 2 - w / 2, y - hl * 0.36, w, hl * 0.72, hl * 0.36); ctx.fill();
       ctx.font = "800 " + Math.round(taille * 0.62) + "px 'Baloo 2', system-ui, sans-serif";
-      ctx.fillStyle = choisi ? "#1A1305" : "#C6D1E6";
+      ctx.fillStyle = ecarte ? "#5A667E" : choisi ? "#1A1305" : "#C6D1E6";
       ctx.fillText(noms[i], L / 2, y);
+      if (ecarte){
+        const lw = ctx.measureText(noms[i]).width;
+        ctx.strokeStyle = "#5A667E"; ctx.lineWidth = Math.max(1.5, taille * 0.05);
+        ctx.beginPath(); ctx.moveTo(L / 2 - lw / 2 - 6, y); ctx.lineTo(L / 2 + lw / 2 + 6, y); ctx.stroke();
+      }
     }
     ctx.font = "700 " + Math.round(taille * 0.55) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillStyle = "#8496B6";
