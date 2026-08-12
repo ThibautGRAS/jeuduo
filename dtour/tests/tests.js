@@ -3343,6 +3343,97 @@ if (D){
       return (Math.max(...m) - Math.min(...m)) / Math.max(...m) < 0.15;
     })());
 
+  /* ---- le placement des habitants (niveau 2) ---- */
+  verifier("aucun habitant n'est placé sans sprite existant",
+    (() => {
+      /* Une place debout servie EN SECOURS à quelqu'un qui n'a pas de
+         silhouette debout affichait l'étiquette de son nom au-dessus
+         d'une place vide : interrogeable, invisible. Mesuré avant
+         correction : 198 placements fantômes sur 2393. */
+      let fantomes = 0, total = 0;
+      const surDisque = n2 => fs.existsSync(path.join(RACINE, "img", "commun", n2 + ".webp"))
+                           || fs.existsSync(path.join(RACINE, "img", "n2", n2 + ".webp"));
+      for (let k = 0; k < 150; k++){
+        D.Jeu.demarrer(2);
+        for (const s of D.SUSPECTS){ total++; if (!surDisque(s.sprite)) fantomes++; }
+      }
+      messageDetail = fantomes + " fantôme(s) sur " + total + " placements";
+      return fantomes === 0;
+    })());
+
+  verifier("une place assise n'est donnée qu'à qui a une pose assise, et l'inverse",
+    (() => {
+      for (let k = 0; k < 150; k++){
+        D.Jeu.demarrer(2);
+        for (const s of D.SUSPECTS){
+          if (s.id === "chat") continue;
+          const assis = s.sprite.indexOf("assis_") === 0;
+          if (assis && D.ASSIS_APPART.indexOf(s.id) < 0) return false;
+          if (!assis && D.DEBOUT_APPART.indexOf(s.id) < 0) return false;
+        }
+      }
+      return true;
+    })());
+
+  verifier("le coupable et le témoin clé sont toujours dans la pièce",
+    (() => {
+      /* Écarter un candidat faute de place ne doit jamais toucher le
+         noyau : sans eux l'affaire est insoluble. */
+      for (let k = 0; k < 200; k++){
+        D.Jeu.demarrer(2);
+        const ids = D.SUSPECTS.map(s => s.id);
+        const cp = D.Affaire.bonneReponse();
+        if (cp && cp !== "personne" && cp !== "chat" && ids.indexOf(cp) < 0) return false;
+        const tc = D.Affaire.scenario && D.Affaire.scenario.temoinCle;
+        if (tc && tc !== "personne" && tc !== "chat" && ids.indexOf(tc) < 0) return false;
+      }
+      return true;
+    })());
+
+  verifier("les cinq places sont toujours occupées",
+    (() => {
+      for (let k = 0; k < 150; k++){
+        D.Jeu.demarrer(2);
+        if (D.SUSPECTS.filter(s => s.id !== "chat").length !== D.PLACES.length) return false;
+      }
+      return true;
+    })());
+
+  /* ---- une enquête ratée raconte quand même l'affaire ---- */
+  verifier("perdre révèle le coupable ET la cachette",
+    (() => {
+      /* Une histoire qu'on ne connaît pas ne donne pas envie d'être
+         rejouée. */
+      D.Jeu.demarrer(2);
+      const r = D.Affaire.revelation();
+      return r.length > 6 && r.indexOf("{") < 0 &&
+        (D.Affaire.titreSolution() === "PERSONNE" || r.indexOf(D.Affaire.titreSolution()) === 0);
+    })());
+
+  verifier("et la chute survit à la défaite",
+    (() => {
+      /* Cinquante et un scénarios ont une chute, dix-huit seulement ont
+         un récit : la chute EST l'explication. La remplacer par un
+         message de défaite retirait l'histoire à qui en avait le plus
+         besoin. */
+      return /pourquoi \+ " " \+ Affaire\.chute\(\)/.test(source);
+    })());
+
+  verifier("la défaite dit laquelle des deux causes",
+    (() => {
+      /* Le chrono ne se déclenche pas depuis un `pas()` isolé — la
+         première version du test l'appelait et lisait un `fini` encore
+         nul. On vérifie donc les deux chemins : la valeur enregistrée, et
+         la présence des deux appels dans la source. */
+      D.Jeu.demarrer(2); D.Enquete.terminer(false, "accusations");
+      const a = D.Enquete.fini && D.Enquete.fini.cause;
+      D.Jeu.demarrer(2); D.Enquete.terminer(false);
+      const b = D.Enquete.fini && D.Enquete.fini.cause;
+      return a === "accusations" && b === "temps" &&
+        /terminer\(false, "accusations"\)/.test(source) &&
+        /terminer\(false, "temps"\)/.test(source);
+    })());
+
   verifier("les huit boutons ont le même canevas et le même disque",
     (() => {
       /* Ils sont posés en dessinant le canevas ENTIER : la place du

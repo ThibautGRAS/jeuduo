@@ -264,6 +264,26 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Plus d'habitant fantôme** (v6.58) : au niveau 2, une étiquette de nom
+s'affichait parfois au-dessus d'une place vide — le personnage était
+interrogeable sans être visible, tantôt au frigo, tantôt dans le couloir.
+Cause : une place DEBOUT était servie en secours à quelqu'un qui n'a pas
+de silhouette debout — Tristan, Kevin, Rémy, Teo, Charles n'ont qu'une
+pose assise. Mesuré avant correction : **198 placements fantômes sur
+2393**, soit un par partie sur deux. Une place n'est désormais tenable
+que si le sprite existe ; on sert les plus contraints d'abord, et un
+candidat sans place est écarté plutôt que placé de force. Vérifié sur
+4800 placements : zéro fantôme, cinq habitants à chaque partie, coupable
+et témoin clé toujours présents.
+
+**Une enquête ratée raconte quand même l'affaire** : on ne montrait ni le
+coupable ni ce qui s'était passé, et le joueur repartait sans savoir. La
+solution est révélée dans les deux cas — **« C'ÉTAIT CHARLES, et la pizza
+était dans une poche de manteau. »** — suivie de la chute, qui est la
+véritable explication : cinquante et un scénarios en ont une, dix-huit
+seulement ont un récit. Seul le ton change, et une phrase courte dit
+pourquoi on a perdu : au chrono, ou à force de citer des noms.
+
 **Tirer relève tout seul** (v6.57) : à couvert, il fallait rappuyer sur
 le bouclier avant de pouvoir tirer. Deux gestes là où l'intention est
 évidente — et le temps de les enchaîner suffisait à encaisser le jet

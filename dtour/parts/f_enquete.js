@@ -824,31 +824,46 @@ function composerSuspects(){
     if (id && id !== "personne" && id !== "chat" && parId(id) && noyau.indexOf(id) < 0) noyau.push(id);
   }
 
-  /* 2. On complète jusqu'à cinq, en préférant les PROCHES du noyau :
-        une pièce doit ressembler à un groupe, pas à un tirage. */
+  /* 2. On complète, en préférant les PROCHES du noyau : une pièce doit
+        ressembler à un groupe, pas à un tirage. On ne coupe PAS à cinq
+        ici — certains candidats seront écartés faute de place tenable,
+        et il faut de quoi les remplacer. */
   const eviter = sc.eviter || [];
   const reste = SUSPECTS_BANQUE.map(b => b.id)
     .filter(id => id !== "chat" && noyau.indexOf(id) < 0 && eviter.indexOf(id) < 0);
   melangerTableau(reste);
   const proche = id => noyau.some(n => LIENS[n] && LIENS[n].amis.indexOf(id) >= 0);
   reste.sort((a, b) => (proche(b) ? 1 : 0) - (proche(a) ? 1 : 0));
-  const choisis = noyau.concat(reste).slice(0, PLACES.length);
 
-  /* 3. Les places. On sert D'ABORD ceux qui ne peuvent pas rester
-        debout, sinon ils se retrouvent sans place utilisable. */
+  /* 3. Les places, et la règle qui manquait : UNE PLACE N'EST TENABLE
+        QUE SI LE SPRITE EXISTE. L'ancien code servait une place debout
+        en SECOURS à quelqu'un qui n'a pas de silhouette debout — Tristan,
+        Kevin, Rémy, Teo, Charles. Résultat : l'étiquette de son nom
+        s'affichait au-dessus d'une place vide, et il était interrogeable
+        sans être visible. Mesuré avant correction : 198 placements
+        fantômes sur 2393, soit un par partie sur deux.
+
+        On sert les plus CONTRAINTS d'abord — qui ne peut que s'asseoir
+        passe avant qui peut les deux — et le noyau garde la priorité
+        absolue sur le reste. Un candidat sans place tenable est ÉCARTÉ,
+        pas placé de force : mieux vaut quatre personnes visibles que
+        cinq dont une n'existe pas. */
   const places = PLACES.slice();
   melangerTableau(places);
-  const assises = places.filter(p => p.assise);
-  const debouts = places.filter(p => !p.assise);
+  const peutAssis = id => ASSIS_APPART.indexOf(id) >= 0;
+  const peutDebout = id => DEBOUT_APPART.indexOf(id) >= 0;
+  const tenable = (id, pl) => (pl.assise ? peutAssis(id) : peutDebout(id));
+  const contrainte = id => (peutDebout(id) ? 1 : 0) + (peutAssis(id) ? 1 : 0);
+  const parContrainte = liste => liste.slice().sort((a, b) => contrainte(a) - contrainte(b));
+  const file = parContrainte(noyau).concat(parContrainte(reste));
+
   const paires = [];
-  const prendre = (id, liste, secours, assis) => {
-    const pl = liste.shift() || secours.shift();
-    if (pl) paires.push([id, pl, !!pl.assise]);
-  };
-  for (const id of choisis) if (DEBOUT_APPART.indexOf(id) < 0) prendre(id, assises, debouts);
-  for (const id of choisis) if (DEBOUT_APPART.indexOf(id) >= 0){
-    /* qui ne sait pas s'asseoir ne prend qu'une place debout */
-    prendre(id, debouts, ASSIS_APPART.indexOf(id) >= 0 ? assises : []);
+  for (const id of file){
+    if (!places.length) break;
+    const i = places.findIndex(pl => tenable(id, pl));
+    if (i < 0) continue;
+    const pl = places.splice(i, 1)[0];
+    paires.push([id, pl, !!pl.assise]);
   }
   paires.push(["chat", PLACES_FIXES.chat, false]);
 
@@ -2223,6 +2238,16 @@ const Affaire = {
      récit dit l'enchaînement. Les affaires qui n'en ont pas encore se
      rabattent sur leur chute. */
   recit(){ return this.scenario.recit ? remplir(this.scenario.recit) : ""; },
+  /* Le nom du coupable ET où était la pizza, en une phrase, pour l'écran
+     de fin d'une enquête RATÉE : le joueur qui n'a pas trouvé a encore
+     plus besoin de savoir que celui qui a trouvé. */
+  revelation(){
+    const qui = this.coupable ? this.coupable.nom : "PERSONNE";
+    /* `faits.ou` est déjà la formulation lisible du meuble — « dans le
+       placard du haut » — et non son identifiant. */
+    const ou = this.faits && this.faits.ou;
+    return ou ? qui + ", et la pizza était " + ou + "." : qui + ".";
+  },
   piste(){ return this.scenario.piste.map(p => [p[0], remplir(p[1])]); },
   trouvaille(){ return this.scenario.trouvaille.map(p => [p[0], remplir(p[1])]); },
   contradiction(){ return remplir(this.scenario.contradiction); },
@@ -3156,7 +3181,7 @@ const Enquete = {
         /* Deux noms, pas trois : sans cette limite, on finissait par
            citer tout le monde jusqu'à tomber juste. */
         this.dialogue([[0, "On s'est trompés deux fois."], [1, "On ne nous laissera pas recommencer."]], 0.3);
-        this.terminer(false);
+        this.terminer(false, "accusations");
         return false;
       }
       this.dire("Ça ne tient pas. Une seule autre chance.", 2.6);
@@ -3201,8 +3226,12 @@ const Enquete = {
     return true;
   },
 
-  terminer(gagne){
-    this.fini = { gagne, t:0 };
+  terminer(gagne, cause){
+    /* La cause est retenue : perdre au chrono et perdre en accusant deux
+       fois à côté ne se racontent pas pareil, et l'écran de fin doit
+       pouvoir le dire. */
+    this.fini = { gagne, t:0, cause:cause || (gagne ? "resolu" : "temps"),
+                  accuses:this.ecartes.slice() };
     this.actif = false;
     this.tempsPris = ENQ_DUREE - this.restant;
     if (gagne){
@@ -3270,7 +3299,7 @@ const Enquete = {
     Visiteurs.majorer(dt);
     Camera.suivreEnq(chef.x, dt);
 
-    if (this.restant <= 0){ this.restant = 0; this.terminer(false); }
+    if (this.restant <= 0){ this.restant = 0; this.terminer(false, "temps"); }
     Effets.majorer(dt);
   },
 };

@@ -1071,6 +1071,39 @@ D'où la règle : **canevas 320, disque 304, centré**, pour les huit.
 exactement huit boutons ; un test relit l'en-tête WebP et compare les
 huit tailles.
 
+### Un secours qui ignore une contrainte fabrique des fantômes
+
+Le placement des habitants du niveau 2 servait une place DEBOUT en
+secours à qui n'avait pas de silhouette debout. Le code s'exécutait sans
+erreur, le personnage entrait dans `SUSPECTS`, son étiquette s'affichait,
+il était interrogeable — et invisible. Le pire des symptômes, encore une
+fois : tout fonctionne sauf l'image.
+
+Mesuré : 198 placements fantômes sur 2393, soit un par partie sur deux.
+La règle qui manquait : **une place n'est tenable que si le sprite
+existe**. Un secours doit vérifier la même contrainte que le premier
+choix, sinon il ne fait que déplacer le problème hors de vue.
+
+Deux corollaires. On sert les plus CONTRAINTS d'abord — qui ne peut que
+s'asseoir passe avant qui peut les deux — et on ne coupe pas la liste des
+candidats avant d'avoir placé : certains seront écartés, il faut de quoi
+les remplacer. Un candidat sans place tenable est écarté, pas placé de
+force ; mais le noyau (coupable, témoin clé) garde une priorité absolue,
+et un test vérifie qu'il est toujours dans la pièce.
+
+### Perdre doit raconter l'histoire, sinon elle est perdue
+
+L'enquête ratée n'affichait ni coupable ni explication. Or celui qui n'a
+pas trouvé a plus besoin de savoir que celui qui a trouvé : une histoire
+qu'on ne connaît pas ne donne pas envie d'être rejouée.
+
+Piège rencontré dans la correction elle-même : ma première version
+remplaçait la chute par un message de défaite. Or sur cinquante
+scénarios, cinquante et un ont une chute et dix-huit seulement ont un
+récit — **la chute EST l'explication**. La remplacer retirait l'histoire
+à celui qui en avait le plus besoin. Le reproche passe devant, en une
+phrase courte, et la chute reste.
+
 ### Un bouton d'état ne doit pas bloquer l'action qui l'annule
 
 À couvert, appuyer sur TIRER ne faisait rien : il fallait d'abord

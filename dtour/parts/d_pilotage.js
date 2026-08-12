@@ -586,19 +586,37 @@ const Interface = {
     if (E.eTarte) E.eTarte.textContent = Enquete.tarteEsquivee ? "OUI" : (Enquete.tarteRecue ? "NON" : "—");
     if (E.eFouilles) E.eFouilles.textContent = chiffres(Enquete.fouilles);
     if (E.eScore) E.eScore.textContent = chiffres(Score.points);
+    /* PERDRE DOIT AUSSI RACONTER L'AFFAIRE. Une enquête ratée ne
+       montrait ni le coupable ni ce qui s'était passé : le joueur
+       repartait sans savoir, et une histoire qu'on ne connaît pas ne
+       donne pas envie de la rejouer. On révèle donc la solution dans les
+       deux cas — la seule différence est le TON. */
+    const cause = (Enquete.fini && Enquete.fini.cause) || "temps";
     if (E.eCoupable){
-      E.eCoupable.textContent = gagne ? "C'ÉTAIT " + Affaire.titreSolution() : "";
-      E.eCoupable.classList.toggle("on", !!gagne);
+      E.eCoupable.textContent = gagne
+        ? "C'ÉTAIT " + Affaire.titreSolution()
+        : "C'ÉTAIT " + Affaire.revelation();
+      E.eCoupable.classList.add("on");
     }
     if (E.eChute){
-      E.eChute.textContent = gagne ? Affaire.chute() : "Personne n'a rien vu. Comme d'habitude.";
+      /* LA CHUTE RESTE, dans les deux cas : sur les cinquante scénarios,
+         cinquante et un ont une chute mais seulement dix-huit ont un
+         récit. La chute EST l'explication de l'affaire — la remplacer par
+         un message de défaite, comme le faisait ma première correction,
+         revenait à retirer l'histoire à celui qui en avait le plus
+         besoin. Le reproche passe devant, en une phrase courte. */
+      const pourquoi = cause === "accusations"
+        ? "Deux noms, deux erreurs."
+        : "Le temps a manqué.";
+      E.eChute.textContent = gagne ? Affaire.chute()
+                                   : pourquoi + " " + Affaire.chute();
       E.eChute.classList.add("on");
     }
     /* Le récit : la chute fait rire, le récit fait comprendre. Trouver
        le coupable sans savoir ce qu'il a fait laissait le joueur sur sa
-       faim. */
+       faim — et ne pas le trouver du tout, encore plus. */
     if (E.eRecit){
-      const r2 = gagne ? Affaire.recit() : "";
+      const r2 = Affaire.recit();
       E.eRecit.textContent = r2;
       E.eRecit.classList.toggle("on", !!r2);
     }
