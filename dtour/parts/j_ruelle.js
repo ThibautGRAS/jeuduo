@@ -1204,13 +1204,39 @@ Object.assign(Ruelle, {
       return true;
     }
     if (this.dans(this.zoneAbri(), x, y)){
-      this.couvert = !this.couvert; Sons.clic(); return true;
+      if (this.couvert) this.quitterAbri();
+      else { this.couvert = true; Sons.clic(); }
+      return true;
     }
-    if (this.couvert) return true;              /* à couvert, on ne tire pas */
-    if (this.dans(this.zoneTir(), x, y)){ this.tirerViseur(); return true; }
-    if (this.dans(this.zoneBascule(), x, y)){ this.changerHeros(); return true; }
+    /* À COUVERT, TIRER RELÈVE TOUT SEUL. Il fallait avant rappuyer sur
+       le bouclier avant de pouvoir tirer : deux gestes là où l'intention
+       est évidente, et le temps de les enchaîner suffisait à encaisser le
+       jet suivant. Le bouton ne sert plus qu'à SE METTRE à couvert ; on
+       en sort en tirant, ou en rappuyant dessus. */
+    if (this.dans(this.zoneTir(), x, y)){
+      if (this.couvert) this.quitterAbri();
+      this.tirerViseur();
+      return true;
+    }
+    if (this.dans(this.zoneBascule(), x, y)){
+      /* changer de héros relève aussi : accroupi, l'autre ne pourrait
+         rien faire de plus, et rester à couvert serait un piège */
+      if (this.couvert) this.quitterAbri();
+      this.changerHeros();
+      return true;
+    }
     return false;
   },
+  /* Sortir de l'abri est un geste à part : il se déclenche depuis trois
+     endroits — le bouclier, le tir, le changement de héros — et le son
+     doit être le même partout. */
+  quitterAbri(){
+    if (!this.couvert) return false;
+    this.couvert = false;
+    Sons.souffle(0.10, 0.07, 620, 1.5);
+    return true;
+  },
+
   toucheBouge(id, x, y){
     if (this.manche.actif && this.manche.id === id) this.majManche(x, y);
   },

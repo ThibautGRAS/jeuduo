@@ -293,26 +293,128 @@ laquelle donnerait beaucoup aux affaires.
 
 ---
 
+## Les méchants de la ruelle (niveau 4)
+
+Ils sont d'une autre nature que tout le reste du bestiaire : ce sont les
+**seuls adversaires qu'on abat**. Hortense lance des tartes, Risoto est
+suspect, mais personne n'est tué dans les trois premiers niveaux. Ceux-ci
+arrivent par hordes au fond d'une rue, et ils tombent.
+
+**Ils n'apparaissent QUE dans le niveau 4**, et c'est volontaire pour
+l'instant : les faire passer dans la file du niveau 1 ou dans
+l'appartement du niveau 2 signifierait qu'on les y côtoie, ce qui rendrait
+la fusillade absurde. Si l'un devait traverser un autre niveau un jour, il
+faudrait d'abord décider ce qu'il y est.
+
+Aucun n'est un portrait : ce sont des archétypes, et les noms ne vivent
+que dans le texte du code. Les planches doivent rester sur cette ligne —
+voir la section 14 de `PROMPTS.md`.
+
+Leur équilibrage suit une règle unique : **pv × vitesse est le même pour
+les trois**, entre 10,5 et 11,5. La même menace, répartie autrement — l'un
+laisse peu de temps, l'autre demande beaucoup de balles. Ce que chacun
+change, c'est la QUESTION posée au joueur.
+
+### DEPARDIAHREE — le tank
+
+- **Physique : homme très corpulent, la soixantaine, cheveux gris en
+  bataille, costume sombre ouvert sur une chemise blanche froissée.**
+  Il s'appelait « LE COSTAUD » jusqu'à la v6.53 ; ses treize fichiers ont
+  été renommés.
+- 160 points de vie, vitesse 0.072, taille 1.12 : le plus lent et le plus
+  dur des trois.
+- **Torse blindé** (multiplicateur 0,35), tête à 1,15 : deux balles de
+  revolver dans la tête, neuf dans le torse. Tirer dans la masse n'est
+  donc pas la bonne réponse, alors que le torse est la zone la plus large.
+- **Jambes** : deux balles le font trébucher. Ça ne le tue pas, ça fait
+  gagner 1,15 s.
+- **Attaque** : à moyenne distance (z 0,34 à 0,74) il s'arrête, ramasse
+  une bouteille, arme pendant 1,05 s — un point d'exclamation bat au-dessus
+  de sa tête — puis la lance. 18 points de barricade si on n'est pas à
+  couvert.
+- Sa question : **« la tête pour tuer, ou les jambes pour ralentir ? »**
+- Sprites : `enn_depar_*`, 18 poses.
+
+### DSKKK — le rapide en garde
+
+- **Physique : homme âgé, cheveux blancs plaqués, visage large et
+  rougeaud, costume sombre bien coupé, cravate desserrée.** Sec et
+  nerveux, l'opposé du précédent.
+- 95 points de vie, vitesse 0.115 : deux fois plus rapide pour moitié
+  moins de points de vie.
+- **La garde** : il couvre son visage périodiquement **tout en
+  avançant** — une garde immobile aurait été un répit, il faut qu'elle
+  soit une pression. Tant qu'elle tient, viser la tête revient à tirer
+  dans ses avant-bras : rien ne tombe, et le coup bloqué se voit (anneau
+  blanc) et s'entend (claquement métallique).
+- Trois réponses, aucune gratuite : attendre qu'il baisse les bras, viser
+  les **jambes** qui passent la garde, ou dépenser **trois balles** sur les
+  avant-bras pour la casser. Garde cassée, il reste **sonné** 1,25 s sans
+  aucune défense, la tête à 1,8 fois le tarif.
+- **Attaque** : arrivé au contact il ne s'évapore pas, il **bondit** sur la
+  barricade — 22 points au lieu de 12.
+- Sa question : **« comment ouvrir sa garde avant qu'il arrive ? »**
+- Sprites : `enn_dsk_*`, 19 poses, dont une seconde pose au sol où il
+  s'affaisse.
+
+### JUBILAR LE FUMIER — le lanceur rapide
+
+- **Physique : quarantaine, mal rasé, cheveux hirsutes, grosse chemise de
+  bûcheron à carreaux rouges et noirs, jean, grosses chaussures.** Trapu,
+  énergique, sourire mauvais.
+- 110 points de vie, vitesse 0.095 : le milieu des trois.
+- **La cible du bras** : il s'arrête net, sort un pavé, arme — et pendant
+  les 0,85 s de préparation, une cible apparaît sur son bras armé. Un tir
+  dedans **annule le jet** : le pavé tombe, il se tient le bras et perd
+  1,5 s. Rien n'entame ses points de vie ; la parade fait gagner du temps,
+  elle ne tue pas.
+- C'est la **première parade du niveau qui ne coûte pas de temps de tir**,
+  contrairement à À COUVERT — et c'est ce qui la rend intéressante : contre
+  lui, on choisit entre le geste sûr et coûteux et le geste gratuit qu'on
+  peut rater.
+- La cible a une **taille fixe à l'écran** : au fond de la rue un avant-bras
+  fait six pixels. Sa position, elle, est mesurée sur le sprite et déclarée
+  par personnage.
+- Sa question : **« je tire dans son bras, ou je me mets à couvert ? »**
+- Sprites : `enn_jubi_*`, 18 poses.
+
+### Ceux qui restent à faire
+
+Écrits dans le document de conception, pas encore construits : **L'ABBÉ
+FORCEUR**, prêtre maigre qui bombarde en cloche par-dessus les autres, et
+**PATRICK BRUHELL**, qui reste au fond et lance des salves de trois. Tous
+deux réutilisent la cible du bras, qui existe désormais. Et un **GÉANT**
+toutes les trois hordes : un des personnages déjà rencontrés, 2,2 fois plus
+grand, avec sa mécanique amplifiée.
+
 ## Où chacun apparaît
 
-| Personnage | Niveau 1 | Niveau 2 | Niveau 3 |
-|---|---|---|---|
-| PF | héros (droite) | inspecteur | champion |
-| Thibaut | héros (gauche) | inspecteur | champion |
-| Hortense | attaque aux fenêtres | frappe à la porte | traverse, rare |
-| Gabi | fait la queue | habitante | habituée du bar (animée) |
-| Mathilde | fait la queue | visiteuse | habituée du bar |
-| Tristan | — | — | habitué du bar (animé) |
-| Solène | — | — | habituée du bar (animée) |
-| Kevin | — | — | habitué du bar (animé) |
-| Rémy | — | — | habitué du bar (animé) |
-| Teo | terrasse | habitant | — |
-| Charles | terrasse | habitant (assis) | habitué du bar (animé) |
-| Risoto | — | suspect | traverse, clin d'œil |
-| Francky | fait la queue | visiteur | barman (cocktails) |
-| Jojo | fait la queue | visiteur | barman (Jägerbombs) |
-| Marini | fait la queue | visiteur | habitué + télé du fond |
-| Martin | fait la queue | visiteur | habitué du bar |
+| Personnage | Niveau 1 | Niveau 2 | Niveau 3 | Niveau 4 |
+|---|---|---|---|---|
+| PF | héros (droite) | inspecteur | champion | héros (fusil) |
+| Thibaut | héros (gauche) | inspecteur | champion | héros (revolver) |
+| Hortense | attaque aux fenêtres | frappe à la porte | traverse, rare | — |
+| Gabi | fait la queue | habitante | habituée du bar (animée) | — |
+| Mathilde | fait la queue | visiteuse | habituée du bar | — |
+| Tristan | — | — | habitué du bar (animé) | — |
+| Solène | — | — | habituée du bar (animée) | — |
+| Kevin | — | — | habitué du bar (animé) | — |
+| Rémy | — | — | habitué du bar (animé) | — |
+| Teo | terrasse | habitant | — | — |
+| Charles | terrasse | habitant (assis) | habitué du bar (animé) | — |
+| Risoto | — | suspect | traverse, clin d'œil | — |
+| Francky | fait la queue | visiteur | barman (cocktails) | — |
+| Jojo | fait la queue | visiteur | barman (Jägerbombs) | — |
+| Marini | fait la queue | visiteur | habitué + télé du fond | — |
+| Martin | fait la queue | visiteur | habitué du bar | — |
+| Depardiahree | — | — | — | **méchant** (tank) |
+| DSKKK | — | — | — | **méchant** (garde) |
+| Jubilar | — | — | — | **méchant** (lanceur) |
+
+Les trois méchants de la ruelle sont la seule exception à la règle
+ci-dessous : ils ont été inventés POUR le niveau 4 et n'apparaissent nulle
+part ailleurs. Une colonne vide sur toute leur ligne est une information,
+pas un oubli.
 
 Ajouter un niveau, c'est piocher dans ce tableau — pas inventer des
 gens : « seuls des personnages écrits pour le jeu valent la peine

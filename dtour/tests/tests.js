@@ -2863,24 +2863,64 @@ if (D){
     D.RELEVE_PF.some(l => /Callaghan/i.test(l)),
     "Thibaut dit « inspecteur », PF dit « Callaghan »");
 
-  verifier("le bouton à couvert accroupit les deux et coupe le tir",
+  verifier("le bouton à couvert accroupit les deux",
     (() => {
       D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
       const za = D.Ruelle.zoneAbri();
       D.Ruelle.toucheDebut(9, za.x, za.y);
-      const n0 = D.Ruelle.heroActif().balles;
-      const zt = D.Ruelle.zoneTir();
-      D.Ruelle.heroActif().repos = 0;
-      D.Ruelle.toucheDebut(10, zt.x, zt.y);
       const poses = [0, 1].map(i => D.Ruelle.poseHeros(i));
-      return D.Ruelle.couvert && D.Ruelle.heroActif().balles === n0 &&
-        poses.every(po => po === "accroupi");
-    })(), "se replier volontairement servira quand ils lanceront des choses");
-  verifier("et on peut ressortir",
+      return D.Ruelle.couvert && poses.every(po => po === "accroupi");
+    })(), "c'est ce qui annule les dégâts d'un jet");
+
+  verifier("et TIRER relève tout seul, sans repasser par le bouclier",
     (() => {
+      /* Avant, il fallait rappuyer sur le bouclier : deux gestes là où
+         l'intention est évidente, et le temps de les enchaîner suffisait
+         à encaisser le jet suivant. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      D.Ruelle.toucheDebut(9, D.Ruelle.zoneAbri().x, D.Ruelle.zoneAbri().y);
+      if (!D.Ruelle.couvert) return false;
+      const n0 = D.Ruelle.heroActif().balles;
+      D.Ruelle.heroActif().repos = 0;
+      const zt = D.Ruelle.zoneTir();
+      D.Ruelle.toucheDebut(10, zt.x, zt.y);
+      /* relevé ET le coup est parti, dans le même geste */
+      return !D.Ruelle.couvert && D.Ruelle.heroActif().balles === n0 - 1;
+    })());
+
+  verifier("changer de héros relève aussi",
+    (() => {
+      /* accroupi, l'autre ne pourrait rien faire de plus : rester à
+         couvert après avoir changé serait un piège. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      D.Ruelle.toucheDebut(9, D.Ruelle.zoneAbri().x, D.Ruelle.zoneAbri().y);
+      const zb = D.Ruelle.zoneBascule();
+      const idx = D.Ruelle.actifIdx;
+      D.Ruelle.toucheDebut(12, zb.x, zb.y);
+      return !D.Ruelle.couvert && D.Ruelle.actifIdx !== idx;
+    })());
+
+  verifier("le bouclier reste un bascule",
+    (() => {
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
       const za = D.Ruelle.zoneAbri();
+      D.Ruelle.toucheDebut(9, za.x, za.y);
+      const dedans = D.Ruelle.couvert;
       D.Ruelle.toucheDebut(11, za.x, za.y);
-      return !D.Ruelle.couvert;
+      return dedans && !D.Ruelle.couvert;
+    })());
+
+  verifier("la croix reste utilisable à couvert",
+    (() => {
+      /* Viser pendant qu'on encaisse est le seul geste qui reste : le
+         couper aurait fait de l'abri un temps mort. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      D.Ruelle.toucheDebut(9, D.Ruelle.zoneAbri().x, D.Ruelle.zoneAbri().y);
+      const zm = D.Ruelle.zoneManche();
+      const av = D.Ruelle.viseur.x;
+      D.Ruelle.toucheDebut(13, zm.x + zm.r * 0.8, zm.y);
+      for (let k = 0; k < 30; k++) D.Ruelle.pasViseur(1 / 60);
+      return D.Ruelle.couvert && D.Ruelle.viseur.x > av + 0.03;
     })());
   verifier("l'équipier ne couvre pas si on est à couvert",
     (() => {

@@ -264,6 +264,21 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Tirer relève tout seul** (v6.57) : à couvert, il fallait rappuyer sur
+le bouclier avant de pouvoir tirer. Deux gestes là où l'intention est
+évidente — et le temps de les enchaîner suffisait à encaisser le jet
+suivant. Le bouton ne sert plus qu'à SE METTRE à couvert ; on en sort en
+tirant, en changeant de héros, ou en rappuyant dessus. La croix reste
+utilisable pendant qu'on encaisse : viser est le seul geste qui reste, le
+couper aurait fait de l'abri un temps mort.
+
+**Le bestiaire connaît les méchants** : `PERSONNAGES.md` a sa section
+« Les méchants de la ruelle », avec pour chacun ses chiffres, sa mécanique
+et surtout **la question qu'il pose au joueur**. Le tableau « Où chacun
+apparaît » gagne une colonne Niveau 4, et il est dit noir sur blanc qu'ils
+n'interviennent nulle part ailleurs : une colonne vide sur toute leur ligne
+est une information, pas un oubli.
+
 **Jubilar et la cible du bras** (v6.56) : troisième ennemi, et la
 première parade qui ne coûte pas de temps de tir. Il s'arrête net, sort
 un pavé, arme — et pendant les 0,85 s de préparation, une **cible

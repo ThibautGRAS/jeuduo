@@ -1071,6 +1071,23 @@ D'où la règle : **canevas 320, disque 304, centré**, pour les huit.
 exactement huit boutons ; un test relit l'en-tête WebP et compare les
 huit tailles.
 
+### Un bouton d'état ne doit pas bloquer l'action qui l'annule
+
+À couvert, appuyer sur TIRER ne faisait rien : il fallait d'abord
+rappuyer sur le bouclier. Le code disait `if (this.couvert) return true;`
+avant même de regarder où le doigt avait tapé — l'état bloquait l'entrée
+au lieu d'être annulé par elle. Or l'intention de quelqu'un qui appuie sur
+TIRER pendant qu'il est accroupi ne fait aucun doute.
+
+La règle : un état défensif s'annule tout seul dès que le joueur demande
+l'action qu'il empêche. Sortir de l'abri est devenu un geste nommé
+(`quitterAbri`) appelé depuis trois endroits — le bouclier, le tir, le
+changement de héros — pour que le son et l'effet soient les mêmes partout.
+
+Attention au corollaire : ne pas tout débloquer pour autant. La croix
+directionnelle reste active à couvert, parce que viser est le seul geste
+qui reste et que le couper ferait de l'abri un temps mort.
+
 ### Une position sur un sprite se MESURE, elle ne se devine pas
 
 La cible du bras armé, première version : `x = 0,80` de la largeur, au
