@@ -264,6 +264,13 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Le harnais couvre le niveau 4** (v6.51) : quatre scènes permanentes —
+l'annonce, le jeu, la relève, le repli — parce qu'une règle en dur veut
+désormais qu'aucune modification visuelle ne parte sans qu'on ait ouvert
+une image du résultat. Elle a servi tout de suite : la réplique de
+relève sortait de l'écran par la droite, elle se rétrécit maintenant
+pour tenir, et le bouton À COUVERT était trop discret.
+
 **Les commandes sont des images** (v6.50) : bouton de tir dans ses
 trois états, anneau de rechargement qui se remplit, croix
 directionnelle, pastille de pouce, bouclier et relais. Peintes au

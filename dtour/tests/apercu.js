@@ -431,6 +431,56 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "22_ruelle_420");
   }
 
+  /* 23-26. LE NIVEAU 4, dans ses quatre situations. Ces scènes existent
+     parce que la règle en dur de MEMOIRE.md l'exige : aucune
+     modification visuelle ne part sans qu'on ait ouvert une image. */
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 1.6;
+    D.RuelleVue.dessiner(); D.RuelleVue.dessinerIntro();
+    ecrire(canevas, "23_ruelle_intro");
+  }
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    for (let k = 0; k < 3; k++) D.Ruelle.ajouterEnnemi();
+    D.Ruelle.ennemis.forEach((e, k) => { e.z = [0.28, 0.58, 0.86][k]; e.couloir = [1, 3, 2][k]; e.frame = k; });
+    D.Ruelle.ennemis[1].pv = 90;
+    D.Score.points = 1660; D.Ruelle.barricade = 74; D.Ruelle.vague = 2; D.Ruelle.aSortir = 6;
+    D.Ruelle.heros[0].balles = 4;
+    D.Ruelle.viseur = { x:0.52, y:0.40 };
+    D.Ruelle.manche = { actif:true, id:1, dx:0.35, dy:-0.5 };
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "24_ruelle_jeu");
+  }
+  {
+    /* le rechargement : l'un s'accroupit, l'autre couvre et le dit */
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ajouterEnnemi(); D.Ruelle.ennemis[0].z = 0.62;
+    D.Ruelle.heros[0].balles = 0; D.Ruelle.heros[0].recharge = 1.0;
+    D.Ruelle.pas(1 / 60);
+    D.Ruelle.heros[1].repos = 0.20;
+    D.Ruelle.flashes.push({ t:0.13, duree:0.13, heros:1 });
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "25_ruelle_releve");
+  }
+  {
+    /* à couvert : les deux accroupis, plus personne ne tire */
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ajouterEnnemi(); D.Ruelle.ennemis[0].z = 0.80;
+    D.Ruelle.couvert = true; D.Ruelle.barricade = 28; D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "26_ruelle_couvert");
+  }
+
   /* 21. niveau 1 au format d'un téléphone en paysage plein écran : c'est
          là que le rapport largeur/hauteur est le plus haut, et donc que
          la ligne de sol se voit le mieux. */

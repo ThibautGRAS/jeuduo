@@ -619,7 +619,7 @@ const VISEE_RECUL = { revolver:0.085, fusil:0.042 };
 const VISEE_RETOUR = 0.55;          /* le bras redescend tout seul      */
 const MANCHE_R = 0.150, MANCHE_X = 0.195, MANCHE_Y = 0.855;
 const TIR_R = 0.112, TIR_X = 0.805, TIR_Y = 0.855;
-const ABRI_R = 0.072, ABRI_X = 0.50, ABRI_Y = 0.745;
+const ABRI_R = 0.092, ABRI_X = 0.50, ABRI_Y = 0.735;
 
 Object.assign(Ruelle, {
   viseur:{ x:0.5, y:0.45 }, manche:{ actif:false, id:null, dx:0, dy:0 },
@@ -804,7 +804,7 @@ Object.assign(RuelleVue, {
 
     /* à couvert et changer */
     const za = Ruelle.zoneAbri();
-    poser("btn_couvert", za.x, za.y, za.r, Ruelle.couvert ? 1 : 0.78);
+    poser("btn_couvert", za.x, za.y, za.r, Ruelle.couvert ? 1 : 0.92);
     if (Ruelle.couvert){
       ctx.strokeStyle = "#4CC46A"; ctx.lineWidth = Math.max(2, za.r * 0.10);
       ctx.beginPath(); ctx.arc(za.x, za.y, za.r * 0.94, 0, 6.2832); ctx.stroke();
@@ -819,19 +819,28 @@ Object.assign(RuelleVue, {
     if (Ruelle.replique){
       const r2 = Ruelle.replique;
       const al = borne(r2.t / 0.4, 0, 1);
-      const bx = r2.qui === 0 ? L * 0.28 : L * 0.72;
       const by = H * 0.600;
       /* L'alignement était laissé à ce que le dessin précédent avait
          posé : la pastille se calait au centre et le texte partait à
          gauche. On le fixe ICI, juste avant d'écrire. */
       ctx.save();
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.font = "800 " + Math.round(L * 0.036) + "px 'Baloo 2', system-ui, sans-serif";
-      const w2 = ctx.measureText(r2.txt).width;
-      const bw2 = Math.min(w2 + 22, L * 0.62);
+      /* La réplique se RÉTRÉCIT pour tenir : « Je prends la suite,
+         Callaghan. » sortait de l'écran par la droite. On cherche la
+         taille qui rentre, puis on ramène la pastille dans l'écran. */
+      let taille = L * 0.036, w2 = 0;
+      for (let k = 0; k < 8; k++){
+        ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+        w2 = ctx.measureText(r2.txt).width;
+        if (w2 + 24 <= L * 0.80) break;
+        taille *= 0.92;
+      }
+      const bw2 = w2 + 24;
+      const bx = borne(r2.qui === 0 ? L * 0.30 : L * 0.70,
+                       bw2 / 2 + 6, L - bw2 / 2 - 6);
       ctx.globalAlpha = al;
       ctx.fillStyle = "rgba(250,248,255,.95)";
-      arrondi(bx - bw2 / 2, by - L * 0.038, bw2, L * 0.076, L * 0.032); ctx.fill();
+      arrondi(bx - bw2 / 2, by - taille * 1.05, bw2, taille * 2.10, taille * 0.95); ctx.fill();
       ctx.fillStyle = "#171226";
       ctx.fillText(r2.txt, bx, by);
       ctx.restore();

@@ -37,9 +37,17 @@ Dans cet ordre, sans sauter d'étape :
 2. **Contrôler la syntaxe** : extraire le `<script>` et lancer `node --check`.
 3. **Lancer la suite** : `node tests/tests.js`. Elle rend un code non nul en cas
    d'échec.
-4. **Ne pousser que si tout est vert.** Enchaîner les commandes avec `&&`, jamais
+4. **REGARDER LE RENDU AVANT DE POUSSER.** Règle en dur, sans exception :
+   toute modification qui touche à l'affichage — un sprite, une position, une
+   couleur, un bouton, un ordre de dessin — se vérifie **à l'image** avant le
+   push, avec `node dtour/tests/apercu.js` puis en OUVRANT les fichiers
+   produits. Les tests ne voient pas un bouton coupé, une couture, un halo
+   rose, un personnage qui flotte ou un texte à côté de sa pastille : ils ont
+   laissé passer tout ça. Une suite verte n'autorise pas à pousser du visuel
+   non regardé, et chaque aller-retour évité vaut dix minutes de rendu.
+5. **Ne pousser que si tout est vert.** Enchaîner les commandes avec `&&`, jamais
    avec des retours à la ligne : sinon le déploiement part malgré un test rouge.
-5. **Vérifier après coup** que le fichier déployé contient bien ce qu'on croit,
+6. **Vérifier après coup** que le fichier déployé contient bien ce qu'on croit,
    en particulier le numéro de version affiché en bas du lobby.
 
 **Piège du tube.** `node tests/x.js | tail -3` renvoie le code de `tail`, pas

@@ -1,5 +1,24 @@
 # MEMOIRE.md — ce que ce dossier a appris
 
+### RÈGLE EN DUR — regarder le rendu avant de pousser
+Aucune modification visuelle ne part sans qu'on ait OUVERT une image du
+résultat. Pas « les tests sont verts, donc ça va » : les tests ont
+laissé passer, dans ce seul projet, un bouton coupé à la ceinture, une
+couture rectangulaire en plein écran, un halo rose autour des
+commandes, un personnage qui flotte au-dessus du trottoir, un texte à
+côté de sa pastille, une flamme de bouche à l'autre bout de l'écran et
+un équipier qui tirait sans jouer son animation.
+
+Le harnais rend toutes les scènes en une commande. Le coût est d'une
+minute ; le coût d'un aller-retour avec Thibaut est bien supérieur, et
+il use la confiance dans ce que je livre.
+
+Corollaire : quand une scène manque au harnais, on l'AJOUTE au lieu de
+bricoler un script jetable. `apercu.js` doit couvrir tout ce qui se
+dessine.
+
+---
+
 Mémoire technique de `dtour/`. Complète `LISEZMOI.md`, qui décrit le
 jeu, et `../MEMOIRE.md`, dont les pièges valent ici aussi.
 
