@@ -2686,16 +2686,54 @@ if (D){
          combattants. */
       const vue = source.slice(source.indexOf("const RuelleVue"));
       const iEnn = vue.indexOf("Ruelle.poseEnnemi");
-      const iHer = vue.indexOf("RUELLE_TAILLE_HEROS");
       const iBar = vue.indexOf("RUELLE_PREMIER_PLAN");
-      return iEnn > 0 && iHer > iEnn && iBar > iHer;
-    })(), "l'ordre doit être : décor, ennemis, héros, barricade");
-  verifier("les héros chevauchent la barricade",
+      const iHer = vue.indexOf("RUELLE_TAILLE_HEROS");
+      return iEnn > 0 && iBar > iEnn && iHer > iBar;
+    })(), "l'ordre doit être : décor, ennemis, barricade, héros");
+  verifier("les héros se mettent à couvert pour recharger",
     (() => {
-      /* Leurs pieds sont sous le bord de l'écran : la palissade les
-         coupe à la taille au lieu de les poser devant. */
-      const m = source.match(/RUELLE_PIEDS_HEROS = ([\d.]+)/);
-      return !!m && parseFloat(m[1]) > 1;
+      /* C'est le seul moment où ils s'enfoncent derrière la barricade :
+         le reste du temps ils sont entiers, au premier plan. */
+      const m = source.match(/RUELLE_ABRI = ([\d.]+)/);
+      return !!m && parseFloat(m[1]) > 0.15 && /h\.recharge > 0 \?/.test(source);
+    })());
+
+  verifier("le champignon pousse le viseur",
+    (() => {
+      D.Jeu.demarrer(4); D.Camera.mesurer(390, 780, 1);
+      const zm = D.Ruelle.zoneManche();
+      const av = D.Ruelle.viseur.x;
+      D.Ruelle.toucheDebut(1, zm.x + zm.r * 0.8, zm.y);
+      for (let k = 0; k < 30; k++) D.Ruelle.pasViseur(1 / 60);
+      return D.Ruelle.viseur.x > av + 0.05;
+    })(), "toucher l'ennemi directement rendait le niveau trop simple");
+  verifier("le bouton de tir tire, le champignon non",
+    (() => {
+      D.Jeu.demarrer(4);
+      const zt = D.Ruelle.zoneTir(), zm = D.Ruelle.zoneManche();
+      const n0 = D.Ruelle.heroActif().balles;
+      D.Ruelle.toucheDebut(2, zm.x, zm.y);
+      const apresManche = D.Ruelle.heroActif().balles;
+      D.Ruelle.heroActif().repos = 0;
+      D.Ruelle.toucheDebut(3, zt.x, zt.y);
+      return apresManche === n0 && D.Ruelle.heroActif().balles === n0 - 1;
+    })());
+  verifier("le recul repousse le viseur vers le haut",
+    (() => {
+      D.Jeu.demarrer(4);
+      D.Ruelle.viseur.y = 0.5; D.Ruelle.heroActif().repos = 0;
+      D.Ruelle.tirerViseur();
+      return D.Ruelle.viseur.y < 0.5;
+    })(), "c'est lui qui impose son rythme au revolver");
+  verifier("le revolver recule plus que le fusil",
+    D.VISEE_RECUL.revolver > D.VISEE_RECUL.fusil * 1.5);
+  verifier("la bascule au centre change de héros",
+    (() => {
+      D.Jeu.demarrer(4);
+      const zb = D.Ruelle.zoneBascule();
+      const av = D.Ruelle.actifIdx;
+      D.Ruelle.toucheDebut(4, zb.x, zb.y);
+      return D.Ruelle.actifIdx !== av;
     })());
 
   /* --- la ruelle se joue --- */

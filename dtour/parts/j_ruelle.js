@@ -27,14 +27,23 @@ const RUELLE_PREMIER_PLAN = 0.700;  /* fraction du décor qui passe devant */
 /* Les héros CHEVAUCHENT la barricade : leurs pieds sont sous le bord de
    l'écran et la palissade les coupe à la taille. C'est ce qui les met
    vraiment derrière l'abri au lieu de les poser devant. */
-const RUELLE_TAILLE_HEROS = 0.480;
-const RUELLE_PIEDS_HEROS = 1.020;   /* fraction de hauteur : sous l'écran */
+const RUELLE_TAILLE_HEROS = 0.400;
+const RUELLE_PIEDS_HEROS = 0.995;   /* fraction de hauteur : les pieds    */
 /* Les planches dessinent les héros de PROFIL, arme à l'horizontale. Or
    les ennemis arrivent du fond, donc d'en haut : à plat, les deux se
    visaient l'un l'autre par-dessus la barricade. On les incline
    légèrement vers le point de fuite — c'est un mensonge de perspective,
    mais c'est celui que l'œil attend. */
-const RUELLE_INCLINE_HEROS = 0.20;  /* radians, vers le haut de la rue  */
+const RUELLE_INCLINE_HEROS = 0.16;  /* radians, vers le haut de la rue  */
+/* Trois plans, et l'ordre compte plus que tout :
+   3. les ENNEMIS au fond, masqués par les contours de la barricade ;
+   2. la BARRICADE, redessinée par-dessus eux ;
+   1. les HÉROS devant elle, entiers — ils étaient coupés à la ceinture
+      et ressemblaient à des bustes posés sur les caisses.
+   Quand ils rechargent, ils se baissent DERRIÈRE la barricade : c'est
+   le seul moment où ils passent au second plan. */
+const RUELLE_ABRI = 0.30;           /* de combien ils s'enfoncent, en
+                                       fraction de leur hauteur        */
 const RUELLE_ECART_HEROS = 0.205;   /* écart au bord : plus ils sont
                                        écartés, plus les lignes de tir
                                        se croisent haut dans la ruelle */
@@ -128,6 +137,7 @@ const Ruelle = {
     this.barricade = RUELLE_BARRICADE_PV;
     this.vague = 0; this.actifIdx = 0;
     this.secousse = 0; this.hitStop = 0;
+    this.recul = 0; this.razViseur();
     this.heros = [
       { id:"thibaut", arme:"revolver", sprite:"ruel_th", balles:ARMES.revolver.chargeur,
         recharge:0, repos:0, pose:"vise1" },
@@ -167,6 +177,7 @@ const Ruelle = {
     if (!this.actif) return;
     if (this.hitStop > 0){ this.hitStop -= dt; return; }
     this.secousse = Math.max(0, this.secousse - dt * 2.4);
+    this.pasViseur(dt);
     for (const h of this.heros){
       if (h.recharge > 0){
         h.recharge -= dt;
@@ -363,27 +374,6 @@ const RuelleVue = {
       ctx.drawImage(spr, b.x + (b.l - l) / 2, b.y, l, b.h);
       ctx.globalAlpha = 1;
     }
-    /* les deux héros, tout devant, de dos. PF est RETOURNÉ : les deux
-       doivent viser vers le centre de la ruelle, sinon celui de droite
-       tire vers le trottoir. */
-    for (let i = 0; i < 2; i++){
-      const h = Ruelle.heros[i];
-      const spr = Images.table[h.sprite + "_" + Ruelle.poseHeros(i)];
-      if (!spr || !spr.naturalWidth) continue;
-      const haut = H * RUELLE_TAILLE_HEROS;
-      const larg = haut * spr.naturalWidth / spr.naturalHeight;
-      const x = i === 0 ? L * RUELLE_ECART_HEROS : L * (1 - RUELLE_ECART_HEROS);
-      const yHaut = H * RUELLE_PIEDS_HEROS - haut;
-      ctx.save();
-      ctx.globalAlpha = i === Ruelle.actifIdx ? 1 : 0.84;
-      /* On pivote autour de l'épaule, pas du coin de l'image : sinon le
-         personnage décolle du sol en s'inclinant. */
-      ctx.translate(x, yHaut + haut * 0.34);
-      if (i === 1) ctx.scale(-1, 1);
-      ctx.rotate(-RUELLE_INCLINE_HEROS);
-      ctx.drawImage(spr, -larg / 2, -haut * 0.34, larg, haut);
-      ctx.restore();
-    }
     /* La barricade repasse DEVANT : les ennemis arrivés au contact
        doivent disparaître derrière les caisses, pas marcher dessus. */
     const f = this._fond;
@@ -402,7 +392,200 @@ const RuelleVue = {
       ctx.drawImage(fond, f.x, f.y, f.l, f.h);
       ctx.restore();
     }
+    /* les deux héros, tout devant, de dos. PF est RETOURNÉ : les deux
+       doivent viser vers le centre de la ruelle, sinon celui de droite
+       tire vers le trottoir. */
+    for (let i = 0; i < 2; i++){
+      const h = Ruelle.heros[i];
+      const spr = Images.table[h.sprite + "_" + Ruelle.poseHeros(i)];
+      if (!spr || !spr.naturalWidth) continue;
+      const haut = H * RUELLE_TAILLE_HEROS;
+      const larg = haut * spr.naturalWidth / spr.naturalHeight;
+      const x = i === 0 ? L * RUELLE_ECART_HEROS : L * (1 - RUELLE_ECART_HEROS);
+      /* Pendant le rechargement il se met À COUVERT : il s'enfonce
+         derrière la barricade, et il n'est plus dessiné devant elle. */
+      const abri = h.recharge > 0 ? Math.sin(Math.min(1, 1 - h.recharge / ARMES[h.arme].recharge) * Math.PI) : 0;
+      const yHaut = H * RUELLE_PIEDS_HEROS - haut + haut * RUELLE_ABRI * abri;
+      ctx.save();
+      ctx.globalAlpha = i === Ruelle.actifIdx ? 1 : 0.84;
+      /* On pivote autour de l'épaule, pas du coin de l'image : sinon le
+         personnage décolle du sol en s'inclinant. */
+      ctx.translate(x, yHaut + haut * 0.34);
+      if (i === 1) ctx.scale(-1, 1);
+      ctx.rotate(-RUELLE_INCLINE_HEROS);
+      ctx.drawImage(spr, -larg / 2, -haut * 0.34, larg, haut);
+      ctx.restore();
+    }
     ctx.globalAlpha = 1;
     ctx.restore();
+    this.dessinerHud();
   },
 };
+
+/* ================= viser au pouce =================
+   Toucher directement l'ennemi rendait le niveau trop simple : c'était
+   un jeu de temps de réaction, sans adresse. Un VISEUR qu'on déplace au
+   champignon et un bouton de tir séparé changent la nature du jeu — la
+   difficulté devient le suivi d'une cible qui grossit et se décale.
+   Le recul repousse le viseur vers le haut : c'est ce qui impose son
+   rythme au revolver de Thibaut et distingue vraiment les deux armes. */
+const VISEE_VITESSE = 0.62;         /* largeurs d'écran par seconde     */
+const VISEE_RECUL = { revolver:0.085, fusil:0.042 };
+const VISEE_RETOUR = 0.55;          /* le bras redescend tout seul      */
+const MANCHE_R = 0.155, MANCHE_X = 0.20, MANCHE_Y = 0.845;
+const TIR_R = 0.115, TIR_X = 0.80, TIR_Y = 0.845;
+
+Object.assign(Ruelle, {
+  viseur:{ x:0.5, y:0.45 }, manche:{ actif:false, id:null, dx:0, dy:0 },
+
+  razViseur(){ this.viseur = { x:0.5, y:0.45 }; this.manche = { actif:false, id:null, dx:0, dy:0 }; },
+
+  /* Les trois zones du pouce, en fractions : elles suivent l'écran. */
+  zoneManche(){ return { x:Camera.L * MANCHE_X, y:Camera.H * MANCHE_Y, r:Camera.L * MANCHE_R }; },
+  zoneTir(){ return { x:Camera.L * TIR_X, y:Camera.H * TIR_Y, r:Camera.L * TIR_R }; },
+  zoneBascule(){ return { x:Camera.L * 0.5, y:Camera.H * 0.885, r:Camera.L * 0.085 }; },
+  dans(z, x, y){ const dx = x - z.x, dy = y - z.y; return dx * dx + dy * dy <= z.r * z.r; },
+
+  toucheDebut(id, x, y){
+    if (!this.actif) return false;
+    if (this.dans(this.zoneManche(), x, y)){
+      this.manche = { actif:true, id, dx:0, dy:0 };
+      this.majManche(x, y);
+      return true;
+    }
+    if (this.dans(this.zoneTir(), x, y)){ this.tirerViseur(); return true; }
+    if (this.dans(this.zoneBascule(), x, y)){ this.changerHeros(); return true; }
+    return false;
+  },
+  toucheBouge(id, x, y){
+    if (this.manche.actif && this.manche.id === id) this.majManche(x, y);
+  },
+  toucheFin(id){
+    if (this.manche.actif && this.manche.id === id) this.manche = { actif:false, id:null, dx:0, dy:0 };
+  },
+  majManche(x, y){
+    const z = this.zoneManche();
+    let dx = (x - z.x) / z.r, dy = (y - z.y) / z.r;
+    const d = Math.hypot(dx, dy);
+    if (d > 1){ dx /= d; dy /= d; }
+    this.manche.dx = dx; this.manche.dy = dy;
+  },
+
+  /* Le viseur bouge, le recul le repousse, le bras le ramène. */
+  pasViseur(dt){
+    const m = this.manche;
+    if (m.actif){
+      this.viseur.x += m.dx * VISEE_VITESSE * dt;
+      this.viseur.y += m.dy * VISEE_VITESSE * dt * (Camera.L / Math.max(1, Camera.H)) * 1.9;
+    }
+    if (this.recul > 0){
+      const pris = Math.min(this.recul, VISEE_RETOUR * dt);
+      this.viseur.y += pris; this.recul -= pris;
+    }
+    this.viseur.x = borne(this.viseur.x, 0.04, 0.96);
+    this.viseur.y = borne(this.viseur.y, 0.06, 0.78);
+  },
+
+  tirerViseur(){
+    const av = this.viseur.y;
+    const ok = this.tirer(this.viseur.x * Camera.L, this.viseur.y * Camera.H);
+    void av; void ok;
+    const arme = this.heroActif().arme;
+    /* Le recul ne s'applique que si le coup est parti. */
+    if (this.heroActif().repos > 0){
+      const r = VISEE_RECUL[arme] || 0.06;
+      this.viseur.y = borne(this.viseur.y - r, 0.06, 0.78);
+      this.recul = (this.recul || 0) + r;
+    }
+    return ok;
+  },
+});
+
+/* ================= le HUD et les commandes ================= */
+Object.assign(RuelleVue, {
+  dessinerHud(){
+    const L = Camera.L, H = Camera.H;
+    const p = Math.round(L * 0.036);
+    ctx.textBaseline = "middle";
+
+    /* --- bandeau du haut : score, vague, barricade --- */
+    const hb = Math.round(H * 0.052);
+    ctx.fillStyle = "rgba(8,7,14,.72)";
+    arrondi(p * 0.5, p * 0.5, L - p, hb, hb * 0.3); ctx.fill();
+    ctx.font = "800 " + Math.round(hb * 0.40) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.textAlign = "left"; ctx.fillStyle = "#F7B32B";
+    ctx.fillText(chiffres(Score.points), p * 1.1, p * 0.5 + hb * 0.5);
+    ctx.textAlign = "center"; ctx.fillStyle = "#EDE7FA";
+    ctx.fillText("VAGUE " + (Ruelle.vague + 1), L * 0.5, p * 0.5 + hb * 0.5);
+
+    /* la barricade : une jauge, pas un nombre */
+    const lj = L * 0.24, xj = L - p * 1.1 - lj, yj = p * 0.5 + hb * 0.5;
+    const part = Ruelle.barricade / RUELLE_BARRICADE_PV;
+    ctx.fillStyle = "rgba(255,255,255,.16)";
+    arrondi(xj, yj - hb * 0.16, lj, hb * 0.32, hb * 0.16); ctx.fill();
+    ctx.fillStyle = part > 0.6 ? "#4CC46A" : part > 0.3 ? "#F7B32B" : "#E2453D";
+    arrondi(xj, yj - hb * 0.16, Math.max(2, lj * part), hb * 0.32, hb * 0.16); ctx.fill();
+
+    /* --- le viseur --- */
+    const vx = Ruelle.viseur.x * L, vy = Ruelle.viseur.y * H;
+    const r = L * 0.052;
+    const cible = Ruelle.viser(vx, vy, ARMES[Ruelle.heroActif().arme].tolerance);
+    ctx.strokeStyle = cible ? "#E2453D" : "rgba(255,255,255,.82)";
+    ctx.lineWidth = Math.max(1.5, L * 0.006);
+    ctx.beginPath(); ctx.arc(vx, vy, r, 0, 6.2832); ctx.stroke();
+    ctx.beginPath();
+    for (const [ax, ay] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      ctx.moveTo(vx + ax * r * 0.45, vy + ay * r * 0.45);
+      ctx.lineTo(vx + ax * r * 1.35, vy + ay * r * 1.35);
+    }
+    ctx.stroke();
+
+    /* --- le champignon --- */
+    const zm = Ruelle.zoneManche();
+    ctx.fillStyle = "rgba(10,8,16,.42)";
+    ctx.beginPath(); ctx.arc(zm.x, zm.y, zm.r, 0, 6.2832); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.20)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(zm.x, zm.y, zm.r, 0, 6.2832); ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.66)";
+    ctx.beginPath();
+    ctx.arc(zm.x + Ruelle.manche.dx * zm.r * 0.62,
+            zm.y + Ruelle.manche.dy * zm.r * 0.62, zm.r * 0.36, 0, 6.2832);
+    ctx.fill();
+
+    /* --- le bouton de tir, avec les munitions autour --- */
+    const zt = Ruelle.zoneTir(), h = Ruelle.heroActif(), arme = ARMES[h.arme];
+    const recharge = h.recharge > 0;
+    ctx.fillStyle = recharge ? "rgba(90,70,30,.55)" : "rgba(226,69,61,.80)";
+    ctx.beginPath(); ctx.arc(zt.x, zt.y, zt.r, 0, 6.2832); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.34)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(zt.x, zt.y, zt.r, 0, 6.2832); ctx.stroke();
+    ctx.textAlign = "center"; ctx.fillStyle = "#FFF";
+    ctx.font = "800 " + Math.round(zt.r * 0.34) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillText(recharge ? "…" : "TIR", zt.x, zt.y);
+    /* une balle par munition, en couronne : on lit le chargeur d'un
+       coup d'œil sans compter */
+    for (let k = 0; k < arme.chargeur; k++){
+      const a = -Math.PI / 2 + (k / arme.chargeur) * 6.2832;
+      const rr = zt.r * 1.30;
+      ctx.beginPath();
+      ctx.arc(zt.x + Math.cos(a) * rr, zt.y + Math.sin(a) * rr, zt.r * 0.11, 0, 6.2832);
+      ctx.fillStyle = k < h.balles ? "#F7B32B" : "rgba(255,255,255,.18)";
+      ctx.fill();
+    }
+
+    /* --- la bascule de héros, au centre --- */
+    const zb = Ruelle.zoneBascule();
+    ctx.fillStyle = "rgba(10,8,16,.62)";
+    ctx.beginPath(); ctx.arc(zb.x, zb.y, zb.r, 0, 6.2832); ctx.fill();
+    ctx.strokeStyle = Heros[Ruelle.actifIdx] ? Heros[Ruelle.actifIdx].couleur : "#FFF";
+    ctx.lineWidth = Math.max(2, L * 0.008);
+    ctx.beginPath(); ctx.arc(zb.x, zb.y, zb.r, 0, 6.2832); ctx.stroke();
+    ctx.fillStyle = "#EDE7FA";
+    ctx.font = "800 " + Math.round(zb.r * 0.40) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillText(Ruelle.heroActif().id === "thibaut" ? "TH" : "P-F", zb.x, zb.y - zb.r * 0.12);
+    ctx.font = "700 " + Math.round(zb.r * 0.26) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillStyle = "rgba(237,231,250,.66)";
+    ctx.fillText("CHANGER", zb.x, zb.y + zb.r * 0.42);
+    ctx.textAlign = "left";
+  },
+});

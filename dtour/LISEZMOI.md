@@ -264,6 +264,23 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**On vise au pouce** (v6.39). Toucher directement l'ennemi rendait le
+niveau trop simple : c'était un jeu de temps de réaction, sans adresse.
+Un **champignon** à gauche pousse le viseur, un **bouton TIR** à droite
+fait feu, et le **recul** repousse le réticule vers le haut — fort au
+revolver de Thibaut, doux au fusil de PF. C'est ça qui distingue enfin
+les deux armes : l'un impose son rythme, l'autre pardonne.
+
+**Trois plans, dans le bon ordre** : les ennemis au fond, masqués par
+les contours de la barricade ; la barricade au second ; les héros
+devant, **entiers**. Ils étaient coupés à la ceinture et ressemblaient à
+des bustes posés sur les caisses. Quand ils rechargent, ils s'enfoncent
+derrière l'abri — c'est le seul moment où ils passent au second plan.
+
+**Un premier HUD** : score, vague, jauge de barricade, viseur qui rougit
+sur une cible, munitions en couronne autour du bouton de tir, et une
+bascule au centre pour changer de héros.
+
 **Les héros visent la ruelle** (v6.38) : ils sont inclinés vers le point
 de fuite, la coupe de la barricade descend dans les caisses là où elles
 couvrent partout, et la course des ennemis s'anime à une cadence liée à
