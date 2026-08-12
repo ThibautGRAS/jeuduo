@@ -264,6 +264,21 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Jubilar refait** (v6.63) : ses dix-huit poses viennent de deux
+nouvelles planches, et le raccord de chemise qui clochait depuis la v6.56
+est réglé — la base et la mécanique sortent enfin du même dessin.
+
+Le pavé a changé de place dans la pose de préparation : de 0,23 / 0,05 du
+canevas à **0,14 / 0,05**. La cible du bras a suivi. C'est une leçon à
+retenir : **une position d'interface calée sur un sprite est solidaire de
+ce sprite** — elle se remesure à chaque nouvelle planche, elle ne se
+reporte pas. Vérifié aux deux bornes de sa fourchette de jet : la cible
+tombe à 0,140 / 0,050 du sprite dessiné, aux deux profondeurs.
+
+Le découpeur accepte désormais des **coupures bornées en hauteur** : une
+colonne coupée sur toute la planche sectionnait aussi la pose du dessus,
+et le morceau détaché — 3 537 px — était compté comme une pose de plus.
+
 **Le bar est plein de monde** (v6.62) : neuf habitués peuplent le
 **premier plan**, en trois grappes — bas gauche, bas centre, bas droite —
 posées si bas qu'on ne voit que leurs épaules et leur tête. Le champion

@@ -763,7 +763,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.62</div>
+  <div id="version">CALLAGHAN v6.63</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -835,7 +835,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.62";
+const VERSION = "6.63";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -9438,10 +9438,12 @@ const ENNEMIS = {
        armé porte une CIBLE : un tir dedans annule le jet. C'est la seule
        parade du niveau qui ne coûte pas de temps de tir, contrairement à
        À COUVERT — et c'est ce qui la rend intéressante. */
-    /* cible mesurée sur enn_jubi_arme2 : le pavé est à 0,23 de la
-       largeur du canevas et 0,09 de sa hauteur */
+    /* Cible mesurée sur enn_jubi_arme2, et REMESURÉE à chaque nouvelle
+       planche : la pose de préparation a changé en v6.63 et la pierre
+       est passée de 0,23 / 0,09 à 0,14 / 0,05. Une position d'interface
+       calée sur un sprite est solidaire de ce sprite. */
     jet:{ zMin:0.25, zMax:0.80, attente:[2.2, 3.6], objet:"pave",
-          vol:1.00, degat:14, cible:{ x:0.23, y:0.09 }, penalite:1.6 },
+          vol:1.00, degat:14, cible:{ x:0.14, y:0.05 }, penalite:1.6 },
   },
 };
 

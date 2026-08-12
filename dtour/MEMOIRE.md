@@ -1096,6 +1096,25 @@ LE TROU — teinte de corps pour un alpha effacé par erreur, noir ou
 magenta pour du fond réellement enclos. Ma première version comptait
 tout, et déclarait cassées des découpes justes.
 
+### Une coupure de planche doit pouvoir être bornée en hauteur
+
+Deux poses qui se touchent se séparent en déclarant la colonne de coupe.
+Mais couper la colonne sur TOUTE la hauteur de la planche sectionne aussi
+la pose de la rangée du dessus : sur Jubilar, la coupure des poses au sol
+amputait le bras d'une pose de course, et le morceau détaché — 3 537 px,
+au-dessus du seuil de fragment — était compté comme une pose de plus. Le
+contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
+coupure se déclare donc avec sa plage de hauteur.
+
+### Une position d'interface calée sur un sprite se REMESURE
+
+La cible du bras armé de Jubilar était à 0,23 / 0,09 du canevas, mesurée
+sur sa planche de la v6.56. La nouvelle planche place le pavé à
+0,14 / 0,05 : reporter l'ancienne valeur aurait remis la cible à côté
+d'une main vide, exactement le défaut corrigé en v6.56. Ce genre de
+constante est solidaire du dessin sur lequel elle a été prise, et doit
+figurer dans la liste des choses à refaire quand la planche change.
+
 ### Un premier plan se calibre sur ce qu'il ne doit PAS masquer
 
 Première version de la foule du bar : pieds à 1,30 hauteur d'écran,
