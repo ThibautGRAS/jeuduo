@@ -264,6 +264,13 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**La jauge appartient au décor** (v6.48) : la vie de la barricade est
+posée sur les caisses et **suit leur courbe** — un trait droit sur un
+décor en perspective a l'air collé par-dessus. Les héros passent devant
+elle, les ennemis derrière. Le bouton de tir devient un cadran :
+couronne de fins bâtonnets, bague lumineuse en trois passes de plus en
+plus pâles, balle dorée en dégradé et compte de munitions dessous.
+
 **Le binôme se comprend** (v6.47) : celui qui ne tire pas reste
 **accroupi derrière la barricade** — debout sans rien faire, il avait
 l'air d'attendre le bus. La vie de la barricade se lit désormais **sur

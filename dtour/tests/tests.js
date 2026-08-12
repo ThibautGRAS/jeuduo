@@ -2750,9 +2750,17 @@ if (D){
       D.Ruelle.heros[autre].recharge = 0;
       return D.Ruelle.poseHeros(autre) === "accroupi";
     })(), "debout sans tirer, il avait l'air d'attendre le bus");
-  verifier("la vie de la barricade se lit sur la barricade",
-    /const yj = H \* RUELLE_PREMIER_PLAN/.test(source),
-    "en haut à gauche, on la confondait avec le score");
+  verifier("la vie de la barricade est posée sur la barricade, et courbée",
+    (() => {
+      /* Elle appartient au DÉCOR : les héros passent devant, les ennemis
+         derrière. Et elle suit la courbe des caisses — un trait droit
+         sur un décor en perspective a l'air collé par-dessus. */
+      const vue = source.slice(source.indexOf("const RuelleVue"));
+      const iBar = vue.indexOf("RUELLE_PREMIER_PLAN");
+      const iJauge = vue.indexOf("RUELLE_BARRICADE_PV");
+      const iHer = vue.indexOf("RUELLE_TAILLE_HEROS");
+      return iBar > 0 && iJauge > iBar && iHer > iJauge && /cyArc/.test(source);
+    })());
 
   verifier("l'équipier qui couvre JOUE l'animation de tir",
     (() => {
