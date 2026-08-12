@@ -2853,6 +2853,40 @@ if (D){
       return tailles.every(x => x.o > 800 && x.o < 40000);
     })());
 
+  verifier("l'impact reste SYNTHÉTISÉ, il n'a pas d'échantillon",
+    (() => {
+      /* C'est le son le plus fréquent du niveau — cinquante fois par
+         horde. Un échantillon, même bon, s'y entend en boucle et
+         fatigue ; la percussion sèche, non. Celui de la v6.70 était
+         mauvais et a été retiré. */
+      return D.Sons.ECHANTILLONS.indexOf("impact_chair") < 0 &&
+        !fs.existsSync(path.join(RACINE, "son", "impact_chair.ogg")) &&
+        /impact\(tete\)\{[\s\S]{0,200}?this\.claque/.test(source);
+    })());
+
+  verifier("les cinq cris ont des timbres DIFFÉRENTS",
+    (() => {
+      /* Découpés dans le même enregistrement : sans transformation
+         propre à chacun, les cinq méchants meurent avec la même voix.
+         Les tailles de fichier suffisent à voir qu'ils diffèrent —
+         durées et hauteurs distinctes donnent des poids distincts. */
+      const t2 = Object.keys(D.ENNEMIS).map(
+        k => fs.statSync(path.join(RACINE, "son", "cri_" + k + ".ogg")).size);
+      messageDetail = t2.map(x => Math.round(x / 1024) + " Ko").join(", ");
+      return new Set(t2).size === t2.length;
+    })());
+
+  verifier("le source des cris n'est pas versionné",
+    (() => {
+      /* 4,9 Mo servis par GitHub Pages pour un fichier que le jeu ne
+         charge jamais. */
+      const wav = fs.readdirSync(path.join(RACINE, "son"))
+        .filter(f => f.toLowerCase().endsWith(".wav"));
+      messageDetail = wav.length ? wav.join(", ") : "";
+      return wav.length === 0 &&
+        fs.readFileSync(path.join(RACINE, ".gitignore"), "utf8").indexOf("son/*.wav") >= 0;
+    })());
+
   verifier("chaque méchant a son cri",
     (() => {
       return Object.keys(D.ENNEMIS).every(k =>

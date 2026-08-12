@@ -1135,6 +1135,38 @@ au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
 
+### Un son fréquent doit FATIGUER moins, pas sonner mieux
+
+L'échantillon d'impact sur un corps a été retiré au profit de la
+synthèse qu'il remplaçait. Le critère n'est pas la qualité isolée mais la
+FRÉQUENCE : ce son sort cinquante fois par horde. Un enregistrement, même
+bon, s'entend alors en boucle — toujours la même attaque, toujours la
+même queue. Une percussion synthétisée avec un grain de hasard à chaque
+tir ne se répète jamais tout à fait.
+
+Corollaire pour choisir quoi échantillonner : les sons RARES d'abord (un
+cri de mort, un rechargement), les sons fréquents en dernier — et
+seulement avec plusieurs variantes.
+
+### Un enregistrement continu ne se coupe pas aux silences
+
+Le source des cris grogne sans interruption : médiane d'enveloppe à
+0,026, 75ᵉ centile à 0,094. Une segmentation par seuil d'énergie n'a
+rendu que quatre morceaux sur cinquante-six secondes, et les quatre
+commençaient en plein milieu d'un aboiement.
+
+La parade : glisser une fenêtre de durée fixe et la NOTER — énergie
+moyenne divisée par l'énergie de ses bords. Une bonne fenêtre est forte
+au milieu et faible aux extrémités ; c'est exactement ce qu'on cherche
+pour un son qu'on va fondre en entrée et en sortie.
+
+### Un fichier source lourd n'a rien à faire dans un dépôt servi
+
+4,9 Mo de WAV pour cinq fichiers de 8 Ko que le jeu charge. GitHub Pages
+sert tout le dépôt. Le source sort du dépôt, et ce qui le remplace est la
+REPRODUCTIBILITÉ : les instants et les transformations sont écrits dans
+le script, donc le découpage se refait sans avoir gardé la matière.
+
 ### Lever une règle, c'est garder l'invariant qui la motivait
 
 « Aucun fichier audio » n'était pas un caprice : elle garantissait qu'il

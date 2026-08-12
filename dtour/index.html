@@ -772,7 +772,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.70</div>
+  <div id="version">CALLAGHAN v6.71</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -844,7 +844,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.70";
+const VERSION = "6.71";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1120,7 +1120,7 @@ const Sons = {
   /* Les noms de fichiers attendus dans `son/`. Déposer un .ogg à ce nom
      suffit à remplacer le son : aucune ligne de code à toucher. */
   ECHANTILLONS:[
-    "tir_revolver", "tir_fusil", "recharge", "impact_chair",
+    "tir_revolver", "tir_fusil", "recharge",
     "cri_depar", "cri_dsk", "cri_jubi", "cri_abbe", "cri_bruh",
   ],
 
@@ -1188,14 +1188,17 @@ const Sons = {
 
   /* Impact sur un corps : mat, sans aigu. La tête sonne plus haut et
      plus court — c'est la récompense. */
+  /* L'IMPACT RESTE SYNTHÉTISÉ. L'échantillon fabriqué en v6.70 était
+     mauvais — et c'est le son le plus fréquent du niveau, celui qu'on
+     entend cinquante fois par horde : mieux vaut la percussion sèche
+     d'origine, qui ne fatigue pas, qu'un bruit mou joué en boucle. */
   impact(tete){
-    /* La tête garde son timbre propre : c'est la récompense, elle doit
-       rester distincte même quand l'échantillon de chair est présent. */
-    this.echant("impact_chair", tete ? 0.9 : 0.72, () => {
-      this.claque(tete ? 0.09 : 0.10, tete ? 0.34 : 0.26,
-                  tete ? 3000 : 1200, tete ? 300 : 180, tete ? 1.4 : 1.0);
-    });
-    if (tete) this.bip(420, 0.07, "triangle", 0.20, 180);
+    if (tete){
+      this.claque(0.09, 0.34, 3000, 300, 1.4);
+      this.bip(420, 0.07, "triangle", 0.20, 180);
+    } else {
+      this.claque(0.10, 0.26, 1200, 180, 1.0);
+    }
   },
 
   /* Le cri d'un méchant, propre à chacun. Sans échantillon, un râle

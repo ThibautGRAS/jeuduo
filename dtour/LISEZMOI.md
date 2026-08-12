@@ -283,6 +283,30 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Les méchants grognent** (v6.71) : les cinq cris sont découpés dans un
+enregistrement de grognements de chien, plus la synthèse qui sonnait
+comme un jouet.
+
+**On choisit des fenêtres, on ne coupe pas aux silences** : le source
+grogne presque en continu — médiane de l'enveloppe à 0,026, 75ᵉ centile à
+0,094, aucun blanc. Une coupure au silence ne rendait que quatre morceaux
+sur cinquante-six secondes. Les fenêtres sont donc notées par leur
+énergie **divisée par celle de leurs bords** : une bonne fenêtre commence
+et finit doucement, sinon le cri démarre en plein milieu d'un aboiement.
+
+**Chaque méchant a sa transformation** : même matière, cinq voix. La
+hauteur et la durée bougent ensemble, ce qui étire aussi les formants —
+c'est ce qui fait qu'un grognement descendu d'une quinte sonne énorme au
+lieu de sonner ralenti. Mesuré, du plus grave au plus fluet :
+Depardiahree 832 Hz sur 1,21 s, l'Abbé 1462 Hz sur 0,40 s.
+
+**L'impact sur un corps revient à la synthèse.** C'est le son le plus
+fréquent du niveau — cinquante fois par horde. Un échantillon, même bon,
+s'y entend en boucle et fatigue ; la percussion sèche, non.
+
+Le source de 4,9 Mo **n'est pas versionné** : les instants retenus sont
+écrits dans `cris.py`, le découpage est reproductible sans le garder.
+
 **Le jeu a des échantillons** (v6.70) : la règle « aucun fichier audio »
 est levée pour neuf sons — deux détonations, le rechargement, l'impact
 dans la chair, et **un cri par méchant**. 55 Ko au total.
