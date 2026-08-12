@@ -1135,6 +1135,34 @@ au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
 
+### Un écran de présentation se dessine EN PREMIER, pas en dernier
+
+L'affiche du bar était peinte à la fin de `dessiner()`. Comme l'écran de
+choix rend la main plus haut dans la même fonction, elle n'était jamais
+atteinte au premier lancement — et l'était au rejeu, parce que l'état
+diffère d'un cheveu entre les deux chemins. Un écran qui doit TOUT
+recouvrir se place au début et rend la main lui-même.
+
+### Une même propriété pilotée à deux endroits : c'est le dernier qui gagne
+
+Le pupitre du niveau 3 était allumé par deux fonctions différentes. J'en
+ai corrigé une ; l'autre, appelée après, le rallumait sans rien savoir de
+l'affiche. Le symptôme est resté identique, ce qui donne l'impression que
+la correction n'a servi à rien.
+
+Le réflexe : avant de corriger un affichage, chercher TOUS les endroits
+qui le pilotent. `grep` sur le nom de l'élément, pas seulement sur la
+condition qu'on croit fautive.
+
+### Un fond noir pur se compose en ADDITIF, il ne se détoure pas
+
+Détourer un personnage entouré de néon laisse un halo sale : le dégradé
+lumineux se coupe quelque part, et cette coupure se voit. En mode
+`lighter`, un fond noir n'ajoute rien et disparaît de lui-même, tandis
+que le néon se fond dans la pénombre. Aucune découpe, donc aucun bord
+raté — à condition que le fond du dessin soit VRAIMENT noir, ce qui se
+vérifie en mesurant les coins.
+
 ### Un décor de premier plan accroché à la CAMÉRA n'est pas un décor
 
 Les grappes de figurants du bar étaient posées en fractions d'ÉCRAN.

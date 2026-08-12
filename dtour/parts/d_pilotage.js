@@ -347,7 +347,11 @@ const Interface = {
     /* Le pupitre du niveau 3 n'apparaît qu'une fois le champion choisi :
        pendant la sélection, les flèches et BOIRE/JETER n'ont rien à
        piloter et encombrent l'écran de choix. */
-    if (E.pupitre3) E.pupitre3.classList.toggle("on", Jeu.niveau === 3 && !Tournee.enChoix);
+    /* Le pupitre reste rangé pendant l'AFFICHE aussi, pas seulement
+       pendant le choix : il se dessinait par-dessus l'écran de
+       présentation, avec ses boutons éteints en travers du titre. */
+    if (E.pupitre3) E.pupitre3.classList.toggle("on",
+      Jeu.niveau === 3 && !Tournee.enChoix && Tournee.introT <= 0);
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
     if (E.pleinBtn) E.pleinBtn.classList.add("on");
     if (E.pauseBtn) E.pauseBtn.classList.add("on");
@@ -429,10 +433,15 @@ const Interface = {
      restent cliquables — un appui à vide répond « PAS DE VERRE ICI ». */
   majActionBar(){
     if (Jeu.niveau !== 3) return;
-    /* L'écran de choix se joue au doigt sur le canevas : on range le
-       pupitre tant qu'il n'y a pas de champion. */
-    if (E.pupitre3) E.pupitre3.classList.toggle("on", !Tournee.enChoix);
-    if (Tournee.enChoix) return;
+    /* L'écran de choix ET l'affiche se jouent au doigt sur le canevas :
+       on range le pupitre tant qu'il n'y a pas de champion. DEUX endroits
+       décidaient de cet affichage, et celui-ci — le dernier appelé —
+       ignorait l'affiche : le pupitre revenait par-dessus l'écran de
+       présentation quoi qu'en dise l'autre. Une même propriété pilotée à
+       deux endroits, c'est toujours le dernier qui gagne. */
+    if (E.pupitre3) E.pupitre3.classList.toggle("on",
+      !Tournee.enChoix && Tournee.introT <= 0);
+    if (Tournee.enChoix || Tournee.introT > 0) return;
     const pret = Tournee.actif && Tournee.verreAPortee() >= 0 && Tournee.boitT <= 0;
     if (E.c3B) E.c3B.classList.toggle("eteint", !pret);
     if (E.c3J) E.c3J.classList.toggle("eteint", !pret);

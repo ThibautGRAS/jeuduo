@@ -22,6 +22,12 @@ const BarVue = {
     const img = Images.table.fond_bar;
     if (!img || !img.naturalWidth){ ctx.fillStyle = "#120A18"; ctx.fillRect(0, 0, L, H); return; }
 
+    /* L'INTRO PASSE AVANT TOUT, y compris avant l'écran de choix. Elle
+       était peinte à la fin de `dessiner()`, donc le `return` du choix
+       l'emportait : au premier lancement on tombait sur le bar et le
+       pupitre sans jamais la voir, alors qu'au rejeu elle apparaissait.
+       Un écran de présentation ne doit dépendre d'aucun autre état. */
+    if (T.introT > 0){ this.dessinerIntro(); return; }
     if (T.enChoix){ this.dessinerChoix(); return; }
 
     const trem = T.secousse > 0 ? Math.sin(T.secousse * 62) * 5 * T.secousse : 0;
@@ -95,7 +101,7 @@ const BarVue = {
     /* L'AFFICHE EN DERNIER, par-dessus le HUD : c'est un écran de
        présentation, pas une surimpression. Posée au milieu du dessin,
        la jauge d'ambiance et le score lui passaient dessus. */
-    if (Tournee.introT > 0) this.dessinerIntro();
+
   },
 
   /* --------- choix du champion --------- */
@@ -355,33 +361,53 @@ const BarVue = {
       ctx.globalAlpha = al;
     }
     /* un voile qui remonte du bas : il détache le texte du décor */
-    const v = ctx.createLinearGradient(0, H * 0.42, 0, H);
+    const v = ctx.createLinearGradient(0, H * 0.62, 0, H);
     v.addColorStop(0, "rgba(10,7,20,0)");
-    v.addColorStop(1, "rgba(10,7,20,.88)");
+    v.addColorStop(1, "rgba(10,7,20,.92)");
     ctx.fillStyle = v;
-    ctx.fillRect(0, H * 0.42, L, H * 0.58);
+    ctx.fillRect(0, H * 0.62, L, H * 0.38);
 
-    /* LE DUO, contenu et non recadré : les deux noms peints en font
-       partie, les couper reviendrait à couper le titre. */
+    /* LE DUO, COMPOSÉ EN ADDITIF plutôt que détouré. Son fond est noir
+       pur (mesuré : 1 de luminance aux coins) et les personnages sont
+       cernés d'un néon. Un détourage coupait DANS ce néon et laissait un
+       halo sale ; en additif, le noir n'ajoute rien, le néon se fond dans
+       la nuit du bar et les deux noms peints restent nets. Aucune
+       découpe, donc aucun artefact possible.
+
+       Contenu et non recadré : les deux noms font partie de l'image,
+       les couper reviendrait à couper le titre. */
     const duo = Images.table.duo_bar;
     if (duo && duo.naturalWidth){
       const av = borne((BAR_INTRO_DUREE - t) / 0.5, 0, 1);
-      const e2 = Math.min((L * 0.94) / duo.naturalWidth,
-                          (H * 0.66) / duo.naturalHeight);
+      const e2 = Math.min((L * 0.98) / duo.naturalWidth,
+                          (H * 0.80) / duo.naturalHeight);
       const l2 = duo.naturalWidth * e2, h2 = duo.naturalHeight * e2;
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
       ctx.globalAlpha = al * av;
       ctx.drawImage(duo, (L - l2) / 2,
-                    H * 0.46 - h2 / 2 + (1 - av) * H * 0.04, l2, h2);
+                    H * 0.44 - h2 / 2 + (1 - av) * H * 0.04, l2, h2);
+      ctx.restore();
       ctx.globalAlpha = al;
     }
 
+    /* Une bande sombre derrière le titre : le duo descend bas et le texte
+       se posait sur ses jambes. Elle vient APRÈS le duo, donc par-dessus,
+       et en mode normal — pas additif, sinon elle éclaircirait. */
+    const bt = ctx.createLinearGradient(0, H * 0.72, 0, H);
+    bt.addColorStop(0, "rgba(8,5,16,0)");
+    bt.addColorStop(0.40, "rgba(8,5,16,.88)");
+    bt.addColorStop(1, "rgba(8,5,16,.96)");
+    ctx.fillStyle = bt;
+    ctx.fillRect(0, H * 0.72, L, H * 0.28);
+
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillStyle = "#F7B32B";
-    BarVue.texteQuiTient("LA TOURNÉE DU D'TOUR", L / 2, H * 0.845, L * 0.88,
+    BarVue.texteQuiTient("LA TOURNÉE DU D'TOUR", L / 2, H * 0.865, L * 0.88,
                          H * 0.085, "800");
     ctx.fillStyle = "rgba(237,231,250,.62)";
     ctx.font = "700 " + Math.round(H * 0.038) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillText("Touchez pour commencer", L / 2, H * 0.935);
+    ctx.fillText("Touchez pour commencer", L / 2, H * 0.950);
     ctx.textAlign = "left";
     ctx.restore();
   },

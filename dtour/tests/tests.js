@@ -1890,6 +1890,44 @@ if (D){
         /b\.ref\.comptoir \|\| BAR_COMPTOIR/.test(source);
     })());
 
+  verifier("l'affiche passe AVANT tout le reste du dessin",
+    (() => {
+      /* Elle était peinte à la fin : le `return` de l'écran de choix
+         l'emportait, et au premier lancement on tombait sur le bar sans
+         jamais la voir — alors qu'au rejeu elle apparaissait. Un écran
+         de présentation ne doit dépendre d'aucun autre état. */
+      const i = source.indexOf("if (T.introT > 0){ this.dessinerIntro(); return; }");
+      const j = source.indexOf("if (T.enChoix){ this.dessinerChoix(); return; }");
+      return i > 0 && j > i;
+    })());
+
+  verifier("le pupitre reste rangé pendant l'AFFICHE aussi",
+    (() => {
+      /* Il se dessinait par-dessus l'écran de présentation, boutons
+         éteints en travers du titre. */
+      const pup = domBac.getElementById("pupitre3");
+      D.Jeu.demarrer(3);
+      D.Jeu.pas(1 / 60);
+      const pendant = !pup.classList.contains("on");
+      /* la tape doit venir APRÈS le quart de seconde de garde */
+      for (let k = 0; k < 30; k++) D.Jeu.pas(1 / 60);
+      D.Tournee.passerIntro();
+      for (let k = 0; k < 60; k++) D.Jeu.pas(1 / 60);
+      D.Tournee.lancer(); D.Tournee.introT = 0;
+      D.Jeu.pas(1 / 60);
+      return pendant && pup.classList.contains("on");
+    })());
+
+  verifier("le duo de l'affiche se compose en ADDITIF, il n'est pas détouré",
+    (() => {
+      /* Le fond de l'image est un noir pur : en `lighter` il n'ajoute
+         rien et disparaît de lui-même, tandis qu'un détourage laissait
+         un halo sale autour du néon. */
+      const i = source.indexOf("const duo = Images.table.duo_bar");
+      const bloc = source.slice(i, i + 600);
+      return i > 0 && /globalCompositeOperation = "lighter"/.test(bloc);
+    })());
+
   verifier("les deux champions existent et se distinguent",
     D.BAR_CHAMPIONS.length === 2 &&
     D.BAR_CHAMPIONS[0].vitesse !== D.BAR_CHAMPIONS[1].vitesse &&

@@ -283,6 +283,27 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**L'affiche du bar réparée** (v6.82) : tes deux captures montraient deux
+défauts différents, et ils avaient deux causes différentes.
+
+**Elle ne s'affichait pas au premier lancement.** Elle était peinte à la
+FIN du dessin, or l'écran de choix rend la main avant : au premier
+lancement on tombait sur le bar et le pupitre sans jamais la voir, alors
+qu'au rejeu elle apparaissait. Elle passe maintenant avant tout le reste
+— un écran de présentation ne doit dépendre d'aucun autre état.
+
+**Le pupitre se dessinait par-dessus**, boutons éteints en travers du
+titre. Et il fallait corriger DEUX endroits : une seconde fonction
+rallumait le pupitre sans tenir compte de l'affiche, et c'est elle qui
+gagnait puisqu'elle passait en dernier.
+
+**Le duo se compose en ADDITIF, il n'est plus détouré.** Le fond de
+l'image est un noir pur : en mode `lighter` il n'ajoute rien et disparaît
+de lui-même, tandis que le néon des contours se fond dans la pénombre —
+là où un détourage laissait un halo sale. Aucune découpe, donc aucun bord
+raté. Il occupe 80 % de la hauteur, avec une bande sombre derrière le
+titre.
+
 **Les deux intros attendent le clic** (v6.81) : elles s'effaçaient toutes
 seules après 2,6 s à la ruelle et 3,2 s au bar. Le joueur qui lisait
 encore se retrouvait en pleine partie sans l'avoir demandé — et le
