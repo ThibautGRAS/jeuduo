@@ -23,14 +23,19 @@
       s'en va pour de bon ; sa place se libère et quelqu'un d'autre
       finit par arriver. */
 
-/* Les trois grappes, en fraction de largeur d'écran. Le monde du bar
-   fait trois fonds bout à bout : ces positions sont à l'ÉCRAN et non
-   dans le monde, la foule du premier plan ne défile pas avec le décor —
-   c'est ce qui la distingue des clients du comptoir. */
+/* Les grappes sont PLACÉES DANS LE BAR, pas sur l'écran. C'était le
+   défaut de la première version : accrochées à la caméra, elles
+   suivaient le champion comme un décor peint sur la vitre — on ne les
+   dépassait jamais, et le bar semblait tenir en un seul écran.
+
+   Posées dans le MONDE, elles ne sont visibles que quand on passe
+   devant : le bar redevient un lieu qu'on traverse, avec des coins où
+   il y a du monde et des coins où il n'y a personne. Six grappes
+   réparties sur toute la longueur — assez pour qu'il y ait presque
+   toujours quelqu'un en vue, jamais assez pour faire une haie. */
 const FOULE_PLACES = [
-  { id: "gauche", x: 0.155 },
-  { id: "centre", x: 0.500 },
-  { id: "droite", x: 0.845 },
+  { id: "g1", x: 0.110 }, { id: "g2", x: 0.370 },
+  { id: "g3", x: 0.630 }, { id: "g4", x: 0.890 },
 ];
 /* La ligne des pieds, SOUS le bas de l'écran : on ne voit que le buste.
    C'est ce qui laisse au champion de la place pour circuler tout en
@@ -42,7 +47,7 @@ const FOULE_PLACES = [
    laissent le haut du corps lisible. */
 const FOULE_PIEDS = 1.52;
 const FOULE_TAILLE = 0.78;         /* fraction de la hauteur d'écran */
-const FOULE_ECART = 0.052;         /* écart entre deux voisins d'une grappe */
+const FOULE_ECART = 0.030;         /* écart entre deux voisins, EN MONDE */
 const FOULE_PAR_GRAPPE = 3;        /* au plus, sinon ils se recouvrent */
 
 const FOULE_REPLIQUE = [7.0, 13.0];   /* délai entre deux répliques      */
@@ -103,25 +108,41 @@ Object.assign(Tournee, {
     this.replique = null;
     const libres = BAR_CLIENTS.map(c => c.id);
     melangerTableau(libres);
+
+    /* UNE GRAINE PAR GRAPPE D'ABORD, puis on complète À TOUR DE RÔLE.
+       Remplir chaque grappe à fond avant de passer à la suivante vidait
+       les dernières : mesuré, dix personnes pour six grappes en
+       laissaient deux désertes. À tour de rôle, elles se remplissent
+       toutes, et le bar a du monde partout où on passe. */
+    const graines = [];
     for (const place of FOULE_PLACES){
       if (!libres.length) break;
-      const graine = libres.shift();
-      const grappe = [graine];
-      const amis = (LIENS[graine] && LIENS[graine].amis) || [];
-      for (const a of amis){
-        if (grappe.length >= FOULE_PAR_GRAPPE) break;
-        const i = libres.indexOf(a);
-        if (i >= 0) grappe.push(libres.splice(i, 1)[0]);
+      const id = libres.shift();
+      graines.push({ place:place.id, ids:[id] });
+    }
+    let tour = 0;
+    while (libres.length && graines.length){
+      const g = graines[tour % graines.length];
+      tour++;
+      if (g.ids.length >= FOULE_PAR_GRAPPE) {
+        if (graines.every(x => x.ids.length >= FOULE_PAR_GRAPPE)) break;
+        continue;
       }
-      while (grappe.length < FOULE_PAR_GRAPPE && libres.length){
-        grappe.push(libres.shift());
-      }
-      grappe.forEach((id, k) => {
+      /* on prend un AMI de la graine s'il en reste un, sinon le premier
+         venu : mieux vaut une grappe dépareillée qu'une place vide */
+      const amis = (LIENS[g.ids[0]] && LIENS[g.ids[0]].amis) || [];
+      let i = libres.findIndex(x => amis.indexOf(x) >= 0);
+      if (i < 0) i = 0;
+      g.ids.push(libres.splice(i, 1)[0]);
+    }
+
+    for (const g of graines){
+      g.ids.forEach((id, k) => {
         const ref = BAR_CLIENTS.find(c => c.id === id);
         if (!ref) return;
         this.foule.push({
-          ref, place:place.id, rang:k, etat:"grappe", t:0,
-          x:this.xFoule(place.id, k, grappe.length), dir:1, foulee:0,
+          ref, place:g.place, rang:k, etat:"grappe", t:0,
+          x:this.xFoule(g.place, k, g.ids.length), dir:1, foulee:0,
           cible:0, retour:0,
         });
       });

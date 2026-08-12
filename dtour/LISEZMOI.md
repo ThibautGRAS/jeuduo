@@ -283,6 +283,37 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Le bar prend de la profondeur** (v6.80).
+
+**L'écran d'intro du niveau 3 est en PLEIN ÉCRAN**, comme celui de la
+ruelle : le duo détouré sur un fond de bar flouté et assombri, le nom du
+niveau, l'invite. Posée en clair sur le bar, l'affiche se mélangeait au
+décor qu'elle est censée présenter.
+
+**LES FIGURANTS SONT DANS LE BAR, plus sur la caméra.** C'était le défaut
+de fond : accrochés à l'écran, ils suivaient le champion comme un décor
+peint sur la vitre — on ne les dépassait jamais et le bar semblait tenir
+en un seul écran. Quatre grappes réparties sur toute la longueur, dont on
+croise les groupes en se déplaçant.
+
+Défaut trouvé en le faisant : six grappes pour dix habitués en laissaient
+deux désertes, parce que je remplissais chacune à fond avant de passer à
+la suivante. À TOUR DE RÔLE, elles se remplissent toutes — et les
+affinités tiennent encore, 46 % de paires amies.
+
+**Les longues répliques se replient sur DEUX LIGNES** au lieu de
+rapetisser la police : réduire jusqu'à tenir donnait un texte minuscule
+étalé sur toute la largeur, illisible. La coupure se fait sur l'espace le
+plus proche du milieu, pour deux lignes équilibrées.
+
+**Le bruit blanc d'ambiance du bar est retiré.** Il datait d'avant
+l'enregistrement ; les deux se superposaient en un souffle sourd qui
+mangeait les voix. La rumeur enregistrée monte de 0,30 à 0,52.
+
+**Les lumières de la rue vacillent plus franchement** : trois sinus
+incommensurables au lieu de deux, amplitude de 10 à 26 %. À l'ancien
+réglage on devinait le vacillement sans le voir.
+
 **Jojo enfin d'aplomb, et l'affiche avant le choix** (v6.79).
 
 **LE COMPTOIR N'EST PAS HORIZONTAL.** C'était ça, le bug de Jojo, et il

@@ -1642,38 +1642,65 @@ const RuelleVue = {
 
   /* Une bulle au-dessus du héros qui parle. Bornée sur SA largeur : la
      même faute a déjà coupé une phrase deux fois sur ce projet. */
+  /* Une bulle au-dessus du héros qui parle. Elle se REPLIE SUR DEUX
+     LIGNES quand la phrase est longue, au lieu de rapetisser la police :
+     réduire jusqu'à tenir donnait un texte minuscule étalé sur toute la
+     largeur, illisible et laid. Deux lignes gardent une taille lisible.
+
+     La coupure se fait sur un ESPACE, au plus près du milieu — couper au
+     milieu des mots ou au premier espace venu donne des lignes
+     déséquilibrées qu'on lit deux fois. */
   bulleHeros(txt, qui, opac){
     const L = Camera.L, H = Camera.H;
     const h = Heros[qui] || Heros[0];
     ctx.save();
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    /* La largeur DISPONIBLE est fixée d'abord, et le texte est réduit
-       pour y entrer : la bulle ne s'étire plus au-delà de l'écran. La
-       même faute a coupé une phrase trois fois sur ce projet — c'est la
-       troisième correction, autant qu'elle soit la dernière. */
-    const dispo = L * 0.86;
-    let taille = H * 0.028;
-    for (let k = 0; k < 15; k++){
-      ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
-      if (ctx.measureText(txt).width <= dispo - H * 0.040) break;
-      taille *= 0.92;
+    const dispo = L * 0.86 - H * 0.040;
+    const taille = H * 0.028;
+    ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+
+    let lignes = [txt];
+    if (ctx.measureText(txt).width > dispo){
+      const mots = txt.split(" ");
+      let best = -1, ecart = 1e9;
+      for (let k = 1; k < mots.length; k++){
+        const a2 = mots.slice(0, k).join(" "), b2 = mots.slice(k).join(" ");
+        const la = ctx.measureText(a2).width, lb = ctx.measureText(b2).width;
+        if (Math.max(la, lb) > dispo) continue;
+        if (Math.abs(la - lb) < ecart){ ecart = Math.abs(la - lb); best = k; }
+      }
+      if (best > 0) lignes = [mots.slice(0, best).join(" "), mots.slice(best).join(" ")];
+      else {
+        /* un seul mot plus large que la bulle : là, et là seulement, on
+           réduit la police */
+        let t2 = taille;
+        for (let k = 0; k < 15; k++){
+          ctx.font = "800 " + Math.round(t2) + "px 'Baloo 2', system-ui, sans-serif";
+          if (ctx.measureText(txt).width <= dispo) break;
+          t2 *= 0.92;
+        }
+      }
     }
-    const bw = ctx.measureText(txt).width + H * 0.040;
+
+    const larg = Math.max(...lignes.map(s => ctx.measureText(s).width));
+    const bw = larg + H * 0.040;
+    const interligne = H * 0.036;
+    const bh = H * 0.058 + (lignes.length - 1) * interligne;
     const bx = borne(L * (qui === 0 ? 0.34 : 0.66), bw / 2 + 6, L - bw / 2 - 6);
-    /* 0,50 : au-dessus de la BARRICADE, pas seulement du bouclier. À
-       0,635 la bulle se posait sur les caisses et sur la tête du
-       champion — elle est illisible sur un fond de bois. Plus haut, elle
-       est sur le ciel de la rue, où rien ne la concurrence. */
     const by = H * 0.50;
     ctx.globalAlpha = opac;
     ctx.fillStyle = "rgba(250,248,255,.96)";
-    arrondi(bx - bw / 2, by - H * 0.034, bw, H * 0.068, H * 0.028); ctx.fill();
+    arrondi(bx - bw / 2, by - bh / 2, bw, bh, H * 0.026); ctx.fill();
     ctx.fillStyle = h && h.couleur ? h.couleur : "#171226";
     ctx.font = "800 " + Math.round(H * 0.016) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillText(h && h.nom ? h.nom : "", bx, by - H * 0.020);
+    ctx.fillText(h && h.nom ? h.nom : "", bx, by - bh / 2 + H * 0.014);
     ctx.fillStyle = "#171226";
-    ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillText(txt, bx, by + H * 0.010);
+    const fonte = ctx.font;
+    void fonte;
+    lignes.forEach((s, k) => {
+      ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.fillText(s, bx, by - bh / 2 + H * 0.038 + k * interligne);
+    });
     ctx.restore();
     ctx.globalAlpha = 1;
     ctx.textAlign = "left";
@@ -1978,9 +2005,15 @@ const RuelleVue = {
         /* le vacillement : deux sinus lents et déphasés, jamais le même
            cycle d'une flaque à l'autre. Une lumière parfaitement stable
            se lit comme du décor mort. */
+        /* TROIS sinus incommensurables plutôt que deux, et une
+           amplitude plus large : à 10 % on devinait le vacillement sans
+           le voir. À 26 %, avec un battement rapide par-dessus, la rue
+           respire — c'est ce qui la rend habitée plutôt que peinte. */
         const ph = Ruelle.temps * 1.7 + k * 2.1;
-        const vac = 0.90 + 0.10 * Math.sin(ph) * Math.sin(ph * 0.37 + 1.1);
-        const a4 = 0.30 * f2.force * heureF.nuit * vac;
+        const vac = 0.80 + 0.26 * (0.55 * Math.sin(ph)
+                                 + 0.30 * Math.sin(ph * 0.37 + 1.1)
+                                 + 0.15 * Math.sin(ph * 3.9 + k));
+        const a4 = 0.40 * f2.force * heureF.nuit * vac;
         const g2 = ctx.createRadialGradient(L * f2.x, H * f2.y, 0,
                                             L * f2.x, H * f2.y, L * f2.l);
         const c2 = f2.couleur;

@@ -333,38 +333,70 @@ const BarVue = {
   /* L'AFFICHE DU NIVEAU, avant la première image. Elle annonce le
      niveau et donne au navigateur le temps de finir de charger le décor
      — même service que l'intro de la ruelle. Une tape la passe. */
+  /* L'ÉCRAN D'INTRODUCTION, en PLEIN ÉCRAN et non posé sur la scène.
+     Même forme qu'au niveau 4 : un fond flou, le duo par-dessus, le nom
+     du niveau, et une invite. Posée sur le bar en clair, l'affiche se
+     mélangeait au décor qu'elle est censée présenter. */
   dessinerIntro(){
     const L = Camera.L, H = Camera.H, t = Tournee.introT;
     const al = borne(t / 0.30, 0, 1);
     ctx.save();
     ctx.globalAlpha = al;
-    ctx.fillStyle = "#05070E";
+
+    /* le bar, flouté et assombri : on reconnaît le lieu sans le lire */
+    const fond = Images.table.fond_bar_flou;
+    ctx.fillStyle = "#0A0714";
     ctx.fillRect(0, 0, L, H);
-    const im = Images.table.affiche_bar;
-    if (im && im.naturalWidth){
-      /* CONTENUE, pas recadrée : c'est une affiche, la couper aux bords
-         mangerait les deux noms peints en bas. */
-      const e = Math.min(L / im.naturalWidth, (H * 0.80) / im.naturalHeight);
-      const l = im.naturalWidth * e, h = im.naturalHeight * e;
-      const av = borne((BAR_INTRO_DUREE - t) / 0.5, 0, 1);
-      ctx.globalAlpha = al * av;
-      ctx.drawImage(im, (L - l) / 2, H * 0.44 - h / 2 + (1 - av) * H * 0.04, l, h);
+    if (fond && fond.naturalWidth){
+      const e = Math.max(L / fond.naturalWidth, H / fond.naturalHeight);
+      const l = fond.naturalWidth * e, h = fond.naturalHeight * e;
+      ctx.globalAlpha = al * 0.85;
+      ctx.drawImage(fond, (L - l) / 2, (H - h) / 2, l, h);
       ctx.globalAlpha = al;
     }
+    /* un voile qui remonte du bas : il détache le texte du décor */
+    const v = ctx.createLinearGradient(0, H * 0.42, 0, H);
+    v.addColorStop(0, "rgba(10,7,20,0)");
+    v.addColorStop(1, "rgba(10,7,20,.88)");
+    ctx.fillStyle = v;
+    ctx.fillRect(0, H * 0.42, L, H * 0.58);
+
+    /* LE DUO, contenu et non recadré : les deux noms peints en font
+       partie, les couper reviendrait à couper le titre. */
+    const duo = Images.table.duo_bar;
+    if (duo && duo.naturalWidth){
+      const av = borne((BAR_INTRO_DUREE - t) / 0.5, 0, 1);
+      const e2 = Math.min((L * 0.94) / duo.naturalWidth,
+                          (H * 0.66) / duo.naturalHeight);
+      const l2 = duo.naturalWidth * e2, h2 = duo.naturalHeight * e2;
+      ctx.globalAlpha = al * av;
+      ctx.drawImage(duo, (L - l2) / 2,
+                    H * 0.46 - h2 / 2 + (1 - av) * H * 0.04, l2, h2);
+      ctx.globalAlpha = al;
+    }
+
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillStyle = "#F7B32B";
-    let ta = H * 0.085;
-    for (let k = 0; k < 15; k++){
-      ctx.font = "800 " + Math.round(ta) + "px 'Baloo 2', system-ui, sans-serif";
-      if (ctx.measureText("LA TOURNÉE DU D'TOUR").width <= L * 0.88) break;
-      ta *= 0.92;
-    }
-    ctx.fillText("LA TOURNÉE DU D'TOUR", L / 2, H * 0.885);
-    ctx.fillStyle = "rgba(237,231,250,.55)";
-    ctx.font = "700 " + Math.round(H * 0.040) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillText("Touchez pour commencer", L / 2, H * 0.960);
+    BarVue.texteQuiTient("LA TOURNÉE DU D'TOUR", L / 2, H * 0.845, L * 0.88,
+                         H * 0.085, "800");
+    ctx.fillStyle = "rgba(237,231,250,.62)";
+    ctx.font = "700 " + Math.round(H * 0.038) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillText("Touchez pour commencer", L / 2, H * 0.935);
     ctx.textAlign = "left";
     ctx.restore();
+  },
+
+  /* Écrit centré sans jamais dépasser `large` : on part de la taille
+     voulue et on descend tant que ça ne rentre pas. */
+  texteQuiTient(txt, x, y, large, taille, gras){
+    if (!txt) return;
+    let t2 = taille;
+    for (let k = 0; k < 15; k++){
+      ctx.font = gras + " " + Math.round(t2) + "px 'Baloo 2', system-ui, sans-serif";
+      if (ctx.measureText(txt).width <= large) break;
+      t2 *= 0.92;
+    }
+    ctx.fillText(txt, x, y);
   },
 
   dessinerFoule(){
@@ -383,7 +415,11 @@ const BarVue = {
       if (!spr || !spr.naturalWidth) continue;
       const sh = H * FOULE_TAILLE * m.ref.taille * echellePerso(m.ref.id);
       const sl = sh * spr.naturalWidth / spr.naturalHeight;
-      const x = L * m.x, y = H * FOULE_PIEDS;
+      /* `ex` convertit une position DU MONDE en position d'écran : la
+         grappe reste sur place quand le champion se déplace, et on la
+         dépasse. Hors champ, on ne la dessine pas. */
+      const x = this.ex(m.x), y = H * FOULE_PIEDS;
+      if (x < -L * 0.25 || x > L * 1.25) continue;
       ctx.save();
       /* un cran plus sombre que le champion : ils sont du décor vivant,
          ils ne doivent pas se disputer l'œil avec lui */
@@ -408,7 +444,7 @@ const BarVue = {
       /* On ramène la bulle dans l'écran d'après SA LARGEUR, pas d'après
          une marge fixe : borner le centre à 0,14 laissait quand même
          dépasser une bulle de 0,44 de large, et la phrase était coupée. */
-      const bx = borne(L * m.x, bw / 2 + 6, L - bw / 2 - 6);
+      const bx = borne(this.ex(m.x), bw / 2 + 6, L - bw / 2 - 6);
       ctx.globalAlpha = borne(r.t / 0.4, 0, 1);
       ctx.fillStyle = "rgba(250,248,255,.95)";
       arrondi(bx - bw / 2, by - H * 0.036, bw, H * 0.072, H * 0.030); ctx.fill();

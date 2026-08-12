@@ -412,7 +412,7 @@ const Jeu = {
          présentation silencieux se lit comme un chargement. */
       Sons.lancerMusiqueFichier("musique_bar");
       Sons.volumeMusique(0.42);
-      Sons.lancerFondFichier("foule_bar", 0.30);
+      Sons.lancerFondFichier("foule_bar", 0.52);
       return;
     }
     if (this.niveau === 2){

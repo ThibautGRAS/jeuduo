@@ -1135,6 +1135,37 @@ au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
 
+### Un décor de premier plan accroché à la CAMÉRA n'est pas un décor
+
+Les grappes de figurants du bar étaient posées en fractions d'ÉCRAN.
+Résultat : elles suivaient le champion partout, comme peintes sur la
+vitre. On ne les dépassait jamais, et un bar long de trois fonds semblait
+tenir en un seul écran.
+
+Posées en coordonnées de MONDE, elles deviennent des lieux : on croise un
+groupe, on le dépasse, on en trouve un autre plus loin. La règle
+générale : tout ce qui appartient au LIEU se place dans le monde ; seule
+l'interface se place à l'écran. Un doute sur la catégorie se tranche en
+demandant « est-ce que je dois pouvoir le dépasser ? ».
+
+### Remplir des groupes à tour de rôle, pas l'un après l'autre
+
+Dix habitués pour six grappes : en remplissant chacune à fond avant de
+passer à la suivante, les deux dernières restaient désertes. À tour de
+rôle, toutes se garnissent. Le défaut ne se voit pas au premier essai —
+il faut compter, ou marcher jusqu'au bout du bar.
+
+### Une bulle trop longue se REPLIE, elle ne rapetisse pas
+
+Réduire la police jusqu'à ce que la phrase tienne sur une ligne donne un
+texte minuscule étalé sur toute la largeur : lisible au sens strict,
+illisible en pratique. Deux lignes gardent une taille normale. La coupure
+se choisit sur l'espace le plus proche du MILIEU — au premier espace
+venu, on obtient une ligne longue et un mot seul, qu'on lit deux fois.
+
+La réduction de police reste, mais comme dernier recours : un seul mot
+plus large que la bulle.
+
 ### Une ligne de décor qui « a l'air » horizontale ne l'est pas forcément
 
 Le comptoir du bar était traité comme une constante : 0,555. Mesuré sur

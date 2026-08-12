@@ -772,7 +772,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.79</div>
+  <div id="version">CALLAGHAN v6.80</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -844,7 +844,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.79";
+const VERSION = "6.80";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1320,21 +1320,13 @@ const Sons = {
      plus des événements calés sur l'horloge AUDIO (pas sur l'affichage,
      une seconde qui traîne s'entend). Rien n'est échantillonné : tout
      est synthétisé, le jeu reste un seul fichier. */
-  lancerFondBar(){
-    this.init();
-    if (!this.ac || this.bar) return;
-    const n = this.ac.sampleRate * 3;
-    const b = this.ac.createBuffer(1, n, this.ac.sampleRate), d = b.getChannelData(0);
-    let prec = 0;
-    for (let i = 0; i < n; i++){ prec = (prec + (Math.random() * 2 - 1) * 0.07) * 0.988; d[i] = prec; }
-    const src = this.ac.createBufferSource(); src.buffer = b; src.loop = true;
-    const f = this.ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 520; f.Q.value = 0.7;
-    const g = this.ac.createGain(); g.gain.value = 0;
-    src.connect(f); f.connect(g); g.connect(this.maitre);
-    src.start();
-    const t = this.ac.currentTime;
-    this.bar = { src, gain:g, filtre:f, prochainVerre:t + 2, prochainRire:t + 5 };
-  },
+  /* LE BRUIT BLANC D'AMBIANCE A ÉTÉ RETIRÉ. Il datait du temps où il
+     n'y avait pas d'enregistrement : une nappe filtrée qui suggérait une
+     salle. Maintenant qu'une vraie rumeur de bar tourne en boucle, les
+     deux se superposaient en un souffle sourd qui mangeait les voix.
+     La méthode reste, vide, parce que plusieurs endroits l'appellent —
+     et pour que la trace de la décision reste lisible ici. */
+  lancerFondBar(){ /* remplacé par l'échantillon `foule_bar` */ },
   arreterFondBar(){
     if (!this.bar) return;
     try{ this.bar.src.stop(); }catch(e){}
@@ -1803,7 +1795,7 @@ const IMAGES_NIVEAU3 = [
   /* L'affiche du niveau : le duo au comptoir, montrée avant la première
      image. Elle annonce le niveau ET donne au navigateur le temps de
      charger le décor — même service que `duo_ruelle` au niveau 4. */
-  "affiche_bar",
+  "affiche_bar", "duo_bar", "fond_bar_flou",
   /* Les poses de barman sont TOUTES découpées dans la même bande de la
      même planche : même hauteur en pixels, même trait de coupe au
      niveau de la ceinture. C'est ce qui garantit qu'à hauteur d'écran
@@ -2374,7 +2366,7 @@ const Jeu = {
          présentation silencieux se lit comme un chargement. */
       Sons.lancerMusiqueFichier("musique_bar");
       Sons.volumeMusique(0.42);
-      Sons.lancerFondFichier("foule_bar", 0.30);
+      Sons.lancerFondFichier("foule_bar", 0.52);
       return;
     }
     if (this.niveau === 2){
@@ -9122,38 +9114,70 @@ const BarVue = {
   /* L'AFFICHE DU NIVEAU, avant la première image. Elle annonce le
      niveau et donne au navigateur le temps de finir de charger le décor
      — même service que l'intro de la ruelle. Une tape la passe. */
+  /* L'ÉCRAN D'INTRODUCTION, en PLEIN ÉCRAN et non posé sur la scène.
+     Même forme qu'au niveau 4 : un fond flou, le duo par-dessus, le nom
+     du niveau, et une invite. Posée sur le bar en clair, l'affiche se
+     mélangeait au décor qu'elle est censée présenter. */
   dessinerIntro(){
     const L = Camera.L, H = Camera.H, t = Tournee.introT;
     const al = borne(t / 0.30, 0, 1);
     ctx.save();
     ctx.globalAlpha = al;
-    ctx.fillStyle = "#05070E";
+
+    /* le bar, flouté et assombri : on reconnaît le lieu sans le lire */
+    const fond = Images.table.fond_bar_flou;
+    ctx.fillStyle = "#0A0714";
     ctx.fillRect(0, 0, L, H);
-    const im = Images.table.affiche_bar;
-    if (im && im.naturalWidth){
-      /* CONTENUE, pas recadrée : c'est une affiche, la couper aux bords
-         mangerait les deux noms peints en bas. */
-      const e = Math.min(L / im.naturalWidth, (H * 0.80) / im.naturalHeight);
-      const l = im.naturalWidth * e, h = im.naturalHeight * e;
-      const av = borne((BAR_INTRO_DUREE - t) / 0.5, 0, 1);
-      ctx.globalAlpha = al * av;
-      ctx.drawImage(im, (L - l) / 2, H * 0.44 - h / 2 + (1 - av) * H * 0.04, l, h);
+    if (fond && fond.naturalWidth){
+      const e = Math.max(L / fond.naturalWidth, H / fond.naturalHeight);
+      const l = fond.naturalWidth * e, h = fond.naturalHeight * e;
+      ctx.globalAlpha = al * 0.85;
+      ctx.drawImage(fond, (L - l) / 2, (H - h) / 2, l, h);
       ctx.globalAlpha = al;
     }
+    /* un voile qui remonte du bas : il détache le texte du décor */
+    const v = ctx.createLinearGradient(0, H * 0.42, 0, H);
+    v.addColorStop(0, "rgba(10,7,20,0)");
+    v.addColorStop(1, "rgba(10,7,20,.88)");
+    ctx.fillStyle = v;
+    ctx.fillRect(0, H * 0.42, L, H * 0.58);
+
+    /* LE DUO, contenu et non recadré : les deux noms peints en font
+       partie, les couper reviendrait à couper le titre. */
+    const duo = Images.table.duo_bar;
+    if (duo && duo.naturalWidth){
+      const av = borne((BAR_INTRO_DUREE - t) / 0.5, 0, 1);
+      const e2 = Math.min((L * 0.94) / duo.naturalWidth,
+                          (H * 0.66) / duo.naturalHeight);
+      const l2 = duo.naturalWidth * e2, h2 = duo.naturalHeight * e2;
+      ctx.globalAlpha = al * av;
+      ctx.drawImage(duo, (L - l2) / 2,
+                    H * 0.46 - h2 / 2 + (1 - av) * H * 0.04, l2, h2);
+      ctx.globalAlpha = al;
+    }
+
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillStyle = "#F7B32B";
-    let ta = H * 0.085;
-    for (let k = 0; k < 15; k++){
-      ctx.font = "800 " + Math.round(ta) + "px 'Baloo 2', system-ui, sans-serif";
-      if (ctx.measureText("LA TOURNÉE DU D'TOUR").width <= L * 0.88) break;
-      ta *= 0.92;
-    }
-    ctx.fillText("LA TOURNÉE DU D'TOUR", L / 2, H * 0.885);
-    ctx.fillStyle = "rgba(237,231,250,.55)";
-    ctx.font = "700 " + Math.round(H * 0.040) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillText("Touchez pour commencer", L / 2, H * 0.960);
+    BarVue.texteQuiTient("LA TOURNÉE DU D'TOUR", L / 2, H * 0.845, L * 0.88,
+                         H * 0.085, "800");
+    ctx.fillStyle = "rgba(237,231,250,.62)";
+    ctx.font = "700 " + Math.round(H * 0.038) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillText("Touchez pour commencer", L / 2, H * 0.935);
     ctx.textAlign = "left";
     ctx.restore();
+  },
+
+  /* Écrit centré sans jamais dépasser `large` : on part de la taille
+     voulue et on descend tant que ça ne rentre pas. */
+  texteQuiTient(txt, x, y, large, taille, gras){
+    if (!txt) return;
+    let t2 = taille;
+    for (let k = 0; k < 15; k++){
+      ctx.font = gras + " " + Math.round(t2) + "px 'Baloo 2', system-ui, sans-serif";
+      if (ctx.measureText(txt).width <= large) break;
+      t2 *= 0.92;
+    }
+    ctx.fillText(txt, x, y);
   },
 
   dessinerFoule(){
@@ -9172,7 +9196,11 @@ const BarVue = {
       if (!spr || !spr.naturalWidth) continue;
       const sh = H * FOULE_TAILLE * m.ref.taille * echellePerso(m.ref.id);
       const sl = sh * spr.naturalWidth / spr.naturalHeight;
-      const x = L * m.x, y = H * FOULE_PIEDS;
+      /* `ex` convertit une position DU MONDE en position d'écran : la
+         grappe reste sur place quand le champion se déplace, et on la
+         dépasse. Hors champ, on ne la dessine pas. */
+      const x = this.ex(m.x), y = H * FOULE_PIEDS;
+      if (x < -L * 0.25 || x > L * 1.25) continue;
       ctx.save();
       /* un cran plus sombre que le champion : ils sont du décor vivant,
          ils ne doivent pas se disputer l'œil avec lui */
@@ -9197,7 +9225,7 @@ const BarVue = {
       /* On ramène la bulle dans l'écran d'après SA LARGEUR, pas d'après
          une marge fixe : borner le centre à 0,14 laissait quand même
          dépasser une bulle de 0,44 de large, et la phrase était coupée. */
-      const bx = borne(L * m.x, bw / 2 + 6, L - bw / 2 - 6);
+      const bx = borne(this.ex(m.x), bw / 2 + 6, L - bw / 2 - 6);
       ctx.globalAlpha = borne(r.t / 0.4, 0, 1);
       ctx.fillStyle = "rgba(250,248,255,.95)";
       arrondi(bx - bw / 2, by - H * 0.036, bw, H * 0.072, H * 0.030); ctx.fill();
@@ -9418,14 +9446,19 @@ const BarVue = {
       s'en va pour de bon ; sa place se libère et quelqu'un d'autre
       finit par arriver. */
 
-/* Les trois grappes, en fraction de largeur d'écran. Le monde du bar
-   fait trois fonds bout à bout : ces positions sont à l'ÉCRAN et non
-   dans le monde, la foule du premier plan ne défile pas avec le décor —
-   c'est ce qui la distingue des clients du comptoir. */
+/* Les grappes sont PLACÉES DANS LE BAR, pas sur l'écran. C'était le
+   défaut de la première version : accrochées à la caméra, elles
+   suivaient le champion comme un décor peint sur la vitre — on ne les
+   dépassait jamais, et le bar semblait tenir en un seul écran.
+
+   Posées dans le MONDE, elles ne sont visibles que quand on passe
+   devant : le bar redevient un lieu qu'on traverse, avec des coins où
+   il y a du monde et des coins où il n'y a personne. Six grappes
+   réparties sur toute la longueur — assez pour qu'il y ait presque
+   toujours quelqu'un en vue, jamais assez pour faire une haie. */
 const FOULE_PLACES = [
-  { id: "gauche", x: 0.155 },
-  { id: "centre", x: 0.500 },
-  { id: "droite", x: 0.845 },
+  { id: "g1", x: 0.110 }, { id: "g2", x: 0.370 },
+  { id: "g3", x: 0.630 }, { id: "g4", x: 0.890 },
 ];
 /* La ligne des pieds, SOUS le bas de l'écran : on ne voit que le buste.
    C'est ce qui laisse au champion de la place pour circuler tout en
@@ -9437,7 +9470,7 @@ const FOULE_PLACES = [
    laissent le haut du corps lisible. */
 const FOULE_PIEDS = 1.52;
 const FOULE_TAILLE = 0.78;         /* fraction de la hauteur d'écran */
-const FOULE_ECART = 0.052;         /* écart entre deux voisins d'une grappe */
+const FOULE_ECART = 0.030;         /* écart entre deux voisins, EN MONDE */
 const FOULE_PAR_GRAPPE = 3;        /* au plus, sinon ils se recouvrent */
 
 const FOULE_REPLIQUE = [7.0, 13.0];   /* délai entre deux répliques      */
@@ -9498,25 +9531,41 @@ Object.assign(Tournee, {
     this.replique = null;
     const libres = BAR_CLIENTS.map(c => c.id);
     melangerTableau(libres);
+
+    /* UNE GRAINE PAR GRAPPE D'ABORD, puis on complète À TOUR DE RÔLE.
+       Remplir chaque grappe à fond avant de passer à la suivante vidait
+       les dernières : mesuré, dix personnes pour six grappes en
+       laissaient deux désertes. À tour de rôle, elles se remplissent
+       toutes, et le bar a du monde partout où on passe. */
+    const graines = [];
     for (const place of FOULE_PLACES){
       if (!libres.length) break;
-      const graine = libres.shift();
-      const grappe = [graine];
-      const amis = (LIENS[graine] && LIENS[graine].amis) || [];
-      for (const a of amis){
-        if (grappe.length >= FOULE_PAR_GRAPPE) break;
-        const i = libres.indexOf(a);
-        if (i >= 0) grappe.push(libres.splice(i, 1)[0]);
+      const id = libres.shift();
+      graines.push({ place:place.id, ids:[id] });
+    }
+    let tour = 0;
+    while (libres.length && graines.length){
+      const g = graines[tour % graines.length];
+      tour++;
+      if (g.ids.length >= FOULE_PAR_GRAPPE) {
+        if (graines.every(x => x.ids.length >= FOULE_PAR_GRAPPE)) break;
+        continue;
       }
-      while (grappe.length < FOULE_PAR_GRAPPE && libres.length){
-        grappe.push(libres.shift());
-      }
-      grappe.forEach((id, k) => {
+      /* on prend un AMI de la graine s'il en reste un, sinon le premier
+         venu : mieux vaut une grappe dépareillée qu'une place vide */
+      const amis = (LIENS[g.ids[0]] && LIENS[g.ids[0]].amis) || [];
+      let i = libres.findIndex(x => amis.indexOf(x) >= 0);
+      if (i < 0) i = 0;
+      g.ids.push(libres.splice(i, 1)[0]);
+    }
+
+    for (const g of graines){
+      g.ids.forEach((id, k) => {
         const ref = BAR_CLIENTS.find(c => c.id === id);
         if (!ref) return;
         this.foule.push({
-          ref, place:place.id, rang:k, etat:"grappe", t:0,
-          x:this.xFoule(place.id, k, grappe.length), dir:1, foulee:0,
+          ref, place:g.place, rang:k, etat:"grappe", t:0,
+          x:this.xFoule(g.place, k, g.ids.length), dir:1, foulee:0,
           cible:0, retour:0,
         });
       });
@@ -11265,38 +11314,65 @@ const RuelleVue = {
 
   /* Une bulle au-dessus du héros qui parle. Bornée sur SA largeur : la
      même faute a déjà coupé une phrase deux fois sur ce projet. */
+  /* Une bulle au-dessus du héros qui parle. Elle se REPLIE SUR DEUX
+     LIGNES quand la phrase est longue, au lieu de rapetisser la police :
+     réduire jusqu'à tenir donnait un texte minuscule étalé sur toute la
+     largeur, illisible et laid. Deux lignes gardent une taille lisible.
+
+     La coupure se fait sur un ESPACE, au plus près du milieu — couper au
+     milieu des mots ou au premier espace venu donne des lignes
+     déséquilibrées qu'on lit deux fois. */
   bulleHeros(txt, qui, opac){
     const L = Camera.L, H = Camera.H;
     const h = Heros[qui] || Heros[0];
     ctx.save();
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    /* La largeur DISPONIBLE est fixée d'abord, et le texte est réduit
-       pour y entrer : la bulle ne s'étire plus au-delà de l'écran. La
-       même faute a coupé une phrase trois fois sur ce projet — c'est la
-       troisième correction, autant qu'elle soit la dernière. */
-    const dispo = L * 0.86;
-    let taille = H * 0.028;
-    for (let k = 0; k < 15; k++){
-      ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
-      if (ctx.measureText(txt).width <= dispo - H * 0.040) break;
-      taille *= 0.92;
+    const dispo = L * 0.86 - H * 0.040;
+    const taille = H * 0.028;
+    ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+
+    let lignes = [txt];
+    if (ctx.measureText(txt).width > dispo){
+      const mots = txt.split(" ");
+      let best = -1, ecart = 1e9;
+      for (let k = 1; k < mots.length; k++){
+        const a2 = mots.slice(0, k).join(" "), b2 = mots.slice(k).join(" ");
+        const la = ctx.measureText(a2).width, lb = ctx.measureText(b2).width;
+        if (Math.max(la, lb) > dispo) continue;
+        if (Math.abs(la - lb) < ecart){ ecart = Math.abs(la - lb); best = k; }
+      }
+      if (best > 0) lignes = [mots.slice(0, best).join(" "), mots.slice(best).join(" ")];
+      else {
+        /* un seul mot plus large que la bulle : là, et là seulement, on
+           réduit la police */
+        let t2 = taille;
+        for (let k = 0; k < 15; k++){
+          ctx.font = "800 " + Math.round(t2) + "px 'Baloo 2', system-ui, sans-serif";
+          if (ctx.measureText(txt).width <= dispo) break;
+          t2 *= 0.92;
+        }
+      }
     }
-    const bw = ctx.measureText(txt).width + H * 0.040;
+
+    const larg = Math.max(...lignes.map(s => ctx.measureText(s).width));
+    const bw = larg + H * 0.040;
+    const interligne = H * 0.036;
+    const bh = H * 0.058 + (lignes.length - 1) * interligne;
     const bx = borne(L * (qui === 0 ? 0.34 : 0.66), bw / 2 + 6, L - bw / 2 - 6);
-    /* 0,50 : au-dessus de la BARRICADE, pas seulement du bouclier. À
-       0,635 la bulle se posait sur les caisses et sur la tête du
-       champion — elle est illisible sur un fond de bois. Plus haut, elle
-       est sur le ciel de la rue, où rien ne la concurrence. */
     const by = H * 0.50;
     ctx.globalAlpha = opac;
     ctx.fillStyle = "rgba(250,248,255,.96)";
-    arrondi(bx - bw / 2, by - H * 0.034, bw, H * 0.068, H * 0.028); ctx.fill();
+    arrondi(bx - bw / 2, by - bh / 2, bw, bh, H * 0.026); ctx.fill();
     ctx.fillStyle = h && h.couleur ? h.couleur : "#171226";
     ctx.font = "800 " + Math.round(H * 0.016) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillText(h && h.nom ? h.nom : "", bx, by - H * 0.020);
+    ctx.fillText(h && h.nom ? h.nom : "", bx, by - bh / 2 + H * 0.014);
     ctx.fillStyle = "#171226";
-    ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillText(txt, bx, by + H * 0.010);
+    const fonte = ctx.font;
+    void fonte;
+    lignes.forEach((s, k) => {
+      ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.fillText(s, bx, by - bh / 2 + H * 0.038 + k * interligne);
+    });
     ctx.restore();
     ctx.globalAlpha = 1;
     ctx.textAlign = "left";
@@ -11601,9 +11677,15 @@ const RuelleVue = {
         /* le vacillement : deux sinus lents et déphasés, jamais le même
            cycle d'une flaque à l'autre. Une lumière parfaitement stable
            se lit comme du décor mort. */
+        /* TROIS sinus incommensurables plutôt que deux, et une
+           amplitude plus large : à 10 % on devinait le vacillement sans
+           le voir. À 26 %, avec un battement rapide par-dessus, la rue
+           respire — c'est ce qui la rend habitée plutôt que peinte. */
         const ph = Ruelle.temps * 1.7 + k * 2.1;
-        const vac = 0.90 + 0.10 * Math.sin(ph) * Math.sin(ph * 0.37 + 1.1);
-        const a4 = 0.30 * f2.force * heureF.nuit * vac;
+        const vac = 0.80 + 0.26 * (0.55 * Math.sin(ph)
+                                 + 0.30 * Math.sin(ph * 0.37 + 1.1)
+                                 + 0.15 * Math.sin(ph * 3.9 + k));
+        const a4 = 0.40 * f2.force * heureF.nuit * vac;
         const g2 = ctx.createRadialGradient(L * f2.x, H * f2.y, 0,
                                             L * f2.x, H * f2.y, L * f2.l);
         const c2 = f2.couleur;

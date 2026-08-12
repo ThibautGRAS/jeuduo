@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.79";
+const VERSION = "6.80";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -494,21 +494,13 @@ const Sons = {
      plus des événements calés sur l'horloge AUDIO (pas sur l'affichage,
      une seconde qui traîne s'entend). Rien n'est échantillonné : tout
      est synthétisé, le jeu reste un seul fichier. */
-  lancerFondBar(){
-    this.init();
-    if (!this.ac || this.bar) return;
-    const n = this.ac.sampleRate * 3;
-    const b = this.ac.createBuffer(1, n, this.ac.sampleRate), d = b.getChannelData(0);
-    let prec = 0;
-    for (let i = 0; i < n; i++){ prec = (prec + (Math.random() * 2 - 1) * 0.07) * 0.988; d[i] = prec; }
-    const src = this.ac.createBufferSource(); src.buffer = b; src.loop = true;
-    const f = this.ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 520; f.Q.value = 0.7;
-    const g = this.ac.createGain(); g.gain.value = 0;
-    src.connect(f); f.connect(g); g.connect(this.maitre);
-    src.start();
-    const t = this.ac.currentTime;
-    this.bar = { src, gain:g, filtre:f, prochainVerre:t + 2, prochainRire:t + 5 };
-  },
+  /* LE BRUIT BLANC D'AMBIANCE A ÉTÉ RETIRÉ. Il datait du temps où il
+     n'y avait pas d'enregistrement : une nappe filtrée qui suggérait une
+     salle. Maintenant qu'une vraie rumeur de bar tourne en boucle, les
+     deux se superposaient en un souffle sourd qui mangeait les voix.
+     La méthode reste, vide, parce que plusieurs endroits l'appellent —
+     et pour que la trace de la décision reste lisible ici. */
+  lancerFondBar(){ /* remplacé par l'échantillon `foule_bar` */ },
   arreterFondBar(){
     if (!this.bar) return;
     try{ this.bar.src.stop(); }catch(e){}
@@ -977,7 +969,7 @@ const IMAGES_NIVEAU3 = [
   /* L'affiche du niveau : le duo au comptoir, montrée avant la première
      image. Elle annonce le niveau ET donne au navigateur le temps de
      charger le décor — même service que `duo_ruelle` au niveau 4. */
-  "affiche_bar",
+  "affiche_bar", "duo_bar", "fond_bar_flou",
   /* Les poses de barman sont TOUTES découpées dans la même bande de la
      même planche : même hauteur en pixels, même trait de coupe au
      niveau de la ceinture. C'est ce qui garantit qu'à hauteur d'écran

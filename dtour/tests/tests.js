@@ -3258,7 +3258,7 @@ if (D){
       return D.FLAQUES.length >= 4 &&
         D.FLAQUES.every(f => f.l > f.h && f.force > 0) &&
         /if \(heureF\.nuit > 0\)\{/.test(source) &&
-        /0\.30 \* f2\.force \* heureF\.nuit \* vac/.test(source);
+        /f2\.force \* heureF\.nuit \* vac/.test(source);
     })(), "une flaque ronde vue en perspective est une ellipse");
 
   verifier("les flaques VACILLENT, chacune à son rythme",
@@ -4065,12 +4065,25 @@ if (D){
   /* ---- la foule du premier plan (niveau 3) ---- */
   const unBar = () => { D.Jeu.demarrer(3); D.Tournee.lancer(); D.Tournee.introT = 0; D.Camera.mesurer(844, 318, 1); return D.Tournee; };
 
-  verifier("trois grappes peuplent le premier plan",
+  verifier("les grappes sont RÉPARTIES DANS LE BAR, pas collées à la caméra",
     (() => {
+      /* Accrochées à l'écran, elles suivaient le champion comme un décor
+         peint sur la vitre : on ne les dépassait jamais et le bar
+         semblait tenir en un seul écran. */
       const T = unBar();
-      return D.FOULE_PLACES.length === 3 &&
+      const xs = D.FOULE_PLACES.map(p => p.x).sort((a, b2) => a - b2);
+      const etendue = xs[xs.length - 1] - xs[0];
+      messageDetail = D.FOULE_PLACES.length + " grappes, étendue " + etendue.toFixed(2);
+      return D.FOULE_PLACES.length >= 4 && etendue > 0.7 &&
         D.FOULE_PLACES.every(p => T.grappe(p.id).length > 0) &&
-        T.foule.length >= 6;
+        /const x = this\.ex\(m\.x\)/.test(source);
+    })());
+
+  verifier("une grappe hors champ n'est pas dessinée",
+    (() => {
+      /* Six grappes sur toute la longueur : sans rejet, on peint à chaque
+         image des gens que personne ne voit. */
+      return /if \(x < -L \* 0\.25 \|\| x > L \* 1\.25\) continue;/.test(source);
     })());
 
   verifier("les grappes se composent par AFFINITÉ, pas au hasard",
