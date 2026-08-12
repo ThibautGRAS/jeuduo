@@ -264,6 +264,32 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Jubilar et la cible du bras** (v6.56) : troisième ennemi, et la
+première parade qui ne coûte pas de temps de tir. Il s'arrête net, sort
+un pavé, arme — et pendant les 0,85 s de préparation, une **cible
+apparaît sur son bras armé**. Un tir dedans annule le jet : le pavé
+tombe, il se tient le bras et perd une seconde et demie. Rien n'entame
+ses points de vie, la parade fait gagner du temps sans tuer. Contre lui
+on choisit donc entre À COUVERT, qui coûte un temps de tir, et le tir de
+précision, qui n'en coûte aucun mais peut se rater.
+
+La cible a une **taille fixe à l'écran**, indépendante de la profondeur :
+au fond de la rue un avant-bras fait six pixels, une zone calquée sur le
+sprite serait injouable là où elle sert le plus. Sa position, elle, est
+mesurée sur le sprite et déclarée par personnage.
+
+**DSKKK a enfin sa planche complète** : six poses de course, quatre
+impacts, deux de chute et deux poses au sol — il s'affaisse. Il glissait
+jusqu'ici au lieu de courir et ne réagissait pas aux impacts.
+
+**L'alerte a deux couleurs** : ambre pendant qu'il se prépare, rouge
+quand le jet est imminent. Deux couleurs valent mieux qu'un compte à
+rebours.
+
+**Six hordes** au lieu de cinq, chacune avec son casting : Depardiahree,
+puis DSKKK, puis Jubilar — une mécanique à la fois — et trois hordes
+mélangées. Le relevé de fin compte les jets annulés au bras.
+
 **Les balles portent moins de loin** (v6.55) : la meilleure stratégie
 du niveau était de POSER le viseur sur le point de fuite et de tirer en
 boucle. Les cinq couloirs convergent là-bas, donc tous les ennemis

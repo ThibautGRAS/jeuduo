@@ -3,7 +3,7 @@
 const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
-                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","legPtG","legPtD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","eRecit","niveaux","marque","vign1","vign2","titreFond","titreVoile","titreHaut","titreEnseigne","titreSst","pause","pauseNiv","pauseBtn","coins","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","vign4","niv4","pupitre3","c3G","c3D","c3B","c3J","c3E","releveRuelle","releveTues","rScore","rHordes","rTetes","rGardes","rEncaissees","rContacts","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
+                    "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","legPtG","legPtD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","eRecit","niveaux","marque","vign1","vign2","titreFond","titreVoile","titreHaut","titreEnseigne","titreSst","pause","pauseNiv","pauseBtn","coins","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","vign4","niv4","pupitre3","c3G","c3D","c3B","c3J","c3E","releveRuelle","releveTues","rScore","rHordes","rTetes","rGardes","rEncaissees","rAnnules","rContacts","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
                     "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
@@ -466,6 +466,7 @@ const Interface = {
     if (E.rGardes) E.rGardes.textContent = chiffres(b.gardes);
     if (E.rEncaissees) E.rEncaissees.textContent = chiffres(b.encaissees)
       + (b.bloquees ? " / " + chiffres(b.bloquees + b.encaissees) : "");
+    if (E.rAnnules) E.rAnnules.textContent = chiffres(b.annules || 0);
     if (E.rContacts) E.rContacts.textContent = chiffres(b.contacts);
 
     /* Le détail par catégorie, construit à partir de ENNEMIS : ajouter
@@ -1128,6 +1129,7 @@ globalThis.DTOUR = {
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, portraitOk, ecranOk, orientationVoulue, ORIENTATION, Ecran, Interface, Pause, Boucle,
   Perspective, courbeZ, POSES_ENNEMI, POSES_PROPRES, POSES_BASE_MANQUANTES,
+  REPLI_POSE,
   attenuation, PORTEE_MIN, PORTEE_PLEINE,
   ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, IA_REUSSITE, IA_CADENCE, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, RUELLE_DEGAT_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,

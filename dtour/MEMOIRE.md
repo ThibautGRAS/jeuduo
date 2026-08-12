@@ -1071,6 +1071,42 @@ D'où la règle : **canevas 320, disque 304, centré**, pour les huit.
 exactement huit boutons ; un test relit l'en-tête WebP et compare les
 huit tailles.
 
+### Une position sur un sprite se MESURE, elle ne se devine pas
+
+La cible du bras armé, première version : `x = 0,80` de la largeur, au
+jugé. Les deux planches lèvent le bras à GAUCHE — la cible flottait à
+côté d'une main vide. Mesurée sur le sprite, elle tombe à 0,23 de la
+largeur du canevas et 0,09 de sa hauteur. La valeur est déclarée par
+personnage dans `ENNEMIS[…].jet.cible`, parce que Depardiahree et
+Jubilar ne brandissent pas au même endroit.
+
+La vérification qui compte n'est pas visuelle mais arithmétique : on
+calcule le rectangle où le sprite est réellement dessiné, et on vérifie
+que la cible tombe dedans, à la même position relative à deux
+profondeurs éloignées. L'œil, sur un ennemi de 46 px de haut, ne
+distingue pas 0,23 de 0,40.
+
+### Un élément d'interface posé sur un ennemi garde une taille d'écran
+
+Au fond de la ruelle un ennemi occupe 5,5 % de la hauteur d'écran, donc
+son avant-bras environ six pixels sur un iPhone. Toute zone de tir
+calquée sur le sprite est donc injouable exactement là où elle sert le
+plus. La cible du bras et le point d'exclamation d'alerte ont une taille
+FIXE en fraction d'écran ; seule leur POSITION suit le sprite. C'est
+aussi pourquoi la consigne de génération exige de voir du fond entre le
+bras levé et le buste : sans cet écart, la cible se superpose au torse et
+le joueur ne sait plus ce qu'il vise.
+
+### Un test qui repère du code par son nom tombera au renommage
+
+« La barricade repasse devant les ennemis » cherchait `Ruelle.poseEnnemi`
+dans la source pour situer la passe des ennemis. Renommé en
+`Ruelle.imagePose`, le test est tombé alors que l'ordre de dessin était
+juste. C'est le même défaut que « reconstruire une liste du code à la
+regex » : inévitable ici — l'ordre de dessin ne se teste pas autrement —
+mais le repère doit être commenté pour que l'échec se lise en dix
+secondes.
+
 ### Une perspective qui converge crée un point de camping
 
 Les cinq couloirs du niveau 4 convergent vers le point de fuite : tous

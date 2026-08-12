@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.55";
+const VERSION = "6.56";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -687,7 +687,7 @@ const PREFIXES_BAR = ["bar_th", "bar_pf"];
 const POSES_ENNEMI = ["run1", "run2", "run3", "run4", "run5", "run6",
                       "hit_torse", "hit_epaule", "hit_jambe", "hit_tete",
                       "chute1", "chute2", "sol"];
-const ENNEMIS_RUELLE = ["depar", "dsk"];
+const ENNEMIS_RUELLE = ["depar", "dsk", "jubi"];
 /* Chacun a en plus les poses de SA mécanique. Elles ne sont pas
    communes : Depardiahree trébuche et lance une bouteille, DSKKK
    garde son visage, personne ne fait les deux. La table les déclare
@@ -695,14 +695,23 @@ const ENNEMIS_RUELLE = ["depar", "dsk"];
    fichiers qui n'existent pas. */
 const POSES_PROPRES = {
   depar: ["trebuche1", "trebuche2", "ramasse", "arme", "lance"],
-  dsk: ["garde1", "garde2", "garde_casse", "sonne", "bond"],
+  dsk: ["garde1", "garde2", "garde_casse", "sonne", "bond", "sol2"],
+  jubi: ["arret", "arme1", "arme2", "lance", "lache"],
 };
-/* DSKKK n'a pour l'instant qu'une pose de course : sa planche de base —
-   six poses de course, quatre impacts, deux de chute, une au sol — n'est
-   pas encore arrivée. Le rendu se replie sur `run1` pour toute pose
-   manquante, donc il est jouable mais raide. À remplacer dès que la
-   planche est là. */
-const POSES_BASE_MANQUANTES = { dsk:true };
+/* Plus aucune planche de base ne manque. La table reste : c'est elle qui
+   autorise un ennemi à n'avoir que sa pose de course, et le test dit en
+   clair lesquels sont incomplets. */
+const POSES_BASE_MANQUANTES = {};
+/* REPLI DE POSE. Tous les personnages n'ont pas la même richesse : DSKKK
+   a une seconde pose au sol où il s'affaisse, les autres non. Plutôt que
+   de conditionner la logique à l'existence d'un fichier, la logique
+   demande toujours la meilleure pose et le rendu redescend d'un cran.
+   Le dernier recours reste `run1` — une pose fausse vaut mieux qu'un
+   ennemi invisible. */
+const REPLI_POSE = {
+  sol2:"sol", chute3:"chute2", garde2:"garde1", trebuche2:"trebuche1",
+  run2:"run1", run3:"run1", run4:"run1", run5:"run1", run6:"run1",
+};
 /* Ce qui vole, ce qui éclate, ce qui prévient. Les projectiles ont
    DEUX vues : de côté pendant le vol, et de face quand ils fondent
    sur la barricade — un objet qui arrive droit sur soi ne se dessine

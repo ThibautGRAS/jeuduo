@@ -144,6 +144,19 @@ const ENNEMIS = {
        sur la barricade, et ça coûte plus cher. */
     bond:{ z:0.90, duree:0.55, degat:22 },
   },
+  jubi: {
+    nom:"JUBILAR LE FUMIER", pv:110, vitesse:0.095, taille:1.00, sprite:"jubi",
+    /* pv x vitesse = 10,5 : la troisième déclinaison de la même menace. */
+    mult:{ tete:1.30, torse:0.60, jambes:0.85, epaule:0.75 },
+    /* Il s'arrête net et prépare. Contrairement à Depardiahree, son bras
+       armé porte une CIBLE : un tir dedans annule le jet. C'est la seule
+       parade du niveau qui ne coûte pas de temps de tir, contrairement à
+       À COUVERT — et c'est ce qui la rend intéressante. */
+    /* cible mesurée sur enn_jubi_arme2 : le pavé est à 0,23 de la
+       largeur du canevas et 0,09 de sa hauteur */
+    jet:{ zMin:0.25, zMax:0.80, attente:[2.2, 3.6], objet:"pave",
+          vol:1.00, degat:14, cible:{ x:0.23, y:0.09 }, penalite:1.6 },
+  },
 };
 
 /* ---------------- ce qui vole ----------------
@@ -169,6 +182,27 @@ const ALERTE_TAILLE = 0.085;
 /* Le retour d'un tir BLOQUÉ. Blanc et non rouge, en anneau et non en
    étoile : il ne doit surtout pas ressembler à un coup qui porte. */
 const BLOCAGE_DUREE = 0.26;
+
+/* ---------------- la cible du bras armé ----------------
+   Mesuré au moment de concevoir les hordes : au fond de la rue un ennemi
+   occupe 5,5 % de la hauteur d'écran, donc son avant-bras environ six
+   pixels sur un iPhone. Une zone de tir calquée sur le sprite serait
+   injouable là où elle sert le plus. La cible a donc une taille FIXE à
+   l'écran, indépendante de la profondeur : c'est un élément d'interface
+   posé sur l'ennemi, pas une partie de son corps.
+
+   Sa position, elle, suit le sprite — bras levé, écarté du buste, en
+   haut à droite de la boîte. C'est pour ça que la consigne de génération
+   exige de voir du fond entre le bras et le corps. */
+/* La position est MESURÉE sur le sprite de préparation, en fraction du
+   canevas, et déclarée par personnage : elle n'est pas devinable. Ma
+   première valeur (0,80 en largeur) plaçait la cible à DROITE alors que
+   les deux planches lèvent le bras à GAUCHE — la cible flottait à côté
+   d'une main vide. Refaire la mesure prend deux minutes ; la supposer
+   coûte une livraison. */
+const CIBLE_BRAS_DEFAUT = { x:0.23, y:0.09 };
+const CIBLE_BRAS_TAILLE = 0.082;   /* fraction de la largeur d'écran */
+const CIBLE_BRAS_PRISE = 1.15;     /* la zone tactile est un peu plus large */
 
 /* ---------------- l'atténuation à distance ----------------
    Sans elle, la meilleure stratégie du niveau était de POSER le viseur
@@ -253,9 +287,10 @@ const Ruelle = {
   VAGUES:[
     { nombre:5,  delai:1.9,  vitesse:1.00, types:["depar"] },
     { nombre:6,  delai:1.7,  vitesse:1.02, types:["dsk"] },
-    { nombre:10, delai:1.3,  vitesse:1.10, types:["depar", "dsk"] },
-    { nombre:14, delai:1.0,  vitesse:1.20, types:["depar", "dsk", "dsk"] },
-    { nombre:18, delai:0.78, vitesse:1.32, types:["depar", "depar", "dsk"] },
+    { nombre:6,  delai:1.6,  vitesse:1.04, types:["jubi"] },
+    { nombre:10, delai:1.3,  vitesse:1.10, types:["depar", "jubi"] },
+    { nombre:14, delai:1.0,  vitesse:1.20, types:["dsk", "jubi", "depar"] },
+    { nombre:18, delai:0.78, vitesse:1.32, types:["depar", "depar", "dsk", "jubi"] },
   ],
 
   demarrer(){
@@ -263,7 +298,7 @@ const Ruelle = {
     this.ennemis.length = 0; this.flashes.length = 0;
     this.projectiles.length = 0; this.impacts.length = 0; this.blocages.length = 0;
     this.bilan = { tues:{}, tetes:0, gardes:0, bloquees:0, encaissees:0,
-                   contacts:0, hordes:0 };
+                   contacts:0, hordes:0, annules:0 };
     for (const k of Object.keys(ENNEMIS)) this.bilan.tues[k] = 0;
     this.barricade = RUELLE_BARRICADE_PV;
     this.vague = 0; this.actifIdx = 0;
@@ -375,6 +410,49 @@ const Ruelle = {
      celui-ci. */
   gardeTient(e){ return !!e.ref.garde && e.etat === "garde"; },
 
+  /* La fenêtre est OUVERTE pendant la préparation seulement : viser le
+     bras avant qu'il soit armé, ou après le lancer, ne veut rien dire. */
+  cibleOuverte(e){
+    return !!(e.ref.jet && e.ref.jet.cible) && e.etat === "arme2";
+  },
+  /* L'image d'une pose, avec son repli : la pose demandée, puis celle
+     que REPLI_POSE désigne, puis `run1` en dernier recours. */
+  imagePose(e){
+    const base = "enn_" + e.ref.sprite + "_";
+    const nom = this.poseEnnemi(e);
+    return Images.table[base + nom]
+        || Images.table[base + (REPLI_POSE[nom] || "run1")]
+        || Images.table[base + "run1"];
+  },
+
+  posCibleBras(e){
+    const b = this.boiteEnnemi(e);
+    const c = (e.ref.jet && typeof e.ref.jet.cible === "object")
+            ? e.ref.jet.cible : CIBLE_BRAS_DEFAUT;
+    return { x:b.x + b.l * c.x, y:b.y + b.h * c.y,
+             r:Camera.L * CIBLE_BRAS_TAILLE * 0.5 };
+  },
+  /* Un tir dans la cible : le jet est ANNULÉ, le pavé tombe, et il perd
+     du temps. Rien n'entame ses points de vie — la parade fait gagner du
+     temps, elle ne tue pas, sinon viser le bras dominerait tout. */
+  tirerCibleBras(fx, fy){
+    for (const e of this.ennemis){
+      if (!this.cibleOuverte(e)) continue;
+      const c = this.posCibleBras(e);
+      const dx = fx - c.x, dy = fy - c.y, rr = c.r * CIBLE_BRAS_PRISE;
+      if (dx * dx + dy * dy > rr * rr) continue;
+      e.etat = "lache"; e.tEtat = 0;
+      e.attente = e.ref.jet.attente[1] * e.ref.jet.penalite;
+      Sons.impact(true);
+      this.secousse = Math.max(this.secousse, 0.4);
+      this.hitStop = Math.max(this.hitStop, 0.05);
+      Score.points += 150;
+      if (this.bilan) this.bilan.annules++;
+      return true;
+    }
+    return false;
+  },
+
   /* Un seul endroit compte les morts : le joueur et l'équipier tuent
      tous les deux, et deux compteurs séparés auraient divergé. */
   compterMort(e, zone){
@@ -447,7 +525,10 @@ const Ruelle = {
         if (jet){
           e.attente -= dt;
           if (e.attente <= 0 && e.z >= jet.zMin && e.z <= jet.zMax){
-            e.etat = "ramasse"; e.tEtat = 0;
+            /* celui qui a une cible sur le bras s'arrête NET d'abord :
+               l'arrêt est le premier signal, et il faut qu'il précède la
+               fenêtre de tir pour que le joueur ait le temps de lire */
+            e.etat = jet.cible ? "arret" : "ramasse"; e.tEtat = 0;
             continue;
           }
         }
@@ -466,6 +547,21 @@ const Ruelle = {
           if (this.barricade <= 0) this.terminer(false);
           continue;
         }
+      } else if (e.etat === "arret"){
+        if (e.tEtat > 0.38){ e.etat = "arme1"; e.tEtat = 0; }
+      } else if (e.etat === "arme1"){
+        if (e.tEtat > 0.34){ e.etat = "arme2"; e.tEtat = 0; }
+      } else if (e.etat === "arme2"){
+        /* LA FENÊTRE. 0,85 s, la même durée que le télégraphe de
+           Depardiahree moins le temps de ramassage : assez pour lire et
+           décider, trop peu pour flâner. */
+        if (e.tEtat > 0.85){
+          e.etat = "lance"; e.tEtat = 0;
+          this.lancerProjectile(e);
+        }
+      } else if (e.etat === "lache"){
+        /* le pavé est tombé : il se tient le bras et repart */
+        if (e.tEtat > 0.75){ e.etat = "course"; e.tEtat = 0; }
       } else if (e.etat === "ramasse"){
         /* il s'ARRÊTE pour ramasser : l'arrêt est déjà une information,
            et c'est la fenêtre où on peut le punir sans qu'il avance */
@@ -666,10 +762,15 @@ Ruelle.tirer = function(fx, fy){
     return false;
   }
   h.balles--; h.repos = 1 / arme.cadence;
+  /* La cible du bras passe AVANT les zones du corps : elle se superpose
+     à la silhouette, et le joueur qui la vise ne veut pas toucher le
+     torse par accident. */
+  const annule = this.tirerCibleBras(fx, fy);
   if (h.balles <= 0){ h.recharge = arme.recharge; Sons.recharge(h.arme !== "revolver"); }
   this.secousse = Math.max(this.secousse, arme.secousse * 0.35);
   this.flashes.push({ t:0.13, duree:0.13, heros:this.actifIdx });
   if (h.arme === "revolver") Sons.revolver(); else Sons.fusil();
+  if (annule) return true;
   const cible = this.viser(fx, fy, arme.tolerance);
   if (!cible) return false;
   const e = cible.ennemi;
@@ -721,12 +822,18 @@ Ruelle.poseEnnemi = function(e){
   /* Le harnais force une pose pour photographier la planche entière à
      la taille du jeu. Rien d'autre ne pose ce champ. */
   if (e.poseForcee) return e.poseForcee;
-  if (e.etat === "sol") return "sol";
+  /* Il s'affaisse : la première pose au sol est encore tendue, la
+     seconde est molle. Qui n'a pas de `sol2` retombe sur `sol`. */
+  if (e.etat === "sol") return e.mort > 0.55 ? "sol2" : "sol";
   if (e.etat === "chute") return e.tEtat < 0.21 ? "chute1" : "chute2";
   if (e.etat === "garde") return "garde" + (1 + e.frame);
   if (e.etat === "garde_casse") return "garde_casse";
   if (e.etat === "sonne") return "sonne";
   if (e.etat === "bond") return "bond";
+  if (e.etat === "arret") return "arret";
+  if (e.etat === "arme1") return "arme1";
+  if (e.etat === "arme2") return "arme2";
+  if (e.etat === "lache") return "lache";
   if (e.etat === "ramasse") return "ramasse";
   if (e.etat === "arme") return "arme";
   if (e.etat === "lance") return "lance";
@@ -806,8 +913,7 @@ const RuelleVue = {
          alors qu'il continuait d'avancer et d'entamer la barricade : le
          pire des symptômes, parce qu'on cherche le bug dans la logique.
          Il vaut mieux une pose fausse qu'un ennemi fantôme. */
-      const spr = Images.table["enn_" + e.ref.sprite + "_" + Ruelle.poseEnnemi(e)]
-               || Images.table["enn_" + e.ref.sprite + "_run1"];
+      const spr = Ruelle.imagePose(e);
       if (!spr || !spr.naturalWidth) continue;
       const b = Ruelle.boiteEnnemi(e);
       /* ANCRAGE PAR LES PIEDS. Toutes les poses n'ont pas le même
@@ -838,13 +944,29 @@ const RuelleVue = {
         ctx.fillStyle = part > 0.55 ? "#4CC46A" : part > 0.25 ? "#F7B32B" : "#E2453D";
         ctx.fillRect(xv, yv, lv * part, hv);
       }
+      /* LA CIBLE DU BRAS ARMÉ, à taille d'écran fixe. Elle bat, comme
+         l'alerte, mais plus vite : c'est une fenêtre, pas un
+         avertissement. */
+      if (Ruelle.cibleOuverte(e)){
+        const im3 = Images.table.sig_cible_bras;
+        const c = Ruelle.posCibleBras(e);
+        if (im3 && im3.naturalWidth){
+          const hc = c.r * 2 * (1 + 0.08 * Math.sin(e.tEtat * 16));
+          const lc = hc * im3.naturalWidth / im3.naturalHeight;
+          ctx.drawImage(im3, c.x - lc / 2, c.y - hc / 2, lc, hc);
+        }
+      }
       /* L'ALERTE, pendant toute la préparation du jet. Elle est à taille
          d'écran FIXE, pas à la taille de l'ennemi : au fond de la rue
          elle serait de six pixels, donc invisible, et c'est précisément
          de loin qu'il faut prévenir. Elle bat pour attirer l'œil sans
          clignoter — un clignotement disparaît une image sur deux. */
-      if (e.etat === "ramasse" || e.etat === "arme"){
-        const al = Images.table[e.etat === "arme" ? "sig_alerte" : "sig_alerte_or"];
+      if (e.etat === "ramasse" || e.etat === "arme" ||
+          e.etat === "arret" || e.etat === "arme1" || e.etat === "arme2"){
+        /* ambre pendant qu'il se prépare, rouge quand le jet est
+           imminent : deux couleurs valent mieux qu'un compte à rebours */
+        const imminent = e.etat === "arme" || e.etat === "arme2";
+        const al = Images.table[imminent ? "sig_alerte" : "sig_alerte_or"];
         if (al && al.naturalWidth){
           const ha = H * ALERTE_TAILLE * (1 + 0.10 * Math.sin(e.tEtat * 11));
           const la = ha * al.naturalWidth / al.naturalHeight;

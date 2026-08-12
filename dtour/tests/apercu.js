@@ -583,6 +583,30 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "33_dsk_bond");
   }
 
+  /* 34. Jubilar en pleine préparation : la cible sur le bras armé, à
+     taille d'écran fixe, sur deux profondeurs très différentes. C'est LE
+     contrôle qui compte — une cible qui rétrécit avec l'ennemi serait
+     injouable au fond de la rue. */
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 3;
+    const ref = D.ENNEMIS.jubi;
+    /* les deux BORNES de sa fourchette de jet, pas des z arbitraires :
+       hors de [zMin, zMax] le jeu ne le fait jamais armer, et une scène
+       impossible ne prouve rien */
+    const j = D.ENNEMIS.jubi.jet;
+    for (const [z, c] of [[j.zMin + 0.02, 1], [j.zMax - 0.06, 3]]){
+      D.Ruelle.ennemis.push({ ref, pv:ref.pv, pvMax:ref.pv, couloir:c, z,
+        vitesse:ref.vitesse, etat:"arme2", frame:0, tFrame:0, tEtat:0.3,
+        mort:0, touche:null, usure:0, attente:9, usureGarde:0, attenteGarde:999 });
+    }
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "34_jubilar_cible_bras");
+  }
+
   /* 27. les poses propres de Depardiahree, à leur taille de jeu, sur
      une même ligne de sol : c'est la seule façon de voir qu'une pose
      plus haute que les autres ne fait pas grandir le personnage. */

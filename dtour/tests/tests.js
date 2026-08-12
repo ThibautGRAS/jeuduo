@@ -2730,7 +2730,10 @@ if (D){
          plus. Le décor est donc redessiné par le bas, après les
          combattants. */
       const vue = source.slice(source.indexOf("const RuelleVue"));
-      const iEnn = vue.indexOf("Ruelle.poseEnnemi");
+      /* le repère est l'appel qui CHOISIT l'image d'un ennemi : il a déjà
+         changé de nom une fois (poseEnnemi -> imagePose) et le test est
+         tombé alors que l'ordre était juste */
+      const iEnn = vue.indexOf("Ruelle.imagePose");
       const iBar = vue.indexOf("RUELLE_PREMIER_PLAN");
       const iHer = vue.indexOf("RUELLE_TAILLE_HEROS");
       return iEnn > 0 && iBar > iEnn && iHer > iBar;
@@ -3205,6 +3208,100 @@ if (D){
       D.Ruelle.barricade = 0; D.Ruelle.terminer(false);
       return D.Ruelle.bilan.hordes === 0;
     })(), "compter la horde perdue serait flatteur et faux");
+
+  /* ---- Jubilar et la cible du bras ---- */
+  const unJubi = () => {
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.couvert = false;
+    D.Ruelle.projectiles.length = 0; D.Ruelle.viser = viserVrai;
+    const ref = D.ENNEMIS.jubi;
+    D.Ruelle.ennemis.push({ ref, pv:ref.pv, pvMax:ref.pv, couloir:2, z:0.5,
+      vitesse:ref.vitesse, etat:"course", frame:0, tFrame:0, tEtat:0, mort:0,
+      touche:null, usure:0, attente:0.02, usureGarde:0, attenteGarde:999 });
+    return D.Ruelle.ennemis[0];
+  };
+
+  verifier("il s'arrête, il arme en deux temps, il lance",
+    (() => {
+      unJubi();
+      const vus = new Set();
+      for (let i = 0; i < 60 * 5; i++){
+        D.Ruelle.pas(1 / 60);
+        if (D.Ruelle.ennemis[0]) vus.add(D.Ruelle.ennemis[0].etat);
+      }
+      return ["arret", "arme1", "arme2", "lance"].every(s => vus.has(s));
+    })(), "l'arrêt précède la fenêtre : il faut le temps de lire");
+
+  verifier("la fenêtre de tir n'est ouverte QUE pendant la préparation",
+    (() => {
+      const e = unJubi();
+      const ouvert = et => { e.etat = et; return D.Ruelle.cibleOuverte(e); };
+      return !ouvert("course") && !ouvert("arret") && !ouvert("arme1") &&
+             ouvert("arme2") && !ouvert("lance");
+    })());
+
+  verifier("la cible du bras a une taille FIXE à l'écran",
+    (() => {
+      /* Au fond de la rue l'avant-bras fait six pixels : une zone
+         calquée sur le sprite serait injouable là où elle sert le plus. */
+      const e = unJubi(); e.etat = "arme2";
+      e.z = 0.05; const loin = D.Ruelle.posCibleBras(e).r;
+      e.z = 0.95; const pres = D.Ruelle.posCibleBras(e).r;
+      return loin === pres && loin > D.Camera.L * 0.03;
+    })());
+
+  verifier("un tir dans la cible annule le jet sans blesser",
+    (() => {
+      const e = unJubi(); e.etat = "arme2"; e.tEtat = 0.2;
+      const pv = e.pv, c = D.Ruelle.posCibleBras(e);
+      const h = D.Ruelle.heroActif(); h.repos = 0; h.recharge = 0; h.balles = 99;
+      const touche = D.Ruelle.tirer(c.x, c.y);
+      /* aucun projectile ne part, et il ne perd pas un point de vie :
+         la parade fait gagner du temps, elle ne tue pas */
+      return touche && e.etat === "lache" && e.pv === pv &&
+             D.Ruelle.projectiles.length === 0 && D.Ruelle.bilan.annules === 1;
+    })());
+
+  verifier("et le jet annulé lui coûte du temps",
+    (() => {
+      const e = unJubi(); e.etat = "arme2"; e.tEtat = 0.2;
+      const c = D.Ruelle.posCibleBras(e);
+      const h = D.Ruelle.heroActif(); h.repos = 0; h.recharge = 0; h.balles = 99;
+      D.Ruelle.tirer(c.x, c.y);
+      return e.attente > D.ENNEMIS.jubi.jet.attente[1];
+    })());
+
+  verifier("hors de la cible, le tir touche le corps normalement",
+    (() => {
+      const e = unJubi(); e.etat = "arme2"; e.tEtat = 0.2;
+      const pv = e.pv;
+      tirerZone(e, "torse");
+      return e.pv < pv && e.etat !== "lache";
+    })());
+
+  /* ---- le repli de pose ---- */
+  verifier("une pose absente redescend d'un cran avant run1",
+    (() => {
+      /* DSKKK a une seconde pose au sol, les autres non : la logique
+         demande toujours la meilleure et le rendu redescend. */
+      return D.REPLI_POSE.sol2 === "sol" && D.REPLI_POSE.run4 === "run1" &&
+             D.POSES_PROPRES.dsk.indexOf("sol2") >= 0 &&
+             D.POSES_PROPRES.depar.indexOf("sol2") < 0;
+    })());
+
+  verifier("plus aucune planche de base ne manque",
+    (() => {
+      const manquants = Object.keys(D.POSES_BASE_MANQUANTES);
+      messageDetail = manquants.length ? "encore attendues : " + manquants.join(", ") : "";
+      return manquants.length === 0;
+    })());
+
+  verifier("les trois ennemis pèsent la même menace",
+    (() => {
+      const m = Object.keys(D.ENNEMIS).map(k => D.ENNEMIS[k].pv * D.ENNEMIS[k].vitesse);
+      messageDetail = "pv x vitesse : " + m.map(x => x.toFixed(1)).join(", ");
+      return (Math.max(...m) - Math.min(...m)) / Math.max(...m) < 0.15;
+    })());
 
   verifier("les huit boutons ont le même canevas et le même disque",
     (() => {
