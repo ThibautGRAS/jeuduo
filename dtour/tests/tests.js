@@ -2850,16 +2850,21 @@ if (D){
          synthétisé : fichier absent, réseau lent, décodage refusé, le
          son sort quand même. C'est ce qui permet de livrer la plomberie
          avant les fichiers. */
-      const sansRepli = [];
-      const re = /this\.echant\("([a-z_]+)"[\s\S]{0,40}?,\s*([^)]*)\)/g;
-      let m;
-      while ((m = re.exec(source))){
-        if (/^null\s*$/.test(m[2])) continue;      /* repli explicite en dehors */
-        if (!/=>/.test(m[2])) sansRepli.push(m[1]);
-      }
-      messageDetail = sansRepli.length ? "sans repli : " + sansRepli.join(", ") : "";
-      return /echant\(nom, vol, repli\)/.test(source) &&
-             /if \(!buf \|\| !this\.ac \|\| !this\.actif\)\{ if \(repli\) repli\(\); return false; \}/.test(source);
+      /* L'invariant porte sur les sons qui PONCTUENT une action : un tir,
+         une mort. Chacun doit sortir même sans fichier. Le grognement
+         d'ambiance, lui, n'a délibérément PAS de repli — un râle de
+         synthèse joué en boucle serait pire que le silence. Viser un
+         motif large flaguait justement celui-là. */
+      const avecRepli = nom => {
+        const i = source.indexOf(nom + "(");
+        if (i < 0) return false;
+        return /this\.echant\([\s\S]{0,120}?\(\) => \{/.test(source.slice(i, i + 500));
+      };
+      const sans = ["revolver", "fusil", "criMort"].filter(n => !avecRepli(n));
+      messageDetail = sans.length ? "sans repli : " + sans.join(", ") : "";
+      return sans.length === 0 &&
+        /echant\(nom, vol, repli, opt\)/.test(source) &&
+        /if \(!buf \|\| !this\.ac \|\| !this\.actif\)\{ if \(repli\) repli\(\); return false; \}/.test(source);
     })());
 
   verifier("les échantillons ne retardent pas le démarrage",
@@ -2959,6 +2964,72 @@ if (D){
       messageDetail = wav.length ? wav.join(", ") : "";
       return wav.length === 0 &&
         fs.readFileSync(path.join(RACINE, ".gitignore"), "utf8").indexOf("son/*.wav") >= 0;
+    })());
+
+  verifier("un bombardier SE POSTE et lance vraiment",
+    (() => {
+      /* LE DÉFAUT SIGNALÉ. Sa fenêtre de jet ne dure que 1,8 s alors que
+         son délai d'attente initial va de 3,4 à 5,2 s : il la traversait
+         avant d'avoir fini d'attendre et ne lançait jamais. La cause
+         n'était pas le délai, c'était que rien ne l'arrêtait. */
+      const compte = k => {
+        D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
+        D.Camera.mesurer(390, 780, 1);
+        D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.barricade = 1e9;
+        const ref = D.ENNEMIS[k];
+        D.Ruelle.ennemis.push({ ref, pv:1e9, pvMax:1e9, taille:ref.taille, couloir:2,
+          z:0, vitesse:ref.vitesse, etat:"course", frame:0, tFrame:0, tEtat:0,
+          mort:0, touche:null, usure:0,
+          attente:(ref.jet.attente[0] + ref.jet.attente[1]) / 2,
+          usureGarde:0, attenteGarde:999 });
+        let jets = 0;
+        for (let i = 0; i < 60 * 30; i++){
+          const n = D.Ruelle.projectiles.length;
+          D.Ruelle.pas(1 / 60);
+          if (D.Ruelle.projectiles.length > n) jets++;
+        }
+        return { jets, z:D.Ruelle.ennemis[0] ? D.Ruelle.ennemis[0].z : -1 };
+      };
+      const r = ["abbe", "bruh"].map(k => ({ k, ...compte(k) }));
+      messageDetail = r.map(x => x.k + " " + x.jets + " jets, posté à " + x.z.toFixed(2)).join(" | ");
+      return r.every(x => x.jets >= 3 &&
+        Math.abs(x.z - D.ENNEMIS[x.k].jet.zMax) < 0.001);
+    })());
+
+  verifier("un bombardier posté n'atteint jamais la barricade",
+    (() => {
+      /* C'est sa définition : il faut aller le chercher. */
+      return ["abbe", "bruh"].every(k =>
+        D.ENNEMIS[k].menaceDistante && D.ENNEMIS[k].jet.zMax < 0.9);
+    })());
+
+  verifier("les deux bombardiers tiennent DEUX balles dans la tête",
+    (() => {
+      /* Postés, ils sont à portée quasi pleine : un headshot unique les
+         effaçait, alors qu'ils sont les plus gênants une fois installés. */
+      const dur = ["abbe", "bruh"].map(k => {
+        const e = D.ENNEMIS[k];
+        const d = D.ARMES.revolver.tete * e.mult.tete * D.attenuation(e.jet.zMax);
+        return { k, balles:Math.ceil(e.pv / d) };
+      });
+      messageDetail = dur.map(x => x.k + " " + x.balles).join(", ");
+      return dur.every(x => x.balles === 2);
+    })());
+
+  verifier("les vivants grognent, et un seul à la fois",
+    (() => {
+      /* À trois qui râlent ensemble, on n'entend plus les tirs. */
+      return /pasGrognements\(dt\)\{[\s\S]{0,700}?piocher\(vivants\)/.test(source) &&
+        /this\.grogneT -= dt;[\s\S]{0,60}?if \(this\.grogneT > 0\) return;/.test(source);
+    })());
+
+  verifier("le cri de MORT est plus lent que le grognement",
+    (() => {
+      /* Le ralentissement descend la hauteur : la mort sonne plus grave
+         que la vie, ce qui la distingue sans qu'on ait à l'expliquer. */
+      const m = source.match(/criMort\(cle\)\{[\s\S]{0,400}?taux:([\d.]+)/);
+      const g = source.match(/grogne\(cle\)\{[\s\S]{0,500}?taux:([\d.]+)/);
+      return m && g && parseFloat(m[1]) < parseFloat(g[1]) && parseFloat(m[1]) < 0.9;
     })());
 
   verifier("chaque méchant a son cri",
@@ -3980,10 +4051,17 @@ if (D){
       D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
       const an = D.Ruelle.annonce;
       if (!an || an.etape !== 0) return false;
-      D.Ruelle.pas(0.2);
-      if (!D.Ruelle.avancerAnnonce()) return false;
-      if (D.Ruelle.annonce.etape !== 1) return false;
-      /* une tape trop rapide ne saute pas deux étapes */
+      /* LA CARTE NE SE SAUTE PAS : taper avant 2,5 s ne fait rien. C'est
+         le défaut signalé — en tapant vite avant qu'elle arrive, on la
+         passait sans l'avoir lue, et rien ne permet de la revoir. */
+      D.Ruelle.pas(0.5);
+      D.Ruelle.avancerAnnonce();
+      if (!D.Ruelle.annonce || D.Ruelle.annonce.etape !== 0) return false;
+      /* passé le minimum, elle se laisse avancer */
+      D.Ruelle.pas(D.ANNONCE_CARTE_MIN);
+      D.Ruelle.avancerAnnonce();
+      if (!D.Ruelle.annonce || D.Ruelle.annonce.etape !== 1) return false;
+      /* et une tape trop rapide ne saute pas deux répliques */
       D.Ruelle.avancerAnnonce();
       return D.Ruelle.annonce.etape === 1;
     })());
@@ -4208,10 +4286,12 @@ if (D){
       D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       D.Ruelle.ennemis.length = 0; D.Ruelle.ajouterEnnemi();
       const e0 = D.Ruelle.ennemis[0];
+      /* On force Depardiahree : DSKKK bondit au lieu d'arriver au
+         contact, et les deux bombardiers se POSTENT à distance et
+         n'atteignent jamais la barricade — c'est leur définition. Seul
+         un ennemi de contact mesure ce cas. */
+      e0.ref = D.ENNEMIS.depar;
       e0.z = 0.999;
-      /* DSKKK bondit au lieu d'arriver au contact, et l'ordre est tiré au
-         sort : on neutralise son bond pour mesurer le cas ordinaire. */
-      if (e0.ref.bond) e0.z = e0.ref.bond.z - 0.01, e0.z = 0.999, e0.ref = D.ENNEMIS.depar;
       const avant = D.Ruelle.barricade;
       for (let k = 0; k < 20; k++) D.Ruelle.pas(1 / 60);
       return D.Ruelle.barricade < avant;

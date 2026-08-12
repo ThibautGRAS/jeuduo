@@ -283,6 +283,38 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Les bombardiers se postent, et les monstres grognent** (v6.74).
+
+**BruHell ne lançait effectivement jamais.** Sa fenêtre de jet ne dure
+que **1,8 s** alors que son délai d'attente initial va de 3,4 à 5,2 s :
+il la traversait avant d'avoir fini d'attendre. La cause n'était pas le
+délai — c'est que **rien ne l'arrêtait**, alors que « rester au fond » est
+toute sa définition. Un ennemi à menace distante se POSTE désormais à sa
+distance de tir, et sa position y est bornée : sans ça il la dépassait de
+quelques millièmes et la condition de jet échouait encore. Mesuré après
+correction, en trente secondes : l'Abbé 5 jets, BruHell 4.
+
+**Ils ne sont plus faibles.** Postés, ils sont à portée quasi pleine et
+tombaient d'une seule balle dans la tête. L'Abbé passe à 115 points de vie
+(tête 1,25) et BruHell à 120 (tête 1,15) : il en faut **deux** à leur
+distance de tir, et comme ils ne s'approchent plus, ces deux balles se
+méritent.
+
+**Les monstres grognent tant qu'ils sont vivants** : un éclat de 0,18 à
+0,30 s pris au hasard dans leur cri, haché et répété, avec un intervalle
+qui se resserre quand ils approchent. Un seul à la fois pour toute la rue
+— à trois qui râlent ensemble, on n'entend plus les tirs. À la mort, le
+cri **entier, plus lent et plus fort** : le ralentissement descend la
+hauteur, donc la mort sonne plus grave que la vie.
+
+**La bulle remonte à mi-écran** : à 0,635 elle se posait sur les caisses
+et sur la tête du champion, illisible sur un fond de bois.
+
+**La carte de bestiaire ne se saute plus.** En tapant vite avant qu'elle
+arrive, on la passait sans l'avoir lue — et rien ne permet de la revoir.
+Elle tient ses 2,5 s quoi qu'on fasse. Les répliques, elles, restent
+sautables : on les a déjà entendues.
+
 **La ruelle a sa musique** (v6.73) : 28,8 s en boucle, 234 Ko, qui
 remplacent la petite grille de jazz — elle n'a rien à faire dans une
 fusillade. Repli sur la grille synthétisée si le fichier manque, comme

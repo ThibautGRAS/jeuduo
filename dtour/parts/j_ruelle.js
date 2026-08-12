@@ -151,11 +151,14 @@ const ENNEMIS = {
      tenait : les FRAGILES. Peu de points de vie, tête très payante, ce
      sont ceux qu'on abat en premier quand la rue se remplit. */
   bruh: {
-    nom:"PATRICK BRUHELL", pv:85, vitesse:0.100, taille:1.00, sprite:"bruh",
+    /* 120 et non 85, tête à 1,15 et non 1,50 : posté à 0,52, l'atténuation
+       vaut 0,93 — il était à portée pleine et tombait d'une seule balle,
+       alors qu'il est le plus gênant des cinq une fois installé. */
+    nom:"PATRICK BRUHELL", pv:120, vitesse:0.100, taille:1.00, sprite:"bruh",
     /* Comme l'Abbé, sa menace n'est pas d'arriver au contact : exception
        DÉCLARÉE, et un test exige en échange qu'il reste fragile. */
     menaceDistante:true,
-    mult:{ tete:1.50, torse:0.72, jambes:0.90, epaule:0.80 },
+    mult:{ tete:1.15, torse:0.72, jambes:0.90, epaule:0.80 },
     /* IL EST L'EXACT CONTRAIRE DE L'ABBÉ, et c'est là tout l'intérêt de
        les avoir tous les deux. L'Abbé lance HAUT et LENT : on voit venir,
        on a le temps de se couvrir. BruHell lance un cocktail Molotov à
@@ -171,12 +174,16 @@ const ENNEMIS = {
     plie:{ duree:1.3, multTete:1.7 },
   },
   abbe: {
-    nom:"L'ABBÉ FORCEUR", pv:95, vitesse:0.090, taille:1.02, sprite:"abbe",
+    /* 115 et non 95, tête à 1,25 et non 1,40 : posté à 0,30, l'atténuation
+       vaut 0,67, donc un headshot faisait 84 sur 95 — il tombait presque
+       d'une balle. À 115 il en faut deux, et comme il ne s'approche plus,
+       ces deux balles se méritent. */
+    nom:"L'ABBÉ FORCEUR", pv:115, vitesse:0.090, taille:1.02, sprite:"abbe",
     /* Il est le premier à CASSER la règle pv x vitesse (8,6 au lieu de
        11) et c'est voulu : sa menace n'est pas d'arriver au contact mais
        de rester vivant derrière les autres à bombarder. Peu résistant,
        très gênant. */
-    mult:{ tete:1.40, torse:0.70, jambes:0.90, epaule:0.80 },
+    mult:{ tete:1.25, torse:0.70, jambes:0.90, epaule:0.80 },
     /* L'exception à la règle pv x vitesse est DÉCLARÉE ici, pas déduite
        d'un écart de chiffres : sa menace n'est pas d'arriver au contact.
        Un test vérifie en échange qu'il reste fragile — sinon ce drapeau
@@ -240,6 +247,9 @@ const ALERTE_TAILLE = 0.085;
 /* Le retour d'un tir BLOQUÉ. Blanc et non rouge, en anneau et non en
    étoile : il ne doit surtout pas ressembler à un coup qui porte. */
 const BLOCAGE_DUREE = 0.26;
+/* Intervalle entre deux grognements : le premier chiffre quand ils sont
+   au contact, le second quand ils sont au fond. */
+const GROGNE_DELAI = [1.1, 2.8];
 
 /* ---------------- le bestiaire ----------------
    Une entrée par méchant : le sous-titre de sa carte, et les deux
@@ -297,7 +307,10 @@ const BESTIAIRE = {
    l'échange : portrait en buste, nom, et deux mots qui disent comment le
    jouer. C'est le seul endroit du niveau où le jeu explique quelque
    chose — autant que ce soit court et que ça n'arrive qu'une fois. */
-const ANNONCE_CARTE = 2.6;
+const ANNONCE_CARTE = 3.0;
+/* La carte tient au moins ce temps-là même si on tape : 2,5 s, mesuré
+   comme le minimum pour lire un nom et une ligne de sous-titre. */
+const ANNONCE_CARTE_MIN = 2.5;
 const ANNONCE_MOT = 2.2;
 
 /* ---------------- la cible du bras armé ----------------
@@ -385,7 +398,7 @@ const Ruelle = {
   ennemis:[], vague:0, aSortir:0, prochain:0,
   /* Qui a déjà été rencontré, pour ne montrer la carte qu'une fois. */
   vus:[], annonce:null, geantCle:null,
-  projectiles:[], impacts:[], blocages:[],
+  projectiles:[], impacts:[], blocages:[], grogneT:0,
   /* Le relevé de fin. `tues` est indexé par TYPE et pas par nom
      affichable : le nom vit dans ENNEMIS, et le dupliquer ici aurait
      dérivé au premier renommage — c'est exactement ce qui est arrivé
@@ -511,7 +524,18 @@ const Ruelle = {
      étapes — c'est le réglage à 0,12 s du niveau 2. */
   avancerAnnonce(){
     if (!this.annonce) return false;
-    if (this.annonce.t < 0.12) return true;
+    /* LA CARTE NE SE SAUTE PAS. C'est la seule fois où le joueur voit ce
+       méchant présenté ; en tapant vite avant qu'elle arrive, il la
+       passait sans l'avoir lue et n'avait aucun moyen de la revoir. Elle
+       tient donc ses 2,5 s, quoi qu'on fasse.
+
+       Les répliques, elles, se sautent : on les a déjà entendues aux
+       hordes précédentes. */
+    if (this.annonce.etape === 0 && this.annonce.carte){
+      if (this.annonce.t < ANNONCE_CARTE_MIN) return true;
+    } else if (this.annonce.t < 0.12){
+      return true;
+    }
     this.etapeSuivante();
     return true;
   },
@@ -654,6 +678,33 @@ const Ruelle = {
      celui-ci. */
   gardeTient(e){ return !!e.ref.garde && e.etat === "garde"; },
 
+  cleEnnemi(e){ return Object.keys(ENNEMIS).find(k => ENNEMIS[k] === e.ref); },
+
+  /* LES GROGNEMENTS DES VIVANTS. Ils disent qu'il y a du monde dans la
+     rue avant qu'on le voie, et c'est surtout ce qui rend un bombardier
+     posté au fond menaçant plutôt qu'oubliable.
+
+     Deux précautions : un seul grognement à la fois pour toute la rue —
+     à trois vivants qui râlent ensemble, on n'entend plus les tirs — et
+     un intervalle qui se RESSERRE quand ils approchent, ce qui fait
+     monter la tension sans changer de son. */
+  pasGrognements(dt){
+    this.grogneT -= dt;
+    if (this.grogneT > 0) return;
+    const vivants = this.ennemis.filter(
+      e => e.etat !== "chute" && e.etat !== "sol");
+    if (!vivants.length){ this.grogneT = GROGNE_DELAI[1]; return; }
+    /* celui qui grogne est tiré au sort, pas toujours le plus proche :
+       sinon un ennemi posté au fond serait muet toute la horde */
+    const qui = piocher(vivants);
+    const cle = this.cleEnnemi(qui);
+    if (cle) Sons.grogne(cle);
+    /* plus ils sont près, plus ça revient souvent */
+    const proche = Math.max(...vivants.map(e => e.z));
+    this.grogneT = melange(GROGNE_DELAI[1], GROGNE_DELAI[0], borne(proche, 0, 1))
+                 * (0.75 + Math.random() * 0.5);
+  },
+
   /* La fenêtre est OUVERTE pendant la préparation seulement : viser le
      bras avant qu'il soit armé, ou après le lancer, ne veut rien dire. */
   cibleOuverte(e){
@@ -728,8 +779,8 @@ const Ruelle = {
   compterMort(e, zone){
     /* Le cri part AVANT le comptage : même si le bilan n'existe pas, un
        méchant qui tombe doit s'entendre. */
-    const cle0 = Object.keys(ENNEMIS).find(k => ENNEMIS[k] === e.ref);
-    if (cle0) Sons.cri(cle0);
+    const cle0 = this.cleEnnemi(e);
+    if (cle0) Sons.criMort(cle0);
     if (!this.bilan) return;
     const cle = Object.keys(ENNEMIS).find(k => ENNEMIS[k] === e.ref);
     if (cle) this.bilan.tues[cle] = (this.bilan.tues[cle] || 0) + 1;
@@ -783,7 +834,24 @@ const Ruelle = {
       const e = this.ennemis[i];
       e.tEtat += dt;
       if (e.etat === "course"){
-        e.z += e.vitesse * dt;
+        /* UN BOMBARDIER SE POSTE. Sans ça il traverse sa fenêtre de jet
+           avant d'avoir fini d'attendre et ne lance JAMAIS : mesuré, la
+           fenêtre de BruHell dure 1,8 s pour un délai initial de 3,4 à
+           5,2 s. Le défaut n'était pas le délai, c'était qu'il avance
+           encore alors que « rester au fond » est toute sa définition.
+           Posté, il faut aller le chercher — c'est aussi ce qui le rend
+           dangereux au lieu d'être une cible qui passe. */
+        const poste = e.ref.menaceDistante && e.ref.jet && e.z >= e.ref.jet.zMax;
+        if (poste){
+          /* On BORNE la position, on ne se contente pas d'arrêter : le
+             pas qui l'a amené là l'a fait dépasser de quelques
+             millièmes, et la condition de jet exige `z <= zMax`. Résultat
+             mesuré avant correction : l'Abbé posté ne lançait plus jamais,
+             et BruHell une seule fois en trente secondes. */
+          e.z = e.ref.jet.zMax;
+        } else {
+          e.z += e.vitesse * dt;
+        }
         /* Le bond passe AVANT tout le reste : arrivé là, plus rien
            d'autre ne compte. */
         if (e.ref.bond && e.z >= e.ref.bond.z){
@@ -913,6 +981,7 @@ const Ruelle = {
       }
     }
     if (this.annonce) this.pasAnnonce(dt);
+    this.pasGrognements(dt);
     this.pasProjectiles(dt);
     for (let i = this.flashes.length - 1; i >= 0; i--){
       this.flashes[i].t -= dt;
@@ -1250,9 +1319,11 @@ const RuelleVue = {
     }
     const bw = ctx.measureText(txt).width + H * 0.040;
     const bx = borne(L * (qui === 0 ? 0.34 : 0.66), bw / 2 + 6, L - bw / 2 - 6);
-    /* 0,635 : au-dessus du bouclier, qui commence à 0,735 moins son
-       rayon. À 0,715 la bulle lui passait dessus. */
-    const by = H * 0.635;
+    /* 0,50 : au-dessus de la BARRICADE, pas seulement du bouclier. À
+       0,635 la bulle se posait sur les caisses et sur la tête du
+       champion — elle est illisible sur un fond de bois. Plus haut, elle
+       est sur le ciel de la rue, où rien ne la concurrence. */
+    const by = H * 0.50;
     ctx.globalAlpha = opac;
     ctx.fillStyle = "rgba(250,248,255,.96)";
     arrondi(bx - bw / 2, by - H * 0.034, bw, H * 0.068, H * 0.028); ctx.fill();

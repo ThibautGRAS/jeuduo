@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.73";
+const VERSION = "6.74";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -323,16 +323,25 @@ const Sons = {
   },
 
   /* Joue l'échantillon s'il est là, sinon exécute le repli. Rend true si
-     l'échantillon a servi — utile aux tests. */
-  echant(nom, vol, repli){
+     l'échantillon a servi — utile aux tests.
+
+     `opt` permet d'en tirer plusieurs sons DIFFÉRENTS : `taux` change la
+     hauteur, `de` et `duree` découpent un morceau. C'est ce qui fait
+     qu'un seul grognement enregistré donne à la fois le râle continu du
+     monstre vivant et son dernier cri. */
+  echant(nom, vol, repli, opt){
     const buf = this.echants[nom];
     if (!buf || !this.ac || !this.actif){ if (repli) repli(); return false; }
+    const o = opt || {};
     const s = this.ac.createBufferSource(); s.buffer = buf;
     const g = this.ac.createGain(); g.gain.value = vol === undefined ? 1 : vol;
     /* une variation de hauteur à chaque coup : sans elle, dix tirs
        d'affilée sonnent comme un seul son collé dix fois */
-    s.playbackRate.value = 0.94 + Math.random() * 0.12;
-    s.connect(g); g.connect(this.maitre); s.start(this.ac.currentTime);
+    s.playbackRate.value = (o.taux || 1) * (0.94 + Math.random() * 0.12);
+    s.connect(g); g.connect(this.maitre);
+    const t0 = this.ac.currentTime;
+    if (o.duree) s.start(t0, o.de || 0, o.duree);
+    else s.start(t0, o.de || 0);
     return true;
   },
 
@@ -387,14 +396,30 @@ const Sons = {
     }
   },
 
-  /* Le cri d'un méchant, propre à chacun. Sans échantillon, un râle
-     synthétisé : grave, court, filtré — assez pour qu'une mort ne soit
-     pas silencieuse. */
-  cri(cle){
-    this.echant("cri_" + cle, 0.8, () => {
-      this.claque(0.22, 0.20, 900, 140, 1.6);
-      this.bip(120 + Math.random() * 40, 0.28, "sawtooth", 0.12, 70);
-    });
+  /* TROIS USAGES DU MÊME ENREGISTREMENT, et c'est ce qui donne au niveau
+     sa présence sonore sans charger cinq fichiers de plus :
+
+     - `grogne` : un ÉCLAT de 0,18 à 0,30 s pris au hasard dans le
+       grognement, doux, joué pendant qu'ils avancent. C'est le haché
+       demandé — on entend qu'ils sont là avant de les voir tomber.
+     - `criMort` : l'enregistrement ENTIER, plus lent et plus fort. Le
+       ralentissement descend la hauteur : la mort sonne plus grave que
+       la vie, ce qui la distingue sans qu'on ait à l'expliquer.
+     - le repli synthétisé, si le fichier manque. */
+  grogne(cle){
+    const buf = this.echants["cri_" + cle];
+    if (!buf) return;   /* pas de repli : un râle de synthèse en boucle
+                           serait pire que le silence */
+    const duree = 0.18 + Math.random() * 0.12;
+    const de = Math.random() * Math.max(0, buf.duration - duree);
+    this.echant("cri_" + cle, 0.30, null,
+                { de, duree, taux:0.92 + Math.random() * 0.22 });
+  },
+  criMort(cle){
+    this.echant("cri_" + cle, 1.0, () => {
+      this.claque(0.26, 0.24, 800, 130, 1.6);
+      this.bip(110 + Math.random() * 30, 0.34, "sawtooth", 0.14, 62);
+    }, { taux:0.78 });
   },
   /* La barricade encaisse : un choc de bois, grave et court. */
   choc(){

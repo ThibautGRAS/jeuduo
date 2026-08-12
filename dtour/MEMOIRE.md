@@ -1135,6 +1135,39 @@ au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
 
+### Une fenêtre d'action ne vaut rien si rien n'arrête celui qui la traverse
+
+BruHell ne lançait jamais son cocktail. Le réflexe aurait été de raccourcir
+son délai d'attente ; le vrai défaut était ailleurs. Sa fenêtre de jet
+mesure 1,8 s de traversée et son attente initiale 3,4 à 5,2 s : il
+sortait de la fenêtre avant d'avoir fini d'attendre. Aucun réglage de
+délai n'aurait tenu, parce que la fenêtre elle-même dépendait de sa
+vitesse.
+
+La correction est structurelle : un ennemi dont la menace est la DISTANCE
+se poste à sa portée et n'avance plus. Ça règle le bug, ça rend le
+personnage conforme à sa définition, et ça le rend dangereux au lieu
+d'être une cible qui passe.
+
+Piège dans la correction : arrêter ne suffit pas, il faut BORNER. Le pas
+qui l'amène à sa position le fait dépasser de quelques millièmes, et la
+condition `z <= zMax` échoue encore. Mesuré entre les deux versions : 0
+jet pour l'Abbé, 1 pour BruHell en trente secondes.
+
+### Un même enregistrement peut porter trois sons
+
+Un grognement de 0,8 s donne le râle du monstre vivant (un éclat de 0,2 s
+pris au hasard, doux, répété), son dernier cri (l'enregistrement entier,
+ralenti à 0,78 — le ralentissement descend la hauteur, donc la mort sonne
+plus grave que la vie) et rien d'autre à charger. Découper et transposer
+coûte trois paramètres ; cinq fichiers de plus auraient coûté 40 Ko et une
+séance de découpage.
+
+Corollaire : le son d'ambiance n'a PAS de repli synthétisé, et c'est
+assumé — un râle de synthèse joué en boucle serait pire que le silence.
+L'invariant « jamais muet » porte sur les sons qui ponctuent une action,
+pas sur l'ambiance.
+
 ### Une boucle audio a besoin d'un arrêt explicite ET d'une libération
 
 Deux pièges, et le second ne se voit qu'à la deuxième partie. Une source
