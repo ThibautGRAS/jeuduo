@@ -3214,6 +3214,98 @@ if (D){
       return p0.y > y0 && f0.y < fy0;
     })());
 
+  verifier("les flaques de lumière n'apparaissent qu'à la nuit tombante",
+    (() => {
+      /* La route du décor de nuit est à 19 de luminance moyenne — presque
+         noire. Ce sont ces flaques qui lui rendent de la profondeur. */
+      return D.FLAQUES.length >= 4 &&
+        D.FLAQUES.every(f => f.l > f.h && f.force > 0) &&
+        /if \(heureF\.nuit > 0\)\{/.test(source) &&
+        /0\.30 \* f2\.force \* heureF\.nuit \* vac/.test(source);
+    })(), "une flaque ronde vue en perspective est une ellipse");
+
+  verifier("les flaques VACILLENT, chacune à son rythme",
+    (() => {
+      /* Une lumière parfaitement stable se lit comme du décor mort. */
+      return /Ruelle\.temps \* 1\.7 \+ k \* 2\.1/.test(source);
+    })());
+
+  verifier("un tir raté laisse une marque au sol",
+    (() => {
+      /* Sans marque, tirer à côté ne produit rien : le joueur ne sait pas
+         s'il a manqué ou si le jeu n'a pas entendu son doigt. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
+      D.Camera.mesurer(390, 780, 1);
+      D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0;
+      D.Ruelle.particules.length = 0;
+      const h = D.Ruelle.heroActif(); h.repos = 0; h.recharge = 0; h.balles = 6;
+      D.Ruelle.tirer(390 * 0.5, 780 * 0.55);
+      const t2 = D.Ruelle.particules.map(p => p.type);
+      messageDetail = t2.length + " particules";
+      return t2.indexOf("etincelle") >= 0 && t2.indexOf("poussiere") >= 0;
+    })());
+
+  verifier("un raté au fond de la rue éclabousse MOINS",
+    (() => {
+      /* La perspective vaut pour les ratés comme pour le reste. */
+      const gros = z => {
+        D.Ruelle.particules.length = 0;
+        D.Ruelle.fxRate(0.5, z);
+        const e = D.Ruelle.particules.filter(p => p.type === "etincelle");
+        return e.reduce((s, p) => s + p.r, 0) / Math.max(1, e.length);
+      };
+      const fond = gros(0.44), devant = gros(0.80);
+      messageDetail = "fond " + fond.toFixed(4) + ", devant " + devant.toFixed(4);
+      return devant > fond * 1.4;
+    })());
+
+  verifier("un méchant qui tombe fait parfois réagir un héros",
+    (() => {
+      /* Une phrase à chaque mort se lit deux fois puis ne se voit plus :
+         une chance sur trois, et un repos entre deux. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
+      let dits = 0;
+      for (let k = 0; k < 200; k++){
+        D.Ruelle.mot = null; D.Ruelle.motT = 0;
+        D.Ruelle.motDeCombat("depar");
+        if (D.Ruelle.mot) dits++;
+      }
+      messageDetail = dits + " répliques sur 200 morts";
+      return dits > 40 && dits < 130;
+    })());
+
+  verifier("deux morts rapprochées ne font pas deux bulles",
+    (() => {
+      /* Une horde de trois qui tombe ensemble superposerait trois
+         bulles. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
+      D.Ruelle.mot = null; D.Ruelle.motT = 0;
+      let pose = 0;
+      for (let k = 0; k < 40 && !pose; k++){
+        D.Ruelle.motDeCombat("dsk");
+        if (D.Ruelle.mot) pose = 1;
+      }
+      const premier = D.Ruelle.mot;
+      D.Ruelle.motDeCombat("jubi");
+      return pose === 1 && D.Ruelle.mot === premier && D.Ruelle.motT > 0;
+    })());
+
+  verifier("une réplique de combat ne passe jamais sur une annonce",
+    (() => {
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Ruelle.mot = null; D.Ruelle.motT = 0;
+      for (let k = 0; k < 40; k++) D.Ruelle.motDeCombat("abbe");
+      return !!D.Ruelle.annonce && D.Ruelle.mot === null;
+    })());
+
+  verifier("chaque méchant a une réplique pour sa mort",
+    (() => {
+      const sans = Object.keys(D.ENNEMIS)
+        .filter(k => !(D.BESTIAIRE[k] && (D.BESTIAIRE[k].mort || []).length >= 3));
+      messageDetail = sans.length ? sans.join(", ") : "";
+      return sans.length === 0;
+    })());
+
   verifier("chaque méchant a son cri",
     (() => {
       return Object.keys(D.ENNEMIS).every(k =>

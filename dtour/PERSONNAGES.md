@@ -315,7 +315,29 @@ les trois**, entre 10,5 et 11,5. La même menace, répartie autrement — l'un
 laisse peu de temps, l'autre demande beaucoup de balles. Ce que chacun
 change, c'est la QUESTION posée au joueur.
 
+### Ce que ces cinq-là ont en commun
+
+Ce ne sont pas cinq brutes interchangeables. Ce sont **cinq hommes qu'on
+a adorés**, chacun à sa manière, et qui se sont crus au-dessus du
+commun : un monstre sacré, un grand argentier, un homme d'Église, un
+notable de campagne, une figure de la générosité. Tous ont eu une façade,
+et toutes les façades ont craqué.
+
+C'est ce fil qui rend la ruelle drôle plutôt que méchante : on ne tire
+pas sur des inconnus, on tire sur des **statues**. Et chaque mécanique
+dit quelque chose du personnage — l'ogre avance par sa masse, l'homme de
+pouvoir se protège la figure, le menteur annonce tout ce qu'il fait,
+l'hypocrite bombarde sans jamais s'approcher, le généreux de façade lance
+et se sauve.
+
+**Une limite tenue volontairement** : ces personnages évoquent des
+archétypes, pas des dossiers. Ils portent des noms déformés, des travers
+grossis, des répliques qui mordent — mais aucune fiche du jeu ne raconte
+d'affaire réelle ni n'accuse personne. Le dépôt est public ; la satire
+d'un type d'homme se défend, le récit d'un fait divers non.
+
 ### DEPARDIAHREE — le tank
+- **Le personnage** : l'OGRE EN EXIL. Monstre sacré parti vivre ailleurs le jour où on lui a parlé d'impôts. Appétit sans fond, manières de sanglier, et la conviction tranquille qu'on lui pardonnera tout parce qu'on l'a aimé. **Son corps EST sa méthode** — c'est pour ça qu'il est le plus gros, le plus lent et le plus blindé des cinq.
 
 - **Physique : homme très corpulent, la soixantaine, cheveux gris en
   bataille, costume sombre ouvert sur une chemise blanche froissée.**
@@ -336,6 +358,7 @@ change, c'est la QUESTION posée au joueur.
 - Sprites : `enn_depar_*`, 18 poses.
 
 ### DSKKK — le rapide en garde
+- **Le personnage** : L'HOMME QUI SE CROYAIT INTOUCHABLE. Costume impeccable, carrière au sommet, et la certitude qu'une position assez haute dispense de se tenir. Il a fini en peignoir dans un couloir d'hôtel, ce qui reste la meilleure image de sa chute. **Sa garde dit tout** : il se protège la figure, jamais le reste.
 
 - **Physique : homme âgé, cheveux blancs plaqués, visage large et
   rougeaud, costume sombre bien coupé, cravate desserrée.** Sec et
@@ -358,6 +381,7 @@ change, c'est la QUESTION posée au joueur.
   s'affaisse.
 
 ### JUBILAR LE FUMIER — le lanceur rapide
+- **Le personnage** : L'HOMME QUI NIE. Quoi qu'on lui montre, quoi qu'on lui prouve, il nie — calmement, longtemps, avec l'air sincère. Ce n'est pas un colérique, c'est un menteur patient, et c'est bien pire. **Sa mécanique le trahit** : il annonce tout ce qu'il va faire.
 
 - **Physique : quarantaine, mal rasé, cheveux hirsutes, grosse chemise de
   bûcheron à carreaux rouges et noirs, jean, grosses chaussures.** Trapu,
@@ -379,6 +403,7 @@ change, c'est la QUESTION posée au joueur.
 - Sprites : `enn_jubi_*`, 18 poses.
 
 ### L'ABBÉ FORCEUR — le bombardier
+- **Le personnage** : LA VERTU EN FAÇADE. Homme d'Église adoré de tous, statue de son vivant — et derrière la soutane, un tout autre homme. Ce qu'on joue n'est pas la faute, c'est **l'hypocrisie** : le sermon d'une main, l'encensoir de l'autre. **Il bombarde de loin et ne s'approche jamais** — il n'a rien assumé en face.
 
 - **Physique : homme âgé, béret noir, petites lunettes rondes cerclées,
   barbe blanche taillée, long pardessus noir usé, pendentif en forme de
@@ -397,6 +422,7 @@ change, c'est la QUESTION posée au joueur.
 - Sprites : `enn_abbe_*`, 19 poses.
 
 ### BRUHELL L'ENFOIRÉ — le lanceur de Molotov
+- **Le personnage** : LE CŒUR EN FLOQUAGE. Il porte la générosité sur son t-shirt et rien dessous. Il donne en public et prend en privé. **Il lance de loin et n'approche jamais**, comme l'Abbé — deux façons de ne pas se salir les mains.
 
 - **Le surnom EST la blague** : « les Enfoirés » est le nom de la troupe
   des Restos du cœur. Le t-shirt à grand cœur d'un côté, la conduite de

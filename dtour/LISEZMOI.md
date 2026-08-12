@@ -283,6 +283,35 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Les pavés s'éclairent, les balles perdues marquent, les méchants ont
+un caractère** (v6.78).
+
+**Des flaques de lumière sur les pavés**, à partir du crépuscule. La
+route du décor de nuit est à 19 de luminance moyenne — presque noire ;
+ce sont elles qui lui rendent de la profondeur. Positions mesurées sur le
+décor : les deux lampadaires tombent à x=0,47 et 0,75, l'enseigne du bar
+au fond à 0,49. Elles **vacillent**, chacune à son rythme : une lumière
+parfaitement stable se lit comme du décor mort.
+
+**Une balle perdue laisse une marque** : étincelles et poussière au point
+visé, plus un ricochet aigu et descendant. Sans ça, tirer à côté ne
+produisait rien — le joueur ne savait pas s'il avait manqué ou si le jeu
+n'avait pas entendu son doigt. Et la gerbe est **plus petite au fond de
+la rue** : la perspective vaut pour les ratés comme pour le reste.
+
+**Les héros commentent les morts.** Une chance sur trois, sept secondes
+de repos entre deux, et jamais par-dessus une annonce — une phrase à
+chaque mort se lit deux fois puis ne se voit plus. Quatre répliques par
+méchant, taillées pour lui : « Il niera aussi, tu verras. » « La séance
+est levée. » « Le cœur a lâché. »
+
+**Et les cinq ont un caractère écrit.** Le fil commun : ce sont cinq
+hommes qu'on a adorés et qui se sont crus au-dessus — un monstre sacré,
+un grand argentier, un homme d'Église, un menteur patient, une figure de
+la générosité. Chaque mécanique dit quelque chose du personnage : l'ogre
+avance par sa masse, l'homme de pouvoir se protège la figure, le menteur
+annonce tout ce qu'il fait, l'hypocrite bombarde sans jamais s'approcher.
+
 **La nuit tombe sur la ruelle, et tous les effets arrivent** (v6.77).
 
 **L'heure avance avec les hordes** : le crépuscule à la troisième, la

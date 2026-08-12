@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.77";
+const VERSION = "6.78";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -381,6 +381,15 @@ const Sons = {
   /* Le tir à vide : un seul clic sec. Il apprend qu'il faut recharger
      sans qu'on ait à lire le compteur. */
   aVide(){ this.claque(0.035, 0.22, 3600, 900, 2.4); },
+
+  /* Le ricochet sur les pavés : très court, très haut, et il DESCEND —
+     c'est ce qui le distingue d'un tir. Entièrement synthétisé : il sort
+     à chaque balle perdue, donc souvent, et un échantillon s'y userait. */
+  ricochet(){
+    this.claque(0.06, 0.14, 6000, 1400, 3.0);
+    this.bip(1800 + Math.random() * 900, 0.09, "triangle", 0.055, 320);
+  },
+
 
   /* Rechargement : le barillet claque, puis la fermeture. Deux temps,
      parce qu'un rechargement est un geste en deux temps. */

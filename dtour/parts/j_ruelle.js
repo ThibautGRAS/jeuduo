@@ -254,6 +254,10 @@ const BLOCAGE_DUREE = 0.26;
 /* Intervalle entre deux grognements : le premier chiffre quand ils sont
    au contact, le second quand ils sont au fond. */
 const GROGNE_DELAI = [1.1, 2.8];
+/* La réplique de combat : sa durée à l'écran, le repos avant la
+   suivante, et la chance qu'elle sorte. Une phrase à chaque mort se lit
+   deux fois puis ne se voit plus. */
+const MOT_DUREE = 1.9, MOT_REPOS = 7.0, MOT_CHANCE = 0.34;
 
 /* LA BOUCHE DU CANON, POSE PAR POSE. Mesurée sur chaque sprite : le
    point le plus à droite de la moitié haute de la silhouette. Fractions
@@ -295,12 +299,43 @@ const PART_TYPES = {
      encaisse. Ils partent large, tombent vite. */
   bois: { forme:"barre", vie:[0.5, 0.9], taille:[0.008, 0.016],
           couleur:["#A9773F", "#6B4A26"], grav:2.2, rebond:0.2, tourne:9 },
+  /* L'étincelle du ricochet : vive, brève, elle retombe vite. C'est
+     surtout elle qui dit « raté » — une poussière seule serait molle. */
+  etincelle: { forme:"barre", vie:[0.18, 0.34], taille:[0.004, 0.008],
+               couleur:["#FFE9A8", "#E08A2A"], grav:2.4, rebond:0, tourne:16 },
+  /* La poussière soulevée : elle monte à peine et s'efface. */
+  poussiere: { forme:"rond", vie:[0.35, 0.6], taille:[0.008, 0.015],
+               couleur:["#8C8378", "#5C564E"], grav:-0.15, rebond:0, tourne:0,
+               gonfle:1.8, opacite:0.30 },
   /* La gerbe : courte et sombre, jamais rouge vif. Le jeu est burlesque,
      pas gore — une tache brève suffit à dire « touché ». */
   gerbe: { forme:"rond", vie:[0.25, 0.45], taille:[0.005, 0.011],
            couleur:["#8E2230", "#5A121C"], grav:2.0, rebond:0, tourne:0,
            opacite:0.75 },
 };
+
+/* LES FLAQUES DE LUMIÈRE SUR LES PAVÉS. Positions des sources mesurées
+   sur le décor de nuit : les deux lampadaires tombent à x=0,47 et 0,75,
+   l'enseigne du bar au fond à 0,49. La route, elle, est à 19 de
+   luminance moyenne — presque noire. Ce sont ces flaques qui lui rendent
+   de la profondeur.
+
+   Elles sont peintes, pas dans l'image, pour trois raisons : elles
+   VACILLENT (une lumière parfaitement stable se lit comme du décor
+   mort), elles se posent au-dessus du sol mais SOUS les personnages, et
+   leur intensité suit l'heure — au crépuscule elles affleurent, la nuit
+   elles portent la scène.
+
+   `y` est la position sur la route, `l` et `h` les demi-axes de
+   l'ellipse : une flaque est ronde vue du dessus, donc écrasée en
+   perspective. */
+const FLAQUES = [
+  { x:0.475, y:0.560, l:0.150, h:0.045, couleur:[255, 196, 108], force:1.00 },
+  { x:0.752, y:0.600, l:0.135, h:0.040, couleur:[255, 186,  96], force:0.85 },
+  { x:0.490, y:0.505, l:0.085, h:0.022, couleur:[255, 120, 110], force:0.70 },
+  { x:0.170, y:0.640, l:0.115, h:0.036, couleur:[255, 176,  92], force:0.55 },
+  { x:0.880, y:0.665, l:0.120, h:0.038, couleur:[248, 168, 120], force:0.50 },
+];
 
 const HEURES = [
   { des:0, image:"ruelle",            nuit:0.00 },
@@ -332,62 +367,97 @@ const CANONS = {
    secondes. */
 const BESTIAIRE = {
   depar: {
+    /* L'OGRE EN EXIL. Monstre sacré parti vivre ailleurs quand on lui a
+       parlé d'impôts, appétit sans fond, manières de sanglier, et la
+       conviction tranquille qu'on lui pardonnera tout parce qu'on l'a
+       aimé. C'est le PLUS GROS et le plus lent : son corps est sa
+       méthode. */
     soustitre: "Blindé devant. Les jambes le ralentissent.",
-    arrivee: ["Mon Dieu, un Depardiahree !",
-              "Voilà un Depardiahree.",
+    arrivee: ["Mon Dieu, un Depardiahree !", "Voilà un Depardiahree.",
               "Il y a un Depardiahree qui remonte la rue.",
-              "Un Depardiahree. Un vrai.",
+              "Un Depardiahree. En chair, surtout en chair.",
               "Ça descend, là-bas. C'est Depardiahree."],
     reponse: ["Vise pas le ventre, y'a rien à en tirer.",
               "Dans les jambes. Il tombe, il boit, il se relève.",
               "Il a le torse d'une armoire normande.",
               "Il encaisse comme il boit : sans compter.",
-              "Le ventre, c'est du décor. Vise plus haut.",
-              "Il lance des bouteilles. Vides, j'espère."],
+              "Il a fui le pays pour trois sous d'impôts, il fuira pas une balle.",
+              "Il lance des bouteilles. Vides, je le crains."],
+    mort: ["Et voilà. Il rentrera à l'étranger.",
+           "Un de moins à table.",
+           "Il a fini sa tournée.",
+           "La cave est fermée, monsieur."],
   },
   dsk: {
+    /* L'HOMME QUI SE CROYAIT INTOUCHABLE. Grand argentier, costume
+       impeccable, carrière au sommet — et la certitude qu'une position
+       assez haute dispense de se tenir. Il a fini en peignoir dans un
+       couloir d'hôtel, ce qui reste la meilleure image de sa chute. Sa
+       GARDE, c'est ça : il se protège la figure, jamais le reste. */
     soustitre: "Rapide. Il se cache le visage.",
-    arrivee: ["Un DSKKK !",
-              "Attention, DSKKK.",
-              "Mon Dieu, un DSKKK !",
+    arrivee: ["Un DSKKK !", "Attention, DSKKK.", "Mon Dieu, un DSKKK !",
               "DSKKK arrive, et il arrive vite.",
-              "Voilà DSKKK. Baisse la garde, toi."],
+              "Voilà DSKKK. Range ton portefeuille."],
     reponse: ["Il met les mains devant. Casse-lui la garde.",
               "Deux fois plus vite et deux fois moins de plomb.",
               "Vise les jambes, elles passent.",
-              "Il se protège la figure. C'est tout ce qui l'intéresse.",
-              "Attends qu'il baisse les bras. Il baisse toujours les bras.",
-              "Il court plus vite qu'il ne se défend."],
+              "Il protège sa figure. C'est tout ce qui l'a jamais intéressé.",
+              "Il a dirigé les caisses du monde et il court comme un voleur.",
+              "Attends qu'il baisse les bras. Il baisse toujours les bras."],
+    mort: ["La séance est levée.",
+           "Il a démissionné.",
+           "Voilà. En peignoir jusqu'au bout.",
+           "Le sommet, c'était haut. Le sol, c'est dur."],
   },
   jubi: {
+    /* LE FUMIER, ET IL PORTE BIEN SON NOM. L'homme qui nie. Quoi qu'on
+       lui montre, quoi qu'on lui prouve, il nie — calmement, longtemps,
+       avec l'air sincère. Ce n'est pas un colérique, c'est un menteur
+       patient, et c'est bien pire. Sa mécanique le trahit : il ANNONCE
+       tout ce qu'il va faire. */
     soustitre: "Il s'arrête pour lancer. Vise son bras.",
-    arrivee: ["Voilà Jubilar le fumier.",
-              "Un Jubilar !",
+    arrivee: ["Voilà Jubilar le fumier.", "Un Jubilar !",
               "Jubilar. Évidemment.",
-              "Tiens, Jubilar. Ça faisait longtemps.",
+              "Tiens, Jubilar. Il va encore tout nier.",
               "Jubilar, et il a ramassé quelque chose."],
     reponse: ["Quand il arme, tire dans le bras. Ça lui coupe l'envie.",
               "Le pavé ou le bras. À toi de voir.",
               "Il s'arrête toujours avant de lancer. C'est son défaut.",
               "Il annonce tout ce qu'il fait. Aucun talent pour la surprise.",
-              "Vise la main. Le reste suivra.",
+              "Il jurera qu'il n'a rien lancé. Il jure toujours.",
               "Un pavé dans la rue. Très parisien."],
+    mort: ["Il niera aussi, tu verras.",
+           "« C'est pas moi. » Bien sûr.",
+           "Fumier un jour, fumier au sol.",
+           "Celui-là, même par terre, il dira que non."],
   },
   abbe: {
+    /* LA VERTU EN FAÇADE. Homme d'Église adoré de tous, statue de son
+       vivant — et derrière la soutane, un tout autre homme. Le
+       personnage n'est pas le péché, c'est L'HYPOCRISIE : le sermon
+       d'une main, l'encensoir de l'autre. Il bombarde DE LOIN, sans
+       jamais s'approcher : il n'a jamais rien assumé en face. */
     soustitre: "Il bombarde de loin, par-dessus les autres.",
-    arrivee: ["Mon Dieu, l'Abbé Forceur !",
-              "Voilà l'Abbé.",
+    arrivee: ["Mon Dieu, l'Abbé Forceur !", "Voilà l'Abbé.",
               "L'Abbé Forceur, en personne.",
               "L'Abbé. Il vient nous bénir, j'imagine.",
               "Attention, l'Abbé s'est mis en tête de nous sauver."],
     reponse: ["Il lance en cloche. À couvert, ça suffit.",
               "Il reste au fond et il balance. Charmant homme.",
-              "Son encensoir monte haut. Tu as le temps.",
-              "Il ne s'approchera pas. Il faudra aller le chercher.",
-              "Il vise le ciel pour toucher nos pieds. Malin.",
+              "Son encensoir monte haut. Sa morale, moins.",
+              "Il ne s'approchera pas. Il n'a jamais rien fait en face.",
+              "Toute une statue, et personne dedans.",
               "Deux balles dans la tête. Amen."],
+    mort: ["Qu'il repose. Enfin.",
+           "On lui fera une statue. Une petite.",
+           "Le saint homme a fini sa quête.",
+           "Amen, et bon débarras."],
   },
   bruh: {
+    /* LE CŒUR EN FLOQUAGE. Il porte la générosité sur son t-shirt et
+       rien dessous. Les Enfoirés, c'est la troupe des Restos du cœur —
+       et lui a gardé le nom sans la suite. Il donne en public et prend
+       en privé ; il lance de LOIN et n'approche jamais. */
     soustitre: "Molotov tendu. Trop rapide pour se couvrir.",
     arrivee: ["Un BruHell l'Enfoiré !", "Voilà l'Enfoiré.",
               "Mon Dieu, BruHell l'Enfoiré.",
@@ -399,6 +469,10 @@ const BESTIAIRE = {
               "Il porte un cœur sur le t-shirt. C'est tout ce qu'il a.",
               "Il donne aux Restos et il prend au reste.",
               "Le seul qui lance plus vite qu'il ne réfléchit."],
+    mort: ["Le cœur a lâché.",
+           "Il aura donné, pour une fois.",
+           "Un Enfoiré de moins au générique.",
+           "Il gardait le nom. Il a gardé que ça."],
   },
 };
 
@@ -500,7 +574,7 @@ const Ruelle = {
   /* Qui a déjà été rencontré, pour ne montrer la carte qu'une fois. */
   vus:[], annonce:null, geantCle:null,
   projectiles:[], impacts:[], blocages:[], grogneT:0, grogneReste:0,
-  particules:[],
+  particules:[], temps:0, mot:null, motT:0,
   /* Le relevé de fin. `tues` est indexé par TYPE et pas par nom
      affichable : le nom vit dans ENNEMIS, et le dupliquer ici aurait
      dérivé au premier renommage — c'est exactement ce qui est arrivé
@@ -561,6 +635,7 @@ const Ruelle = {
     this.actif = true; this.fini = null;
     this.ennemis.length = 0; this.flashes.length = 0;
     this.particules.length = 0;
+    this.temps = 0; this.mot = null; this.motT = 0;
     this.vus.length = 0; this.annonce = null; this.geantCle = null;
     /* L'ORDRE D'INTRODUCTION est tiré à chaque partie : deux parties ne
        présentent plus les cinq dans la même suite. */
@@ -830,6 +905,20 @@ const Ruelle = {
 
   /* Les éclats de la barricade. Ils partent du haut des caisses, en
      éventail large vers le haut et vers le joueur. */
+  /* La balle qui manque frappe les pavés : une gerbe d'étincelles et de
+     poussière, au point visé. Elle est PLUS PETITE au fond de la rue —
+     la perspective vaut pour les ratés comme pour le reste. */
+  fxRate(x, y){
+    /* le point visé est en l'air ; la balle finit sa course au sol, un
+       peu plus bas, sauf si on visait déjà le pavé */
+    const ySol = Math.min(RUELLE_PIEDS_HEROS - 0.02, Math.max(y, 0.42));
+    const prof = borne((ySol - 0.40) / 0.45, 0, 1);   /* 0 = fond, 1 = devant */
+    const ech = 0.45 + prof * 0.8;
+    this.semer("etincelle", 5, x, ySol, 0.30 * ech, -1.5708, 1.5, ech);
+    this.semer("poussiere", 3, x, ySol, 0.10 * ech, -1.5708, 1.1, ech);
+    Sons.ricochet();
+  },
+
   fxBarricade(couloir, n){
     const c = RUELLE_COULOIRS[couloir] !== undefined ? RUELLE_COULOIRS[couloir] : 0;
     const x = borne(RUELLE_FUITE + c * 0.9, 0.08, 0.92);
@@ -871,6 +960,33 @@ const Ruelle = {
      à trois vivants qui râlent ensemble, on n'entend plus les tirs — et
      un intervalle qui se RESSERRE quand ils approchent, ce qui fait
      monter la tension sans changer de son. */
+  /* UNE RÉPLIQUE DE TEMPS EN TEMPS, quand un méchant tombe. Elle ne
+     suspend rien : le jeu continue derrière, c'est une remarque en
+     passant, pas une annonce.
+
+     Deux garde-fous, et ce sont eux qui font la différence entre du sel
+     et du bavardage :
+     - un DÉLAI minimum entre deux répliques, sinon une horde de trois
+       qui tombe ensemble déclenche trois bulles superposées ;
+     - une chance sur trois seulement. Une phrase à chaque mort, on la
+       lit deux fois puis on ne la voit plus. */
+  motDeCombat(cle){
+    if (this.annonce) return;              /* jamais par-dessus une annonce */
+    if (this.motT > 0) return;
+    if (Math.random() > MOT_CHANCE) return;
+    const b = BESTIAIRE[cle];
+    if (!b || !b.mort || !b.mort.length) return;
+    this.mot = { txt:piocher(b.mort), qui:Math.random() < 0.5 ? 0 : 1, t:0 };
+    this.motT = MOT_REPOS;
+  },
+
+  pasMot(dt){
+    if (this.motT > 0) this.motT -= dt;
+    if (!this.mot) return;
+    this.mot.t += dt;
+    if (this.mot.t >= MOT_DUREE) this.mot = null;
+  },
+
   pasGrognements(dt){
     this.grogneT -= dt;
     if (this.grogneT > 0) return;
@@ -974,7 +1090,7 @@ const Ruelle = {
     /* Le cri part AVANT le comptage : même si le bilan n'existe pas, un
        méchant qui tombe doit s'entendre. */
     const cle0 = this.cleEnnemi(e);
-    if (cle0) Sons.criMort(cle0);
+    if (cle0){ Sons.criMort(cle0); this.motDeCombat(cle0); }
     if (!this.bilan) return;
     const cle = Object.keys(ENNEMIS).find(k => ENNEMIS[k] === e.ref);
     if (cle) this.bilan.tues[cle] = (this.bilan.tues[cle] || 0) + 1;
@@ -1175,7 +1291,9 @@ const Ruelle = {
       }
     }
     if (this.annonce) this.pasAnnonce(dt);
+    this.temps += dt;
     this.pasGrognements(dt);
+    this.pasMot(dt);
     this.pasParticules(dt);
     this.pasProjectiles(dt);
     for (let i = this.flashes.length - 1; i >= 0; i--){
@@ -1329,7 +1447,13 @@ Ruelle.tirer = function(fx, fy){
   if (h.arme === "revolver") Sons.revolver(); else Sons.fusil();
   if (annule) return true;
   const cible = this.viser(fx, fy, arme.tolerance);
-  if (!cible) return false;
+  if (!cible){
+    /* RATÉ : la balle part quand même quelque part. Sans marque au sol,
+       tirer à côté ne produit rien du tout — le joueur ne sait pas s'il
+       a manqué ou si le jeu n'a pas entendu son doigt. */
+    this.fxRate(fx / Camera.L, fy / Camera.H);
+    return false;
+  }
   const e = cible.ennemi;
   const brut = cible.zone === "tete" ? arme.tete
              : cible.zone === "torse" ? arme.torse : arme.jambes;
@@ -1705,6 +1829,14 @@ const RuelleVue = {
       ctx.globalAlpha = 1;
     }
 
+    /* LA RÉPLIQUE DE COMBAT, sous l'annonce et au-dessus du reste. Elle
+       ne suspend rien : c'est une remarque en passant. */
+    if (Ruelle.mot && !Ruelle.annonce){
+      const m2 = Ruelle.mot;
+      const op = borne(Math.min(m2.t / 0.14, (MOT_DUREE - m2.t) / 0.30), 0, 1);
+      this.bulleHeros(m2.txt, m2.qui, op);
+    }
+
     /* L'ANNONCE se peint par-dessus le décor mais SOUS le pupitre : le
        joueur ne doit jamais perdre ses commandes de vue, même pendant
        qu'on lui présente ce qui arrive. */
@@ -1828,6 +1960,42 @@ const RuelleVue = {
     }
     ctx.globalAlpha = 1;
     ctx.restore();
+
+    /* ---------- LES FLAQUES DE LUMIÈRE ----------
+       Posées sur les pavés APRÈS le décor et AVANT les personnages : une
+       flaque doit éclairer le sol, pas passer devant les jambes de celui
+       qui marche dedans. */
+    const heureF = Ruelle.heure();
+    if (heureF.nuit > 0){
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      for (let k = 0; k < FLAQUES.length; k++){
+        const f2 = FLAQUES[k];
+        /* le vacillement : deux sinus lents et déphasés, jamais le même
+           cycle d'une flaque à l'autre. Une lumière parfaitement stable
+           se lit comme du décor mort. */
+        const ph = Ruelle.temps * 1.7 + k * 2.1;
+        const vac = 0.90 + 0.10 * Math.sin(ph) * Math.sin(ph * 0.37 + 1.1);
+        const a4 = 0.30 * f2.force * heureF.nuit * vac;
+        const g2 = ctx.createRadialGradient(L * f2.x, H * f2.y, 0,
+                                            L * f2.x, H * f2.y, L * f2.l);
+        const c2 = f2.couleur;
+        g2.addColorStop(0, `rgba(${c2[0]},${c2[1]},${c2[2]},${a4.toFixed(3)})`);
+        g2.addColorStop(0.55, `rgba(${c2[0]},${c2[1]},${c2[2]},${(a4 * 0.35).toFixed(3)})`);
+        g2.addColorStop(1, `rgba(${c2[0]},${c2[1]},${c2[2]},0)`);
+        ctx.save();
+        ctx.translate(L * f2.x, H * f2.y);
+        /* écrasée : une flaque ronde vue en perspective est une ellipse */
+        ctx.scale(1, (H * f2.h) / (L * f2.l));
+        ctx.translate(-L * f2.x, -H * f2.y);
+        ctx.fillStyle = g2;
+        ctx.beginPath();
+        ctx.arc(L * f2.x, H * f2.y, L * f2.l, 0, 6.2832);
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.restore();
+    }
 
     /* ---------- LES PARTICULES ----------
        Peintes APRÈS les personnages : une douille passe devant la
