@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.48";
+const VERSION = "6.49";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -207,6 +207,101 @@ const Sons = {
     f.type = "bandpass"; f.frequency.value = centre || 900; f.Q.value = q || 1.1;
     const g = this.ac.createGain(); g.gain.value = vol || 0.2;
     s.connect(f); f.connect(g); g.connect(this.maitre); s.start(t);
+  },
+
+  /* ================= les armes de la ruelle =================
+     Un coup de feu convaincant tient en TROIS couches, et c'est leur
+     empilement qui fait la différence avec un bip :
+       1. la DÉTONATION — bruit blanc très court dans un filtre qui
+          s'effondre : c'est elle qui donne le claquement ;
+       2. le CORPS — un oscillateur grave qui plonge d'une octave :
+          c'est ce qui sépare une arme d'un pétard ;
+       3. la QUEUE — une réverbération courte, plus longue pour le
+          fusil, parce que la ruelle renvoie.
+     Tout est synthétisé : pas un octet d'audio à charger, pas de
+     licence à vérifier. */
+
+  /* Une salve de bruit filtré dont la fréquence de coupure s'effondre.
+     `chute` règle la brutalité : plus elle est basse, plus c'est mat. */
+  claque(duree, vol, depart, chute, q){
+    if (!this.ac || !this.actif) return;
+    const t = this.ac.currentTime;
+    const n = Math.max(1, Math.floor(this.ac.sampleRate * duree));
+    const b = this.ac.createBuffer(1, n, this.ac.sampleRate), d = b.getChannelData(0);
+    /* l'enveloppe est dans l'échantillon : attaque instantanée, chute
+       exponentielle — c'est la forme d'une explosion */
+    for (let i = 0; i < n; i++){
+      const e = Math.pow(1 - i / n, 2.6);
+      d[i] = (Math.random() * 2 - 1) * e;
+    }
+    const s = this.ac.createBufferSource(); s.buffer = b;
+    const f = this.ac.createBiquadFilter();
+    f.type = "lowpass"; f.Q.value = q || 0.9;
+    f.frequency.setValueAtTime(depart, t);
+    f.frequency.exponentialRampToValueAtTime(Math.max(80, chute), t + duree * 0.85);
+    const g = this.ac.createGain(); g.gain.value = vol;
+    s.connect(f); f.connect(g); g.connect(this.maitre); s.start(t);
+  },
+
+  /* La queue : un court nuage de bruit très filtré, qui simule le
+     renvoi des murs sans convolution. */
+  echoRuelle(duree, vol, coupe){
+    if (!this.ac || !this.actif) return;
+    const t = this.ac.currentTime;
+    const n = Math.max(1, Math.floor(this.ac.sampleRate * duree));
+    const b = this.ac.createBuffer(1, n, this.ac.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++){
+      const p = i / n;
+      /* elle monte puis s'éteint : le son revient des murs */
+      const e = Math.min(1, p * 12) * Math.pow(1 - p, 2.2);
+      d[i] = (Math.random() * 2 - 1) * e;
+    }
+    const s = this.ac.createBufferSource(); s.buffer = b;
+    const f = this.ac.createBiquadFilter();
+    f.type = "lowpass"; f.frequency.value = coupe; f.Q.value = 0.7;
+    const g = this.ac.createGain(); g.gain.value = vol;
+    s.connect(f); f.connect(g); g.connect(this.maitre); s.start(t + 0.02);
+  },
+
+  revolver(){
+    /* sec, claquant, très haut à l'attaque : on doit sentir la précision */
+    this.claque(0.16, 0.42, 7200, 220, 0.8);
+    this.bip(150, 0.09, "sine", 0.30, 62);
+    this.echoRuelle(0.22, 0.075, 1400);
+  },
+  fusil(){
+    /* plus grave, plus large, une queue plus longue */
+    this.claque(0.24, 0.46, 4200, 130, 1.2);
+    this.bip(104, 0.14, "sine", 0.34, 44);
+    this.echoRuelle(0.36, 0.105, 900);
+  },
+  /* Le tir à vide : un seul clic sec. Il apprend qu'il faut recharger
+     sans qu'on ait à lire le compteur. */
+  aVide(){ this.claque(0.035, 0.22, 3600, 900, 2.4); },
+
+  /* Rechargement : le barillet claque, puis la fermeture. Deux temps,
+     parce qu'un rechargement est un geste en deux temps. */
+  recharge(long){
+    this.claque(0.05, 0.16, 2600, 700, 2.0);
+    const ac = this.ac; if (!ac) return;
+    const self = this;
+    setTimeout(() => self.claque(0.06, 0.20, 1800, 420, 1.6), (long ? 900 : 700));
+  },
+
+  /* Impact sur un corps : mat, sans aigu. La tête sonne plus haut et
+     plus court — c'est la récompense. */
+  impact(tete){
+    if (tete){
+      this.claque(0.09, 0.34, 3000, 300, 1.4);
+      this.bip(420, 0.07, "triangle", 0.20, 180);
+    } else {
+      this.claque(0.10, 0.26, 1200, 180, 1.0);
+    }
+  },
+  /* La barricade encaisse : un choc de bois, grave et court. */
+  choc(){
+    this.claque(0.14, 0.30, 900, 110, 1.1);
+    this.bip(76, 0.16, "sine", 0.26, 40);
   },
 
   /* --- lit d'ambiance : rue + terrasse --- */

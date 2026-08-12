@@ -2742,6 +2742,28 @@ if (D){
       return ok && D.Ruelle.introT <= 0.25;
     })());
 
+  verifier("chaque arme a son propre son",
+    (() => {
+      /* Trois couches par coup : la détonation qui claque, le corps
+         grave qui sépare une arme d'un pétard, et la queue qui rend le
+         renvoi des murs. Le fusil a une queue plus longue. */
+      const rev = source.slice(source.indexOf("revolver(){"), source.indexOf("fusil(){"));
+      const fus = source.slice(source.indexOf("fusil(){"), source.indexOf("aVide()"));
+      const n = t => (t.match(/this\.(claque|bip|echoRuelle)\(/g) || []).length;
+      const queue = t => { const m = t.match(/echoRuelle\(([\d.]+)/); return m ? parseFloat(m[1]) : 0; };
+      return n(rev) === 3 && n(fus) === 3 && queue(fus) > queue(rev);
+    })());
+  verifier("le tir à vide et le rechargement s'entendent",
+    /Sons\.aVide\(\); Sons\.recharge/.test(source) &&
+    /recharge\(long\)\{[\s\S]{0,400}?setTimeout/.test(source),
+    "un rechargement est un geste en deux temps");
+  verifier("le headshot sonne autrement",
+    /impact\(tete\)\{[\s\S]{0,300}?if \(tete\)/.test(source) &&
+    /Sons\.impact\(cible\.zone === "tete"\)/.test(source));
+  verifier("aucun fichier audio n'est chargé",
+    !/\.mp3|\.wav|\.ogg|new Audio\(/.test(source),
+    "synthèse uniquement : pas un octet à télécharger, pas de licence à vérifier");
+
   verifier("l'équipier qui ne tire pas reste accroupi",
     (() => {
       D.Jeu.demarrer(4); D.Ruelle.introT = 0;

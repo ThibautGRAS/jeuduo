@@ -264,6 +264,18 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Les armes s'entendent** (v6.49). Chaque coup de feu tient en trois
+couches synthétisées : la **détonation** — bruit blanc très court dans
+un filtre qui s'effondre, c'est elle qui claque —, le **corps** — un
+oscillateur grave qui plonge d'une octave, c'est ce qui sépare une arme
+d'un pétard — et la **queue**, une réverbération courte, plus longue
+pour le fusil parce que la ruelle renvoie. S'y ajoutent le clic à vide,
+le rechargement en deux temps, l'impact mat sur un corps, sa variante
+plus aiguë au headshot, et le choc de bois quand la barricade encaisse.
+
+Pas un octet d'audio à télécharger, pas de licence à vérifier : tout est
+synthétisé, comme le reste du jeu depuis le premier jour.
+
 **La jauge appartient au décor** (v6.48) : la vie de la barricade est
 posée sur les caisses et **suit leur courbe** — un trait droit sur un
 décor en perspective a l'air collé par-dessus. Les héros passent devant

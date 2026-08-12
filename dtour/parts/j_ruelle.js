@@ -220,10 +220,12 @@ const Ruelle = {
     this.iaT -= dt;
     if (this.iaT > 0) return;
     this.iaT = IA_CADENCE;
-    if (lui.balles <= 0){ lui.recharge = ARMES[lui.arme].recharge; return; }
+    if (lui.balles <= 0){
+      lui.recharge = ARMES[lui.arme].recharge; Sons.recharge(lui.arme !== "revolver"); return;
+    }
     lui.balles--; lui.repos = 0.22;
     this.flashes.push({ t:0.13, duree:0.13, heros:1 - this.actifIdx });
-    Sons.bip(lui.arme === "revolver" ? 120 : 90, 0.09, "square", 0.16, 60);
+    if (lui.arme === "revolver") Sons.revolver(); else Sons.fusil();
     /* Elle vise le plus avancé, et rate souvent : c'est un soutien, pas
        une seconde paire de mains parfaite. */
     const proies = this.ennemis.filter(e => e.etat === "course" || e.etat === "touche");
@@ -237,7 +239,7 @@ const Ruelle = {
     void IA_ECART;
     const zone = (ZONES_CORPS.find(z => f >= z.haut && f < z.bas) || ZONES_CORPS[1]).id;
     const degat = zone === "tete" ? arme.tete : zone === "torse" ? arme.torse : arme.jambes;
-    but.pv -= degat; but.touche = zone;
+    but.pv -= degat; but.touche = zone; Sons.impact(false);
     Score.points += 10;
     if (but.pv <= 0){ but.etat = "chute"; but.tEtat = 0; but.mort = 0; Score.points += 100; }
     else { but.etat = "touche"; but.tEtat = 0; }
@@ -290,7 +292,7 @@ const Ruelle = {
         if (e.z >= 1){
           e.z = 1;
           this.barricade = Math.max(0, this.barricade - RUELLE_DEGAT_BARRICADE);
-          this.secousse = 0.8;
+          this.secousse = 0.8; Sons.choc();
           this.ennemis.splice(i, 1);
           if (this.barricade <= 0) this.terminer(false);
           continue;
@@ -360,12 +362,16 @@ Ruelle.tirer = function(fx, fy){
   if (!this.actif) return false;
   const h = this.heroActif(), arme = ARMES[h.arme];
   if (h.recharge > 0 || h.repos > 0) return false;
-  if (h.balles <= 0){ h.recharge = arme.recharge; return false; }
+  if (h.balles <= 0){
+    /* le clic à vide, puis le rechargement : on l'entend avant de le lire */
+    h.recharge = arme.recharge; Sons.aVide(); Sons.recharge(h.arme !== "revolver");
+    return false;
+  }
   h.balles--; h.repos = 1 / arme.cadence;
-  if (h.balles <= 0) h.recharge = arme.recharge;
+  if (h.balles <= 0){ h.recharge = arme.recharge; Sons.recharge(h.arme !== "revolver"); }
   this.secousse = Math.max(this.secousse, arme.secousse * 0.35);
   this.flashes.push({ t:0.13, duree:0.13, heros:this.actifIdx });
-  Sons.bip(h.arme === "revolver" ? 120 : 90, 0.10, "square", 0.22, 60);
+  if (h.arme === "revolver") Sons.revolver(); else Sons.fusil();
   const cible = this.viser(fx, fy, arme.tolerance);
   if (!cible) return false;
   const e = cible.ennemi;
@@ -373,6 +379,7 @@ Ruelle.tirer = function(fx, fy){
               : cible.zone === "torse" ? arme.torse : arme.jambes;
   e.pv -= degat;
   e.touche = cible.zone;
+  Sons.impact(cible.zone === "tete");
   Score.points += cible.zone === "tete" ? 40 : 10;
   if (e.pv <= 0){
     e.etat = "chute"; e.tEtat = 0; e.mort = 0;
