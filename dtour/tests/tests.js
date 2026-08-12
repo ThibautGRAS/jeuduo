@@ -1484,8 +1484,11 @@ if (D){
   /* Parler à la sœur fait venir Hortense beaucoup plus vite. */
   verifier("interroger la sœur avance la venue d'Hortense",
     (() => {
+      /* 600 tirages, pas 200 : Gabi n'est plus dans toutes les
+         distributions, donc les essais utiles sont deux fois moins
+         nombreux et la mesure devenait bruyante. */
       let avances = 0, essais = 0;
-      for (let n = 0; n < 200; n++){
+      for (let n = 0; n < 600; n++){
         D.Jeu.demarrer(2); D.Intro.finir();
         const avant = D.HortenseApp.quand;
         const is = D.SUSPECTS.findIndex(x => x.id === "gabi");
@@ -1499,14 +1502,21 @@ if (D){
     })(), "chaque passage doit rapprocher son arrivée");
   verifier("et une fois sur deux environ, elle arrive tout de suite",
     (() => {
-      let vite = 0;
-      for (let n = 0; n < 400; n++){
+      /* Gabi n'est plus de toutes les distributions : on ne compte que
+         les parties où elle est là, sinon la proportion mesure le
+         tirage du casting au lieu de la réaction d'Hortense. */
+      let vite = 0, essais = 0;
+      for (let n = 0; n < 800; n++){
         D.Jeu.demarrer(2); D.Intro.finir();
         const is = D.SUSPECTS.findIndex(x => x.id === "gabi");
+        if (is < 0) continue;
         D.Enquete.interroger(is);
+        essais++;
         if (D.HortenseApp.quand - (D.ENQ_DUREE - D.Enquete.restant) < 9) vite++;
       }
-      return vite > 160 && vite < 280;
+      const part = vite / Math.max(1, essais);
+      messageDetail = Math.round(part * 100) + " % sur " + essais + " parties";
+      return essais > 200 && part > 0.35 && part < 0.72;
     })(), "ni jamais, ni à tous les coups");
   verifier("interroger quelqu'un d'autre ne la fait pas venir",
     (() => {

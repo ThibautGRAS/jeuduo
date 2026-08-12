@@ -264,6 +264,15 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Cinquante et une affaires** (v6.32), dont dix-huit avec le nouveau
+casting : le compte de Martin qui ne tombe jamais juste, le maire qui se
+sert et laisse cinq euros, Tristan qui sort porter la pizza à quelqu'un
+déjà monté, Solène qui crève en arrivant et pose la boîte dans l'entrée,
+Teo qui n'a même pas eu à se lever, Francky qui met une pizza au frais
+pour Mathilde, Kevin qui a faim depuis 20 h 15, Jojo qui la planque dans
+l'évier pour qu'elle ne l'ait pas — et deux affaires où **personne n'a
+rien volé**.
+
 **Six affaires du nouveau casting** (v6.31), dont les trois nœuds du
 quartier : la **liaison secrète de Gabi et Charles** — deux innocents qui
 mentent, et pas sur le vol —, les **trois professeurs d'histoire** qui
