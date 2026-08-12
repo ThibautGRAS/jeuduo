@@ -11,7 +11,7 @@ import re, sys, pathlib
 
 BASE = pathlib.Path(__file__).parent
 CIBLE = BASE / "index.html"
-MORCEAUX = ["a_socle.js", "b_jeu.js", "c_rendu.js", "e_hortense.js", "f_enquete.js", "g_enquete_vue.js", "h_bar.js", "i_bar_vue.js", "d_pilotage.js"]
+MORCEAUX = ["a_socle.js", "b_jeu.js", "c_rendu.js", "e_hortense.js", "f_enquete.js", "g_enquete_vue.js", "h_bar.js", "i_bar_vue.js", "j_ruelle.js", "d_pilotage.js"]
 
 REPERE = re.compile(r"<script>\n.*?\n</script>", re.S)
 

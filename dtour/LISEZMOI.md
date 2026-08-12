@@ -264,6 +264,19 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**La ruelle prend de la profondeur** (v6.34). Le niveau 4 démarre : le
+décor est en place, l'orientation bascule en portrait — une ruelle qui
+s'enfonce a besoin de hauteur —, et le projecteur de perspective
+fonctionne. Chaque ennemi porte un Z entre 0 (le fond) et 1 (la
+barricade) ; sa taille, sa position et son ordre de dessin s'en
+déduisent, avec une courbe en puissance 2,35 qui écrase le fond et étire
+le premier plan. Une progression linéaire aurait donné un entonnoir
+plat. Les cinq couloirs se rejoignent au point de fuite à moins de deux
+pixels près.
+
+Premier ennemi découpé : treize images, six de course, quatre d'impact,
+deux de chute et une au sol.
+
 **Cinquante et une affaires** (v6.32), dont dix-huit avec le nouveau
 casting : le compte de Martin qui ne tombe jamais juste, le maire qui se
 sert et laisse cinq euros, Tristan qui sort porter la pizza à quelqu'un

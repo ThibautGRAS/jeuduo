@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.33";
+const VERSION = "6.34";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -579,6 +579,17 @@ const POSES_BAR = ["idle", "marche1", "marche2", "marche3", "marche4",
                    "attrape", "tient", "boit", "vide", "jette", "titube"];
 const PREFIXES_BAR = ["bar_th", "bar_pf"];
 
+/* ---------- niveau 4 : la ruelle ----------
+   Treize images par ennemi : six de course, quatre d'impact, deux de
+   chute et une au sol. Toutes découpées dans la même planche, donc même
+   taille d'image et pieds sur la même ligne. */
+const POSES_ENNEMI = ["run1", "run2", "run3", "run4", "run5", "run6",
+                      "hit_torse", "hit_epaule", "hit_jambe", "hit_tete",
+                      "chute1", "chute2", "sol"];
+const ENNEMIS_RUELLE = ["costaud"];
+const IMAGES_NIVEAU4 = ["ruelle"].concat(
+  ENNEMIS_RUELLE.flatMap(e => POSES_ENNEMI.map(po => "enn_" + e + "_" + po)));
+
 const IMAGES_NIVEAU3 = [
   "fond_bar",
   /* Les poses de barman sont TOUTES découpées dans la même bande de la
@@ -634,6 +645,7 @@ const IMG_PAR_DOSSIER = {
     .concat(["thibaut", "pierre"].flatMap(h => POSES_HEROS.map(p => h + "_" + p))),
   n2: IMAGES_NIVEAU2,
   n3: IMAGES_NIVEAU3,
+  n4: IMAGES_NIVEAU4,
 };
 const IMG_CHEMIN = {};
 for (const d of Object.keys(IMG_PAR_DOSSIER))

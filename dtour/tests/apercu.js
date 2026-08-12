@@ -407,6 +407,30 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "17_bar_figurants_844");
   }
 
+  /* 22. niveau 4 : la ruelle en portrait, un ennemi à cinq profondeurs
+         sur les cinq couloirs. C'est la scène qui décide si la fausse
+         profondeur tient : les silhouettes doivent grossir vite en
+         approchant, et les lointaines rester minuscules. */
+  {
+    const { D, canevas } = await preparer(420, 840);
+    D.amorcer(); D.Camera.mesurer(420, 840, 1);
+    const ctx = canevas.getContext("2d");
+    const fond = D.Images.table.ruelle;
+    /* le décor couvre l'écran, ancré en bas */
+    const s2 = Math.max(420 / fond.naturalWidth, 840 / fond.naturalHeight);
+    ctx.drawImage(fond, (420 - fond.naturalWidth * s2) / 2,
+      840 - fond.naturalHeight * s2, fond.naturalWidth * s2, fond.naturalHeight * s2);
+    const essais = [[0.02, 2], [0.20, 0], [0.42, 4], [0.68, 1], [0.95, 3]];
+    /* du plus lointain au plus proche : l'ordre de rendu suit Z */
+    for (const [z, couloir] of essais){
+      const p = D.Perspective.projeter(z, couloir);
+      const spr = D.Images.table["enn_costaud_run" + (1 + Math.floor(z * 6) % 6)];
+      const h = p.hauteur, l = h * spr.naturalWidth / spr.naturalHeight;
+      ctx.drawImage(spr, p.x - l / 2, p.y - h, l, h);
+    }
+    ecrire(canevas, "22_ruelle_420");
+  }
+
   /* 21. niveau 1 au format d'un téléphone en paysage plein écran : c'est
          là que le rapport largeur/hauteur est le plus haut, et donc que
          la ligne de sol se voit le mieux. */

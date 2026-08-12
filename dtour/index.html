@@ -700,7 +700,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.33</div>
+  <div id="version">CALLAGHAN v6.34</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -772,7 +772,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.33";
+const VERSION = "6.34";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1333,6 +1333,17 @@ const POSES_BAR = ["idle", "marche1", "marche2", "marche3", "marche4",
                    "attrape", "tient", "boit", "vide", "jette", "titube"];
 const PREFIXES_BAR = ["bar_th", "bar_pf"];
 
+/* ---------- niveau 4 : la ruelle ----------
+   Treize images par ennemi : six de course, quatre d'impact, deux de
+   chute et une au sol. Toutes découpées dans la même planche, donc même
+   taille d'image et pieds sur la même ligne. */
+const POSES_ENNEMI = ["run1", "run2", "run3", "run4", "run5", "run6",
+                      "hit_torse", "hit_epaule", "hit_jambe", "hit_tete",
+                      "chute1", "chute2", "sol"];
+const ENNEMIS_RUELLE = ["costaud"];
+const IMAGES_NIVEAU4 = ["ruelle"].concat(
+  ENNEMIS_RUELLE.flatMap(e => POSES_ENNEMI.map(po => "enn_" + e + "_" + po)));
+
 const IMAGES_NIVEAU3 = [
   "fond_bar",
   /* Les poses de barman sont TOUTES découpées dans la même bande de la
@@ -1388,6 +1399,7 @@ const IMG_PAR_DOSSIER = {
     .concat(["thibaut", "pierre"].flatMap(h => POSES_HEROS.map(p => h + "_" + p))),
   n2: IMAGES_NIVEAU2,
   n3: IMAGES_NIVEAU3,
+  n4: IMAGES_NIVEAU4,
 };
 const IMG_CHEMIN = {};
 for (const d of Object.keys(IMG_PAR_DOSSIER))
@@ -8707,6 +8719,52 @@ const BarVue = {
     ctx.restore();
   },
 };
+/* ================= NIVEAU 4 — LA RUELLE =================
+   Shooter arcade en fausse profondeur. La caméra est fixe, derrière la
+   barricade ; les ennemis viennent du fond et grossissent en approchant.
+
+   Tout repose sur UNE idée : chaque ennemi porte un Z entre 0 (le fond
+   de la ruelle) et 1 (la barricade). Sa taille, sa position à l'écran
+   et son ordre de dessin se déduisent de ce Z. On ne déplace jamais un
+   sprite verticalement à vitesse constante — c'est ce qui donne aux
+   faux 3D leur allure de papier découpé. */
+
+/* Le décor est en portrait (941 x 1672). Ces deux repères sont mesurés
+   dessus : la ligne d'horizon où la ruelle se perd, et la ligne où les
+   pieds d'un ennemi touchent la barricade. */
+const RUELLE_HORIZON = 0.300;      /* fraction de hauteur : le fond      */
+const RUELLE_BARRICADE = 0.760;    /* fraction de hauteur : le premier plan */
+const RUELLE_ECH_LOIN = 0.055;     /* hauteur d'un ennemi au fond        */
+const RUELLE_ECH_PRES = 0.520;     /* hauteur d'un ennemi à la barricade */
+const RUELLE_FUITE = 0.500;        /* le point de fuite, en largeur      */
+
+/* Les cinq trajectoires convergent vers le point de fuite. La valeur
+   est l'écart à la barricade, en fraction de largeur ; au fond, tout le
+   monde se rejoint. */
+const RUELLE_COULOIRS = [-0.34, -0.17, 0, 0.17, 0.34];
+
+/* La courbe de profondeur. Une interpolation linéaire donnerait une
+   ruelle en entonnoir plat : les ennemis lointains avanceraient trop
+   vite et les proches trop lentement. L'exposant écrase le fond et
+   étire le premier plan, ce qui est la façon dont une perspective se
+   comporte vraiment. */
+function courbeZ(z){ return Math.pow(borne(z, 0, 1), 2.35); }
+
+const Perspective = {
+  /* Tout ce qu'il faut pour dessiner quelqu'un à la profondeur z, sur
+     le couloir c. Une seule fonction : c'est elle qui garantit que les
+     ennemis, les impacts et les corps au sol partagent le même monde. */
+  projeter(z, couloir){
+    const t = courbeZ(z);
+    const H = Camera.H, L = Camera.L;
+    const y = melange(H * RUELLE_HORIZON, H * RUELLE_BARRICADE, t);
+    const ech = melange(RUELLE_ECH_LOIN, RUELLE_ECH_PRES, t);
+    const ecart = RUELLE_COULOIRS[couloir] || 0;
+    /* au fond, les couloirs se rejoignent au point de fuite */
+    const x = L * (RUELLE_FUITE + ecart * t);
+    return { x, y, hauteur: H * ech, ordre: t };
+  },
+};
 
 /* ================= UIManager -> Interface ================= */
 const E = {};
@@ -9721,7 +9779,7 @@ globalThis.DTOUR = {
   xPlace, borne, melange, chiffres, doux, SPRITES_PNJ, PERSOS_DEBOUT, PERSOS_ASSIS,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, portraitOk, ecranOk, orientationVoulue, ORIENTATION, Ecran, Interface, Pause, Boucle,
-  Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
+  Perspective, courbeZ, POSES_ENNEMI, ENNEMIS_RUELLE, IMAGES_NIVEAU4, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
   POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE, BAR_TAILLE_BARMAN, BAR_COPIES,

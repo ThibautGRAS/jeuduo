@@ -2622,6 +2622,54 @@ if (D){
     /Jeu\.phase === "titre" \? 1 : Jeu\.niveau/.test(source),
     "c'est là qu'on choisit, et les tuiles se partagent la largeur");
 
+  /* --- la fausse profondeur de la ruelle --- */
+  titre("La ruelle");
+  D.Camera.mesurer(420, 840, 1);
+  verifier("un ennemi lointain est minuscule, un ennemi proche est grand",
+    (() => {
+      const loin = D.Perspective.projeter(0, 2), pres = D.Perspective.projeter(1, 2);
+      messageDetail = Math.round(loin.hauteur) + " px au fond, " + Math.round(pres.hauteur) + " px devant";
+      return pres.hauteur > loin.hauteur * 7;
+    })());
+  verifier("il grossit sans jamais rétrécir en avançant",
+    (() => {
+      let h = -1;
+      for (let z = 0; z <= 1.0001; z += 0.02){
+        const p = D.Perspective.projeter(z, 0);
+        if (p.hauteur < h - 0.001) return false;
+        h = p.hauteur;
+      }
+      return true;
+    })());
+  verifier("il grossit de plus en plus vite : c'est ça, une perspective",
+    (() => {
+      /* Une progression linéaire donnerait une ruelle en entonnoir plat.
+         Le dernier quart du trajet doit compter plus que le premier. */
+      const d = z => D.Perspective.projeter(z + 0.25, 0).hauteur - D.Perspective.projeter(z, 0).hauteur;
+      return d(0.75) > d(0) * 4;
+    })());
+  verifier("les cinq couloirs se rejoignent au point de fuite",
+    (() => {
+      const xs = [0, 1, 2, 3, 4].map(c => D.Perspective.projeter(0, c).x);
+      const ecart = Math.max(...xs) - Math.min(...xs);
+      messageDetail = "écart au fond : " + ecart.toFixed(1) + " px";
+      return ecart < 2;
+    })());
+  verifier("et s'écartent franchement au premier plan",
+    (() => {
+      const xs = [0, 1, 2, 3, 4].map(c => D.Perspective.projeter(1, c).x);
+      return Math.max(...xs) - Math.min(...xs) > D.Camera.L * 0.6;
+    })());
+  verifier("les pieds descendent du fond vers la barricade",
+    D.Perspective.projeter(0, 0).y < D.Perspective.projeter(1, 0).y &&
+    D.Perspective.projeter(1, 0).y < 840 * 0.8);
+  verifier("l'ordre de dessin suit la profondeur",
+    D.Perspective.projeter(0.2, 0).ordre < D.Perspective.projeter(0.8, 0).ordre,
+    "sans ça, un ennemi lointain passerait devant un proche");
+  verifier("chaque ennemi a ses treize images",
+    D.ENNEMIS_RUELLE.every(e => D.POSES_ENNEMI.length === 13 &&
+      D.POSES_ENNEMI.every(po => D.IMAGES_NIVEAU4.indexOf("enn_" + e + "_" + po) >= 0)));
+
   /* --- la carte des liens --- */
   titre("Qui connaît qui");
   verifier("chaque habitant possible a ses liens",
