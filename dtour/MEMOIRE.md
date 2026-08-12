@@ -1135,6 +1135,29 @@ au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
 
+### Lever une règle, c'est garder l'invariant qui la motivait
+
+« Aucun fichier audio » n'était pas un caprice : elle garantissait qu'il
+n'y a rien à télécharger, rien qui puisse manquer, aucune licence à
+vérifier. En la levant pour neuf sons, il fallait sauver ce qui comptait
+vraiment — **que le jeu ne soit jamais muet**. D'où le repli synthétisé
+systématique, et le test qui vérifie que chaque appel d'échantillon en a
+un. La plomberie se livre alors avant les fichiers, ce qui est le seul
+moyen de la vérifier séparément.
+
+### Un encodeur DÉPASSE la crête qu'on lui donne
+
+Échantillons normalisés à 0,89 avant encodage, mesurés à 1,000 après :
+saturés. Le Vorbis reconstruit un signal qui dépasse l'original. La marge
+se prend AVANT l'encodeur — 0,78 donne 0,905 en sortie. Contrôler après
+encodage, jamais avant : c'est le fichier livré qui compte.
+
+### `ffmpeg` déduit le format de l'extension
+
+Écrire dans un fichier temporaire `.ogg.tmp` — précaution héritée des
+sprites corrompus — casse la détection de format : il faut `-f ogg`
+explicite. La précaution reste bonne, elle demande juste d'être dite.
+
 ### Bloquer une file d'apparitions, ce n'est pas retarder son premier délai
 
 L'annonce de horde repoussait `prochain`, le délai avant la prochaine

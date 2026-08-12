@@ -283,6 +283,26 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Le jeu a des échantillons** (v6.70) : la règle « aucun fichier audio »
+est levée pour neuf sons — deux détonations, le rechargement, l'impact
+dans la chair, et **un cri par méchant**. 55 Ko au total.
+
+Mais l'invariant qui motivait la règle reste, et il est plus fort :
+**le jeu n'est JAMAIS muet.** Chaque son passant par un échantillon garde
+son repli synthétisé — fichier absent, réseau lent, décodage refusé, le
+son sort quand même. C'est ce qui permet de livrer la plomberie avant les
+fichiers, et un test le vérifie.
+
+Deux autres garanties : le chargement part **après** les images
+essentielles et ne retarde pas l'écran titre ; et tout passe par
+l'**AudioContext déjà déverrouillé**, jamais par un élément audio HTML —
+lancé depuis un rappel réseau, iOS le bloque silencieusement.
+
+**Déposer un `.ogg` dans `son/` au bon nom suffit à remplacer un son**,
+sans toucher une ligne de code. Les fichiers actuels sont une synthèse
+hors ligne, plus riche que le temps réel mais pas un enregistrement :
+`son/LISEZMOI.md` dit où trouver de vrais sons en CC0.
+
 **L'affiche du bar et la vignette du niveau 4** (v6.69) : le niveau 3
 s'ouvre sur son affiche — PF et Thibaut dos à dos au comptoir — montrée
 3,2 s, passable d'une tape. Elle rend le même service que l'intro de la

@@ -1146,6 +1146,10 @@ function amorcer(){
     ajusterCanevas();
     setTimeout(() => Interface.fermerIntro(), 120);
     charger(imagesDifferees()).then(() => { Images.toutPret = true; });
+    /* Les échantillons partent APRÈS les images essentielles : ils ne
+       doivent pas retarder l'écran titre d'une seule image. Et leur
+       absence n'empêche rien — chaque son a son repli synthétisé. */
+    Sons.chargerEchantillons();
   });
 }
 

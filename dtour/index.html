@@ -772,7 +772,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.69</div>
+  <div id="version">CALLAGHAN v6.70</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -844,7 +844,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.69";
+const VERSION = "6.70";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1095,16 +1095,81 @@ const Sons = {
     s.connect(f); f.connect(g); g.connect(this.maitre); s.start(t + 0.02);
   },
 
+  /* ================= LA BANQUE D'ÉCHANTILLONS =================
+     La règle « aucun fichier audio » a tenu tant que le jeu n'avait
+     besoin que de percussions courtes. Un coup de feu, un rechargement
+     et un cri demandent une matière que la synthèse temps réel ne donne
+     pas : on charge donc des fichiers, mais SANS jamais dépendre d'eux.
+
+     Trois garanties, dans cet ordre :
+
+     1. LE JEU N'EST JAMAIS MUET. Chaque échantillon a un repli
+        synthétisé — celui qui existait avant. Fichier absent, réseau
+        lent, décodage refusé : le son sort quand même. C'est ce qui
+        permet de livrer la plomberie avant les fichiers.
+     2. RIEN NE BLOQUE LE DÉMARRAGE. Le chargement part APRÈS les images
+        essentielles et ne retarde pas l'écran titre.
+     3. TOUT PASSE PAR L'AudioContext DÉJÀ DÉVERROUILLÉ. Un élément
+        audio HTML lancé depuis un rappel réseau est silencieusement
+        bloqué par iOS — le
+        piège est documenté dans MEMOIRE.md, et c'est pour ça que les
+        échantillons sont décodés en AudioBuffer et joués par la même
+        chaîne que le reste. */
+  echants:{}, echantsCharges:false,
+
+  /* Les noms de fichiers attendus dans `son/`. Déposer un .ogg à ce nom
+     suffit à remplacer le son : aucune ligne de code à toucher. */
+  ECHANTILLONS:[
+    "tir_revolver", "tir_fusil", "recharge", "impact_chair",
+    "cri_depar", "cri_dsk", "cri_jubi", "cri_abbe", "cri_bruh",
+  ],
+
+  chargerEchantillons(){
+    if (this.echantsCharges) return;
+    this.echantsCharges = true;
+    this.init();
+    if (!this.ac) return;
+    for (const nom of this.ECHANTILLONS){
+      fetch("son/" + nom + ".ogg")
+        .then(r => (r.ok ? r.arrayBuffer() : Promise.reject(r.status)))
+        .then(b => this.ac.decodeAudioData(b))
+        .then(buf => { this.echants[nom] = buf; })
+        /* Un échantillon manquant n'est PAS une erreur : c'est le cas
+           normal tant que le fichier n'a pas été déposé. */
+        .catch(() => {});
+    }
+  },
+
+  /* Joue l'échantillon s'il est là, sinon exécute le repli. Rend true si
+     l'échantillon a servi — utile aux tests. */
+  echant(nom, vol, repli){
+    const buf = this.echants[nom];
+    if (!buf || !this.ac || !this.actif){ if (repli) repli(); return false; }
+    const s = this.ac.createBufferSource(); s.buffer = buf;
+    const g = this.ac.createGain(); g.gain.value = vol === undefined ? 1 : vol;
+    /* une variation de hauteur à chaque coup : sans elle, dix tirs
+       d'affilée sonnent comme un seul son collé dix fois */
+    s.playbackRate.value = 0.94 + Math.random() * 0.12;
+    s.connect(g); g.connect(this.maitre); s.start(this.ac.currentTime);
+    return true;
+  },
+
   revolver(){
-    /* sec, claquant, très haut à l'attaque : on doit sentir la précision */
-    this.claque(0.16, 0.42, 7200, 220, 0.8);
-    this.bip(150, 0.09, "sine", 0.30, 62);
+    this.echant("tir_revolver", 0.85, () => {
+      /* sec, claquant, très haut à l'attaque : on doit sentir la précision */
+      this.claque(0.16, 0.42, 7200, 220, 0.8);
+      this.bip(150, 0.09, "sine", 0.30, 62);
+    });
+    /* l'écho de la ruelle reste synthétisé DANS TOUS LES CAS : il dépend
+       du lieu, pas de l'arme, et il se superpose à l'échantillon */
     this.echoRuelle(0.22, 0.075, 1400);
   },
   fusil(){
-    /* plus grave, plus large, une queue plus longue */
-    this.claque(0.24, 0.46, 4200, 130, 1.2);
-    this.bip(104, 0.14, "sine", 0.34, 44);
+    this.echant("tir_fusil", 0.85, () => {
+      /* plus grave, plus large, une queue plus longue */
+      this.claque(0.24, 0.46, 4200, 130, 1.2);
+      this.bip(104, 0.14, "sine", 0.34, 44);
+    });
     this.echoRuelle(0.36, 0.105, 900);
   },
   /* Le tir à vide : un seul clic sec. Il apprend qu'il faut recharger
@@ -1114,6 +1179,7 @@ const Sons = {
   /* Rechargement : le barillet claque, puis la fermeture. Deux temps,
      parce qu'un rechargement est un geste en deux temps. */
   recharge(long){
+    if (this.echant("recharge", 0.8, null)) return;
     this.claque(0.05, 0.16, 2600, 700, 2.0);
     const ac = this.ac; if (!ac) return;
     const self = this;
@@ -1123,12 +1189,23 @@ const Sons = {
   /* Impact sur un corps : mat, sans aigu. La tête sonne plus haut et
      plus court — c'est la récompense. */
   impact(tete){
-    if (tete){
-      this.claque(0.09, 0.34, 3000, 300, 1.4);
-      this.bip(420, 0.07, "triangle", 0.20, 180);
-    } else {
-      this.claque(0.10, 0.26, 1200, 180, 1.0);
-    }
+    /* La tête garde son timbre propre : c'est la récompense, elle doit
+       rester distincte même quand l'échantillon de chair est présent. */
+    this.echant("impact_chair", tete ? 0.9 : 0.72, () => {
+      this.claque(tete ? 0.09 : 0.10, tete ? 0.34 : 0.26,
+                  tete ? 3000 : 1200, tete ? 300 : 180, tete ? 1.4 : 1.0);
+    });
+    if (tete) this.bip(420, 0.07, "triangle", 0.20, 180);
+  },
+
+  /* Le cri d'un méchant, propre à chacun. Sans échantillon, un râle
+     synthétisé : grave, court, filtré — assez pour qu'une mort ne soit
+     pas silencieuse. */
+  cri(cle){
+    this.echant("cri_" + cle, 0.8, () => {
+      this.claque(0.22, 0.20, 900, 140, 1.6);
+      this.bip(120 + Math.random() * 40, 0.28, "sawtooth", 0.12, 70);
+    });
   },
   /* La barricade encaisse : un choc de bois, grave et court. */
   choc(){
@@ -10093,6 +10170,10 @@ const Ruelle = {
   /* Un seul endroit compte les morts : le joueur et l'équipier tuent
      tous les deux, et deux compteurs séparés auraient divergé. */
   compterMort(e, zone){
+    /* Le cri part AVANT le comptage : même si le bilan n'existe pas, un
+       méchant qui tombe doit s'entendre. */
+    const cle0 = Object.keys(ENNEMIS).find(k => ENNEMIS[k] === e.ref);
+    if (cle0) Sons.cri(cle0);
     if (!this.bilan) return;
     const cle = Object.keys(ENNEMIS).find(k => ENNEMIS[k] === e.ref);
     if (cle) this.bilan.tues[cle] = (this.bilan.tues[cle] || 0) + 1;
@@ -12406,6 +12487,10 @@ function amorcer(){
     ajusterCanevas();
     setTimeout(() => Interface.fermerIntro(), 120);
     charger(imagesDifferees()).then(() => { Images.toutPret = true; });
+    /* Les échantillons partent APRÈS les images essentielles : ils ne
+       doivent pas retarder l'écran titre d'une seule image. Et leur
+       absence n'empêche rien — chaque son a son repli synthétisé. */
+    Sons.chargerEchantillons();
   });
 }
 

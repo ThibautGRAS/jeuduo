@@ -273,7 +273,9 @@ const CONNUS = new Set(["if","for","while","switch","catch","return","typeof","f
   "parseInt","parseFloat","isNaN","isFinite","setTimeout","clearTimeout","setInterval","clearInterval",
   "requestAnimationFrame","cancelAnimationFrame","console","localStorage","document","window",
   "globalThis","performance","navigator","AudioContext","webkitAudioContext","Error","RegExp","Symbol",
-  "void","await","async","from","of","in","delete","else","try","super","this","REGEX"]);
+  "void","await","async","from","of","in","delete","else","try","super","this","REGEX",
+  /* `fetch` arrive avec la banque d'échantillons (v6.70) */
+  "fetch"]);
 
 const appels = new Set();
 for (const m of code.matchAll(/(?:^|[^.\w$])([A-Za-z_$][\w$]*)\s*\(/g)) appels.add(m[1]);
@@ -2785,11 +2787,77 @@ if (D){
     /recharge\(long\)\{[\s\S]{0,400}?setTimeout/.test(source),
     "un rechargement est un geste en deux temps");
   verifier("le headshot sonne autrement",
-    /impact\(tete\)\{[\s\S]{0,300}?if \(tete\)/.test(source) &&
+    /impact\(tete\)\{[\s\S]{0,400}?if \(tete\)/.test(source) &&
     /Sons\.impact\(cible\.zone === "tete"\)/.test(source));
-  verifier("aucun fichier audio n'est chargé",
-    !/\.mp3|\.wav|\.ogg|new Audio\(/.test(source),
-    "synthèse uniquement : pas un octet à télécharger, pas de licence à vérifier");
+
+  /* La règle « aucun fichier audio » a été levée : un coup de feu et un
+     cri demandent une matière que la synthèse temps réel ne donne pas.
+     Mais l'invariant qui la motivait, lui, reste — et il est plus fort
+     que l'ancien. */
+  verifier("le jeu n'est JAMAIS muet sans ses fichiers audio",
+    (() => {
+      /* Chaque son passant par un échantillon doit fournir un repli
+         synthétisé : fichier absent, réseau lent, décodage refusé, le
+         son sort quand même. C'est ce qui permet de livrer la plomberie
+         avant les fichiers. */
+      const sansRepli = [];
+      const re = /this\.echant\("([a-z_]+)"[\s\S]{0,40}?,\s*([^)]*)\)/g;
+      let m;
+      while ((m = re.exec(source))){
+        if (/^null\s*$/.test(m[2])) continue;      /* repli explicite en dehors */
+        if (!/=>/.test(m[2])) sansRepli.push(m[1]);
+      }
+      messageDetail = sansRepli.length ? "sans repli : " + sansRepli.join(", ") : "";
+      return /echant\(nom, vol, repli\)/.test(source) &&
+             /if \(!buf \|\| !this\.ac \|\| !this\.actif\)\{ if \(repli\) repli\(\); return false; \}/.test(source);
+    })());
+
+  verifier("les échantillons ne retardent pas le démarrage",
+    (() => {
+      /* Ils partent APRÈS les images essentielles. Les charger avant
+         aurait allongé l'écran de chargement pour un son qu'on n'entend
+         qu'une fois dans le jeu. */
+      const i = source.indexOf("charger(imagesEssentielles()");
+      const j = source.indexOf("Sons.chargerEchantillons()");
+      return i > 0 && j > i;
+    })());
+
+  verifier("les échantillons passent par l'AudioContext, jamais par new Audio()",
+    (() => {
+      /* `new Audio().play()` depuis un rappel réseau est silencieusement
+         bloqué par iOS — le piège est dans MEMOIRE.md. */
+      return !/new Audio\(/.test(source) &&
+             /decodeAudioData/.test(source) &&
+             /createBufferSource\(\); s\.buffer = buf/.test(source);
+    })());
+
+  verifier("chaque échantillon déclaré est sur le disque",
+    (() => {
+      /* Le jeu marche sans eux — mais un nom déclaré et un fichier
+         absent, c'est un son qu'on croit avoir livré et qui n'existe
+         pas. */
+      const manquants = D.Sons.ECHANTILLONS.filter(
+        n => !fs.existsSync(path.join(RACINE, "son", n + ".ogg")));
+      messageDetail = manquants.length ? manquants.join(", ") : "";
+      return manquants.length === 0;
+    })());
+
+  verifier("aucun échantillon n'est vide ni démesuré",
+    (() => {
+      /* Un OGG de zéro octet passe le test d'existence et ne fait aucun
+         bruit. Et au-delà de 40 Ko pièce, on charge un album. */
+      const tailles = D.Sons.ECHANTILLONS.map(n => ({
+        n, o:fs.statSync(path.join(RACINE, "son", n + ".ogg")).size }));
+      const total = tailles.reduce((s, x) => s + x.o, 0);
+      messageDetail = Math.round(total / 1024) + " Ko au total";
+      return tailles.every(x => x.o > 800 && x.o < 40000);
+    })());
+
+  verifier("chaque méchant a son cri",
+    (() => {
+      return Object.keys(D.ENNEMIS).every(k =>
+        D.Sons.ECHANTILLONS.indexOf("cri_" + k) >= 0);
+    })());
 
   verifier("l'équipier qui ne tire pas reste accroupi",
     (() => {

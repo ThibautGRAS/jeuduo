@@ -726,6 +726,10 @@ const Ruelle = {
   /* Un seul endroit compte les morts : le joueur et l'équipier tuent
      tous les deux, et deux compteurs séparés auraient divergé. */
   compterMort(e, zone){
+    /* Le cri part AVANT le comptage : même si le bilan n'existe pas, un
+       méchant qui tombe doit s'entendre. */
+    const cle0 = Object.keys(ENNEMIS).find(k => ENNEMIS[k] === e.ref);
+    if (cle0) Sons.cri(cle0);
     if (!this.bilan) return;
     const cle = Object.keys(ENNEMIS).find(k => ENNEMIS[k] === e.ref);
     if (cle) this.bilan.tues[cle] = (this.bilan.tues[cle] || 0) + 1;
