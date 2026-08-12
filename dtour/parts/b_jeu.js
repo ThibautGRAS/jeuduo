@@ -389,6 +389,14 @@ const Jeu = {
 
   demarrer(niveau){
     if (niveau) this.niveau = niveau;
+    if (this.niveau === 4){
+      Score.raz(); Effets.raz(); razHeros(); File.raz(); Foule.raz();
+      this.temps = 0; this.vies = 1; this.finChrono = 0; this.phase = "jeu";
+      Ruelle.demarrer();
+      Interface.entrerJeu();
+      Sons.reveiller();
+      return;
+    }
     if (this.niveau === 3){
       Score.raz(); Effets.raz(); razHeros(); File.raz(); Foule.raz();
       this.temps = 0; this.vies = 1; this.finChrono = 0; this.phase = "jeu";
@@ -441,6 +449,17 @@ const Jeu = {
 
   /* --------- boucle logique, pas fixe --------- */
   pas(dt){
+    if (this.niveau === 4){
+      if (this.phase === "jeu" || this.phase === "fin"){
+        this.temps += dt;
+        Ruelle.pas(dt);
+        if (this.phase === "fin"){
+          this.finChrono += dt;
+          if (this.finChrono > 1.2 && !Interface.finAffichee) Interface.afficherFin();
+        }
+      }
+      return;
+    }
     if (this.niveau === 3){
       if (this.phase === "jeu" || this.phase === "fin"){
         this.temps += dt;

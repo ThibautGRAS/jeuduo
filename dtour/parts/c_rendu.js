@@ -541,6 +541,16 @@ function dessinerPnj(p, voile){
 /* --- boucle de dessin --- */
 function dessiner(){
   if (!ctx) return;
+  if (Jeu.niveau === 4 && Jeu.phase !== "titre"){
+    const dpr4 = Math.min(2, globalThis.devicePixelRatio || 1);
+    ctx.setTransform(dpr4, 0, 0, dpr4, 0, 0);
+    RuelleVue.dessiner();
+    if (Jeu.phase === "fin"){
+      ctx.fillStyle = "rgba(7,11,22," + borne(Jeu.finChrono * 0.35, 0, 0.5) + ")";
+      ctx.fillRect(0, 0, Camera.L, Camera.H);
+    }
+    return;
+  }
   if (Jeu.niveau === 3 && Jeu.phase !== "titre"){
     const dpr3 = Math.min(2, globalThis.devicePixelRatio || 1);
     ctx.setTransform(dpr3, 0, 0, dpr3, 0, 0);

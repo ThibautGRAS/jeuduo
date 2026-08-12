@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.34";
+const VERSION = "6.35";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -587,8 +587,17 @@ const POSES_ENNEMI = ["run1", "run2", "run3", "run4", "run5", "run6",
                       "hit_torse", "hit_epaule", "hit_jambe", "hit_tete",
                       "chute1", "chute2", "sol"];
 const ENNEMIS_RUELLE = ["costaud"];
-const IMAGES_NIVEAU4 = ["ruelle"].concat(
-  ENNEMIS_RUELLE.flatMap(e => POSES_ENNEMI.map(po => "enn_" + e + "_" + po)));
+/* Les deux héros derrière la barricade, vus de dos. Thibaut a douze
+   poses, PF onze : leurs planches n'en donnaient pas autant, et rien
+   n'oblige deux personnages à avoir le même nombre d'images. */
+const POSES_RUEL_TH = ["accroupi", "leve1", "leve2", "debout", "arme1", "arme2",
+                       "vise1", "vise2", "tir", "recul1", "recul2", "baisse"];
+const POSES_RUEL_PF = ["accroupi", "leve1", "leve2", "arme1", "arme2", "vise",
+                       "tir", "fumee", "recul1", "recul2", "baisse"];
+const IMAGES_NIVEAU4 = ["ruelle"]
+  .concat(ENNEMIS_RUELLE.flatMap(e => POSES_ENNEMI.map(po => "enn_" + e + "_" + po)))
+  .concat(POSES_RUEL_TH.map(po => "ruel_th_" + po))
+  .concat(POSES_RUEL_PF.map(po => "ruel_pf_" + po));
 
 const IMAGES_NIVEAU3 = [
   "fond_bar",

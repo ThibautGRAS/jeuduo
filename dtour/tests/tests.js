@@ -114,8 +114,9 @@ titre("L'écran titre");
   verifier("chaque tuile porte son numéro et sa vignette",
     (() => {
       if (!bloc) return false;
-      return (bloc[1].match(/class="num"/g) || []).length === 3 &&
-        [1, 2, 3].every(k => new RegExp('id="vign' + k + '"').test(bloc[1]));
+      /* Quatre niveaux depuis la v6.35 : la ruelle a rejoint le menu. */
+      return (bloc[1].match(/class="num"/g) || []).length === 4 &&
+        [1, 2, 3, 4].every(k => new RegExp('id="vign' + k + '"').test(bloc[1]));
     })());
   verifier("chaque niveau a sa couleur",
     [["n1", "#37AC48"], ["n2", "#2A8AE4"], ["n3", "#F7B32B"]]
@@ -2669,6 +2670,76 @@ if (D){
   verifier("chaque ennemi a ses treize images",
     D.ENNEMIS_RUELLE.every(e => D.POSES_ENNEMI.length === 13 &&
       D.POSES_ENNEMI.every(po => D.IMAGES_NIVEAU4.indexOf("enn_" + e + "_" + po) >= 0)));
+
+  /* --- la ruelle se joue --- */
+  verifier("le niveau 4 démarre et peuple ses vagues",
+    (() => {
+      D.Jeu.demarrer(4);
+      const ok = D.Ruelle.actif && D.Ruelle.heros.length === 2 &&
+        D.Ruelle.barricade === 100 && D.Ruelle.aSortir === 5;
+      for (let k = 0; k < 600; k++) D.Jeu.pas(1 / 60);
+      return ok && D.Ruelle.ennemis.length > 0;
+    })());
+  verifier("un ennemi touché à la tête tombe plus vite qu'aux jambes",
+    (() => {
+      const coups = zone => {
+        D.Jeu.demarrer(4); D.Ruelle.ennemis.length = 0; D.Ruelle.ajouterEnnemi();
+        const e = D.Ruelle.ennemis[0]; e.z = 0.8;
+        const b = D.Ruelle.boiteEnnemi(e);
+        const f = zone === "tete" ? 0.10 : 0.80;
+        let n = 0;
+        while (e.pv > 0 && n < 40){
+          const h = D.Ruelle.heroActif();
+          h.repos = 0; h.recharge = 0; h.balles = 6;
+          D.Ruelle.tirer(b.x + b.l / 2, b.y + b.h * f); n++;
+        }
+        return n;
+      };
+      const t = coups("tete"), j = coups("jambes");
+      messageDetail = t + " balles à la tête, " + j + " aux jambes";
+      return t < j;
+    })());
+  verifier("on ne tire pas pendant le rechargement",
+    (() => {
+      D.Jeu.demarrer(4);
+      const h = D.Ruelle.heroActif();
+      h.balles = 0; h.recharge = 1.5; h.repos = 0;
+      return D.Ruelle.tirer(200, 400) === false;
+    })());
+  verifier("le chargeur se vide et se recharge tout seul",
+    (() => {
+      D.Jeu.demarrer(4);
+      const h = D.Ruelle.heroActif();
+      for (let k = 0; k < 6; k++){ h.repos = 0; D.Ruelle.tirer(-99, -99); }
+      return h.balles === 0 && h.recharge > 0;
+    })());
+  verifier("changer de héros change d'arme",
+    (() => {
+      D.Jeu.demarrer(4);
+      const a1 = D.Ruelle.armeActive().nom;
+      D.Ruelle.changerHeros();
+      return a1 === "REVOLVER" && D.Ruelle.armeActive().nom === "FUSIL";
+    })());
+  verifier("un ennemi qui atteint la barricade l'abîme",
+    (() => {
+      D.Jeu.demarrer(4); D.Ruelle.ennemis.length = 0; D.Ruelle.ajouterEnnemi();
+      D.Ruelle.ennemis[0].z = 0.999;
+      const avant = D.Ruelle.barricade;
+      for (let k = 0; k < 20; k++) D.Ruelle.pas(1 / 60);
+      return D.Ruelle.barricade < avant;
+    })());
+  verifier("le costaud vaut plus que ce qu'il coûte",
+    (() => {
+      /* pv x vitesse : les types ordinaires tournent autour de 96, lui
+         dépasse — c'est ce qui en fait une décision. */
+      const c = D.ENNEMIS.costaud;
+      return c.pv * c.vitesse * 1000 > 105;
+    })());
+  verifier("toutes les valeurs d'équilibrage sont au même endroit",
+    Object.keys(D.ARMES).length === 2 &&
+    ["chargeur", "tete", "torse", "jambes", "cadence", "recharge"]
+      .every(k => k in D.ARMES.revolver && k in D.ARMES.fusil));
+  D.Jeu.retourTitre();
 
   /* --- la carte des liens --- */
   titre("Qui connaît qui");

@@ -264,6 +264,18 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Le niveau 4 se joue** (v6.35). Quatrième tuile au menu, et une ruelle
+qui se tient debout : Thibaut au revolver et PF au fusil défendent la
+barricade pendant que le quartier accourt. On touche un ennemi pour
+tirer ; la tête vaut 100 dégâts au revolver contre 55 au torse, ce qui
+donne son sens à la précision de Thibaut, tandis que le fusil de PF
+pardonne davantage. Cinq vagues qui montent en nombre et en fréquence,
+jamais en points de vie — le joueur doit sentir la pression, pas tirer
+quinze fois sur le même homme.
+
+Tout l'équilibrage tient dans deux blocs, `ARMES` et `ENNEMIS` : après
+un essai, une valeur se change en une ligne.
+
 **La ruelle prend de la profondeur** (v6.34). Le niveau 4 démarre : le
 décor est en place, l'orientation bascule en portrait — une ruelle qui
 s'enfonce a besoin de hauteur —, et le projecteur de perspective
