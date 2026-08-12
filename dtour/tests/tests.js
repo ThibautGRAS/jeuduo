@@ -1837,11 +1837,11 @@ if (D){
     }
     return null;
   };
-  const lancerPoses = () => { D.Jeu.demarrer(3); D.Tournee.lancer(); };
+  const lancerPoses = () => { D.Jeu.demarrer(3); D.Tournee.lancer(); D.Tournee.introT = 0; };
   const lancer3 = (champ) => {
     D.Jeu.demarrer(3);
     D.Tournee.choixChamp = champ === undefined ? 0 : champ;
-    D.Tournee.lancer();
+    D.Tournee.lancer(); D.Tournee.introT = 0;
   };
   verifier("demarrer(3) ouvre le choix du champion",
     (() => { D.Jeu.demarrer(3); return D.Tournee.enChoix && D.Jeu.phase === "jeu"; })());
@@ -2454,7 +2454,7 @@ if (D){
       D.Jeu.demarrer(3);
       D.Jeu.pas(1 / 60);
       const cache = !pup.classList.contains("on");
-      D.Tournee.lancer();
+      D.Tournee.lancer(); D.Tournee.introT = 0;
       D.Jeu.pas(1 / 60);
       return cache && pup.classList.contains("on");
     })(), "on ne pilote rien tant qu'on n'a pas de champion");
@@ -3432,7 +3432,7 @@ if (D){
     })());
 
   /* ---- la foule du premier plan (niveau 3) ---- */
-  const unBar = () => { D.Jeu.demarrer(3); D.Tournee.lancer(); D.Camera.mesurer(844, 318, 1); return D.Tournee; };
+  const unBar = () => { D.Jeu.demarrer(3); D.Tournee.lancer(); D.Tournee.introT = 0; D.Camera.mesurer(844, 318, 1); return D.Tournee; };
 
   verifier("trois grappes peuplent le premier plan",
     (() => {
@@ -4103,7 +4103,7 @@ if (D){
       /id="pReprendre"/.test(html) && /id="pMenu"/.test(html) && /\.secondaire\{/.test(html));
     for (const niv of [1, 2, 3]){
       D.Jeu.demarrer(niv);
-      if (niv === 3) D.Tournee.lancer();
+      if (niv === 3) D.Tournee.lancer(); D.Tournee.introT = 0;
       D.Intro.finir();          /* une intro en cours interdit la pause */
       D.Jeu.pas(1 / 60);
       const bouton = el("pauseBtn");
@@ -4171,7 +4171,7 @@ if (D){
     const el = n => domBac.getElementById(n);
     for (const niv of [1, 2, 3]){
       D.Jeu.demarrer(niv);
-      if (niv === 3) D.Tournee.lancer();
+      if (niv === 3) D.Tournee.lancer(); D.Tournee.introT = 0;
       D.Jeu.pas(1 / 60);
       D.Jeu.retourTitre();
       const restants = ["hud", "pupitre", "pupitre2", "pupitre3", "releveBar",

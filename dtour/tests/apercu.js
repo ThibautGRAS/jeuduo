@@ -345,7 +345,7 @@ function jouerJusqua(D, condition, limite){
     const { D, canevas } = await preparer(844, 318);
     D.amorcer(); D.Camera.mesurer(844, 318, 1);
     D.Jeu.demarrer(3);
-    D.Tournee.lancer();
+    D.Tournee.lancer(); D.Tournee.introT = 0;
     D.Tournee.x = 0.42; D.Tournee.combo = 4; D.Tournee.ambiance = 55;
     D.Score.points = 1240;
     D.Tournee.verres.push({ type:"cocktail", x:0.34, etat:D.ETAT_VERRE.POSE, t:1.4, vie:7.5, barman:"francky" });
@@ -365,7 +365,7 @@ function jouerJusqua(D, condition, limite){
     const { D, canevas } = await preparer(844, 318);
     D.amorcer(); D.Camera.mesurer(844, 318, 1);
     D.Jeu.demarrer(3);
-    D.Tournee.lancer();
+    D.Tournee.lancer(); D.Tournee.introT = 0;
     D.Tournee.x = 0.42; D.Tournee.temps = 40; D.Tournee.bourre = 4.5;
     D.Score.points = 2380; D.Tournee.combo = 6; D.Tournee.ambiance = 70;
     for (const [t, x] of [["cocktail", 0.30], ["jager", 0.36], ["eau", 0.47], ["cocktail", 0.52]]){
@@ -388,7 +388,7 @@ function jouerJusqua(D, condition, limite){
     const { D, canevas } = await preparer(844, 318);
     D.amorcer(); D.Camera.mesurer(844, 318, 1);
     D.Jeu.demarrer(3);
-    D.Tournee.lancer();
+    D.Tournee.lancer(); D.Tournee.introT = 0;
     D.Tournee.x = 0.50; D.Tournee.temps = 55; D.Tournee.combo = 7;
     D.Tournee.ambiance = 82; D.Score.points = 4120;
     D.Tournee.verres.push({ type:"cocktail", x:0.44, etat:D.ETAT_VERRE.POSE, t:0.3, vie:7.5, barman:"francky" });
@@ -407,7 +407,7 @@ function jouerJusqua(D, condition, limite){
     const { D, canevas } = await preparer(844, 318);
     D.amorcer(); D.Camera.mesurer(844, 318, 1);
     D.Jeu.demarrer(3);
-    D.Tournee.lancer();
+    D.Tournee.lancer(); D.Tournee.introT = 0;
     D.Tournee.x = 0.52; D.Tournee.temps = 48; D.Tournee.combo = 3;
     D.Tournee.ambiance = 64; D.Score.points = 2960;
     const fr = D.Tournee.barmans[0];
@@ -631,7 +631,7 @@ function jouerJusqua(D, condition, limite){
   {
     const { D, canevas } = await preparer(844, 318);
     D.amorcer(); D.Camera.mesurer(844, 318, 1);
-    D.Jeu.demarrer(3); D.Tournee.lancer();
+    D.Jeu.demarrer(3); D.Tournee.lancer(); D.Tournee.introT = 0;
     D.Tournee.x = 0.42; D.Tournee.ambiance = 62; D.Score.points = 980;
     /* un verre sous chaque grappe : s'il en manque un à l'image, la
        foule masque le jeu et il faut la baisser encore */
@@ -649,7 +649,7 @@ function jouerJusqua(D, condition, limite){
   {
     const { D, canevas } = await preparer(844, 318);
     D.amorcer(); D.Camera.mesurer(844, 318, 1);
-    D.Jeu.demarrer(3); D.Tournee.lancer();
+    D.Jeu.demarrer(3); D.Tournee.lancer(); D.Tournee.introT = 0;
     D.Tournee.marche = 1; D.Tournee.dir = 1;
     for (let i = 0; i < 8; i++) D.Jeu.pas(1 / 60);
     /* le champion PILE au centre d'une grappe : c'est là qu'on voit s'il
@@ -795,6 +795,17 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "42_geant");
   }
 
+  /* 43. L'AFFICHE DU NIVEAU 3, avant la première image. Contenue et non
+     recadrée : la couper aux bords mangerait les deux noms peints. */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(3); D.Tournee.lancer(); D.Tournee.introT = 0;
+    D.Tournee.introT = 2.0;
+    D.BarVue.dessiner();
+    ecrire(canevas, "43_bar_affiche");
+  }
+
   /* 27. les poses propres de Depardiahree, à leur taille de jeu, sur
      une même ligne de sol : c'est la seule façon de voir qu'une pose
      plus haute que les autres ne fait pas grandir le personnage. */
@@ -880,7 +891,7 @@ function jouerJusqua(D, condition, limite){
     const { D, canevas } = await preparer(844, 318);
     D.amorcer(); D.Camera.mesurer(844, 318, 1);
     D.Jeu.demarrer(3);
-    D.Tournee.lancer();
+    D.Tournee.lancer(); D.Tournee.introT = 0;
     D.Tournee.x = 0.56; D.Tournee.temps = 62; D.Tournee.combo = 9;
     D.Tournee.ambiance = 88; D.Score.points = 5240;
     D.Tournee.verres.push({ type:"cocktail", x:0.50, etat:D.ETAT_VERRE.POSE, t:1.0, vie:7.5, barman:"francky" });

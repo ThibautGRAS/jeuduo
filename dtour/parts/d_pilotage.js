@@ -241,6 +241,12 @@ const Interface = {
     if (E.vign4 && Images.table.enn_depar_run1 && Images.table.enn_depar_run1.naturalWidth){
       E.vign4.src = Images.table.enn_depar_run1.src; E.vign4.alt = "La ruelle";
     }
+    /* Le PORTRAIT plutôt que la pose de course : un personnage en pied
+       réduit à une vignette de menu ne montre qu'une silhouette. Le
+       buste se lit. */
+    if (E.vign4 && Images.table.port_depar && Images.table.port_depar.naturalWidth){
+      E.vign4.src = Images.table.port_depar.src; E.vign4.alt = "La ruelle";
+    }
     if (E.vign3 && Images.table.bar_cocktail && Images.table.bar_cocktail.naturalWidth){
       E.vign3.src = Images.table.bar_cocktail.src; E.vign3.alt = "La tournée du D'Tour";
     }
@@ -719,6 +725,13 @@ const Entrees = {
         return;
       }
       if (Jeu.niveau === 3){
+        /* Pendant l'affiche, le doigt la PASSE : sans ça elle bloquait
+           trois secondes sans qu'on puisse rien y faire. */
+        if (Tournee.introT > 0){
+          e.preventDefault(); Sons.reveiller();
+          if (Tournee.introT > 0.30) Tournee.introT = 0.30;
+          return;
+        }
         if (Jeu.phase !== "jeu" || !Tournee.enChoix) return;
         e.preventDefault(); Sons.reveiller();
         const r3 = E.cv.getBoundingClientRect ? E.cv.getBoundingClientRect() : { left:0, top:0 };

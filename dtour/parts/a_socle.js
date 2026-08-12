@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.68";
+const VERSION = "6.69";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -765,6 +765,10 @@ const IMAGES_NIVEAU4 = ["ruelle", "ruelle_flou", "duo_ruelle"]
 
 const IMAGES_NIVEAU3 = [
   "fond_bar",
+  /* L'affiche du niveau : le duo au comptoir, montrée avant la première
+     image. Elle annonce le niveau ET donne au navigateur le temps de
+     charger le décor — même service que `duo_ruelle` au niveau 4. */
+  "affiche_bar",
   /* Les poses de barman sont TOUTES découpées dans la même bande de la
      même planche : même hauteur en pixels, même trait de coupe au
      niveau de la ceinture. C'est ce qui garantit qu'à hauteur d'écran

@@ -19,6 +19,10 @@ const BAR_PORTEE = 0.030;           /* portée de prise d'un verre, en fraction 
 const BAR_MARCHE = 0.135;           /* fraction du monde parcourue par seconde, à vitesse 1.0 */
 const BAR_EXPIRE = [7.5, 5.2];      /* vie d'un verre posé : début, puis en plein coup de feu */
 const BAR_AMBIANCE_BUT = 100;
+/* L'affiche du niveau, avant la première image. 3,2 s : assez pour la
+   regarder, assez court pour ne pas peser au deuxième essai — et une
+   tape la passe de toute façon. */
+const BAR_INTRO_DUREE = 3.2;
 const BAR_AMBIANCE_DEBUT = 35;      /* on commence à mi-pente : il y a de quoi monter ET de quoi tomber */
 const BAR_AMBIANCE_FUITE = 0.35;    /* la salle se lasse toute seule, par seconde */
 const BAR_AMBIANCE_GAIN = 8;        /* ce que rapporte une bonne décision */
@@ -138,7 +142,7 @@ const Tournee = {
   stats:null, fini:null, message:null, messageT:0, messageDuree:1.6,
   gele:0, secousse:0, invite:null, prochainClin:0,
   bus:[], bourre:0, deborde:false,
-  clients:[], prochainClient:0, flash:0, boitTotal:1, freinT:0, dureeMarche:0,
+  clients:[], prochainClient:0, introT:0, flash:0, boitTotal:1, freinT:0, dureeMarche:0,
   tarte:null, esquiveOuverte:false, tarteEsquivee:0, tarteRecue:0,
   restant:BAR_DUREE,
 
@@ -171,6 +175,7 @@ const Tournee = {
     this.prochainClin = hasard(14, 26);
     this.bus = []; this.bourre = 0; this.deborde = false;
     this.clients = []; this.prochainClient = hasard(8, 14);
+    this.introT = BAR_INTRO_DUREE;
     this.composerFoule();
     this.flash = 0; this.boitTotal = 1; this.freinT = 0; this.dureeMarche = 0;
     this.tarte = null; this.esquiveOuverte = false;
@@ -523,6 +528,9 @@ const Tournee = {
   /* --------- boucle --------- */
   pas(dt){
     if (this.fini){ this.fini.t += dt; return; }
+    /* L'affiche fige la soirée : rien ne bouge derrière, sinon le
+       chronomètre tourne pendant qu'on regarde une image. */
+    if (this.introT > 0){ this.introT -= dt; return; }
     if (this.enChoix || !this.actif) return;
     this.temps += dt;
     this.restant = Math.max(0, BAR_DUREE - this.temps);

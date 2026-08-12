@@ -91,6 +91,11 @@ const BarVue = {
     if (T.actif && !T.fini) this.dessinerBords();
     if (T.actif || T.fini) this.dessinerBandeau();
     if (T.message) this.dessinerMessage();
+
+    /* L'AFFICHE EN DERNIER, par-dessus le HUD : c'est un écran de
+       présentation, pas une surimpression. Posée au milieu du dessin,
+       la jauge d'ambiance et le score lui passaient dessus. */
+    if (Tournee.introT > 0) this.dessinerIntro();
   },
 
   /* --------- choix du champion --------- */
@@ -322,6 +327,43 @@ const BarVue = {
 
   /* --------- les habitués --------- */
   /* --------- la foule du premier plan --------- */
+  /* L'AFFICHE DU NIVEAU, avant la première image. Elle annonce le
+     niveau et donne au navigateur le temps de finir de charger le décor
+     — même service que l'intro de la ruelle. Une tape la passe. */
+  dessinerIntro(){
+    const L = Camera.L, H = Camera.H, t = Tournee.introT;
+    const al = borne(t / 0.30, 0, 1);
+    ctx.save();
+    ctx.globalAlpha = al;
+    ctx.fillStyle = "#05070E";
+    ctx.fillRect(0, 0, L, H);
+    const im = Images.table.affiche_bar;
+    if (im && im.naturalWidth){
+      /* CONTENUE, pas recadrée : c'est une affiche, la couper aux bords
+         mangerait les deux noms peints en bas. */
+      const e = Math.min(L / im.naturalWidth, (H * 0.80) / im.naturalHeight);
+      const l = im.naturalWidth * e, h = im.naturalHeight * e;
+      const av = borne((BAR_INTRO_DUREE - t) / 0.5, 0, 1);
+      ctx.globalAlpha = al * av;
+      ctx.drawImage(im, (L - l) / 2, H * 0.44 - h / 2 + (1 - av) * H * 0.04, l, h);
+      ctx.globalAlpha = al;
+    }
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = "#F7B32B";
+    let ta = H * 0.085;
+    for (let k = 0; k < 15; k++){
+      ctx.font = "800 " + Math.round(ta) + "px 'Baloo 2', system-ui, sans-serif";
+      if (ctx.measureText("LA TOURNÉE DU D'TOUR").width <= L * 0.88) break;
+      ta *= 0.92;
+    }
+    ctx.fillText("LA TOURNÉE DU D'TOUR", L / 2, H * 0.885);
+    ctx.fillStyle = "rgba(237,231,250,.55)";
+    ctx.font = "700 " + Math.round(H * 0.040) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillText("Touchez pour commencer", L / 2, H * 0.960);
+    ctx.textAlign = "left";
+    ctx.restore();
+  },
+
   dessinerFoule(){
     const L = Camera.L, H = Camera.H;
     const T = Tournee;

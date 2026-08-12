@@ -772,7 +772,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.68</div>
+  <div id="version">CALLAGHAN v6.69</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -844,7 +844,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.68";
+const VERSION = "6.69";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1591,6 +1591,10 @@ const IMAGES_NIVEAU4 = ["ruelle", "ruelle_flou", "duo_ruelle"]
 
 const IMAGES_NIVEAU3 = [
   "fond_bar",
+  /* L'affiche du niveau : le duo au comptoir, montrée avant la première
+     image. Elle annonce le niveau ET donne au navigateur le temps de
+     charger le décor — même service que `duo_ruelle` au niveau 4. */
+  "affiche_bar",
   /* Les poses de barman sont TOUTES découpées dans la même bande de la
      même planche : même hauteur en pixels, même trait de coupe au
      niveau de la ceinture. C'est ce qui garantit qu'à hauteur d'écran
@@ -7809,6 +7813,10 @@ const BAR_PORTEE = 0.030;           /* portée de prise d'un verre, en fraction 
 const BAR_MARCHE = 0.135;           /* fraction du monde parcourue par seconde, à vitesse 1.0 */
 const BAR_EXPIRE = [7.5, 5.2];      /* vie d'un verre posé : début, puis en plein coup de feu */
 const BAR_AMBIANCE_BUT = 100;
+/* L'affiche du niveau, avant la première image. 3,2 s : assez pour la
+   regarder, assez court pour ne pas peser au deuxième essai — et une
+   tape la passe de toute façon. */
+const BAR_INTRO_DUREE = 3.2;
 const BAR_AMBIANCE_DEBUT = 35;      /* on commence à mi-pente : il y a de quoi monter ET de quoi tomber */
 const BAR_AMBIANCE_FUITE = 0.35;    /* la salle se lasse toute seule, par seconde */
 const BAR_AMBIANCE_GAIN = 8;        /* ce que rapporte une bonne décision */
@@ -7928,7 +7936,7 @@ const Tournee = {
   stats:null, fini:null, message:null, messageT:0, messageDuree:1.6,
   gele:0, secousse:0, invite:null, prochainClin:0,
   bus:[], bourre:0, deborde:false,
-  clients:[], prochainClient:0, flash:0, boitTotal:1, freinT:0, dureeMarche:0,
+  clients:[], prochainClient:0, introT:0, flash:0, boitTotal:1, freinT:0, dureeMarche:0,
   tarte:null, esquiveOuverte:false, tarteEsquivee:0, tarteRecue:0,
   restant:BAR_DUREE,
 
@@ -7961,6 +7969,7 @@ const Tournee = {
     this.prochainClin = hasard(14, 26);
     this.bus = []; this.bourre = 0; this.deborde = false;
     this.clients = []; this.prochainClient = hasard(8, 14);
+    this.introT = BAR_INTRO_DUREE;
     this.composerFoule();
     this.flash = 0; this.boitTotal = 1; this.freinT = 0; this.dureeMarche = 0;
     this.tarte = null; this.esquiveOuverte = false;
@@ -8313,6 +8322,9 @@ const Tournee = {
   /* --------- boucle --------- */
   pas(dt){
     if (this.fini){ this.fini.t += dt; return; }
+    /* L'affiche fige la soirée : rien ne bouge derrière, sinon le
+       chronomètre tourne pendant qu'on regarde une image. */
+    if (this.introT > 0){ this.introT -= dt; return; }
     if (this.enChoix || !this.actif) return;
     this.temps += dt;
     this.restant = Math.max(0, BAR_DUREE - this.temps);
@@ -8615,6 +8627,11 @@ const BarVue = {
     if (T.actif && !T.fini) this.dessinerBords();
     if (T.actif || T.fini) this.dessinerBandeau();
     if (T.message) this.dessinerMessage();
+
+    /* L'AFFICHE EN DERNIER, par-dessus le HUD : c'est un écran de
+       présentation, pas une surimpression. Posée au milieu du dessin,
+       la jauge d'ambiance et le score lui passaient dessus. */
+    if (Tournee.introT > 0) this.dessinerIntro();
   },
 
   /* --------- choix du champion --------- */
@@ -8846,6 +8863,43 @@ const BarVue = {
 
   /* --------- les habitués --------- */
   /* --------- la foule du premier plan --------- */
+  /* L'AFFICHE DU NIVEAU, avant la première image. Elle annonce le
+     niveau et donne au navigateur le temps de finir de charger le décor
+     — même service que l'intro de la ruelle. Une tape la passe. */
+  dessinerIntro(){
+    const L = Camera.L, H = Camera.H, t = Tournee.introT;
+    const al = borne(t / 0.30, 0, 1);
+    ctx.save();
+    ctx.globalAlpha = al;
+    ctx.fillStyle = "#05070E";
+    ctx.fillRect(0, 0, L, H);
+    const im = Images.table.affiche_bar;
+    if (im && im.naturalWidth){
+      /* CONTENUE, pas recadrée : c'est une affiche, la couper aux bords
+         mangerait les deux noms peints en bas. */
+      const e = Math.min(L / im.naturalWidth, (H * 0.80) / im.naturalHeight);
+      const l = im.naturalWidth * e, h = im.naturalHeight * e;
+      const av = borne((BAR_INTRO_DUREE - t) / 0.5, 0, 1);
+      ctx.globalAlpha = al * av;
+      ctx.drawImage(im, (L - l) / 2, H * 0.44 - h / 2 + (1 - av) * H * 0.04, l, h);
+      ctx.globalAlpha = al;
+    }
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = "#F7B32B";
+    let ta = H * 0.085;
+    for (let k = 0; k < 15; k++){
+      ctx.font = "800 " + Math.round(ta) + "px 'Baloo 2', system-ui, sans-serif";
+      if (ctx.measureText("LA TOURNÉE DU D'TOUR").width <= L * 0.88) break;
+      ta *= 0.92;
+    }
+    ctx.fillText("LA TOURNÉE DU D'TOUR", L / 2, H * 0.885);
+    ctx.fillStyle = "rgba(237,231,250,.55)";
+    ctx.font = "700 " + Math.round(H * 0.040) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillText("Touchez pour commencer", L / 2, H * 0.960);
+    ctx.textAlign = "left";
+    ctx.restore();
+  },
+
   dessinerFoule(){
     const L = Camera.L, H = Camera.H;
     const T = Tournee;
@@ -11447,6 +11501,12 @@ const Interface = {
     if (E.vign4 && Images.table.enn_depar_run1 && Images.table.enn_depar_run1.naturalWidth){
       E.vign4.src = Images.table.enn_depar_run1.src; E.vign4.alt = "La ruelle";
     }
+    /* Le PORTRAIT plutôt que la pose de course : un personnage en pied
+       réduit à une vignette de menu ne montre qu'une silhouette. Le
+       buste se lit. */
+    if (E.vign4 && Images.table.port_depar && Images.table.port_depar.naturalWidth){
+      E.vign4.src = Images.table.port_depar.src; E.vign4.alt = "La ruelle";
+    }
     if (E.vign3 && Images.table.bar_cocktail && Images.table.bar_cocktail.naturalWidth){
       E.vign3.src = Images.table.bar_cocktail.src; E.vign3.alt = "La tournée du D'Tour";
     }
@@ -11925,6 +11985,13 @@ const Entrees = {
         return;
       }
       if (Jeu.niveau === 3){
+        /* Pendant l'affiche, le doigt la PASSE : sans ça elle bloquait
+           trois secondes sans qu'on puisse rien y faire. */
+        if (Tournee.introT > 0){
+          e.preventDefault(); Sons.reveiller();
+          if (Tournee.introT > 0.30) Tournee.introT = 0.30;
+          return;
+        }
         if (Jeu.phase !== "jeu" || !Tournee.enChoix) return;
         e.preventDefault(); Sons.reveiller();
         const r3 = E.cv.getBoundingClientRect ? E.cv.getBoundingClientRect() : { left:0, top:0 };

@@ -283,6 +283,21 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**L'affiche du bar et la vignette du niveau 4** (v6.69) : le niveau 3
+s'ouvre sur son affiche — PF et Thibaut dos à dos au comptoir — montrée
+3,2 s, passable d'une tape. Elle rend le même service que l'intro de la
+ruelle : elle annonce le niveau ET donne au navigateur le temps de finir
+de charger le décor.
+
+Elle est **contenue et non recadrée** : la couper aux bords mangerait les
+deux noms peints en bas. Et elle se dessine **en dernier**, par-dessus le
+HUD — posée au milieu du dessin, la jauge d'ambiance et le score lui
+passaient dessus.
+
+**La vignette du niveau 4 utilise le PORTRAIT** de Depardiahree et non sa
+pose de course : un personnage en pied réduit à une vignette de menu ne
+montre qu'une silhouette, un buste se lit.
+
 **L'ordre change, l'annonce se lit** (v6.68) : trois corrections sur ce
 qui venait d'être posé.
 
