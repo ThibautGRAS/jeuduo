@@ -1071,6 +1071,43 @@ D'où la règle : **canevas 320, disque 304, centré**, pour les huit.
 exactement huit boutons ; un test relit l'en-tête WebP et compare les
 huit tailles.
 
+### Le WebP est compressé avec perte SOUS les pixels transparents
+
+Le contrôle des trous restait rouge à un ou deux pixels près,
+indéfiniment : chaque réparation en créait de nouveaux. La cause n'est pas
+l'algorithme, c'est le format. Un pixel classé « fond » avant
+enregistrement ne l'est plus après relecture — la couleur derrière un
+alpha nul est réencodée elle aussi. Tout critère qui repose sur la
+couleur sous une zone transparente est donc INSTABLE d'un enregistrement
+à l'autre.
+
+Parade : un seuil d'aire. On ne traite que les taches d'une taille
+visible en jeu (25 px) ; en dessous, c'est du bruit d'encodage. Le
+contrôle est stable au second passage, ce qui est le vrai test.
+
+### Un trou enclos n'est pas toujours un défaut
+
+Deux cas opposés, et la taille ne les distingue pas : la jupe de Mathilde
+(4 000 px) était un défaut, la rangée de shots de Jojo (700 px) est une
+transparence voulue entre les verres. Ce qui tranche est la COULEUR SOUS
+LE TROU — teinte de corps pour un alpha effacé par erreur, noir ou
+magenta pour du fond réellement enclos. Ma première version comptait
+tout, et déclarait cassées des découpes justes.
+
+### Une échelle de personnage se prend sur la TÊTE
+
+Normaliser des poses sur leur hauteur totale marche tant qu'elles ont le
+même cadrage. Dès qu'une planche mélange le pied (314 px) et le buste
+(200 px), la même hauteur de canevas fait rétrécir la tête de 40 % : le
+barman change de taille dès qu'il se met au travail.
+
+La tête se mesure par le PLUS LONG SEGMENT horizontal continu dans le
+haut de la silhouette, médiane sur les premières lignes. Un bras levé à
+côté du crâne forme un segment séparé : il ne gonfle pas la mesure, ce qui
+rend le repère utilisable sur une planche où les gestes changent à chaque
+pose. Le recadrage au buste s'exprime ensuite en TÊTES, pas en pixels —
+c'est une ligne anatomique, elle se déclare et ne se mesure pas.
+
 ### Un détourage qui rate un motif clair troue le vêtement
 
 Le détourage a pris les motifs clairs des vêtements pour du fond :

@@ -34,10 +34,47 @@ from scipy import ndimage
 PERSONNAGES = ("bar_", "pers_", "assis_", "enn_", "ruel_", "h_", "face_",
                "hortense", "duo_", "pierre_", "thibaut_", "enq_")
 FRAG_MIN = 300        # en dessous, c'est du bruit de bord, pas un fragment
+TACHE_MIN = 25        # en dessous, un trou n'est pas visible en jeu
 
 
 def est_personnage(nom):
     return any(nom.startswith(p) for p in PERSONNAGES)
+
+
+def trous_fautifs(a, vis):
+    """Les trous à reboucher, et EUX SEULS.
+
+    Tout pixel transparent enclos n'est pas un défaut. Entre deux verres
+    à shot alignés, entre un bras et un buste, la transparence est
+    voulue — et la couleur dessous est celle du fond de la planche, donc
+    noire après despill ou franchement magenta.
+
+    Le défaut du détourage, lui, laisse une couleur de CORPS sous un
+    alpha effacé : c'est ce qui a permis de réparer 219 sprites sans rien
+    redessiner. C'est donc la couleur qui tranche, pas la taille — un vrai
+    trou de 4 000 px (la jupe de Mathilde) et une vraie transparence de
+    700 px (la rangée de shots de Jojo) ne se distinguent pas autrement.
+    """
+    plein = ndimage.binary_fill_holes(vis)
+    enclos = plein & ~vis
+    if not enclos.any():
+        return enclos & False
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    fond = ((r < 30) & (g < 30) & (b < 30)) | ((np.minimum(r, b) - g) > 40)
+    mauvais = enclos & ~fond
+    # SEUIL D'AIRE, et il n'est pas cosmétique : le WebP est compressé
+    # avec perte, y compris SOUS les pixels transparents. Un pixel classé
+    # « fond » avant enregistrement ne l'est plus après relecture, et le
+    # contrôle restait rouge à un ou deux pixels près indéfiniment, chaque
+    # réparation en créant de nouveaux. On ne traite donc que les taches
+    # d'une taille VISIBLE : en dessous, c'est du bruit d'encodage.
+    lab, n = ndimage.label(mauvais)
+    if n:
+        tailles = ndimage.sum(mauvais, lab, range(1, n + 1))
+        garder = np.zeros(n + 1, dtype=bool)
+        garder[1:] = tailles >= TACHE_MIN
+        mauvais = garder[lab]
+    return mauvais
 
 
 def reparer(chemin):
@@ -61,23 +98,18 @@ def reparer(chemin):
         vis = (lab == principal)
 
     # --- 2. reboucher les trous : l'alpha, pas la couleur ---
-    plein = ndimage.binary_fill_holes(vis)
-    trous = plein & ~vis
-    n_trous = int(trous.sum())
-    if n_trous:
+    # Il faut ITÉRER : reboucher un trou change la silhouette, et de
+    # nouveaux pixels se retrouvent enclos sur son bord — un ou deux à
+    # chaque passe. Sans boucle, le contrôle restait rouge à un pixel
+    # près après chaque réparation, indéfiniment. 
+    n_trous = 0
+    for _ in range(6):
+        trous = trous_fautifs(a, vis)
+        if not trous.any():
+            break
+        n_trous += int(trous.sum())
         a[..., 3][trous] = 255
-        # les pixels restés noirs ou magenta n'avaient pas de couleur à
-        # sauver : on les repeint depuis le plus proche voisin opaque
-        r, g, b = a[..., 0], a[..., 1], a[..., 2]
-        perdus = trous & (((r < 25) & (g < 25) & (b < 25)) |
-                          ((np.minimum(r, b) - g) > 40))
-        if perdus.any():
-            src = vis & ~perdus
-            idx = ndimage.distance_transform_edt(
-                ~src, return_distances=False, return_indices=True)
-            for c in range(3):
-                a[..., c][perdus] = a[..., c][tuple(i[perdus] for i in idx)]
-        vis = plein
+        vis = vis | trous
 
     # --- 3. recentrer horizontalement si un fragment est parti ---
     decale = 0
@@ -117,7 +149,7 @@ def verifier(racine):
         lab, n = ndimage.label(vis)
         tailles = ndimage.sum(vis, lab, range(1, n + 1))
         frag = int(((tailles > FRAG_MIN) & (tailles < tailles.max())).sum())
-        trous = int((ndimage.binary_fill_holes(vis) & ~vis).sum())
+        trous = int(trous_fautifs(a, vis).sum())
         if frag or trous:
             fautifs.append((str(p.relative_to(racine)), frag, trous))
     if fautifs:

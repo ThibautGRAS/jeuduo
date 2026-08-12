@@ -264,6 +264,26 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Les barmans redécoupés** (v6.60) : les 17 poses de Francky et Jojo
+sortent de nouvelles planches, et trois choses changent.
+
+**Plus de bout de comptoir.** Les poses en pied sont recadrées **à la
+ceinture** par le découpage lui-même, à une hauteur exprimée en TÊTES et
+non en pixels. Le bois qui restait collé au sprite se posait par-dessus le
+vrai comptoir du décor, avec sa propre perspective et sa propre lumière :
+on voyait une table flotter.
+
+**L'échelle se prend sur la TÊTE, pas sur la hauteur.** Une pose en pied
+fait 314 px là où un buste en fait 200 : les mettre à la même hauteur de
+canevas faisait rétrécir la tête de 40 % dès que le barman se mettait au
+travail. La tête se mesure par le plus long segment horizontal continu du
+haut de la silhouette — un bras levé à côté du crâne forme un segment
+séparé, il ne gonfle donc pas la mesure.
+
+**Plusieurs planches par personnage.** `shake` n'existait que sur la
+grande planche de Francky : le découpage accepte de piocher ailleurs, et
+la normalisation par la tête rend le mélange sans risque.
+
 **Les sprites sont réparés** (v6.59) : deux défauts de découpage
 corrigés sur **219 sprites de personnage**, mesurés avant d'y toucher.
 
