@@ -1054,6 +1054,55 @@ suite qu'on n'avait pas lue. Rediriger vers un fichier, puis afficher.
 
 ---
 
+### Un bouton posé au canevas entier n'a pas droit à l'à-peu-près
+
+`poser(nom, cx, cy, r)` dessine l'image COMPLÈTE centrée sur la zone
+tactile. Conséquence rarement anticipée : la position du dessin DANS son
+canevas est sa position à l'écran, et son diamètre dans le canevas est
+sa taille à l'écran. Une planche générée sans contrainte donne donc des
+boutons décalés et de tailles différentes sans qu'une seule ligne de
+code soit fautive. Mesuré sur la première planche : croix décalée de
+12,5 % de sa largeur — hors de sa zone tactile — et disques allant de
+300 à 443 px dans un canevas de 451, d'où un bouton de tir qui
+rétrécissait de 27 % à l'appui.
+
+D'où la règle : **canevas 320, disque 304, centré**, pour les huit.
+`decouper_boutons.py` l'impose et refuse d'écrire s'il ne détecte pas
+exactement huit boutons ; un test relit l'en-tête WebP et compare les
+huit tailles.
+
+### L'opacité des commandes ne se juge que sur le décor
+
+Sur fond uni, toutes les valeurs se valent. Sur le décor, c'est le
+bouton de TIR qui décide : il tombe sur le polo clair de
+Pierre-François, et c'est là que la douille blanche se dissout la
+première. `ALPHA=0.62 node tests/apercu.js` rejoue les scènes 23 à 26 à
+une autre valeur sans toucher au jeu. Réglage retenu : 0,45 au repos, 1 dès
+qu'on touche — l'opacité est un retour tactile, pas un réglage figé.
+
+### Le magenta bave sur ce qui brille
+
+Le fond `#FF00FF` du détourage se mélange à toute lueur douce, et le
+résultat n'est plus magenta pur : le détourage le garde. Mesuré sur les
+boutons : une bande rose de 15 à 30 px de large tout autour, de couleur
+(134, 58, 116) — du magenta délavé. Aucune reconstitution fiable n'est
+possible, on ne connaît pas la couleur qui était dessous.
+
+Deux parades, à appliquer ensemble. Côté prompt : bord FRANC, aucune
+lueur ne déborde du disque. Côté découpe : le masque d'un bouton est un
+CERCLE ajusté, pas le contour détecté — tout ce qui bave dans le fond
+part avec le fond. Reste une désaturation du magenta résiduel
+(`min(r,b)` ne peut pas dépasser `g`), sans effet sur l'ambre puisque le
+vert y domine déjà.
+
+### L'anneau de rechargement doit encercler, pas recouvrir
+
+Il était posé à `1.06` fois le rayon du bouton : comme son bord
+intérieur tombe à 0,6925 du canevas et le bouton à 0,95, l'anneau se
+retrouvait SUR la douille. Le bon facteur se déduit : 0,95 / 0,6925 =
+1,372, arrondi à `ANNEAU_AUTOUR = 1.38`. Le compte de munitions a suivi,
+de 1,34 à 1,52, sinon l'anneau lui passait dessus.
+
 ## 4. Le harnais d'aperçu
 
 `tests/apercu.js` exécute le script d'`index.html` **hors navigateur**,

@@ -2889,6 +2889,35 @@ if (D){
         /poser\(recharge \? "btn_tir_vide"/.test(source) && !/ctx\.shadowBlur/.test(source);
     })());
 
+  /* Lit la taille dans l'en-tête WebP : le seul moyen, ici, de contrôler
+     un invariant d'IMAGE et pas seulement de code. */
+  const dimsN4 = nom => {
+    const buf = fs.readFileSync(path.join(RACINE, "img", "n4", nom + ".webp"));
+    const tag = buf.toString("ascii", 12, 16);
+    if (tag === "VP8 ") return { l:buf.readUInt16LE(26) & 0x3fff, h:buf.readUInt16LE(28) & 0x3fff };
+    if (tag === "VP8X") return { l:(buf.readUIntLE(24, 3) & 0xffffff) + 1, h:(buf.readUIntLE(27, 3) & 0xffffff) + 1 };
+    if (tag === "VP8L"){
+      const b2 = buf.readUInt32LE(21);
+      return { l:(b2 & 0x3fff) + 1, h:((b2 >> 14) & 0x3fff) + 1 };
+    }
+    return null;
+  };
+  verifier("les huit boutons ont le même canevas et le même disque",
+    (() => {
+      /* Ils sont posés en dessinant le canevas ENTIER : la place du
+         dessin dans son canevas EST sa place à l'écran, et son diamètre
+         y est sa taille. Une planche non normalisée décalait la croix de
+         12 % et faisait rétrécir le bouton de tir à chaque coup. */
+      const btns = ["btn_tir", "btn_tir_appui", "btn_tir_vide", "btn_anneau",
+                    "btn_croix", "btn_pouce", "btn_couvert", "btn_changer"];
+      const d0 = dimsN4(btns[0]);
+      if (!d0 || d0.l !== d0.h) return false;
+      return btns.every(b2 => {
+        const d = dimsN4(b2);
+        return d && d.l === d0.l && d.h === d0.h;
+      });
+    })(), "canevas 320 x 320, disque de 304 centré");
+
   verifier("le champignon pousse le viseur",
     (() => {
       D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);

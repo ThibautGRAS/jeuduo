@@ -379,3 +379,88 @@ Trois contrôles à l'œil qui évitent un aller-retour :
    entièrement magenta entre deux poses voisines ?
 3. **Regarder la ligne des pieds.** Les chaussures doivent toutes poser
    sur la même horizontale, rangée par rangée.
+4. **Sur une planche de boutons, plisser les yeux et comparer les
+   diamètres.** C'est la consigne la plus souvent ratée, et celle qui ne
+   se rattrape pas au découpage sans perdre de la définition.
+5. **Chercher un halo qui déborde sur le magenta.** Une lueur qui sort
+   de la forme se mélange au fond et laisse une bavure rose que rien ne
+   sait retirer proprement.
+
+---
+
+## 14. Prompt BOUTONS D'INTERFACE
+
+Écrit pour le niveau 4, valable pour toute commande tactile. Deux
+différences avec les planches de personnages, et elles comptent :
+
+- **Le bord doit être FRANC.** C'est la règle qui a manqué la première
+  fois : les boutons portaient une lueur douce, elle s'est fondue dans
+  le `#FF00FF`, et le détourage a gardé une bande rose de 15 à 30 px
+  tout autour. On ne peut pas la reconstituer — la couleur qui était
+  dessous est perdue.
+- **Le diamètre doit être IDENTIQUE partout.** `poser()` dessine le
+  canevas entier : le diamètre du dessin dans son canevas EST sa taille
+  à l'écran, et sa position dans le canevas EST sa position à l'écran.
+  `decouper_boutons.py` renormalise, mais il ne peut pas inventer les
+  pixels d'un bouton généré trop petit.
+
+```
+Planche de 8 boutons d'interface, style verre bombé, vue de face.
+
+=== FORMAT ===
+- PNG au moins 2400 px de large, fond MAGENTA UNI #FF00FF.
+- Grille de 4 colonnes x 2 rangées = 8 boutons.
+- Chaque bouton est un DISQUE PARFAIT, centré au pixel dans sa case,
+  et TOUS ont EXACTEMENT le même diamètre.
+- Au moins 120 px de magenta VIDE entre deux boutons.
+
+=== LA RÈGLE QUI COMPTE ===
+BORD FRANC. Le disque s'arrête net sur le magenta : aucune lueur,
+aucun halo, aucun flou, aucune ombre portée ne dépasse du cercle.
+Toute la lumière du bouton reste À L'INTÉRIEUR du disque. Un halo
+qui déborde se mélange au fond et laisse une bavure rose impossible
+à retirer ensuite.
+
+=== COULEURS ===
+Palette imposée, AUCUN rose, AUCUN magenta, AUCUN violet :
+- corps : bleu nuit très sombre #080D18 à #1B2436, reflet vitré en haut
+- contour et symboles : blanc craie #F1F5FF
+- accents : rouge brique #C6483C, ambre #F7B32B, vert #37AC48
+- éteint : gris bleuté #8496B6
+
+=== AUCUN TEXTE ===
+Pas un mot dans les images : les libellés sont écrits par le jeu.
+
+=== LES 8 BOUTONS ===
+Rangée 1
+1. TIR, actif — douille de revolver en diagonale, corps sombre,
+   anneau rouge brique lumineux, symbole blanc craie.
+2. TIR, enfoncé — même bouton, anneau plus vif, corps plus clair,
+   reflet écrasé (il est appuyé, pas plus petit).
+3. TIR, vide — même bouton éteint, tout en gris bleuté #8496B6,
+   aucune lumière rouge.
+4. ANNEAU DE RECHARGE — un anneau ambre #F7B32B seul, épais,
+   centre entièrement vide (transparent), rien d'autre.
+
+Rangée 2
+5. À COUVERT — bouclier blanc craie sur corps sombre, contour ambre.
+6. CHANGER — deux flèches circulaires qui se poursuivent, blanc craie.
+7. CROIX DIRECTIONNELLE — quatre triangles blanc craie aux quatre
+   points cardinaux sur un disque sombre, centre vide.
+8. PASTILLE DE POUCE — petit disque nacré clair, lisse, sans symbole.
+
+=== POURQUOI ===
+Affichés à 60–110 px sur un fond bleu nuit, au pouce, en plein jeu.
+On ne lit que la silhouette et une couleur. Formes grasses, contrastes
+forts, aucun petit détail.
+```
+
+**Ce que fait le découpage ensuite** : le masque d'un disque est un
+CERCLE ajusté, pas le contour détecté — ce qui bave dans le fond part
+avec le fond. L'anneau, lui, n'est pas un disque : il garde son masque
+propre, complété par une désaturation du magenta résiduel. Sortie
+normalisée en canevas 320 avec un disque de 304 centré, pour les huit.
+
+**Le n° 4 doit vraiment avoir le centre vide** : le jeu le découpe en
+secteur pour montrer l'avancement du rechargement, et le pose à `1.38`
+fois le rayon du bouton pour qu'il l'encercle au lieu de le couvrir.

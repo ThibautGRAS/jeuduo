@@ -734,7 +734,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.51</div>
+  <div id="version">CALLAGHAN v6.52</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -806,7 +806,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.51";
+const VERSION = "6.52";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -9516,6 +9516,21 @@ const VISEE_RECUL = { revolver:0.085, fusil:0.042 };
 const VISEE_RETOUR = 0.55;          /* le bras redescend tout seul      */
 const MANCHE_R = 0.150, MANCHE_X = 0.195, MANCHE_Y = 0.855;
 const TIR_R = 0.112, TIR_X = 0.805, TIR_Y = 0.855;
+/* Les huit boutons sont normalisés : disque de 304 px centré dans un
+   canevas de 320, donc un rayon visible de 0,95 fois ce que `poser()`
+   reçoit. L'anneau suit la même règle et son bord INTÉRIEUR tombe à
+   0,6925. Pour qu'il encercle le bouton au lieu de se poser dessus, il
+   faut donc 0,95 / 0,6925 — sinon il vient couvrir la douille, ce qui
+   était le cas à 1,06. */
+const ANNEAU_AUTOUR = 1.38;
+const COMPTE_SOUS = 1.52;   /* le compte passe SOUS l'anneau (1,31) */
+/* Les commandes se posent sur le bas du décor — la barricade, et les
+   deux héros accroupis derrière. Opaques, elles en cachaient une bonne
+   part. Elles sont donc TRANSPARENTES AU REPOS et reviennent pleines
+   quand on s'en sert : l'opacité devient un retour tactile au lieu
+   d'être un réglage. Le bouton éteint descend plus bas encore, il n'a
+   rien à dire tant que le chargeur se remplit. */
+const CMD_REPOS = 0.45, CMD_ACTIVE = 1, CMD_ETEINT = 0.5, CMD_ANNEAU = 0.95;
 const ABRI_R = 0.092, ABRI_X = 0.50, ABRI_Y = 0.735;
 
 Object.assign(Ruelle, {
@@ -9669,17 +9684,19 @@ Object.assign(RuelleVue, {
 
     /* la croix, et la pastille qui suit le pouce */
     const zm = Ruelle.zoneManche();
-    poser("btn_croix", zm.x, zm.y, zm.r);
+    const aCroix = Ruelle.manche.actif ? CMD_ACTIVE : CMD_REPOS;
+    poser("btn_croix", zm.x, zm.y, zm.r, aCroix);
     poser("btn_pouce",
       zm.x + Ruelle.manche.dx * zm.r * 0.40,
-      zm.y + Ruelle.manche.dy * zm.r * 0.40, zm.r * 0.30);
+      zm.y + Ruelle.manche.dy * zm.r * 0.40, zm.r * 0.30, aCroix);
 
     /* le bouton de tir : trois états, plus l'anneau qui se remplit */
     const zt = Ruelle.zoneTir(), h = Ruelle.heroActif(), arme = ARMES[h.arme];
     const recharge = h.recharge > 0;
     const enfonce = h.repos > 1 / arme.cadence * 0.55;
     poser(recharge ? "btn_tir_vide" : enfonce ? "btn_tir_appui" : "btn_tir",
-      zt.x, zt.y, zt.r * (enfonce ? 0.94 : 1));
+      zt.x, zt.y, zt.r * (enfonce ? 0.94 : 1),
+      recharge ? CMD_ETEINT : enfonce ? CMD_ACTIVE : CMD_REPOS);
     if (recharge){
       /* l'anneau tourne : on voit le temps qui reste sans le compter */
       const av = 1 - h.recharge / arme.recharge;
@@ -9688,7 +9705,7 @@ Object.assign(RuelleVue, {
       ctx.moveTo(zt.x, zt.y);
       ctx.arc(zt.x, zt.y, zt.r * 1.6, -Math.PI / 2, -Math.PI / 2 + av * 6.2832);
       ctx.closePath(); ctx.clip();
-      poser("btn_anneau", zt.x, zt.y, zt.r * 1.06);
+      poser("btn_anneau", zt.x, zt.y, zt.r * ANNEAU_AUTOUR, CMD_ANNEAU);
       ctx.restore();
     }
     /* le compte, sous le bouton */
@@ -9696,21 +9713,25 @@ Object.assign(RuelleVue, {
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.font = "800 " + Math.round(zt.r * 0.30) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillStyle = "rgba(247,193,58,.94)";
-    ctx.fillText(h.balles + "/" + arme.chargeur, zt.x, zt.y + zt.r * 1.34);
+    ctx.fillText(h.balles + "/" + arme.chargeur, zt.x, zt.y + zt.r * COMPTE_SOUS);
     ctx.restore();
 
     /* à couvert et changer */
     const za = Ruelle.zoneAbri();
-    poser("btn_couvert", za.x, za.y, za.r, Ruelle.couvert ? 1 : 0.92);
+    poser("btn_couvert", za.x, za.y, za.r, Ruelle.couvert ? CMD_ACTIVE : CMD_REPOS);
     if (Ruelle.couvert){
       ctx.strokeStyle = "#4CC46A"; ctx.lineWidth = Math.max(2, za.r * 0.10);
       ctx.beginPath(); ctx.arc(za.x, za.y, za.r * 0.94, 0, 6.2832); ctx.stroke();
     }
     const zb = Ruelle.zoneBascule();
-    poser("btn_changer", zb.x, zb.y, zb.r);
+    poser("btn_changer", zb.x, zb.y, zb.r, CMD_REPOS);
+    /* le cercle de couleur suit le bouton : sinon il flotte, plus net
+       que ce qu'il entoure */
+    ctx.globalAlpha = CMD_REPOS;
     ctx.strokeStyle = Heros[Ruelle.actifIdx] ? Heros[Ruelle.actifIdx].couleur : "#FFF";
     ctx.lineWidth = Math.max(2, L * 0.008);
     ctx.beginPath(); ctx.arc(zb.x, zb.y, zb.r * 0.96, 0, 6.2832); ctx.stroke();
+    ctx.globalAlpha = 1;
 
     /* La réplique du relais, juste au-dessus de celui qui reprend. */
     if (Ruelle.replique){

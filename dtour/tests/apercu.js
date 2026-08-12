@@ -21,7 +21,11 @@ const SORTIE = process.argv[3] || "/tmp/apercu";
 fs.mkdirSync(SORTIE, { recursive:true });
 
 const html = fs.readFileSync(path.join(RACINE, "index.html"), "utf8");
-const source = html.match(/<script>\n([\s\S]*?)\n<\/script>/)[1];
+let source = html.match(/<script>\n([\s\S]*?)\n<\/script>/)[1];
+/* ALPHA=0.62 node tests/apercu.js — rejoue tout le harnais avec une
+   autre opacité de commandes. La seule façon de juger la valeur est de
+   la voir SUR le décor : sur fond uni, elles se valent toutes. */
+if (process.env.ALPHA) source = source.replace("const CMD_REPOS = 0.45", "const CMD_REPOS = " + process.env.ALPHA);
 
 function decor(L, H){
   const canevas = createCanvas(L, H);

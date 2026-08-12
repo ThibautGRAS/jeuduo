@@ -264,6 +264,23 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Les boutons sont normalisés** (v6.52) : les huit commandes du niveau
+4 passent par un découpage qui garantit trois choses — pas un pixel de
+magenta, le même diamètre pour tous, et le disque centré au pixel dans
+son canevas. `poser()` dessine le canevas ENTIER : la place du dessin
+dans son canevas EST sa place à l'écran, et son diamètre y est sa
+taille. La planche précédente décalait la croix de 12 % de sa largeur —
+elle ne tombait plus sur sa zone tactile — et le bouton de tir
+rétrécissait de 27 % quand on appuyait dessus. L'anneau de rechargement,
+lui, encercle enfin le bouton au lieu de se poser sur la douille : son
+bord intérieur est calé sur le bord du bouton.
+
+**Et elles s'effacent** : les commandes sont posées à 0,45 au repos et
+reviennent pleines dès qu'on s'en sert — doigt sur la croix, tir
+enfoncé, à couvert engagé. L'opacité devient un retour tactile au lieu
+d'un réglage figé. Le bouton éteint pendant le rechargement descend à
+0,5 : il n'a rien à dire tant que le chargeur se remplit.
+
 **Le harnais couvre le niveau 4** (v6.51) : quatre scènes permanentes —
 l'annonce, le jeu, la relève, le repli — parce qu'une règle en dur veut
 désormais qu'aucune modification visuelle ne parte sans qu'on ait ouvert
