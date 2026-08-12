@@ -2793,7 +2793,7 @@ if (D){
 
   verifier("l'équipier qui ne tire pas reste accroupi",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       D.Ruelle.iaActive = false;
       const autre = 1 - D.Ruelle.actifIdx;
       D.Ruelle.heros[autre].recharge = 0;
@@ -2816,7 +2816,7 @@ if (D){
       /* Il tirait vraiment — munitions consommées, ennemis touchés —
          mais gardait la pose au repos : on croyait que rien ne se
          passait. */
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       D.Ruelle.iaActive = true;
       const autre = 1 - D.Ruelle.actifIdx;
       D.Ruelle.heros[autre].repos = 0.05;
@@ -2831,7 +2831,7 @@ if (D){
   verifier("l'équipier couvre sans qu'on change de personnage",
     (() => {
       /* Le joueur garde SON héros : c'est l'autre que l'IA prend. */
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       const av = D.Ruelle.actifIdx;
       D.Ruelle.heroActif().balles = 0;
       D.Ruelle.heroActif().recharge = 1.4;
@@ -2853,7 +2853,7 @@ if (D){
     "sinon le rechargement ne coûterait plus rien");
   verifier("si les deux sont à sec, personne ne couvre",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       for (const h of D.Ruelle.heros){ h.balles = 0; h.recharge = 1.4; }
       D.Ruelle.pas(1 / 60);
       return !D.Ruelle.iaActive;
@@ -2865,7 +2865,7 @@ if (D){
 
   verifier("le bouton à couvert accroupit les deux",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1); D.Ruelle.annonce = null;
       const za = D.Ruelle.zoneAbri();
       D.Ruelle.toucheDebut(9, za.x, za.y);
       const poses = [0, 1].map(i => D.Ruelle.poseHeros(i));
@@ -2877,7 +2877,7 @@ if (D){
       /* Avant, il fallait rappuyer sur le bouclier : deux gestes là où
          l'intention est évidente, et le temps de les enchaîner suffisait
          à encaisser le jet suivant. */
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1); D.Ruelle.annonce = null;
       D.Ruelle.toucheDebut(9, D.Ruelle.zoneAbri().x, D.Ruelle.zoneAbri().y);
       if (!D.Ruelle.couvert) return false;
       const n0 = D.Ruelle.heroActif().balles;
@@ -2892,7 +2892,7 @@ if (D){
     (() => {
       /* accroupi, l'autre ne pourrait rien faire de plus : rester à
          couvert après avoir changé serait un piège. */
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1); D.Ruelle.annonce = null;
       D.Ruelle.toucheDebut(9, D.Ruelle.zoneAbri().x, D.Ruelle.zoneAbri().y);
       const zb = D.Ruelle.zoneBascule();
       const idx = D.Ruelle.actifIdx;
@@ -2902,7 +2902,7 @@ if (D){
 
   verifier("le bouclier reste un bascule",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1); D.Ruelle.annonce = null;
       const za = D.Ruelle.zoneAbri();
       D.Ruelle.toucheDebut(9, za.x, za.y);
       const dedans = D.Ruelle.couvert;
@@ -2914,7 +2914,7 @@ if (D){
     (() => {
       /* Viser pendant qu'on encaisse est le seul geste qui reste : le
          couper aurait fait de l'abri un temps mort. */
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1); D.Ruelle.annonce = null;
       D.Ruelle.toucheDebut(9, D.Ruelle.zoneAbri().x, D.Ruelle.zoneAbri().y);
       const zm = D.Ruelle.zoneManche();
       const av = D.Ruelle.viseur.x;
@@ -2924,7 +2924,7 @@ if (D){
     })());
   verifier("l'équipier ne couvre pas si on est à couvert",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       D.Ruelle.couvert = true;
       D.Ruelle.heroActif().balles = 0; D.Ruelle.heroActif().recharge = 2;
       D.Ruelle.pas(1 / 60);
@@ -2971,8 +2971,12 @@ if (D){
   };
   /* ---- la mécanique de Depardiahree ---- */
   const unDepar = (z, attente) => {
-    D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1); D.Ruelle.annonce = null;
     D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.couvert = false;
+    /* L'ordre des méchants est tiré au sort à chaque partie : sans le
+       forcer, `ajouterEnnemi` rendait n'importe lequel des cinq et le
+       test mesurait la mécanique d'un autre. */
+    D.Ruelle.ordreMechants = ["depar", "dsk", "jubi", "abbe", "bruh"];
     D.Ruelle.ajouterEnnemi();
     const e = D.Ruelle.ennemis[0];
     e.z = z; e.attente = attente;
@@ -3077,8 +3081,8 @@ if (D){
      avait l'air d'être dans le jeu. */
   const viserVrai = D.Ruelle.viser;
   const unDsk = () => {
-    D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
-    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.couvert = false;
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1); D.Ruelle.annonce = null;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.annonce = null; D.Ruelle.couvert = false;
     D.Ruelle.blocages.length = 0; D.Ruelle.viser = viserVrai;
     const ref = D.ENNEMIS.dsk;
     D.Ruelle.ennemis.push({
@@ -3175,8 +3179,8 @@ if (D){
     (() => {
       /* Les deux premières enseignent UNE mécanique à la fois. */
       const v = D.Ruelle.VAGUES;
-      return v.every(x => Array.isArray(x.types) && x.types.length) &&
-             v[v.length - 1].types.length > 1;
+      return v.every(x => D.Ruelle.typesVague(x).length >= 1) &&
+             D.Ruelle.typesVague(v[v.length - 1]).length > 1;
     })());
 
   /* ---- l'atténuation à distance ---- */
@@ -3243,7 +3247,7 @@ if (D){
 
   verifier("une horde perdue n'est pas comptée comme passée",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       /* on perd pendant la première : le compte doit rester à zéro */
       D.Ruelle.barricade = 0; D.Ruelle.terminer(false);
       return D.Ruelle.bilan.hordes === 0;
@@ -3251,8 +3255,8 @@ if (D){
 
   /* ---- Jubilar et la cible du bras ---- */
   const unJubi = () => {
-    D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
-    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.couvert = false;
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1); D.Ruelle.annonce = null;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.annonce = null; D.Ruelle.couvert = false;
     D.Ruelle.projectiles.length = 0; D.Ruelle.viser = viserVrai;
     const ref = D.ENNEMIS.jubi;
     D.Ruelle.ennemis.push({ ref, pv:ref.pv, pvMax:ref.pv, couloir:2, z:0.5,
@@ -3549,8 +3553,8 @@ if (D){
 
   /* ---- l'Abbé Forceur et son bombardement en cloche ---- */
   const unAbbe = () => {
-    D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
-    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.couvert = false;
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1); D.Ruelle.annonce = null;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.annonce = null; D.Ruelle.couvert = false;
     D.Ruelle.projectiles.length = 0; D.Ruelle.viser = viserVrai;
     const ref = D.ENNEMIS.abbe;
     D.Ruelle.ennemis.push({ ref, pv:ref.pv, pvMax:ref.pv, couloir:2, z:0.30,
@@ -3630,8 +3634,8 @@ if (D){
     (() => {
       /* Un mur de Depardiahree protège le CORPS de l'Abbé mais pas la
          cible sur son bras : c'est la question que le niveau voulait. */
-      return D.Ruelle.VAGUES.some(v => v.types.indexOf("abbe") >= 0 &&
-                                       v.types.indexOf("depar") >= 0);
+      return D.Ruelle.VAGUES.some(v => D.Ruelle.typesVague(v).indexOf("abbe") >= 0 &&
+                                       D.Ruelle.typesVague(v).indexOf("depar") >= 0);
     })());
 
   /* ---- BruHell, le contraire de l'Abbé ---- */
@@ -3648,8 +3652,8 @@ if (D){
     (() => {
       /* Sans règle, c'était l'ordre du tableau — donc l'ordre
          d'apparition — qui décidait. */
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
-      D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.viser = viserVrai;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1); D.Ruelle.annonce = null;
+      D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.annonce = null; D.Ruelle.viser = viserVrai;
       const mk = (ref, z) => {
         D.Ruelle.ennemis.push({ ref, pv:ref.pv, pvMax:ref.pv, couloir:2, z,
           vitesse:ref.vitesse, etat:"arme2", frame:0, tFrame:0, tEtat:0.2,
@@ -3712,7 +3716,7 @@ if (D){
   verifier("la dernière horde les réunit tous les cinq",
     (() => {
       const v = D.Ruelle.VAGUES;
-      const derniere = v[v.length - 1].types;
+      const derniere = D.Ruelle.typesVague(v[v.length - 1]);
       return Object.keys(D.ENNEMIS).every(k => derniere.indexOf(k) >= 0);
     })());
 
@@ -3722,7 +3726,7 @@ if (D){
       /* Un type à la première, deux à la deuxième, trois à la troisième :
          la progression ENSEIGNE au lieu de monter en nombre. */
       const v = D.Ruelle.VAGUES.filter(x => !x.geant);
-      const n = v.map(x => new Set(x.types).size);
+      const n = v.map(x => new Set(D.Ruelle.typesVague(x)).size);
       messageDetail = "types par horde : " + n.join(", ");
       return n[0] === 1 && n[1] === 2 && n[2] === 3 &&
         n.every((x, i) => i === 0 || x >= n[i - 1]);
@@ -3740,7 +3744,7 @@ if (D){
   verifier("jamais plus de trois méchants à l'écran",
     (() => {
       /* À huit de front on ne choisit plus, on arrose. */
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1); D.Ruelle.annonce = null;
       let pic = 0;
       for (let k = 0; k < 60 * 120; k++){
         D.Jeu.pas(1 / 60);
@@ -3754,7 +3758,7 @@ if (D){
     (() => {
       /* Sa mécanique est INCHANGÉE : c'est ce qui le rend juste, on a
          appris à le lire. */
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1); D.Ruelle.annonce = null;
       const gv = D.Ruelle.VAGUES.findIndex(x => x.geant);
       D.Ruelle.lancerVague(gv);
       D.Ruelle.annonce = null; D.Ruelle.ennemis.length = 0;
@@ -3771,12 +3775,70 @@ if (D){
     (() => {
       /* Neuf cartes dont six déjà vues, ce serait vingt secondes
          d'attente au lieu d'une découverte. */
+      /* CE test-ci a besoin de l'annonce : on ne la ferme pas. */
       D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
-      const prem = D.Ruelle.annonce && D.Ruelle.annonce.carte;
+      const prem = !!(D.Ruelle.annonce && D.Ruelle.annonce.carte);
       const cle = D.Ruelle.annonce.cle;
       D.Ruelle.lancerVague(0);
       const deux = D.Ruelle.annonce && D.Ruelle.annonce.carte;
       return prem === true && deux === false && D.Ruelle.vus.indexOf(cle) >= 0;
+    })());
+
+  verifier("l'ordre des méchants change d'une partie à l'autre",
+    (() => {
+      /* Écrit en dur, on commençait toujours par Depardiahree et on
+         finissait par BruHell : une partie ressemblait à la précédente. */
+      const vus = new Set();
+      for (let k = 0; k < 30; k++){
+        D.Jeu.demarrer(4);
+        vus.add(D.Ruelle.ordreMechants.join(","));
+      }
+      messageDetail = vus.size + " ordres différents sur 30 parties";
+      return vus.size >= 8;
+    })());
+
+  verifier("l'annonce se lit UNE ÉTAPE À LA FOIS, et on tape pour avancer",
+    (() => {
+      /* Comme les bulles du niveau 2 : le texte passait trop vite quand
+         les trois défilaient sur un chronomètre unique. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      const an = D.Ruelle.annonce;
+      if (!an || an.etape !== 0) return false;
+      D.Ruelle.pas(0.2);
+      if (!D.Ruelle.avancerAnnonce()) return false;
+      if (D.Ruelle.annonce.etape !== 1) return false;
+      /* une tape trop rapide ne saute pas deux étapes */
+      D.Ruelle.avancerAnnonce();
+      return D.Ruelle.annonce.etape === 1;
+    })());
+
+  verifier("rien ne sort tant que l'annonce n'est pas finie",
+    (() => {
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      for (let k = 0; k < 60; k++) D.Ruelle.pas(1 / 60);
+      const pendant = D.Ruelle.ennemis.length;
+      for (let k = 0; k < 60 * 12; k++) D.Ruelle.pas(1 / 60);
+      return pendant === 0 && !D.Ruelle.annonce && D.Ruelle.ennemis.length > 0;
+    })());
+
+  verifier("taper pendant l'annonce ne tire pas",
+    (() => {
+      /* Sinon on vide un chargeur dans le vide en essayant de passer le
+         texte. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      const h = D.Ruelle.heroActif(); h.repos = 0; h.balles = 6;
+      D.Ruelle.pas(0.2);
+      const zt = D.Ruelle.zoneTir();
+      D.Ruelle.toucheDebut(1, zt.x, zt.y);
+      return h.balles === 6;
+    })());
+
+  verifier("le chargement porte le titre du jeu",
+    (() => {
+      /* « La file du D'Tour » était le nom du premier niveau seul, et il
+         n'a plus cours depuis qu'il y en a quatre. */
+      return /id="intro"[\s\S]{0,220}LES ENQUÊTES DE[\s\S]{0,60}CALLAGHAN/.test(html) &&
+        !/class="marque">LA FILE/.test(html);
     })());
 
   verifier("chaque méchant a son entrée de bestiaire",
@@ -3791,13 +3853,13 @@ if (D){
 
   verifier("l'annonce nomme ce qui arrive, jamais « quelqu'un »",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       for (let i = 0; i < D.Ruelle.VAGUES.length; i++){
         D.Ruelle.lancerVague(i);
         const a = D.Ruelle.annonce;
         if (!a || !a.repliques.length) return false;
         if (a.repliques.some(r => /QUELQU'UN/.test(r[1]))) return false;
-        if (D.Ruelle.VAGUES[i].types.indexOf(a.cle) < 0) return false;
+        if (D.Ruelle.typesVague(D.Ruelle.VAGUES[i]).indexOf(a.cle) < 0) return false;
       }
       return true;
     })());
@@ -3854,7 +3916,7 @@ if (D){
   verifier("la dernière horde mélange les cinq",
     (() => {
       const v = D.Ruelle.VAGUES;
-      const derniere = v[v.length - 1].types;
+      const derniere = D.Ruelle.typesVague(v[v.length - 1]);
       return new Set(derniere).size === Object.keys(D.ENNEMIS).length;
     })(), "c'est la horde qui pose la question : qui tuer en premier ?");
 
@@ -3876,7 +3938,7 @@ if (D){
 
   verifier("le champignon pousse le viseur",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1); D.Ruelle.annonce = null;
       const zm = D.Ruelle.zoneManche();
       const av = D.Ruelle.viseur.x;
       D.Ruelle.toucheDebut(1, zm.x + zm.r * 0.8, zm.y);
@@ -3885,7 +3947,7 @@ if (D){
     })(), "toucher l'ennemi directement rendait le niveau trop simple");
   verifier("le bouton de tir tire, le champignon non",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       const zt = D.Ruelle.zoneTir(), zm = D.Ruelle.zoneManche();
       const n0 = D.Ruelle.heroActif().balles;
       D.Ruelle.toucheDebut(2, zm.x, zm.y);
@@ -3896,7 +3958,7 @@ if (D){
     })());
   verifier("le recul repousse le viseur vers le haut",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       D.Ruelle.viseur.y = 0.5; D.Ruelle.heroActif().repos = 0;
       D.Ruelle.tirerViseur();
       return D.Ruelle.viseur.y < 0.5;
@@ -3905,7 +3967,7 @@ if (D){
     D.VISEE_RECUL.revolver > D.VISEE_RECUL.fusil * 1.5);
   verifier("la bascule au centre change de héros",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       const zb = D.Ruelle.zoneBascule();
       const av = D.Ruelle.actifIdx;
       D.Ruelle.toucheDebut(4, zb.x, zb.y);
@@ -3915,16 +3977,15 @@ if (D){
   /* --- la ruelle se joue --- */
   verifier("le niveau 4 démarre et peuple ses vagues",
     (() => {
+      /* Ici on GARDE l'annonce : elle fait partie du démarrage. Rien ne
+         sort tant qu'elle n'est pas lue — c'est justement son rôle. */
       D.Jeu.demarrer(4); D.Ruelle.introT = 0;
-      /* aSortir vaut désormais 6 et non 5 : la première horde a été
-         rallongée. Et rien ne sort avant la fin de l'annonce — carte de
-         bestiaire plus échange, soit près de cinq secondes. */
       const ok = D.Ruelle.actif && D.Ruelle.heros.length === 2 &&
         D.Ruelle.barricade === 100 &&
         D.Ruelle.aSortir === D.Ruelle.VAGUES[0].nombre &&
-        D.Ruelle.annonce && D.Ruelle.ennemis.length === 0;
-      for (let k = 0; k < 600; k++) D.Jeu.pas(1 / 60);
-      return ok && D.Ruelle.ennemis.length > 0;
+        !!D.Ruelle.annonce && D.Ruelle.ennemis.length === 0;
+      for (let k = 0; k < 900; k++) D.Jeu.pas(1 / 60);
+      return ok && !D.Ruelle.annonce && D.Ruelle.ennemis.length > 0;
     })());
   verifier("un ennemi touché à la tête tombe plus vite qu'aux jambes",
     (() => {
@@ -3947,29 +4008,34 @@ if (D){
     })());
   verifier("on ne tire pas pendant le rechargement",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       const h = D.Ruelle.heroActif();
       h.balles = 0; h.recharge = 1.5; h.repos = 0;
       return D.Ruelle.tirer(200, 400) === false;
     })());
   verifier("le chargeur se vide et se recharge tout seul",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       const h = D.Ruelle.heroActif();
       for (let k = 0; k < 6; k++){ h.repos = 0; D.Ruelle.tirer(-99, -99); }
       return h.balles === 0 && h.recharge > 0;
     })());
   verifier("changer de héros change d'arme",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       const a1 = D.Ruelle.armeActive().nom;
       D.Ruelle.changerHeros();
       return a1 === "REVOLVER" && D.Ruelle.armeActive().nom === "FUSIL";
     })());
   verifier("un ennemi qui atteint la barricade l'abîme",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.ennemis.length = 0; D.Ruelle.ajouterEnnemi();
-      D.Ruelle.ennemis[0].z = 0.999;
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
+      D.Ruelle.ennemis.length = 0; D.Ruelle.ajouterEnnemi();
+      const e0 = D.Ruelle.ennemis[0];
+      e0.z = 0.999;
+      /* DSKKK bondit au lieu d'arriver au contact, et l'ordre est tiré au
+         sort : on neutralise son bond pour mesurer le cas ordinaire. */
+      if (e0.ref.bond) e0.z = e0.ref.bond.z - 0.01, e0.z = 0.999, e0.ref = D.ENNEMIS.depar;
       const avant = D.Ruelle.barricade;
       for (let k = 0; k < 20; k++) D.Ruelle.pas(1 / 60);
       return D.Ruelle.barricade < avant;

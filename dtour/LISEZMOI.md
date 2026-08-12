@@ -283,6 +283,28 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**L'ordre change, l'annonce se lit** (v6.68) : trois corrections sur ce
+qui venait d'être posé.
+
+**L'ordre d'introduction des méchants est tiré au sort à chaque partie.**
+Les hordes déclarent COMBIEN de types elles mélangent, pas lesquels :
+écrits en dur, on commençait toujours par Depardiahree et on finissait
+par BruHell, et une partie ressemblait à la précédente. Mesuré : au moins
+huit ordres différents sur trente parties.
+
+**L'annonce se lit UNE ÉTAPE À LA FOIS**, comme les bulles du niveau 2 :
+la carte, puis la première réplique, puis la seconde. Une tape passe à la
+suivante, avec le même délai de 0,12 s qui empêche un appui d'en sauter
+deux. Et **rien ne sort tant qu'elle n'est pas finie** — retarder le
+premier délai ne suffisait pas, deux ennemis étaient déjà dans la rue
+pendant qu'on lisait la carte. Taper pendant l'annonce ne tire pas :
+sinon on vide un chargeur en essayant de passer le texte.
+
+**Le chargement porte le titre du jeu.** « La file du D'Tour » était le
+nom du premier niveau seul et n'a plus cours depuis qu'il y en a quatre :
+l'écran de chargement affiche **LES ENQUÊTES DE CALLAGHAN**, dans le
+style de l'enseigne du menu.
+
 **Neuf hordes, deux géants, un bestiaire** (v6.67) : le niveau 4 cesse
 d'être une montée en nombre pour devenir un apprentissage.
 

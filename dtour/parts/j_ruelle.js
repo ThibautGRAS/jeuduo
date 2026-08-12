@@ -411,23 +411,28 @@ const Ruelle = {
      `simultanes` plafonne le nombre de vivants à l'écran. C'est ce qui
      rend la question « qui tuer en premier ? » lisible : à huit ennemis
      de front on ne choisit plus, on arrose. */
+  /* NEUF HORDES. Chacune déclare COMBIEN de types elle mélange, pas
+     LESQUELS : l'ordre d'introduction est tiré au sort à chaque partie
+     par `ordreMechants`. Écrire les noms en dur faisait toujours
+     commencer par Depardiahree et finir par BruHell — une partie
+     ressemblait à la précédente. */
   VAGUES:[
-    { nombre:6,  delai:1.9,  vitesse:1.00, simultanes:2, types:["depar"] },
-    { nombre:8,  delai:1.7,  vitesse:1.04, simultanes:3, types:["depar", "dsk"] },
-    { nombre:10, delai:1.5,  vitesse:1.08, simultanes:3, types:["depar", "dsk", "jubi"] },
-    { nombre:1,  delai:2.4,  vitesse:1.00, simultanes:1, geant:true,
-      types:["depar", "dsk", "jubi"] },
-    { nombre:11, delai:1.4,  vitesse:1.14, simultanes:3,
-      types:["depar", "dsk", "jubi", "abbe"] },
-    { nombre:12, delai:1.3,  vitesse:1.18, simultanes:3,
-      types:["depar", "dsk", "jubi", "abbe", "bruh"] },
-    { nombre:1,  delai:2.4,  vitesse:1.00, simultanes:1, geant:true,
-      types:["dsk", "jubi", "abbe", "bruh"] },
-    { nombre:14, delai:1.1,  vitesse:1.24, simultanes:3,
-      types:["depar", "dsk", "jubi", "abbe", "bruh"] },
-    { nombre:16, delai:0.95, vitesse:1.32, simultanes:3,
-      types:["depar", "dsk", "jubi", "abbe", "bruh"] },
+    { nombre:6,  delai:1.9,  vitesse:1.00, simultanes:2, nbTypes:1 },
+    { nombre:8,  delai:1.7,  vitesse:1.04, simultanes:3, nbTypes:2 },
+    { nombre:10, delai:1.5,  vitesse:1.08, simultanes:3, nbTypes:3 },
+    { nombre:1,  delai:2.4,  vitesse:1.00, simultanes:1, nbTypes:3, geant:true },
+    { nombre:11, delai:1.4,  vitesse:1.14, simultanes:3, nbTypes:4 },
+    { nombre:12, delai:1.3,  vitesse:1.18, simultanes:3, nbTypes:5 },
+    { nombre:1,  delai:2.4,  vitesse:1.00, simultanes:1, nbTypes:5, geant:true },
+    { nombre:14, delai:1.1,  vitesse:1.24, simultanes:3, nbTypes:5 },
+    { nombre:16, delai:0.95, vitesse:1.32, simultanes:3, nbTypes:5 },
   ],
+  /* Les types d'une horde : les `nbTypes` premiers de l'ordre tiré. */
+  typesVague(v){
+    return (this.ordreMechants || Object.keys(ENNEMIS))
+      .slice(0, v.nbTypes || 1);
+  },
+  GEANT_TAILLE:2.2, GEANT_PV:4.0, GEANT_VITESSE:0.62,
   /* Un géant, c'est un des cinq en 2,2 fois plus grand et quatre fois
      plus dur. Sa mécanique est INCHANGÉE : c'est ce qui le rend juste —
      on a appris à le lire, il faut le refaire en tenant plus longtemps. */
@@ -437,6 +442,10 @@ const Ruelle = {
     this.actif = true; this.fini = null;
     this.ennemis.length = 0; this.flashes.length = 0;
     this.vus.length = 0; this.annonce = null; this.geantCle = null;
+    /* L'ORDRE D'INTRODUCTION est tiré à chaque partie : deux parties ne
+       présentent plus les cinq dans la même suite. */
+    this.ordreMechants = Object.keys(ENNEMIS);
+    melangerTableau(this.ordreMechants);
     this.projectiles.length = 0; this.impacts.length = 0; this.blocages.length = 0;
     this.bilan = { tues:{}, tetes:0, gardes:0, bloquees:0, encaissees:0,
                    contacts:0, hordes:0, annules:0 };
@@ -463,12 +472,12 @@ const Ruelle = {
     /* Qui est la VEDETTE de cette horde : le type qu'on n'a jamais vu,
        sinon le géant, sinon celui qui arrive le plus souvent. C'est lui
        qu'on annonce — annoncer « des gens » n'apprend rien. */
-    const inedits = (v.types || []).filter(k => this.vus.indexOf(k) < 0);
+    const inedits = this.typesVague(v).filter(k => this.vus.indexOf(k) < 0);
     const cle = v.geant
-      ? (this.geantCle = piocher(v.types.slice()))
-      : (inedits.length ? inedits[0] : piocher(v.types.slice()));
+      ? (this.geantCle = piocher(this.typesVague(v).slice()))
+      : (inedits.length ? inedits[0] : piocher(this.typesVague(v).slice()));
     this.annonce = {
-      cle, geant:!!v.geant, t:0,
+      cle, geant:!!v.geant, t:0, etape:0,
       /* La CARTE de bestiaire ne se montre qu'à la PREMIÈRE rencontre :
          c'est ce qui en fait une découverte. Neuf cartes dont six déjà
          vues, ce serait vingt secondes d'attente. */
@@ -476,8 +485,44 @@ const Ruelle = {
       repliques:this.repliquesAnnonce(cle, !!v.geant),
     };
     if (this.vus.indexOf(cle) < 0) this.vus.push(cle);
-    this.prochain = this.annonce.carte ? ANNONCE_CARTE + ANNONCE_MOT
-                                       : ANNONCE_MOT;
+    /* Rien ne sort tant que l'annonce n'est pas finie : le joueur lit
+       d'abord, il tire ensuite. */
+    this.prochain = 0.4;
+  },
+
+  /* UNE ÉTAPE À LA FOIS, comme les bulles du niveau 2 : la carte, puis
+     la première réplique, puis la seconde. Chacune tient le temps qu'il
+     faut pour être lue, et une tape passe à la suivante. La horde ne
+     commence qu'après. L'ancienne version faisait défiler les trois sur
+     un chronomètre unique, et le texte passait trop vite. */
+  pasAnnonce(dt){
+    const an = this.annonce;
+    an.t += dt;
+    if (an.t >= this.dureeEtape()) this.etapeSuivante();
+  },
+  dureeEtape(){
+    const an = this.annonce;
+    if (an.etape === 0 && an.carte) return ANNONCE_CARTE;
+    return ANNONCE_MOT;
+  },
+  premiereEtape(){ return this.annonce.carte ? 0 : 1; },
+  /* Rend true si la tape a servi : l'appelant sait alors qu'elle n'était
+     pas un tir. Le délai minimal évite qu'un seul appui passe deux
+     étapes — c'est le réglage à 0,12 s du niveau 2. */
+  avancerAnnonce(){
+    if (!this.annonce) return false;
+    if (this.annonce.t < 0.12) return true;
+    this.etapeSuivante();
+    return true;
+  },
+  etapeSuivante(){
+    const an = this.annonce;
+    an.etape++; an.t = 0;
+    const derniere = 1 + (an.repliques ? an.repliques.length - 1 : 0);
+    if (an.etape > derniere){
+      this.annonce = null;
+      this.prochain = 0.25;
+    }
   },
 
   /* Un héros nomme, l'autre commente. Le deuxième réplique est celle qui
@@ -514,7 +559,7 @@ const Ruelle = {
     const v = this.VAGUES[Math.min(this.vague, this.VAGUES.length - 1)];
     /* Le casting est tiré dans la liste de la vague, répétitions
        comprises : un type présent deux fois sort deux fois plus. */
-    const noms = v.types || Object.keys(ENNEMIS);
+    const noms = this.typesVague(v);
     const cle = v.geant && this.geantCle ? this.geantCle
               : noms[Math.floor(Math.random() * noms.length)];
     const ref = ENNEMIS[cle];
@@ -718,7 +763,11 @@ const Ruelle = {
       if (this.replique.t <= 0) this.replique = null;
     }
     /* apparitions */
-    if (this.aSortir > 0 && this.vivants() < this.simultanesMax()){
+    /* RIEN NE SORT PENDANT L'ANNONCE. Retarder seulement le premier
+       délai ne suffisait pas : la boucle continuait de compter et deux
+       ennemis étaient déjà dans la rue quand le joueur lisait encore la
+       carte. */
+    if (!this.annonce && this.aSortir > 0 && this.vivants() < this.simultanesMax()){
       this.prochain -= dt;
       if (this.prochain <= 0){
         this.ajouterEnnemi();
@@ -859,11 +908,7 @@ const Ruelle = {
         if (e.mort > 1.2){ this.ennemis.splice(i, 1); continue; }
       }
     }
-    if (this.annonce){
-      this.annonce.t += dt;
-      const fin = (this.annonce.carte ? ANNONCE_CARTE : 0) + ANNONCE_MOT;
-      if (this.annonce.t >= fin) this.annonce = null;
-    }
+    if (this.annonce) this.pasAnnonce(dt);
     this.pasProjectiles(dt);
     for (let i = this.flashes.length - 1; i >= 0; i--){
       this.flashes[i].t -= dt;
@@ -1129,10 +1174,8 @@ const RuelleVue = {
     const L = Camera.L, H = Camera.H, an = Ruelle.annonce;
     const b = BESTIAIRE[an.cle] || {};
     const ref = ENNEMIS[an.cle] || {};
-    const carteFin = an.carte ? ANNONCE_CARTE : 0;
-
-    if (an.carte && an.t < carteFin){
-      const av = an.t / carteFin;
+    if (an.etape === 0 && an.carte){
+      const av = an.t / ANNONCE_CARTE;
       /* elle entre vite et sort vite : le temps utile est au milieu */
       const opac = borne(Math.min(av / 0.14, (1 - av) / 0.18), 0, 1);
       const cy = H * 0.34;
@@ -1161,14 +1204,11 @@ const RuelleVue = {
       return;
     }
 
-    /* l'échange : une réplique après l'autre */
-    const dt2 = an.t - carteFin;
+    /* l'échange : UNE bulle par étape, jamais deux à l'écran */
     const rep = an.repliques || [];
-    if (!rep.length) return;
-    const par = ANNONCE_MOT / rep.length;
-    const i = Math.min(rep.length - 1, Math.floor(dt2 / par));
-    const dedans = dt2 - i * par;
-    const opac = borne(Math.min(dedans / 0.12, (par - dedans) / 0.15), 0, 1);
+    const i = an.etape - 1;
+    if (i < 0 || i >= rep.length) return;
+    const opac = borne(Math.min(an.t / 0.12, (ANNONCE_MOT - an.t) / 0.20), 0, 1);
     this.bulleHeros(rep[i][1], rep[i][0], opac);
   },
 
@@ -1193,19 +1233,31 @@ const RuelleVue = {
     const h = Heros[qui] || Heros[0];
     ctx.save();
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.font = "800 " + Math.round(H * 0.028) + "px 'Baloo 2', system-ui, sans-serif";
-    const bw = Math.min(ctx.measureText(txt).width + H * 0.040, L * 0.88);
-    const bx = borne(L * (qui === 0 ? 0.32 : 0.68), bw / 2 + 6, L - bw / 2 - 6);
-    const by = H * 0.725;
+    /* La largeur DISPONIBLE est fixée d'abord, et le texte est réduit
+       pour y entrer : la bulle ne s'étire plus au-delà de l'écran. La
+       même faute a coupé une phrase trois fois sur ce projet — c'est la
+       troisième correction, autant qu'elle soit la dernière. */
+    const dispo = L * 0.86;
+    let taille = H * 0.028;
+    for (let k = 0; k < 15; k++){
+      ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+      if (ctx.measureText(txt).width <= dispo - H * 0.040) break;
+      taille *= 0.92;
+    }
+    const bw = ctx.measureText(txt).width + H * 0.040;
+    const bx = borne(L * (qui === 0 ? 0.34 : 0.66), bw / 2 + 6, L - bw / 2 - 6);
+    /* 0,635 : au-dessus du bouclier, qui commence à 0,735 moins son
+       rayon. À 0,715 la bulle lui passait dessus. */
+    const by = H * 0.635;
     ctx.globalAlpha = opac;
     ctx.fillStyle = "rgba(250,248,255,.96)";
-    arrondi(bx - bw / 2, by - H * 0.032, bw, H * 0.064, H * 0.026); ctx.fill();
+    arrondi(bx - bw / 2, by - H * 0.034, bw, H * 0.068, H * 0.028); ctx.fill();
     ctx.fillStyle = h && h.couleur ? h.couleur : "#171226";
-    ctx.font = "800 " + Math.round(H * 0.017) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillText(h && h.nom ? h.nom : "", bx, by - H * 0.019);
+    ctx.font = "800 " + Math.round(H * 0.016) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillText(h && h.nom ? h.nom : "", bx, by - H * 0.020);
     ctx.fillStyle = "#171226";
-    ctx.font = "800 " + Math.round(H * 0.028) + "px 'Baloo 2', system-ui, sans-serif";
-    ctx.fillText(txt, bx, by + H * 0.009);
+    ctx.font = "800 " + Math.round(taille) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillText(txt, bx, by + H * 0.010);
     ctx.restore();
     ctx.globalAlpha = 1;
     ctx.textAlign = "left";
@@ -1534,6 +1586,9 @@ Object.assign(Ruelle, {
   toucheDebut(id, x, y){
     if (!this.actif) return false;
     if (this.introT > 0) return this.passerIntro();
+    /* Pendant l'annonce, le doigt sert à LIRE, pas à tirer : sinon on
+       vide un chargeur dans le vide en essayant de passer le texte. */
+    if (this.annonce) return this.avancerAnnonce();
     if (this.dans(this.zoneManche(), x, y)){
       this.manche = { actif:true, id, dx:0, dy:0 };
       this.majManche(x, y);

@@ -756,7 +756,8 @@ function jouerJusqua(D, condition, limite){
     D.amorcer(); D.Camera.mesurer(390, 780, 1);
     D.Jeu.demarrer(4); D.Ruelle.introT = 0;
     D.Ruelle.ennemis.length = 0;
-    D.Ruelle.annonce = { cle:"abbe", geant:false, t:1.3, carte:true,
+    /* étape 0 = la carte ; le rendu suit les étapes depuis la v6.68 */
+    D.Ruelle.annonce = { cle:"abbe", geant:false, t:1.3, etape:0, carte:true,
                          repliques:D.Ruelle.repliquesAnnonce("abbe", false) };
     D.Ruelle.secousse = 0;
     D.RuelleVue.dessiner();
@@ -768,7 +769,8 @@ function jouerJusqua(D, condition, limite){
     D.Jeu.demarrer(4); D.Ruelle.introT = 0;
     D.Ruelle.ennemis.length = 0;
     /* passé la carte : on est dans l'échange */
-    D.Ruelle.annonce = { cle:"depar", geant:false, t:0.6, carte:false,
+    /* étape 1 = la première bulle */
+    D.Ruelle.annonce = { cle:"depar", geant:false, t:0.6, etape:1, carte:false,
       repliques:[[0, "Mon Dieu, un Depardiahree !"],
                  [1, "Vise pas le ventre, y'a rien à en tirer."]] };
     D.Ruelle.secousse = 0;

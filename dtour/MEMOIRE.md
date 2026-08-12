@@ -1135,6 +1135,27 @@ au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
 
+### Bloquer une file d'apparitions, ce n'est pas retarder son premier délai
+
+L'annonce de horde repoussait `prochain`, le délai avant la prochaine
+apparition. Insuffisant : la boucle continuait de tourner et deux ennemis
+étaient déjà dans la rue pendant qu'on lisait la carte. Un état qui
+SUSPEND doit être testé dans la condition de la boucle, pas compensé par
+un délai.
+
+### Rendre un ordre aléatoire casse les tests qui présumaient le premier
+
+Les hordes tirent désormais l'ordre des méchants au sort. Six aides de
+test appelaient `ajouterEnnemi()` en supposant obtenir un Depardiahree —
+elles mesuraient soudain la mécanique d'un autre. Une aide de test qui
+dépend d'un tirage doit le FORCER, pas espérer.
+
+Même famille : quatorze mises en place tapaient sur le pupitre juste
+après `demarrer(4)`, et l'annonce intercepte maintenant le doigt. Le
+comportement est voulu ; c'est la mise en place qui devait en tenir
+compte. Sauf pour les deux tests qui vérifient l'annonce elle-même — un
+remplacement global les avait cassés en fermant ce qu'ils venaient lire.
+
 ### Un texte de carte se RÉDUIT jusqu'à tenir, il ne se devine pas
 
 « L'ABBÉ FORCEUR » débordait des deux côtés de l'écran en portrait, et
