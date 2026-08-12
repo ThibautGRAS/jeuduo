@@ -283,6 +283,21 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**La ruelle a sa musique** (v6.73) : 28,8 s en boucle, 234 Ko, qui
+remplacent la petite grille de jazz — elle n'a rien à faire dans une
+fusillade. Repli sur la grille synthétisée si le fichier manque, comme
+pour tous les échantillons.
+
+Deux pièges de boucle, tous deux réglés : elle **s'arrête explicitement**
+au retour au menu, sinon elle continue sur l'écran titre et se superpose
+à la musique du niveau suivant ; et **`gainMus` est libéré** à l'arrêt,
+sinon la grille synthétisée refuse de repartir pour les autres niveaux et
+le jeu reste muet à la deuxième partie.
+
+Les fichiers source — deux rechargements et la musique — **sortent du
+dépôt** : 7,5 Mo servis par GitHub Pages pour des fichiers que le jeu ne
+charge jamais.
+
 **Chaque arme a son rechargement** (v6.72) : deux enregistrements
 remplacent le son unique. Le barillet d'un revolver et la culasse d'un
 fusil ne font pas le même bruit — et c'est un des rares moments où le

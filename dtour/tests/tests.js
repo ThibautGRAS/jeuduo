@@ -2895,12 +2895,36 @@ if (D){
   verifier("aucun échantillon n'est vide ni démesuré",
     (() => {
       /* Un OGG de zéro octet passe le test d'existence et ne fait aucun
-         bruit. Et au-delà de 40 Ko pièce, on charge un album. */
+         bruit. Les EFFETS restent sous 40 Ko — au-delà on charge un
+         album pour un claquement. La MUSIQUE a droit à plus : elle est
+         chargée une fois et jouée en boucle pendant tout un niveau, et
+         28 secondes ne tiennent pas dans 40 Ko. */
       const tailles = D.Sons.ECHANTILLONS.map(n => ({
-        n, o:fs.statSync(path.join(RACINE, "son", n + ".ogg")).size }));
+        n, o:fs.statSync(path.join(RACINE, "son", n + ".ogg")).size,
+        musique:n.indexOf("musique") === 0 }));
       const total = tailles.reduce((s, x) => s + x.o, 0);
       messageDetail = Math.round(total / 1024) + " Ko au total";
-      return tailles.every(x => x.o > 800 && x.o < 40000);
+      return tailles.every(x => x.o > 800 &&
+        x.o < (x.musique ? 400000 : 40000));
+    })());
+
+  verifier("la musique du niveau 4 tourne en BOUCLE et s'arrête au menu",
+    (() => {
+      /* Une boucle sans arrêt explicite continue sur l'écran titre et se
+         superpose à la musique du niveau suivant. Et `gainMus` doit être
+         libéré, sinon `lancerMusique` refuse de repartir à la deuxième
+         partie et le jeu reste muet. */
+      return /s\.loop = true/.test(source) &&
+        /Sons\.lancerMusiqueFichier\("musique_ruelle"\)/.test(source) &&
+        /Sons\.arreterMusiqueFichier\(\)/.test(source) &&
+        /arreterMusiqueFichier\(\)\{[\s\S]{0,700}?this\.gainMus = null/.test(source);
+    })());
+
+  verifier("la musique en fichier a un repli synthétisé",
+    (() => {
+      /* Même règle que les effets : fichier absent, le jeu n'est pas
+         silencieux — il retombe sur la grille de jazz. */
+      return /lancerMusiqueFichier\(nom\)\{[\s\S]{0,300}?return this\.lancerMusique\(\)/.test(source);
     })());
 
   verifier("l'impact reste SYNTHÉTISÉ, il n'a pas d'échantillon",

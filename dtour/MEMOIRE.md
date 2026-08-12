@@ -1135,6 +1135,15 @@ au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
 
+### Une boucle audio a besoin d'un arrêt explicite ET d'une libération
+
+Deux pièges, et le second ne se voit qu'à la deuxième partie. Une source
+en `loop = true` continue de tourner quand le niveau se termine : elle
+accompagne l'écran titre puis se superpose à la musique suivante. Et
+libérer la source ne suffit pas — tant que `gainMus` existe,
+`lancerMusique()` refuse de partir, et les autres niveaux deviennent
+muets. L'arrêt doit remettre les deux à zéro.
+
 ### La crête d'un encodage se vérifie sur le FICHIER LIVRÉ, en bouclant
 
 Troisième rencontre avec ce piège, et cette fois il est réglé pour de

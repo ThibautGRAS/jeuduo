@@ -1,6 +1,6 @@
 # son/ — les échantillons du jeu
 
-Neuf fichiers OGG mono, 65 Ko au total.
+Dix fichiers OGG mono. 96 Ko d'effets, plus 234 Ko de musique.
 
 ## Remplacer un son
 
@@ -19,6 +19,7 @@ Neuf fichiers OGG mono, 65 Ko au total.
 | `cri_jubi.ogg` | Jubilar tombe |
 | `cri_abbe.ogg` | l'Abbé tombe |
 | `cri_bruh.ogg` | BruHell tombe |
+| `musique_ruelle.ogg` | musique du niveau 4, en boucle |
 
 ## Ce qui n'est PAS un échantillon, et pourquoi
 
@@ -44,6 +45,23 @@ Les instants retenus et la transformation de chacun sont écrits dans
 **À vérifier** : la licence de cet enregistrement. Freesound mélange CC0,
 CC-BY et CC-BY-NC ; si celui-ci demande une attribution, elle doit
 figurer quelque part dans le jeu ou le dépôt.
+
+## La musique du niveau 4
+
+28,8 s en boucle, 234 Ko à 64 kbps. Elle remplace la petite grille de
+jazz synthétisée, qui n'a rien à faire dans une fusillade.
+
+Deux points qui l'ont demandé du soin :
+
+- **Elle s'arrête explicitement au retour au menu.** Une boucle sans
+  arrêt continue sur l'écran titre et se superpose à la musique du
+  niveau suivant.
+- **`gainMus` est libéré à l'arrêt**, sinon la boucle synthétisée refuse
+  de repartir pour les autres niveaux et le jeu reste muet à la deuxième
+  partie.
+
+Elle passe par le même gain que la musique synthétisée, donc
+`attenuerMusique()` la baisse aussi quand l'équipier parle.
 
 ## Les rechargements viennent d'enregistrements
 

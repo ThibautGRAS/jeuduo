@@ -395,6 +395,11 @@ const Jeu = {
       Ruelle.demarrer();
       Interface.entrerJeu();
       Sons.reveiller();
+      /* La ruelle n'a rien à faire d'une grille de jazz : il lui faut une
+         tension continue. Repli sur la boucle synthétisée si le fichier
+         n'est pas chargé. */
+      Sons.lancerMusiqueFichier("musique_ruelle");
+      Sons.volumeMusique(0.55);
       return;
     }
     if (this.niveau === 3){
@@ -651,6 +656,11 @@ const Jeu = {
     this.niveau = 1;
     Sons.arreterFondEnquete();
     Sons.arreterFondBar();
+    /* La musique en fichier boucle indéfiniment : sans arrêt explicite,
+       elle continuerait de tourner sur l'écran titre et se SUPERPOSERAIT
+       à celle du niveau suivant. La grille synthétisée, elle, s'éteint
+       toute seule avec `musique`. */
+    Sons.arreterMusiqueFichier();
     this.ralenti = 1;
     Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
     this.temps = 0; this.gel = 0; this.moment = 0; this.fondu = 1; this.fonduDe = 0; this.demandes = [];

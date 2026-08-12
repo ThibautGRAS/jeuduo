@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.72";
+const VERSION = "6.73";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -299,6 +299,10 @@ const Sons = {
        d'un fusil ne font pas le même bruit, et c'est un des rares moments
        où le joueur sait quelle arme il tient sans regarder. */
     "recharge_revolver", "recharge_fusil",
+    /* La musique passe par la même mécanique : un fichier, un repli.
+       Elle est plus lourde que les effets (234 Ko contre 10) mais elle
+       est chargée une fois et jouée en boucle. */
+    "musique_ruelle",
     "cri_depar", "cri_dsk", "cri_jubi", "cri_abbe", "cri_bruh",
   ],
 
@@ -587,7 +591,39 @@ const Sons = {
     { basse:[130.81, 196.00], accord:[196.00, 261.63, 329.63] },  /* Do maj7*/
     { basse:[110.00, 164.81], accord:[220.00, 277.18, 329.63] },  /* La 7   */
   ],
-  musique:false, mesure:0, temps4:0, quand:0, gainMus:null, intensite:0,
+  musique:false, mesure:0, temps4:0, quand:0, gainMus:null, intensite:0, sourceMus:null,
+
+  /* La musique EN FICHIER, jouée en boucle. Le niveau 4 n'a rien à faire
+     d'une petite grille de jazz : il lui faut une tension continue. Si
+     l'échantillon n'est pas là, on retombe sur la boucle synthétisée —
+     le jeu n'est jamais muet, c'est la règle de la banque.
+
+     Elle passe par `gainMus`, donc `attenuerMusique()` la baisse comme
+     l'autre quand l'équipier parle : sans ça, la voix passerait dessous. */
+  lancerMusiqueFichier(nom){
+    const buf = this.echants[nom];
+    if (!buf || !this.ac || this.gainMus) return this.lancerMusique();
+    this.gainMus = this.ac.createGain();
+    this.gainMus.gain.value = 0;
+    this.gainMus.connect(this.maitre);
+    const s = this.ac.createBufferSource();
+    s.buffer = buf; s.loop = true;
+    s.connect(this.gainMus);
+    s.start(this.ac.currentTime + 0.05);
+    this.sourceMus = s;
+    this.musique = false;   /* la grille synthétisée reste muette */
+    return true;
+  },
+  arreterMusiqueFichier(){
+    if (this.sourceMus){ try { this.sourceMus.stop(); } catch (e) { void e; } }
+    this.sourceMus = null;
+    /* `gainMus` est remis à null pour que le prochain niveau puisse
+       relancer sa musique : `lancerMusique` refuse de partir tant qu'il
+       existe, et le jeu serait silencieux à la deuxième partie. */
+    if (this.gainMus){ try { this.gainMus.disconnect(); } catch (e) { void e; } }
+    this.gainMus = null;
+    this.musique = false;
+  },
 
   lancerMusique(){
     if (!this.ac || this.gainMus) return;
