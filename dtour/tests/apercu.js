@@ -534,6 +534,55 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "30_depar_eclat_couvert");
   }
 
+  /* 31-33. DSKKK : la garde qui avance, le tir bloqué, et le moment où
+     elle casse. Ce sont les trois instants de sa mécanique. */
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 3;
+    const ref = D.ENNEMIS.dsk;
+    const faire = (z, couloir, etat) => {
+      D.Ruelle.ennemis.push({ ref, pv:ref.pv, pvMax:ref.pv, couloir, z,
+        vitesse:ref.vitesse, etat, frame:0, tFrame:0, tEtat:0, mort:0,
+        touche:null, usure:0, attente:0, usureGarde:0, attenteGarde:999 });
+      return D.Ruelle.ennemis[D.Ruelle.ennemis.length - 1];
+    };
+    faire(0.34, 0, "garde");
+    faire(0.60, 3, "garde");
+    faire(0.78, 2, "course");
+    D.Ruelle.blocages.push({ x:390 * 0.52, y:780 * 0.40, t:0.08 });
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "31_dsk_garde_et_blocage");
+  }
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 3;
+    const ref = D.ENNEMIS.dsk;
+    D.Ruelle.ennemis.push({ ref, pv:ref.pv * 0.5, pvMax:ref.pv, couloir:2, z:0.66,
+      vitesse:ref.vitesse, etat:"sonne", frame:0, tFrame:0, tEtat:0.3, mort:0,
+      touche:null, usure:0, attente:0, usureGarde:0, attenteGarde:999 });
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "32_dsk_sonne");
+  }
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 3;
+    const ref = D.ENNEMIS.dsk;
+    D.Ruelle.ennemis.push({ ref, pv:ref.pv, pvMax:ref.pv, couloir:2, z:0.95,
+      vitesse:ref.vitesse, etat:"bond", frame:0, tFrame:0, tEtat:0.28, mort:0,
+      touche:null, usure:0, attente:0, usureGarde:0, attenteGarde:999 });
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "33_dsk_bond");
+  }
+
   /* 27. les poses propres de Depardiahree, à leur taille de jeu, sur
      une même ligne de sol : c'est la seule façon de voir qu'une pose
      plus haute que les autres ne fait pas grandir le personnage. */

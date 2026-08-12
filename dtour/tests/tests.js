@@ -2688,9 +2688,33 @@ if (D){
   verifier("l'ordre de dessin suit la profondeur",
     D.Perspective.projeter(0.2, 0).ordre < D.Perspective.projeter(0.8, 0).ordre,
     "sans ça, un ennemi lointain passerait devant un proche");
-  verifier("chaque ennemi a ses treize images",
-    D.ENNEMIS_RUELLE.every(e => D.POSES_ENNEMI.length === 13 &&
-      D.POSES_ENNEMI.every(po => D.IMAGES_NIVEAU4.indexOf("enn_" + e + "_" + po) >= 0)));
+  verifier("chaque ennemi COMPLET a ses treize images",
+    D.ENNEMIS_RUELLE.filter(e => !D.POSES_BASE_MANQUANTES[e])
+      .every(e => D.POSES_ENNEMI.length === 13 &&
+        D.POSES_ENNEMI.every(po => D.IMAGES_NIVEAU4.indexOf("enn_" + e + "_" + po) >= 0)));
+  verifier("un ennemi incomplet a au moins sa pose de course",
+    (() => {
+      /* Sans elle il serait INVISIBLE tout en avançant et en entamant la
+         barricade : le rendu se replie sur `run1`, encore faut-il que
+         `run1` existe. */
+      const manquants = D.ENNEMIS_RUELLE.filter(e => D.POSES_BASE_MANQUANTES[e]);
+      messageDetail = manquants.length
+        ? "planche de base attendue pour : " + manquants.join(", ")
+        : "toutes les planches sont complètes";
+      return manquants.every(e => D.IMAGES_NIVEAU4.indexOf("enn_" + e + "_run1") >= 0);
+    })());
+  verifier("toute pose propre déclarée existe sur le disque",
+    (() => {
+      /* C'est ce contrôle-là qui compte vraiment : une pose déclarée et
+         absente du disque est une image manquante au chargement. */
+      const absents = [];
+      for (const e of D.ENNEMIS_RUELLE)
+        for (const po of (D.POSES_PROPRES[e] || []))
+          if (!fs.existsSync(path.join(RACINE, "img", "n4", "enn_" + e + "_" + po + ".webp")))
+            absents.push(e + "/" + po);
+      messageDetail = absents.length ? absents.join(", ") : "";
+      return !absents.length;
+    })());
 
   verifier("entrer dans un niveau réévalue l'orientation",
     /entrerJeu\(\)\{[\s\S]{0,900}?this\.pensePivot\(\)/.test(source),
@@ -3001,6 +3025,115 @@ if (D){
         if (D.Ruelle.projectiles.length && D.Ruelle.vague !== v0) vagueChangee = true;
       }
       return !vagueChangee;
+    })());
+
+  /* ---- la garde de DSKKK ---- */
+  /* Ni la table des vagues ni `viser` ne doivent garder trace du test :
+     la première version mutait VAGUES[0].types et remplaçait `viser`
+     sans le remettre — quatre tests SUIVANTS tombaient, et le défaut
+     avait l'air d'être dans le jeu. */
+  const viserVrai = D.Ruelle.viser;
+  const unDsk = () => {
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.couvert = false;
+    D.Ruelle.blocages.length = 0; D.Ruelle.viser = viserVrai;
+    const ref = D.ENNEMIS.dsk;
+    D.Ruelle.ennemis.push({
+      ref, pv:ref.pv, pvMax:ref.pv, couloir:2,
+      z:0.5, vitesse:ref.vitesse, etat:"garde", frame:0, tFrame:0, tEtat:0,
+      mort:0, touche:null, usure:0, attente:0, usureGarde:0, attenteGarde:999,
+    });
+    return D.Ruelle.ennemis[0];
+  };
+  /* on force la zone visée : viser à la main dépendrait du cadrage */
+  const tirerZone = (e, zone) => {
+    const h = D.Ruelle.heroActif();
+    h.repos = 0; h.recharge = 0; h.balles = 99;
+    D.Ruelle.viser = () => ({ ennemi:e, zone });
+    const r = D.Ruelle.tirer(100, 200);
+    D.Ruelle.viser = viserVrai;
+    return r;
+  };
+
+  verifier("la garde bloque la tête sans rien enlever",
+    (() => {
+      const e = unDsk();
+      const pv = e.pv;
+      tirerZone(e, "tete");
+      return e.pv === pv && e.usureGarde > 0;
+    })(), "viser la tête en garde, c'est tirer dans les avant-bras");
+
+  verifier("et le blocage se VOIT",
+    (() => {
+      /* Un coup sans effet visible est un bug aux yeux du joueur : c'est
+         le piège « éteint ne veut pas dire invisible » appliqué au tir. */
+      return D.Ruelle.blocages.length >= 1;
+    })());
+
+  verifier("assez de coups cassent la garde, et il reste sonné sans défense",
+    (() => {
+      const e = unDsk();
+      for (let k = 0; k < 12 && e.etat === "garde"; k++) tirerZone(e, "tete");
+      if (e.etat !== "garde_casse") return false;
+      for (let i = 0; i < 30; i++) D.Ruelle.pas(1 / 60);
+      if (e.etat !== "sonne") return false;
+      /* sonné, la tête paye PLUS que la normale */
+      const pv = e.pv, h = D.Ruelle.heroActif();
+      tirerZone(e, "tete");
+      return pv - e.pv > D.ARMES[h.arme].tete * D.ENNEMIS.dsk.mult.tete;
+    })());
+
+  verifier("casser la garde coûte au moins trois balles",
+    (() => {
+      const g = D.ENNEMIS.dsk.garde;
+      const parBalle = D.ARMES.revolver.tete;
+      /* ce qui compte est le NOMBRE de balles, donc l'arrondi au
+         supérieur : 2,4 balles se jouent en 3 */
+      return Math.ceil(g.seuil / parBalle) >= 3 &&
+             Math.ceil(g.seuil / D.ARMES.fusil.tete) >= 3;
+    })(), "à 78 de seuil, un seul coup suffisait");
+
+  verifier("les jambes passent la garde",
+    (() => {
+      const e = unDsk();
+      const pv = e.pv;
+      tirerZone(e, "jambes");
+      return e.pv < pv;
+    })(), "sinon la garde n'aurait aucune réponse autre que d'attendre");
+
+  verifier("il avance en garde au lieu de se planter",
+    (() => {
+      const e = unDsk();
+      const z = e.z;
+      for (let i = 0; i < 30; i++) D.Ruelle.pas(1 / 60);
+      return e.z > z;
+    })(), "une garde immobile serait un répit, pas une pression");
+
+  verifier("au contact il bondit et coûte plus cher qu'un ennemi ordinaire",
+    (() => {
+      const e = unDsk();
+      e.etat = "course"; e.z = D.ENNEMIS.dsk.bond.z + 0.01; e.attenteGarde = 999;
+      const b = D.Ruelle.barricade;
+      for (let i = 0; i < 60 * 2; i++) D.Ruelle.pas(1 / 60);
+      return b - D.Ruelle.barricade === D.ENNEMIS.dsk.bond.degat &&
+             D.ENNEMIS.dsk.bond.degat > D.RUELLE_DEGAT_BARRICADE;
+    })());
+
+  verifier("les deux menaces se valent, réparties autrement",
+    (() => {
+      const a = D.ENNEMIS.depar, b = D.ENNEMIS.dsk;
+      const ma = a.pv * a.vitesse, mb = b.pv * b.vitesse;
+      messageDetail = "pv x vitesse : " + ma.toFixed(1) + " et " + mb.toFixed(1);
+      return b.vitesse > a.vitesse * 1.4 && b.pv < a.pv * 0.7 &&
+             Math.abs(ma - mb) / ma < 0.12;
+    })());
+
+  verifier("chaque horde a son casting",
+    (() => {
+      /* Les deux premières enseignent UNE mécanique à la fois. */
+      const v = D.Ruelle.VAGUES;
+      return v.every(x => Array.isArray(x.types) && x.types.length) &&
+             v[v.length - 1].types.length > 1;
     })());
 
   verifier("les huit boutons ont le même canevas et le même disque",

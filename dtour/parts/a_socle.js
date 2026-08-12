@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.53";
+const VERSION = "6.54";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -196,6 +196,12 @@ const Sons = {
     g.gain.exponentialRampToValueAtTime(vol || 0.25, t + 0.008);
     g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
     o.connect(g); g.connect(this.maitre); o.start(t); o.stop(t + duree + 0.02);
+  },
+  /* Un tir BLOQUÉ par une garde : métallique, sec, aigu — tout ce que
+     l'impact sur un corps n'est pas. Il faut l'entendre différent. */
+  bloque(){
+    this.claque(0.045, 0.20, 5200, 2200, 2.6);
+    this.bip(1760, 0.05, "square", 0.10);
   },
   souffle(duree, vol, centre, q){
     if (!this.ac || !this.actif) return;
@@ -681,7 +687,7 @@ const PREFIXES_BAR = ["bar_th", "bar_pf"];
 const POSES_ENNEMI = ["run1", "run2", "run3", "run4", "run5", "run6",
                       "hit_torse", "hit_epaule", "hit_jambe", "hit_tete",
                       "chute1", "chute2", "sol"];
-const ENNEMIS_RUELLE = ["depar"];
+const ENNEMIS_RUELLE = ["depar", "dsk"];
 /* Chacun a en plus les poses de SA mécanique. Elles ne sont pas
    communes : Depardiahree trébuche et lance une bouteille, DSKKK
    garde son visage, personne ne fait les deux. La table les déclare
@@ -689,7 +695,14 @@ const ENNEMIS_RUELLE = ["depar"];
    fichiers qui n'existent pas. */
 const POSES_PROPRES = {
   depar: ["trebuche1", "trebuche2", "ramasse", "arme", "lance"],
+  dsk: ["garde1", "garde2", "garde_casse", "sonne", "bond"],
 };
+/* DSKKK n'a pour l'instant qu'une pose de course : sa planche de base —
+   six poses de course, quatre impacts, deux de chute, une au sol — n'est
+   pas encore arrivée. Le rendu se replie sur `run1` pour toute pose
+   manquante, donc il est jouable mais raide. À remplacer dès que la
+   planche est là. */
+const POSES_BASE_MANQUANTES = { dsk:true };
 /* Ce qui vole, ce qui éclate, ce qui prévient. Les projectiles ont
    DEUX vues : de côté pendant le vol, et de face quand ils fondent
    sur la barricade — un objet qui arrive droit sur soi ne se dessine
@@ -711,7 +724,8 @@ const POSES_RUEL_PF = ["accroupi", "leve1", "leve2", "arme1", "arme2", "vise",
    choses — annoncer le niveau, et donner au navigateur le temps de
    charger le décor et les ennemis avant la première image. */
 const IMAGES_NIVEAU4 = ["ruelle", "ruelle_flou", "duo_ruelle"]
-  .concat(ENNEMIS_RUELLE.flatMap(e => POSES_ENNEMI.map(po => "enn_" + e + "_" + po)))
+  .concat(ENNEMIS_RUELLE.flatMap(e =>
+    (POSES_BASE_MANQUANTES[e] ? ["run1"] : POSES_ENNEMI).map(po => "enn_" + e + "_" + po)))
   .concat(ENNEMIS_RUELLE.flatMap(e => (POSES_PROPRES[e] || []).map(po => "enn_" + e + "_" + po)))
   .concat(OBJETS_RUELLE)
   .concat(POSES_RUEL_TH.map(po => "ruel_th_" + po))

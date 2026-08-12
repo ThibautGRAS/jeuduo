@@ -1071,6 +1071,32 @@ D'où la règle : **canevas 320, disque 304, centré**, pour les huit.
 exactement huit boutons ; un test relit l'en-tête WebP et compare les
 huit tailles.
 
+### Un seuil se compare toujours au dégât d'UN coup
+
+Deux fois le même défaut en deux versions. `mult.tete = 1.7` sur 160 PV
+donnait 170 : un headshot couchait le tank. `garde.seuil = 78` contre 100
+de dégât brut au revolver : un seul coup cassait la garde. Dans les deux
+cas la question de conception disparaissait, et aucun test ne le voyait
+parce que la mécanique FONCTIONNAIT. Un seuil se pose maintenant en
+NOMBRE DE COUPS, arrondi au supérieur, et un test le vérifie pour les
+deux armes.
+
+### Une aide de test qui mute l'état global fait tomber les tests suivants
+
+Mon aide `unDsk()` écrivait dans `VAGUES[0].types` et remplaçait
+`Ruelle.viser` sans le remettre. Résultat : quatre tests SUIVANTS en
+échec, et le défaut avait l'air d'être dans le jeu. Une aide qui touche
+à l'état partagé doit le restaurer, ou construire son objet à la main
+plutôt que passer par la fabrique du jeu.
+
+### Une pose manquante rendait l'ennemi invisible
+
+Le rendu abandonnait (`continue`) quand l'image de la pose n'était pas
+dans la table — mais la logique continuait : l'ennemi avançait, entamait
+la barricade et tuait, sans qu'on le voie. C'est le pire des symptômes,
+parce qu'on cherche le défaut dans la logique. Le rendu se replie
+désormais sur `run1`. Une pose fausse vaut mieux qu'un ennemi fantôme.
+
 ### Une échelle de projectile ne se prend pas sur la hauteur
 
 Première version du vol de bouteille : taille demandée en fraction de la

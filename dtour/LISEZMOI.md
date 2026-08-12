@@ -264,6 +264,31 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**DSKKK relève sa garde** (v6.54) : deuxième ennemi, et une question
+neuve. Il va deux fois plus vite que Depardiahree pour moitié moins de
+points de vie — même menace, répartie autrement — et il couvre son
+visage périodiquement, tout en continuant d'avancer. Tant que la garde
+tient, viser la tête revient à tirer dans ses avant-bras : rien ne
+tombe. Trois réponses, et aucune n'est gratuite — attendre qu'il baisse
+les bras, viser les jambes qui passent la garde, ou dépenser trois
+balles sur les avant-bras pour la casser. Une garde cassée le laisse
+**sonné** une seconde et quart, sans aucune défense, la tête à 1,8 fois
+le tarif normal.
+
+**Un tir bloqué se VOIT et s'ENTEND** : un anneau blanc qui s'ouvre là
+où la balle a tapé, et un claquement métallique sec. Jamais l'étoile
+rouge d'un coup qui porte. Un coup sans effet visible est un bug aux
+yeux de celui qui joue — c'est « éteint ne veut pas dire invisible »
+appliqué au tir.
+
+**Et il ne s'évapore pas au contact** : il BONDIT sur la barricade, pour
+22 points au lieu de 12.
+
+**Chaque horde a son casting** : la première n'envoie que des
+Depardiahree, la deuxième que des DSKKK — une mécanique à la fois — et
+les trois suivantes mélangent, parce que la vraie difficulté est de
+décider qui tuer en premier.
+
 **Depardiahree lance sa bouteille** (v6.53) : le premier ennemi à
 mécanique complète, et le premier danger du niveau. Il s'arrête à
 moyenne distance, ramasse, arme — un point d'exclamation bat au-dessus

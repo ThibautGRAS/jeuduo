@@ -121,6 +121,29 @@ const ENNEMIS = {
        pas, deux oui. */
     trebuche:{ seuil:46, duree:1.15 },
   },
+  dsk: {
+    nom:"DSKKK", pv:95, vitesse:0.115, taille:0.98, sprite:"dsk",
+    /* pv x vitesse = 10,9 contre 11,5 à Depardiahree : la même menace
+       répartie autrement. L'un laisse peu de temps, l'autre demande
+       beaucoup de balles. */
+    mult:{ tete:1.25, torse:0.55, jambes:0.9, epaule:0.7 },
+    /* La GARDE. Il couvre son visage périodiquement, et tant qu'elle
+       tient, viser la tête revient à tirer dans ses avant-bras : aucun
+       point de vie ne tombe, mais la garde s'use. Le joueur a donc trois
+       réponses — attendre, tirer dans les jambes, ou casser la garde. */
+    /* 240 et pas 78 : à 78 un seul coup de revolver (100 de brut)
+       cassait la garde, donc « comment ouvrir sa garde ? » n'était pas
+       une question. À 240 il faut trois balles de revolver ou quatre de
+       fusil — la moitié d'un chargeur, ce qui rend l'autre réponse
+       (attendre, ou viser les jambes) réellement concurrente. */
+    garde:{ attente:[1.6, 2.9], duree:1.9, seuil:240, sonne:1.25,
+            /* une fois sonné, il n'a plus de défense DU TOUT : c'est la
+               récompense d'avoir cassé la garde plutôt que d'attendre */
+            multSonne:1.8 },
+    /* Arrivé au contact il ne s'évapore pas comme les autres : il SAUTE
+       sur la barricade, et ça coûte plus cher. */
+    bond:{ z:0.90, duree:0.55, degat:22 },
+  },
 };
 
 /* ---------------- ce qui vole ----------------
@@ -143,6 +166,9 @@ const IMPACT_DUREE = 0.55;
 /* L'alerte doit apparaître AVANT que le bras parte, sinon elle ne
    prévient de rien. Elle vit toute la préparation. */
 const ALERTE_TAILLE = 0.085;
+/* Le retour d'un tir BLOQUÉ. Blanc et non rouge, en anneau et non en
+   étoile : il ne doit surtout pas ressembler à un coup qui porte. */
+const BLOCAGE_DUREE = 0.26;
 const RUELLE_JITTER = 0.08;        /* deux ennemis d'un même couloir ne
                                       doivent jamais être synchrones   */
 const RUELLE_BARRICADE_PV = 100;
@@ -188,7 +214,7 @@ const ZONES_CORPS = [
 const Ruelle = {
   actif:false, fini:null, restant:0,
   ennemis:[], vague:0, aSortir:0, prochain:0,
-  projectiles:[], impacts:[],
+  projectiles:[], impacts:[], blocages:[],
   barricade:RUELLE_BARRICADE_PV,
   actifIdx:0,                       /* 0 = Thibaut, 1 = PF */
   heros:[],
@@ -197,18 +223,22 @@ const Ruelle = {
   /* Les vagues montent en NOMBRE et en fréquence, pas en points de vie :
      le joueur doit sentir la pression, pas tirer quinze fois sur le
      même homme. */
+  /* Chaque horde a son CASTING. Les premières enseignent une mécanique
+     à la fois — tête ou jambes contre Depardiahree, puis la garde de
+     DSKKK — et les suivantes mélangent, parce que la vraie difficulté
+     est de décider QUI tuer en premier. */
   VAGUES:[
-    { nombre:5,  delai:1.9, vitesse:1.00 },
-    { nombre:8,  delai:1.5, vitesse:1.05 },
-    { nombre:12, delai:1.2, vitesse:1.12 },
-    { nombre:15, delai:0.95, vitesse:1.22 },
-    { nombre:20, delai:0.75, vitesse:1.35 },
+    { nombre:5,  delai:1.9,  vitesse:1.00, types:["depar"] },
+    { nombre:6,  delai:1.7,  vitesse:1.02, types:["dsk"] },
+    { nombre:10, delai:1.3,  vitesse:1.10, types:["depar", "dsk"] },
+    { nombre:14, delai:1.0,  vitesse:1.20, types:["depar", "dsk", "dsk"] },
+    { nombre:18, delai:0.78, vitesse:1.32, types:["depar", "depar", "dsk"] },
   ],
 
   demarrer(){
     this.actif = true; this.fini = null;
     this.ennemis.length = 0; this.flashes.length = 0;
-    this.projectiles.length = 0; this.impacts.length = 0;
+    this.projectiles.length = 0; this.impacts.length = 0; this.blocages.length = 0;
     this.barricade = RUELLE_BARRICADE_PV;
     this.vague = 0; this.actifIdx = 0;
     this.secousse = 0; this.hitStop = 0;
@@ -232,7 +262,9 @@ const Ruelle = {
 
   ajouterEnnemi(){
     const v = this.VAGUES[Math.min(this.vague, this.VAGUES.length - 1)];
-    const noms = Object.keys(ENNEMIS);
+    /* Le casting est tiré dans la liste de la vague, répétitions
+       comprises : un type présent deux fois sort deux fois plus. */
+    const noms = v.types || Object.keys(ENNEMIS);
     const ref = ENNEMIS[noms[Math.floor(Math.random() * noms.length)]];
     const jitter = 1 + (Math.random() * 2 - 1) * RUELLE_JITTER;
     this.ennemis.push({
@@ -244,6 +276,9 @@ const Ruelle = {
       /* dégâts encaissés dans les jambes depuis le dernier trébuchement,
          et délai avant le prochain jet */
       usure:0, attente:ref.jet ? melange(ref.jet.attente[0], ref.jet.attente[1], Math.random()) : 0,
+      /* la garde : usure des avant-bras, et délai avant de la relever */
+      usureGarde:0,
+      attenteGarde:ref.garde ? melange(ref.garde.attente[0], ref.garde.attente[1], Math.random()) : 0,
     });
     this.aSortir--;
   },
@@ -283,6 +318,13 @@ const Ruelle = {
     const f = 0.20 + Math.random() * 0.60;     /* elle ne visait pas la tête */
     void IA_ECART;
     const zone = (ZONES_CORPS.find(z => f >= z.haut && f < z.bas) || ZONES_CORPS[1]).id;
+    if (this.gardeTient(but) && zone === "tete"){
+      but.usureGarde += brut;
+      if (but.usureGarde >= but.ref.garde.seuil){
+        but.usureGarde = 0; but.etat = "garde_casse"; but.tEtat = 0;
+      }
+      return;
+    }
     const brut = zone === "tete" ? arme.tete : zone === "torse" ? arme.torse : arme.jambes;
     const degat = brut * ((but.ref.mult && but.ref.mult[zone]) || 1);
     but.pv -= degat; but.touche = zone; Sons.impact(false);
@@ -301,6 +343,8 @@ const Ruelle = {
      plus jamais. Un ennemi déjà au sol ou en train de lancer ne trébuche
      pas — interrompre un jet est le travail du tir dans le bras, pas
      celui-ci. */
+  gardeTient(e){ return !!e.ref.garde && e.etat === "garde"; },
+
   userJambes(e, zone, degat){
     if (zone !== "jambes" || !e.ref.trebuche) return;
     if (e.etat === "chute" || e.etat === "sol" || e.etat === "trebuche") return;
@@ -345,6 +389,19 @@ const Ruelle = {
       e.tEtat += dt;
       if (e.etat === "course"){
         e.z += e.vitesse * dt;
+        /* Le bond passe AVANT tout le reste : arrivé là, plus rien
+           d'autre ne compte. */
+        if (e.ref.bond && e.z >= e.ref.bond.z){
+          e.etat = "bond"; e.tEtat = 0; Sons.souffle(0.12, 0.09, 500, 1.6);
+          continue;
+        }
+        if (e.ref.garde){
+          e.attenteGarde -= dt;
+          if (e.attenteGarde <= 0){
+            e.etat = "garde"; e.tEtat = 0; e.usureGarde = 0;
+            continue;
+          }
+        }
         /* Le jet : il faut être à moyenne distance, avoir attendu, et
            qu'aucune bouteille de lui ne soit déjà en vol. */
         const jet = e.ref.jet;
@@ -384,6 +441,39 @@ const Ruelle = {
           e.etat = "course"; e.tEtat = 0;
           const j = e.ref.jet;
           e.attente = melange(j.attente[0], j.attente[1], Math.random());
+        }
+      } else if (e.etat === "garde"){
+        /* IL AVANCE EN GARDE. S'arrêter aurait fait de la garde un
+           répit : c'est l'inverse qu'il faut, elle doit être une
+           pression. La cadence des deux poses fait la marche. */
+        e.z += e.vitesse * dt * 0.82;
+        e.tFrame += dt;
+        const cadG = melange(0.22, 0.11, courbeZ(e.z));
+        if (e.tFrame > cadG){ e.tFrame -= cadG; e.frame = (e.frame + 1) % 2; }
+        if (e.ref.bond && e.z >= e.ref.bond.z){ e.etat = "bond"; e.tEtat = 0; continue; }
+        if (e.tEtat > e.ref.garde.duree){
+          e.etat = "course"; e.tEtat = 0;
+          const g = e.ref.garde;
+          e.attenteGarde = melange(g.attente[0], g.attente[1], Math.random());
+        }
+      } else if (e.etat === "garde_casse"){
+        if (e.tEtat > 0.34){ e.etat = "sonne"; e.tEtat = 0; }
+      } else if (e.etat === "sonne"){
+        /* plus de défense du tout, et il n'avance plus : c'est la
+           fenêtre que le joueur a gagnée en cassant la garde */
+        if (e.tEtat > e.ref.garde.sonne){
+          e.etat = "course"; e.tEtat = 0;
+          const g = e.ref.garde;
+          e.attenteGarde = melange(g.attente[0], g.attente[1], Math.random());
+        }
+      } else if (e.etat === "bond"){
+        if (e.tEtat > e.ref.bond.duree){
+          this.barricade = Math.max(0, this.barricade - e.ref.bond.degat);
+          this.secousse = 1.0; this.hitStop = Math.max(this.hitStop, 0.06);
+          Sons.choc();
+          this.ennemis.splice(i, 1);
+          if (this.barricade <= 0) this.terminer(false);
+          continue;
         }
       } else if (e.etat === "trebuche"){
         /* il ne recule pas, il PERD DU TEMPS : c'est tout l'intérêt de
@@ -459,6 +549,10 @@ const Ruelle = {
     for (let i = this.impacts.length - 1; i >= 0; i--){
       this.impacts[i].t += dt;
       if (this.impacts[i].t > IMPACT_DUREE) this.impacts.splice(i, 1);
+    }
+    for (let i = this.blocages.length - 1; i >= 0; i--){
+      this.blocages[i].t += dt;
+      if (this.blocages[i].t > BLOCAGE_DUREE) this.blocages.splice(i, 1);
     }
   },
 
@@ -537,7 +631,24 @@ Ruelle.tirer = function(fx, fy){
   const e = cible.ennemi;
   const brut = cible.zone === "tete" ? arme.tete
              : cible.zone === "torse" ? arme.torse : arme.jambes;
-  const degat = brut * ((e.ref.mult && e.ref.mult[cible.zone]) || 1);
+  /* GARDE : viser la tête revient à tirer dans les avant-bras. Aucun
+     point de vie ne tombe — mais il FAUT le dire, sinon le joueur croit
+     le jeu cassé. C'est le piège « éteint ne veut pas dire invisible »
+     appliqué au tir : un coup sans effet visible est un bug aux yeux de
+     celui qui joue. */
+  if (this.gardeTient(e) && cible.zone === "tete"){
+     e.usureGarde += brut;
+     this.blocages.push({ x:fx, y:fy, t:0 });
+     Sons.bloque();
+     if (e.usureGarde >= e.ref.garde.seuil){
+       e.usureGarde = 0; e.etat = "garde_casse"; e.tEtat = 0;
+       Sons.impact(true); this.secousse = Math.max(this.secousse, 0.45);
+     }
+     return true;
+  }
+  const degat = brut * ((e.ref.mult && e.ref.mult[cible.zone]) || 1)
+              * (e.etat === "sonne" && e.ref.garde && cible.zone === "tete"
+                 ? e.ref.garde.multSonne : 1);
   e.pv -= degat;
   e.touche = cible.zone;
   this.userJambes(e, cible.zone, degat);
@@ -563,6 +674,10 @@ Ruelle.poseEnnemi = function(e){
   if (e.poseForcee) return e.poseForcee;
   if (e.etat === "sol") return "sol";
   if (e.etat === "chute") return e.tEtat < 0.21 ? "chute1" : "chute2";
+  if (e.etat === "garde") return "garde" + (1 + e.frame);
+  if (e.etat === "garde_casse") return "garde_casse";
+  if (e.etat === "sonne") return "sonne";
+  if (e.etat === "bond") return "bond";
   if (e.etat === "ramasse") return "ramasse";
   if (e.etat === "arme") return "arme";
   if (e.etat === "lance") return "lance";
@@ -638,7 +753,12 @@ const RuelleVue = {
     /* les ennemis, du plus lointain au plus proche */
     const liste = Ruelle.ennemis.slice().sort((a, b) => a.z - b.z);
     for (const e of liste){
-      const spr = Images.table["enn_" + e.ref.sprite + "_" + Ruelle.poseEnnemi(e)];
+      /* REPLI SUR run1. Une pose absente rendait l'ennemi INVISIBLE
+         alors qu'il continuait d'avancer et d'entamer la barricade : le
+         pire des symptômes, parce qu'on cherche le bug dans la logique.
+         Il vaut mieux une pose fausse qu'un ennemi fantôme. */
+      const spr = Images.table["enn_" + e.ref.sprite + "_" + Ruelle.poseEnnemi(e)]
+               || Images.table["enn_" + e.ref.sprite + "_run1"];
       if (!spr || !spr.naturalWidth) continue;
       const b = Ruelle.boiteEnnemi(e);
       /* ANCRAGE PAR LES PIEDS. Toutes les poses n'ont pas le même
@@ -739,6 +859,26 @@ const RuelleVue = {
       const yi = H * RUELLE_PREMIER_PLAN;
       ctx.globalAlpha = borne(1 - (av - 0.45) / 0.55, 0, 1);
       ctx.drawImage(img, xi - li / 2, yi - hi * 0.62, li, hi);
+      ctx.globalAlpha = 1;
+    }
+
+    /* LES BLOCAGES : un anneau blanc qui s'ouvre là où la balle a tapé
+       la garde. En blanc et en anneau, jamais en étoile rouge — il ne
+       doit pas se confondre une seconde avec un coup qui porte. */
+    for (const bl of Ruelle.blocages){
+      const av = bl.t / BLOCAGE_DUREE;
+      const ray = L * (0.012 + 0.030 * av);
+      ctx.globalAlpha = borne(1 - av, 0, 1) * 0.9;
+      ctx.strokeStyle = "#F1F5FF";
+      ctx.lineWidth = Math.max(1.5, L * 0.008 * (1 - av * 0.6));
+      ctx.beginPath(); ctx.arc(bl.x, bl.y, ray, 0, 6.2832); ctx.stroke();
+      /* deux éclats obliques : l'anneau seul se lisait comme un viseur */
+      ctx.beginPath();
+      for (const [ax, ay] of [[0.7, -0.7], [-0.7, 0.7]]){
+        ctx.moveTo(bl.x + ax * ray * 1.1, bl.y + ay * ray * 1.1);
+        ctx.lineTo(bl.x + ax * ray * 1.8, bl.y + ay * ray * 1.8);
+      }
+      ctx.stroke();
       ctx.globalAlpha = 1;
     }
 
