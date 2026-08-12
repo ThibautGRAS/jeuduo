@@ -763,7 +763,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.66</div>
+  <div id="version">CALLAGHAN v6.67</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -835,7 +835,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.66";
+const VERSION = "6.67";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1546,6 +1546,10 @@ const REPLI_POSE = {
    DEUX vues : de côté pendant le vol, et de face quand ils fondent
    sur la barricade — un objet qui arrive droit sur soi ne se dessine
    pas de profil. */
+/* Les portraits du bestiaire, recadrés dans les sprites de course par
+   `portraits.py` : un portrait dessiné à part dériverait du personnage,
+   c'est arrivé deux fois sur ce projet. */
+const PORTRAITS_RUELLE = ENNEMIS_RUELLE.map(e => "port_" + e);
 const OBJETS_RUELLE = [
   "obj_bouteille", "obj_pave", "obj_encensoir", "obj_conserve", "obj_bouteille_g",
   "obj_bouteille_f", "obj_pave_f", "obj_encensoir_f", "obj_conserve_f", "obj_bouteille_gf",
@@ -1567,6 +1571,7 @@ const IMAGES_NIVEAU4 = ["ruelle", "ruelle_flou", "duo_ruelle"]
     (POSES_BASE_MANQUANTES[e] ? ["run1"] : POSES_ENNEMI).map(po => "enn_" + e + "_" + po)))
   .concat(ENNEMIS_RUELLE.flatMap(e => (POSES_PROPRES[e] || []).map(po => "enn_" + e + "_" + po)))
   .concat(OBJETS_RUELLE)
+  .concat(PORTRAITS_RUELLE)
   .concat(POSES_RUEL_TH.map(po => "ruel_th_" + po))
   .concat(POSES_RUEL_PF.map(po => "ruel_pf_" + po))
   /* Les commandes sont des IMAGES depuis la v6.50 : peintes au canevas
@@ -9540,6 +9545,65 @@ const ALERTE_TAILLE = 0.085;
    étoile : il ne doit surtout pas ressembler à un coup qui porte. */
 const BLOCAGE_DUREE = 0.26;
 
+/* ---------------- le bestiaire ----------------
+   Une entrée par méchant : le sous-titre de sa carte, et les deux
+   répliques de son arrivée. Le sous-titre doit dire COMMENT LE JOUER en
+   quatre mots — c'est une carte de bestiaire, pas une biographie. La
+   seconde réplique fait la blague, mais elle porte la même information :
+   c'est le seul moment où le jeu enseigne, et il ne dure que deux
+   secondes. */
+const BESTIAIRE = {
+  depar: {
+    soustitre: "Blindé devant. Les jambes le ralentissent.",
+    arrivee: ["Mon Dieu, un Depardiahree !", "Voilà un Depardiahree.",
+              "Il y a un Depardiahree qui remonte la rue."],
+    reponse: ["Vise pas le ventre, y'a rien à en tirer.",
+              "Dans les jambes. Il tombe, il boit, il se relève.",
+              "Il a le torse d'une armoire normande."],
+  },
+  dsk: {
+    soustitre: "Rapide. Il se cache le visage.",
+    arrivee: ["Un DSKKK !", "Attention, DSKKK.",
+              "Mon Dieu, un DSKKK !"],
+    reponse: ["Il met les mains devant. Casse-lui la garde.",
+              "Deux fois plus vite et deux fois moins de plomb.",
+              "Vise les jambes, elles passent."],
+  },
+  jubi: {
+    soustitre: "Il s'arrête pour lancer. Vise son bras.",
+    arrivee: ["Voilà Jubilar le fumier.", "Un Jubilar !",
+              "Jubilar. Évidemment."],
+    reponse: ["Quand il arme, tire dans le bras. Ça lui coupe l'envie.",
+              "Le pavé ou le bras. À toi de voir.",
+              "Il s'arrête toujours avant de lancer. C'est son défaut."],
+  },
+  abbe: {
+    soustitre: "Il bombarde de loin, par-dessus les autres.",
+    arrivee: ["Mon Dieu, l'Abbé Forceur !", "Voilà l'Abbé.",
+              "L'Abbé Forceur, en personne."],
+    reponse: ["Il lance en cloche. À couvert, ça suffit.",
+              "Il reste au fond et il balance. Charmant homme.",
+              "Son encensoir monte haut. Tu as le temps."],
+  },
+  bruh: {
+    soustitre: "Molotov tendu. Trop rapide pour se couvrir.",
+    arrivee: ["Un Patrick BruHell !", "Voilà BruHell.",
+              "Mon Dieu, BruHell."],
+    reponse: ["Lui, ça arrive à plat. Te couvrir sera trop tard.",
+              "Tire dans le bras. C'est la seule réponse.",
+              "Un cocktail, mais pas celui de Francky."],
+  },
+};
+
+/* ---------------- l'annonce de horde ----------------
+   Avant chaque horde, un héros nomme ce qui arrive et l'autre répond. À
+   la PREMIÈRE rencontre d'un méchant, une carte de bestiaire précède
+   l'échange : portrait en buste, nom, et deux mots qui disent comment le
+   jouer. C'est le seul endroit du niveau où le jeu explique quelque
+   chose — autant que ce soit court et que ça n'arrive qu'une fois. */
+const ANNONCE_CARTE = 2.6;
+const ANNONCE_MOT = 2.2;
+
 /* ---------------- la cible du bras armé ----------------
    Mesuré au moment de concevoir les hordes : au fond de la rue un ennemi
    occupe 5,5 % de la hauteur d'écran, donc son avant-bras environ six
@@ -9623,6 +9687,8 @@ const ZONES_CORPS = [
 const Ruelle = {
   actif:false, fini:null, restant:0,
   ennemis:[], vague:0, aSortir:0, prochain:0,
+  /* Qui a déjà été rencontré, pour ne montrer la carte qu'une fois. */
+  vus:[], annonce:null, geantCle:null,
   projectiles:[], impacts:[], blocages:[],
   /* Le relevé de fin. `tues` est indexé par TYPE et pas par nom
      affichable : le nom vit dans ENNEMIS, et le dupliquer ici aurait
@@ -9641,34 +9707,40 @@ const Ruelle = {
      à la fois — tête ou jambes contre Depardiahree, puis la garde de
      DSKKK — et les suivantes mélangent, parce que la vraie difficulté
      est de décider QUI tuer en premier. */
+  /* NEUF HORDES, et une progression qui ENSEIGNE au lieu de monter en
+     nombre. Un type de méchant à la première, deux à la deuxième, trois
+     à la troisième — puis un GÉANT. Le quatrième type arrive après lui,
+     le cinquième ensuite, et un second géant clôt le cycle.
+
+     `simultanes` plafonne le nombre de vivants à l'écran. C'est ce qui
+     rend la question « qui tuer en premier ? » lisible : à huit ennemis
+     de front on ne choisit plus, on arrose. */
   VAGUES:[
-    { nombre:5,  delai:1.9,  vitesse:1.00, types:["depar"] },
-    { nombre:6,  delai:1.7,  vitesse:1.02, types:["dsk"] },
-    { nombre:6,  delai:1.6,  vitesse:1.04, types:["jubi"] },
-    { nombre:6,  delai:1.7,  vitesse:1.02, types:["abbe"] },
-    /* La combinaison qui fait tout le niveau : un mur de Depardiahree
-       protège le corps de l'Abbé mais pas la cible sur son bras. Il faut
-       choisir entre casser le mur et interrompre le bombardement. */
-    { nombre:10, delai:1.3,  vitesse:1.10, types:["depar", "depar", "abbe"] },
-    { nombre:12, delai:1.2,  vitesse:1.14, types:["depar", "jubi", "abbe"] },
-    { nombre:6,  delai:1.8,  vitesse:1.02, types:["bruh"] },
-    /* Les deux bombardiers ENSEMBLE : l'un haut et lent, l'autre à plat
-       et vite. Se couvrir sauve de l'un et pas de l'autre — il faut lire
-       lequel arme. */
-    { nombre:12, delai:1.2,  vitesse:1.16, types:["abbe", "bruh", "depar"] },
-    { nombre:15, delai:1.0,  vitesse:1.22, types:["dsk", "jubi", "depar"] },
-    { nombre:20, delai:0.78, vitesse:1.32, types:["depar", "dsk", "jubi", "abbe", "bruh"] },
-    /* La septième mélange les cinq : c'est la horde qui pose enfin la
-       question du document de conception — QUI tuer en premier. Les deux
-       fragiles arrivent vite et meurent vite, les deux lanceurs
-       s'arrêtent en arrière, le tank sert de mur. */
-    { nombre:22, delai:0.68, vitesse:1.40,
+    { nombre:6,  delai:1.9,  vitesse:1.00, simultanes:2, types:["depar"] },
+    { nombre:8,  delai:1.7,  vitesse:1.04, simultanes:3, types:["depar", "dsk"] },
+    { nombre:10, delai:1.5,  vitesse:1.08, simultanes:3, types:["depar", "dsk", "jubi"] },
+    { nombre:1,  delai:2.4,  vitesse:1.00, simultanes:1, geant:true,
+      types:["depar", "dsk", "jubi"] },
+    { nombre:11, delai:1.4,  vitesse:1.14, simultanes:3,
+      types:["depar", "dsk", "jubi", "abbe"] },
+    { nombre:12, delai:1.3,  vitesse:1.18, simultanes:3,
+      types:["depar", "dsk", "jubi", "abbe", "bruh"] },
+    { nombre:1,  delai:2.4,  vitesse:1.00, simultanes:1, geant:true,
+      types:["dsk", "jubi", "abbe", "bruh"] },
+    { nombre:14, delai:1.1,  vitesse:1.24, simultanes:3,
+      types:["depar", "dsk", "jubi", "abbe", "bruh"] },
+    { nombre:16, delai:0.95, vitesse:1.32, simultanes:3,
       types:["depar", "dsk", "jubi", "abbe", "bruh"] },
   ],
+  /* Un géant, c'est un des cinq en 2,2 fois plus grand et quatre fois
+     plus dur. Sa mécanique est INCHANGÉE : c'est ce qui le rend juste —
+     on a appris à le lire, il faut le refaire en tenant plus longtemps. */
+  GEANT_TAILLE:2.2, GEANT_PV:4.0, GEANT_VITESSE:0.62,
 
   demarrer(){
     this.actif = true; this.fini = null;
     this.ennemis.length = 0; this.flashes.length = 0;
+    this.vus.length = 0; this.annonce = null; this.geantCle = null;
     this.projectiles.length = 0; this.impacts.length = 0; this.blocages.length = 0;
     this.bilan = { tues:{}, tetes:0, gardes:0, bloquees:0, encaissees:0,
                    contacts:0, hordes:0, annules:0 };
@@ -9692,6 +9764,54 @@ const Ruelle = {
     const v = this.VAGUES[Math.min(n, this.VAGUES.length - 1)];
     this.aSortir = v.nombre;
     this.prochain = 0.6;
+    /* Qui est la VEDETTE de cette horde : le type qu'on n'a jamais vu,
+       sinon le géant, sinon celui qui arrive le plus souvent. C'est lui
+       qu'on annonce — annoncer « des gens » n'apprend rien. */
+    const inedits = (v.types || []).filter(k => this.vus.indexOf(k) < 0);
+    const cle = v.geant
+      ? (this.geantCle = piocher(v.types.slice()))
+      : (inedits.length ? inedits[0] : piocher(v.types.slice()));
+    this.annonce = {
+      cle, geant:!!v.geant, t:0,
+      /* La CARTE de bestiaire ne se montre qu'à la PREMIÈRE rencontre :
+         c'est ce qui en fait une découverte. Neuf cartes dont six déjà
+         vues, ce serait vingt secondes d'attente. */
+      carte:this.vus.indexOf(cle) < 0 || !!v.geant,
+      repliques:this.repliquesAnnonce(cle, !!v.geant),
+    };
+    if (this.vus.indexOf(cle) < 0) this.vus.push(cle);
+    this.prochain = this.annonce.carte ? ANNONCE_CARTE + ANNONCE_MOT
+                                       : ANNONCE_MOT;
+  },
+
+  /* Un héros nomme, l'autre commente. Le deuxième réplique est celle qui
+     caractérise le méchant : c'est là qu'on apprend à quoi s'attendre,
+     sous couvert de blague. */
+  repliquesAnnonce(cle, geant){
+    const b = BESTIAIRE[cle] || {};
+    const nom = (ENNEMIS[cle] || {}).nom || "QUELQU'UN";
+    if (geant){
+      return [[0, "Euh… Thibaut ?"],
+              [1, piocher(["Je le vois. Je le vois très bien.",
+                           "Il a mangé les autres, c'est pas possible.",
+                           "On va avoir besoin de plus de balles."])],
+              [0, "UN " + nom + " GÉANT !"]];
+    }
+    return [[Math.random() < 0.5 ? 0 : 1, piocher(b.arrivee || ["Un " + nom + " !"])],
+            [Math.random() < 0.5 ? 1 : 0, piocher(b.reponse || ["Charmant."])]];
+  },
+
+  /* Vivants à l'écran : ceux qui peuvent encore agir. Un corps au sol ne
+     compte pas — sinon le plafond se remplirait de cadavres. */
+  vivants(){
+    return this.ennemis.filter(e => e.etat !== "chute" && e.etat !== "sol").length;
+  },
+  simultanesMax(){
+    const v = this.VAGUES[Math.min(this.vague, this.VAGUES.length - 1)];
+    return v.simultanes || 3;
+  },
+  vagueCourante(){
+    return this.VAGUES[Math.min(this.vague, this.VAGUES.length - 1)];
   },
 
   ajouterEnnemi(){
@@ -9699,12 +9819,22 @@ const Ruelle = {
     /* Le casting est tiré dans la liste de la vague, répétitions
        comprises : un type présent deux fois sort deux fois plus. */
     const noms = v.types || Object.keys(ENNEMIS);
-    const ref = ENNEMIS[noms[Math.floor(Math.random() * noms.length)]];
-    const jitter = 1 + (Math.random() * 2 - 1) * RUELLE_JITTER;
+    const cle = v.geant && this.geantCle ? this.geantCle
+              : noms[Math.floor(Math.random() * noms.length)];
+    const ref = ENNEMIS[cle];
+    const jitter = v.geant ? 1 : 1 + (Math.random() * 2 - 1) * RUELLE_JITTER;
+    /* LE GÉANT n'est pas un sixième ennemi : c'est l'un des cinq, en plus
+       gros et plus dur, avec sa mécanique INCHANGÉE. C'est ce qui le rend
+       juste — on a appris à le lire, il faut le refaire en tenant plus
+       longtemps. Il est aussi plus LENT : sans ça, quatre fois les points
+       de vie à vitesse normale ne laissait pas le temps de le travailler. */
+    const g = !!v.geant;
     this.ennemis.push({
-      ref, pv:ref.pv, pvMax:ref.pv,
-      couloir:Math.floor(Math.random() * RUELLE_COULOIRS.length),
-      z:0, vitesse:ref.vitesse * v.vitesse * jitter,
+      ref, geant:g,
+      pv:ref.pv * (g ? this.GEANT_PV : 1), pvMax:ref.pv * (g ? this.GEANT_PV : 1),
+      taille:(ref.taille || 1) * (g ? this.GEANT_TAILLE : 1),
+      couloir:g ? 2 : Math.floor(Math.random() * RUELLE_COULOIRS.length),
+      z:0, vitesse:ref.vitesse * v.vitesse * jitter * (g ? this.GEANT_VITESSE : 1),
       etat:"course", frame:0, tFrame:0, tEtat:0, mort:0,
       touche:null,
       /* dégâts encaissés dans les jambes depuis le dernier trébuchement,
@@ -9892,7 +10022,7 @@ const Ruelle = {
       if (this.replique.t <= 0) this.replique = null;
     }
     /* apparitions */
-    if (this.aSortir > 0){
+    if (this.aSortir > 0 && this.vivants() < this.simultanesMax()){
       this.prochain -= dt;
       if (this.prochain <= 0){
         this.ajouterEnnemi();
@@ -10033,6 +10163,11 @@ const Ruelle = {
         if (e.mort > 1.2){ this.ennemis.splice(i, 1); continue; }
       }
     }
+    if (this.annonce){
+      this.annonce.t += dt;
+      const fin = (this.annonce.carte ? ANNONCE_CARTE : 0) + ANNONCE_MOT;
+      if (this.annonce.t >= fin) this.annonce = null;
+    }
     this.pasProjectiles(dt);
     for (let i = this.flashes.length - 1; i >= 0; i--){
       this.flashes[i].t -= dt;
@@ -10054,7 +10189,7 @@ const Ruelle = {
     /* On fige la hauteur de départ MAINTENANT : c'est la main du
        lanceur, et lui va continuer d'avancer ou tomber pendant le vol. */
     const p = Perspective.projeter(e.z, e.couloir);
-    const haut = p.hauteur * e.ref.taille;
+    const haut = p.hauteur * (e.taille || e.ref.taille);
     this.projectiles.push({
       objet:j.objet, couloir:e.couloir, z0:e.z, y0:p.y - haut * 0.82,
       t:0, duree:j.vol, degat:j.degat, cloche:j.cloche,
@@ -10135,7 +10270,7 @@ const Ruelle = {
    être instantané, c'est tout l'intérêt du tap-to-shoot. */
 Ruelle.boiteEnnemi = function(e){
   const p = Perspective.projeter(e.z, e.couloir);
-  const h = p.hauteur * e.ref.taille;
+  const h = p.hauteur * (e.taille || e.ref.taille);
   const img = Images.table["enn_" + e.ref.sprite + "_run1"];
   const rap = img && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 0.9;
   const l = h * rap;
@@ -10291,6 +10426,95 @@ Ruelle.poseHeros = function(i){
 
 /* ================= le rendu de la ruelle ================= */
 const RuelleVue = {
+  /* La carte de bestiaire, puis l'échange. Deux temps SUCCESSIFS et non
+     superposés : la carte présente, le dialogue commente. Les mélanger
+     donnerait un écran illisible pendant deux secondes. */
+  dessinerAnnonce(){
+    const L = Camera.L, H = Camera.H, an = Ruelle.annonce;
+    const b = BESTIAIRE[an.cle] || {};
+    const ref = ENNEMIS[an.cle] || {};
+    const carteFin = an.carte ? ANNONCE_CARTE : 0;
+
+    if (an.carte && an.t < carteFin){
+      const av = an.t / carteFin;
+      /* elle entre vite et sort vite : le temps utile est au milieu */
+      const opac = borne(Math.min(av / 0.14, (1 - av) / 0.18), 0, 1);
+      const cy = H * 0.34;
+      ctx.globalAlpha = opac * 0.82;
+      ctx.fillStyle = "#080D18";
+      ctx.fillRect(0, cy - H * 0.30, L, H * 0.60);
+      ctx.globalAlpha = opac;
+      const im = Images.table["port_" + an.cle];
+      const cote = H * 0.30 * (an.geant ? 1.12 : 1);
+      if (im && im.naturalWidth){
+        ctx.drawImage(im, L / 2 - cote / 2, cy - H * 0.24, cote, cote);
+      }
+      ctx.textAlign = "center";
+      /* Le texte est RÉDUIT jusqu'à tenir, il n'est pas posé à une taille
+         devinée : « L'ABBÉ FORCEUR » débordait des deux côtés en portrait,
+         et le sous-titre encore plus. La largeur disponible se mesure,
+         elle ne s'estime pas. */
+      ctx.fillStyle = "#F1F5FF";
+      RuelleVue.texteQuiTient((an.geant ? "GÉANT " : "") + (ref.nom || ""),
+        L / 2, cy + H * 0.115, L * 0.92, H * 0.052, "800");
+      ctx.fillStyle = "#F7B32B";
+      RuelleVue.texteQuiTient(b.soustitre || "",
+        L / 2, cy + H * 0.163, L * 0.90, H * 0.025, "600");
+      ctx.textAlign = "left";
+      ctx.globalAlpha = 1;
+      return;
+    }
+
+    /* l'échange : une réplique après l'autre */
+    const dt2 = an.t - carteFin;
+    const rep = an.repliques || [];
+    if (!rep.length) return;
+    const par = ANNONCE_MOT / rep.length;
+    const i = Math.min(rep.length - 1, Math.floor(dt2 / par));
+    const dedans = dt2 - i * par;
+    const opac = borne(Math.min(dedans / 0.12, (par - dedans) / 0.15), 0, 1);
+    this.bulleHeros(rep[i][1], rep[i][0], opac);
+  },
+
+  /* Écrit centré en (x, y) sans jamais dépasser `large` : on part de la
+     taille voulue et on descend tant que ça ne rentre pas. Quinze essais
+     suffisent largement et bornent le coût. */
+  texteQuiTient(txt, x, y, large, taille, gras){
+    if (!txt) return;
+    let t2 = taille;
+    for (let k = 0; k < 15; k++){
+      ctx.font = gras + " " + Math.round(t2) + "px 'Baloo 2', system-ui, sans-serif";
+      if (ctx.measureText(txt).width <= large) break;
+      t2 *= 0.92;
+    }
+    ctx.fillText(txt, x, y);
+  },
+
+  /* Une bulle au-dessus du héros qui parle. Bornée sur SA largeur : la
+     même faute a déjà coupé une phrase deux fois sur ce projet. */
+  bulleHeros(txt, qui, opac){
+    const L = Camera.L, H = Camera.H;
+    const h = Heros[qui] || Heros[0];
+    ctx.save();
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.font = "800 " + Math.round(H * 0.028) + "px 'Baloo 2', system-ui, sans-serif";
+    const bw = Math.min(ctx.measureText(txt).width + H * 0.040, L * 0.88);
+    const bx = borne(L * (qui === 0 ? 0.32 : 0.68), bw / 2 + 6, L - bw / 2 - 6);
+    const by = H * 0.725;
+    ctx.globalAlpha = opac;
+    ctx.fillStyle = "rgba(250,248,255,.96)";
+    arrondi(bx - bw / 2, by - H * 0.032, bw, H * 0.064, H * 0.026); ctx.fill();
+    ctx.fillStyle = h && h.couleur ? h.couleur : "#171226";
+    ctx.font = "800 " + Math.round(H * 0.017) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillText(h && h.nom ? h.nom : "", bx, by - H * 0.019);
+    ctx.fillStyle = "#171226";
+    ctx.font = "800 " + Math.round(H * 0.028) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillText(txt, bx, by + H * 0.009);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+    ctx.textAlign = "left";
+  },
+
   dessiner(){
     const L = Camera.L, H = Camera.H;
     ctx.save();
@@ -10443,6 +10667,11 @@ const RuelleVue = {
       ctx.drawImage(img, xi - li / 2, yi - hi * 0.62, li, hi);
       ctx.globalAlpha = 1;
     }
+
+    /* L'ANNONCE se peint par-dessus le décor mais SOUS le pupitre : le
+       joueur ne doit jamais perdre ses commandes de vue, même pendant
+       qu'on lui présente ce qui arrive. */
+    if (Ruelle.annonce) this.dessinerAnnonce();
 
     /* LES BLOCAGES : un anneau blanc qui s'ouvre là où la balle a tapé
        la garde. En blanc et en anneau, jamais en étoile rouge — il ne
@@ -12061,7 +12290,7 @@ globalThis.DTOUR = {
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, portraitOk, ecranOk, orientationVoulue, ORIENTATION, Ecran, Interface, Pause, Boucle,
   FOULE_PLACES, FOULE_PAR_GRAPPE, FOULE_PHRASES, FOULE_PIEDS, FOULE_TAILLE, BAR_COMPTOIR,
   Perspective, courbeZ, POSES_ENNEMI, POSES_PROPRES, POSES_BASE_MANQUANTES,
-  REPLI_POSE, ENNEMIS_INCOMPLETS, ENNEMIS_INCOMPLETS,
+  REPLI_POSE, ENNEMIS_INCOMPLETS, BESTIAIRE, ANNONCE_CARTE, ANNONCE_MOT, ENNEMIS_INCOMPLETS,
   attenuation, PORTEE_MIN, PORTEE_PLEINE, PROJ_HAUTEUR,
   ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, IA_REUSSITE, IA_CADENCE, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, RUELLE_DEGAT_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,

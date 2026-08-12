@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.66";
+const VERSION = "6.67";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -729,6 +729,10 @@ const REPLI_POSE = {
    DEUX vues : de côté pendant le vol, et de face quand ils fondent
    sur la barricade — un objet qui arrive droit sur soi ne se dessine
    pas de profil. */
+/* Les portraits du bestiaire, recadrés dans les sprites de course par
+   `portraits.py` : un portrait dessiné à part dériverait du personnage,
+   c'est arrivé deux fois sur ce projet. */
+const PORTRAITS_RUELLE = ENNEMIS_RUELLE.map(e => "port_" + e);
 const OBJETS_RUELLE = [
   "obj_bouteille", "obj_pave", "obj_encensoir", "obj_conserve", "obj_bouteille_g",
   "obj_bouteille_f", "obj_pave_f", "obj_encensoir_f", "obj_conserve_f", "obj_bouteille_gf",
@@ -750,6 +754,7 @@ const IMAGES_NIVEAU4 = ["ruelle", "ruelle_flou", "duo_ruelle"]
     (POSES_BASE_MANQUANTES[e] ? ["run1"] : POSES_ENNEMI).map(po => "enn_" + e + "_" + po)))
   .concat(ENNEMIS_RUELLE.flatMap(e => (POSES_PROPRES[e] || []).map(po => "enn_" + e + "_" + po)))
   .concat(OBJETS_RUELLE)
+  .concat(PORTRAITS_RUELLE)
   .concat(POSES_RUEL_TH.map(po => "ruel_th_" + po))
   .concat(POSES_RUEL_PF.map(po => "ruel_pf_" + po))
   /* Les commandes sont des IMAGES depuis la v6.50 : peintes au canevas

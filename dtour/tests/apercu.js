@@ -748,6 +748,51 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "39_deux_bombardiers");
   }
 
+  /* 40-41. L'ANNONCE DE HORDE : la carte de bestiaire d'un méchant
+     rencontré pour la première fois, puis l'échange entre les deux
+     héros. Deux temps successifs, jamais superposés. */
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0;
+    D.Ruelle.annonce = { cle:"abbe", geant:false, t:1.3, carte:true,
+                         repliques:D.Ruelle.repliquesAnnonce("abbe", false) };
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "40_carte_bestiaire");
+  }
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0;
+    /* passé la carte : on est dans l'échange */
+    D.Ruelle.annonce = { cle:"depar", geant:false, t:0.6, carte:false,
+      repliques:[[0, "Mon Dieu, un Depardiahree !"],
+                 [1, "Vise pas le ventre, y'a rien à en tirer."]] };
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "41_annonce_dialogue");
+  }
+  /* 42. LE GÉANT : un des cinq, 2,2 fois plus grand, mécanique inchangée. */
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 0; D.Ruelle.annonce = null;
+    const ref = D.ENNEMIS.depar;
+    D.Ruelle.ennemis.push({ ref, geant:true,
+      pv:ref.pv * D.Ruelle.GEANT_PV * 0.7, pvMax:ref.pv * D.Ruelle.GEANT_PV,
+      taille:(ref.taille || 1) * D.Ruelle.GEANT_TAILLE,
+      couloir:2, z:0.62, vitesse:ref.vitesse * D.Ruelle.GEANT_VITESSE,
+      etat:"course", frame:2, tFrame:0, tEtat:0, mort:0, touche:null,
+      usure:0, attente:99, usureGarde:0, attenteGarde:999 });
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "42_geant");
+  }
+
   /* 27. les poses propres de Depardiahree, à leur taille de jeu, sur
      une même ligne de sol : c'est la seule façon de voir qu'une pose
      plus haute que les autres ne fait pas grandir le personnage. */

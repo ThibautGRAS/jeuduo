@@ -283,6 +283,33 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Neuf hordes, deux géants, un bestiaire** (v6.67) : le niveau 4 cesse
+d'être une montée en nombre pour devenir un apprentissage.
+
+**Un type de méchant à la première horde, deux à la deuxième, trois à la
+troisième — puis un GÉANT.** Le quatrième type arrive après lui, le
+cinquième ensuite, et un second géant clôt le cycle. Neuf hordes.
+
+**Jamais plus de trois à l'écran.** C'est ce qui rend la question « qui
+tuer en premier ? » lisible : à huit de front on ne choisit plus, on
+arrose.
+
+**Le géant est l'un des cinq**, 2,2 fois plus grand, quatre fois plus
+dur, et plus lent. Sa mécanique est **inchangée** — c'est ce qui le rend
+juste : on a appris à le lire, il faut le refaire en tenant plus
+longtemps.
+
+**Une carte de bestiaire à la première rencontre** : portrait en buste,
+nom, et un sous-titre qui dit comment le jouer en quatre mots. Elle ne
+revient pas — c'est une découverte, pas un rappel. Les portraits sont
+recadrés dans les sprites de course, donc le portrait EST le personnage
+qu'on va affronter.
+
+**Puis l'échange.** Un héros nomme, l'autre commente : « Mon Dieu, un
+Depardiahree ! » — « Vise pas le ventre, y'a rien à en tirer. » La
+deuxième réplique fait la blague mais porte l'information : c'est le seul
+moment où le jeu enseigne, et il dure deux secondes.
+
 **BruHell complète le bestiaire** (v6.66) : cinquième et dernier ennemi,
 dix-neuf poses. **Les cinq sont complets, `ENNEMIS_INCOMPLETS` est vide.**
 

@@ -1135,6 +1135,23 @@ au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
 
+### Un texte de carte se RÉDUIT jusqu'à tenir, il ne se devine pas
+
+« L'ABBÉ FORCEUR » débordait des deux côtés de l'écran en portrait, et
+son sous-titre encore plus. Poser une taille de police en fraction de
+hauteur marche pour un mot court et casse au premier nom long.
+`texteQuiTient()` part de la taille voulue et descend tant que la mesure
+dépasse la largeur disponible. Quinze essais bornent le coût.
+
+### Une méthode de rendu posée dans le mauvais objet ne se voit qu'à
+l'exécution
+
+J'ai inséré `dessinerAnnonce` en m'ancrant sur `razViseur`, qui appartient
+à `Ruelle` et non à `RuelleVue` : la syntaxe passait, les tests passaient,
+et le harnais est tombé sur « this.dessinerAnnonce is not a function ».
+Une ancre d'insertion doit être choisie DANS l'objet visé, pas à sa
+proximité dans le fichier.
+
 ### Un script qui écrit des fichiers doit écrire ATOMIQUEMENT
 
 J'ai corrompu deux sprites, à deux reprises, en interrompant

@@ -3716,6 +3716,92 @@ if (D){
       return Object.keys(D.ENNEMIS).every(k => derniere.indexOf(k) >= 0);
     })());
 
+  /* ---- progression des hordes, géants, annonce ---- */
+  verifier("le casting s'élargit d'une horde à l'autre",
+    (() => {
+      /* Un type à la première, deux à la deuxième, trois à la troisième :
+         la progression ENSEIGNE au lieu de monter en nombre. */
+      const v = D.Ruelle.VAGUES.filter(x => !x.geant);
+      const n = v.map(x => new Set(x.types).size);
+      messageDetail = "types par horde : " + n.join(", ");
+      return n[0] === 1 && n[1] === 2 && n[2] === 3 &&
+        n.every((x, i) => i === 0 || x >= n[i - 1]);
+    })());
+
+  verifier("un géant toutes les trois hordes",
+    (() => {
+      const v = D.Ruelle.VAGUES;
+      const idx = v.map((x, i) => x.geant ? i : -1).filter(i => i >= 0);
+      messageDetail = "géants aux hordes " + idx.map(i => i + 1).join(" et ");
+      return idx.length >= 2 && idx.every(i => (i + 1) % 3 === 1 || i > 0) &&
+        idx[1] - idx[0] === 3 && v[idx[0]].nombre === 1;
+    })());
+
+  verifier("jamais plus de trois méchants à l'écran",
+    (() => {
+      /* À huit de front on ne choisit plus, on arrose. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      let pic = 0;
+      for (let k = 0; k < 60 * 120; k++){
+        D.Jeu.pas(1 / 60);
+        pic = Math.max(pic, D.Ruelle.vivants());
+      }
+      messageDetail = "pic observé : " + pic;
+      return pic <= 3;
+    })());
+
+  verifier("un géant est l'un des cinq, en plus gros et plus dur",
+    (() => {
+      /* Sa mécanique est INCHANGÉE : c'est ce qui le rend juste, on a
+         appris à le lire. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      const gv = D.Ruelle.VAGUES.findIndex(x => x.geant);
+      D.Ruelle.lancerVague(gv);
+      D.Ruelle.annonce = null; D.Ruelle.ennemis.length = 0;
+      D.Ruelle.ajouterEnnemi();
+      const e = D.Ruelle.ennemis[0];
+      return e.geant && Object.keys(D.ENNEMIS).indexOf(
+               Object.keys(D.ENNEMIS).find(k => D.ENNEMIS[k] === e.ref)) >= 0 &&
+        e.pvMax === e.ref.pv * D.Ruelle.GEANT_PV &&
+        e.taille > (e.ref.taille || 1) * 2 &&
+        e.vitesse < e.ref.vitesse;
+    })());
+
+  verifier("la carte de bestiaire ne se montre qu'à la PREMIÈRE rencontre",
+    (() => {
+      /* Neuf cartes dont six déjà vues, ce serait vingt secondes
+         d'attente au lieu d'une découverte. */
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
+      const prem = D.Ruelle.annonce && D.Ruelle.annonce.carte;
+      const cle = D.Ruelle.annonce.cle;
+      D.Ruelle.lancerVague(0);
+      const deux = D.Ruelle.annonce && D.Ruelle.annonce.carte;
+      return prem === true && deux === false && D.Ruelle.vus.indexOf(cle) >= 0;
+    })());
+
+  verifier("chaque méchant a son entrée de bestiaire",
+    (() => {
+      return Object.keys(D.ENNEMIS).every(k => {
+        const b = D.BESTIAIRE[k];
+        return b && b.soustitre && b.soustitre.length > 12 &&
+          b.soustitre.length < 52 &&
+          (b.arrivee || []).length >= 2 && (b.reponse || []).length >= 2;
+      });
+    })(), "le sous-titre dit COMMENT le jouer, en quatre mots");
+
+  verifier("l'annonce nomme ce qui arrive, jamais « quelqu'un »",
+    (() => {
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      for (let i = 0; i < D.Ruelle.VAGUES.length; i++){
+        D.Ruelle.lancerVague(i);
+        const a = D.Ruelle.annonce;
+        if (!a || !a.repliques.length) return false;
+        if (a.repliques.some(r => /QUELQU'UN/.test(r[1]))) return false;
+        if (D.Ruelle.VAGUES[i].types.indexOf(a.cle) < 0) return false;
+      }
+      return true;
+    })());
+
   verifier("les ennemis de contact pèsent la même menace",
     (() => {
       /* La règle pv x vitesse ne vaut que pour ceux dont la menace EST
@@ -3830,8 +3916,13 @@ if (D){
   verifier("le niveau 4 démarre et peuple ses vagues",
     (() => {
       D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+      /* aSortir vaut désormais 6 et non 5 : la première horde a été
+         rallongée. Et rien ne sort avant la fin de l'annonce — carte de
+         bestiaire plus échange, soit près de cinq secondes. */
       const ok = D.Ruelle.actif && D.Ruelle.heros.length === 2 &&
-        D.Ruelle.barricade === 100 && D.Ruelle.aSortir === 5;
+        D.Ruelle.barricade === 100 &&
+        D.Ruelle.aSortir === D.Ruelle.VAGUES[0].nombre &&
+        D.Ruelle.annonce && D.Ruelle.ennemis.length === 0;
       for (let k = 0; k < 600; k++) D.Jeu.pas(1 / 60);
       return ok && D.Ruelle.ennemis.length > 0;
     })());
