@@ -3434,6 +3434,111 @@ if (D){
         /terminer\(false, "temps"\)/.test(source);
     })());
 
+  /* ---- la foule du premier plan (niveau 3) ---- */
+  const unBar = () => { D.Jeu.demarrer(3); D.Tournee.lancer(); D.Camera.mesurer(844, 318, 1); return D.Tournee; };
+
+  verifier("trois grappes peuplent le premier plan",
+    (() => {
+      const T = unBar();
+      return D.FOULE_PLACES.length === 3 &&
+        D.FOULE_PLACES.every(p => T.grappe(p.id).length > 0) &&
+        T.foule.length >= 6;
+    })());
+
+  verifier("les grappes se composent par AFFINITÉ, pas au hasard",
+    (() => {
+      /* Cinq personnes au hasard se lisent comme un tirage ; une grappe
+         d'amis se lit comme un groupe. LIENS existe depuis le niveau 2. */
+      let amies = 0, total = 0;
+      for (let k = 0; k < 40; k++){
+        const T = unBar();
+        for (const p of D.FOULE_PLACES){
+          const g = T.grappe(p.id).map(m => m.ref.id);
+          for (let i = 0; i < g.length; i++) for (let j = i + 1; j < g.length; j++){
+            total++;
+            const L = D.LIENS[g[i]];
+            if (L && L.amis.indexOf(g[j]) >= 0) amies++;
+          }
+        }
+      }
+      messageDetail = amies + " paires amies sur " + total;
+      /* le hasard pur donnerait environ 20 % avec cette carte de liens */
+      return total > 0 && amies / total > 0.35;
+    })());
+
+  verifier("personne n'est dans deux grappes à la fois",
+    (() => {
+      const T = unBar();
+      const ids = T.foule.map(m => m.ref.id);
+      return new Set(ids).size === ids.length;
+    })());
+
+  verifier("la foule est SOUS le comptoir, elle ne masque aucun verre",
+    (() => {
+      /* La réponse à la seule question qui décidait de tout : s'ils
+         masquaient les verres, il aurait fallu reprendre le garde-fou de
+         faisabilité et le niveau devenait un autre jeu. */
+      const T = unBar();
+      const hautFoule = D.FOULE_PIEDS - D.FOULE_TAILLE;
+      return hautFoule > D.BAR_COMPTOIR;
+    })(), "leur tête reste plus bas que le comptoir");
+
+  verifier("quelqu'un finit par quitter sa grappe",
+    (() => {
+      const T = unBar();
+      let vues = new Set();
+      for (let i = 0; i < 60 * 120; i++){
+        T.majFoule(1 / 60);
+        for (const m of T.foule) vues.add(m.etat);
+      }
+      return vues.has("balade");
+    })(), "rien n'est figé : c'est ce qui recompose la soirée");
+
+  verifier("et de temps en temps quelqu'un s'en va pour de bon",
+    (() => {
+      let partis = 0;
+      for (let k = 0; k < 6; k++){
+        const T = unBar();
+        const n0 = T.foule.length;
+        for (let i = 0; i < 60 * 180; i++) T.majFoule(1 / 60);
+        partis += n0 - T.foule.length;
+      }
+      messageDetail = partis + " départ(s) sur six soirées de trois minutes";
+      return partis > 0;
+    })());
+
+  verifier("les répliques se raccrochent au contexte",
+    (() => {
+      /* Une réplique qui parle dans le vide est du bruit. */
+      const T = unBar();
+      T.coupDeFeu = true;
+      const m = T.foule[0];
+      let contextuelles = 0;
+      for (let k = 0; k < 200; k++){
+        if (D.FOULE_PHRASES.coup_de_feu.indexOf(T.phraseFoule(m)) >= 0) contextuelles++;
+      }
+      T.coupDeFeu = false;
+      return contextuelles > 80;
+    })());
+
+  verifier("aucune réplique ne laisse d'accolade à l'écran",
+    (() => {
+      for (const cle of Object.keys(D.FOULE_PHRASES))
+        for (const s of D.FOULE_PHRASES[cle])
+          if (s.indexOf("{") >= 0 || s.length > 44) return false;
+      return true;
+    })(), "courtes : elles se lisent en passant");
+
+  verifier("la foule passe APRÈS le champion dans l'ordre de dessin",
+    (() => {
+      /* Sans ça il marcherait devant eux et le premier plan n'en serait
+         plus un. */
+      const vue = source.slice(source.indexOf("const BarVue"));
+      const iH = vue.indexOf("this.dessinerHeros()");
+      const iF = vue.indexOf("this.dessinerFoule()");
+      return iH > 0 && iF > iH;
+    })());
+
   verifier("les huit boutons ont le même canevas et le même disque",
     (() => {
       /* Ils sont posés en dessinant le canevas ENTIER : la place du

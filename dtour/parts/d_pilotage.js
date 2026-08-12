@@ -1146,6 +1146,7 @@ globalThis.DTOUR = {
   xPlace, borne, melange, chiffres, doux, SPRITES_PNJ, PERSOS_DEBOUT, PERSOS_ASSIS,
   Difficulte, Score, File, Foule, Jeu, Heros, Camera, Effets, Sons, Images, Pnj, TERRASSE,
   mainHeros, xSalut, ancreDe, amorcer, RECUL_SALUT, paysageOk, portraitOk, ecranOk, orientationVoulue, ORIENTATION, Ecran, Interface, Pause, Boucle,
+  FOULE_PLACES, FOULE_PAR_GRAPPE, FOULE_PHRASES, FOULE_PIEDS, FOULE_TAILLE, BAR_COMPTOIR,
   Perspective, courbeZ, POSES_ENNEMI, POSES_PROPRES, POSES_BASE_MANQUANTES,
   REPLI_POSE,
   attenuation, PORTEE_MIN, PORTEE_PLEINE,

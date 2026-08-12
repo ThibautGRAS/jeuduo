@@ -74,12 +74,21 @@ async function preparer(L, H){
   new vm.Script(source, { filename:"jeu" }).runInContext(bac);
   const D = bac.DTOUR;
 
-  /* on remplit la table d'images à la main, avec de vraies images */
-  for (const f of fs.readdirSync(PNG)){
-    if (!f.endsWith(".png")) continue;
-    const img = await loadImage(path.join(PNG, f));
-    D.Images.table[f.slice(0, -4)] = img;
+  /* On remplit la table d'images à la main, avec de vraies images — et
+     on les CHARGE UNE SEULE FOIS pour tout le harnais. Chaque scène crée
+     son propre contexte ; recharger les 252 images à chacune faisait
+     tuer le processus par manque de mémoire bien avant la dernière
+     scène, et le contrôle visuel devenait impossible pile sur ce qu'on
+     venait de changer. Les objets Image sont en lecture seule ici, les
+     partager ne pose donc aucun problème. */
+  if (!preparer._cache){
+    preparer._cache = {};
+    for (const f of fs.readdirSync(PNG)){
+      if (!f.endsWith(".png")) continue;
+      preparer._cache[f.slice(0, -4)] = await loadImage(path.join(PNG, f));
+    }
   }
+  Object.assign(D.Images.table, preparer._cache);
   D.Images.pret = true;
 
   return { D, canevas };
@@ -89,7 +98,13 @@ async function preparer(L, H){
    copie du calcul vivait ici parce que la fonction du jeu n'était pas
    exportée : deux implémentations du même relevé, qui ne pouvaient que
    divorcer. Elles sont parties ensemble. */
+/* SCENES=35,36 node tests/apercu.js — le harnais complet charge un jeu
+   d'images par scène et dépasse la mémoire disponible dans certains
+   environnements. Filtrer permet de regarder ce qu'on vient de changer
+   sans renoncer au contrôle visuel. */
+const FILTRE = (process.env.SCENES || "").split(",").filter(Boolean);
 function ecrire(canevas, nom){
+  if (FILTRE.length && !FILTRE.some(f => nom.startsWith(f))) return;
   const p = path.join(SORTIE, nom + ".png");
   fs.writeFileSync(p, canevas.toBuffer("image/png"));
   console.log("  " + p);
@@ -605,6 +620,45 @@ function jouerJusqua(D, condition, limite){
     D.Ruelle.secousse = 0;
     D.RuelleVue.dessiner();
     ecrire(canevas, "34_jubilar_cible_bras");
+  }
+
+  /* 35-36. LA FOULE DU PREMIER PLAN. Deux questions, deux clichés : le
+     champion reste-t-il LISIBLE derrière une grappe, et les verres du
+     comptoir restent-ils tous visibles ? Même mise en place que la scène
+     14 — `dessinerVia` passe par le dessin du jeu, et non par `BarVue`
+     seul : ma première version appelait BarVue directement et le
+     champion n'apparaissait pas du tout. */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(3); D.Tournee.lancer();
+    D.Tournee.x = 0.42; D.Tournee.ambiance = 62; D.Score.points = 980;
+    /* un verre sous chaque grappe : s'il en manque un à l'image, la
+       foule masque le jeu et il faut la baisser encore */
+    for (const p of D.FOULE_PLACES){
+      D.Tournee.verres.push({ type:"cocktail", x:p.x, etat:D.ETAT_VERRE.POSE,
+                              t:1.2, vie:7.5, barman:"francky" });
+    }
+    D.Tournee.marche = 0; D.Tournee.dir = 1;
+    for (let i = 0; i < 8; i++) D.Jeu.pas(1 / 60);
+    D.Tournee.replique = { qui:D.Tournee.foule[0], txt:"Tu reprends quelque chose ?", t:3 };
+    D.Tournee.secousse = 0;
+    dessinerVia(D, canevas);
+    ecrire(canevas, "35_bar_foule");
+  }
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(3); D.Tournee.lancer();
+    D.Tournee.marche = 1; D.Tournee.dir = 1;
+    for (let i = 0; i < 8; i++) D.Jeu.pas(1 / 60);
+    /* le champion PILE au centre d'une grappe : c'est là qu'on voit s'il
+       passe derrière tout en restant lisible */
+    const centre = D.FOULE_PLACES[1];
+    D.Tournee.foule.forEach(m => { if (m.place === centre.id) m.etat = "grappe"; });
+    D.Tournee.secousse = 0;
+    dessinerVia(D, canevas);
+    ecrire(canevas, "36_bar_foule_derriere");
   }
 
   /* 27. les poses propres de Depardiahree, à leur taille de jeu, sur

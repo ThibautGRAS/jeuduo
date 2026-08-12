@@ -45,6 +45,10 @@ const BarVue = {
     if (T.invite) this.dessinerInvite();
     this.dessinerClients();
     this.dessinerHeros();
+    /* LA FOULE PASSE APRÈS LE CHAMPION : c'est tout l'intérêt du premier
+       plan, il circule DERRIÈRE eux. Mais après les verres aussi, sans
+       jamais les couvrir — ils sont bien plus bas que le comptoir. */
+    this.dessinerFoule();
     if (T.tarte) this.dessinerTarte();
 
     /* Le coup de feu réchauffe la salle. */
@@ -317,6 +321,60 @@ const BarVue = {
   },
 
   /* --------- les habitués --------- */
+  /* --------- la foule du premier plan --------- */
+  dessinerFoule(){
+    const L = Camera.L, H = Camera.H;
+    const T = Tournee;
+    if (!T.foule) return;
+    /* du plus lointain au plus proche : les grappes du bas passent
+       devant celles qui se baladent, pour que personne ne semble
+       traverser un voisin */
+    const liste = T.foule.slice().sort((a, b) => a.x - b.x);
+    for (const m of liste){
+      const pose = m.etat === "grappe" ? "idle" : "marche" + (1 + (Math.floor(m.foulee) % 2));
+      const spr = Images.table[m.ref.prefixe + "_" + pose]
+               || Images.table[m.ref.prefixe + "_idle"]
+               || Images.table[m.ref.sprite];
+      if (!spr || !spr.naturalWidth) continue;
+      const sh = H * FOULE_TAILLE * m.ref.taille * echellePerso(m.ref.id);
+      const sl = sh * spr.naturalWidth / spr.naturalHeight;
+      const x = L * m.x, y = H * FOULE_PIEDS;
+      ctx.save();
+      /* un cran plus sombre que le champion : ils sont du décor vivant,
+         ils ne doivent pas se disputer l'œil avec lui */
+      ctx.globalAlpha = 0.96;
+      if (m.dir < 0 && m.etat !== "grappe"){
+        ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0);
+      }
+      ctx.drawImage(spr, x - sl / 2, y - sh, sl, sh);
+      ctx.restore();
+    }
+    /* la réplique, au-dessus de celui qui parle */
+    const r = T.replique;
+    if (r && r.qui && T.foule.indexOf(r.qui) >= 0){
+      const m = r.qui;
+      const sh = H * FOULE_TAILLE * m.ref.taille * echellePerso(m.ref.id);
+      const by = H * FOULE_PIEDS - sh * 0.98;
+      ctx.save();
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.font = "800 " + Math.round(H * 0.042) + "px 'Baloo 2', system-ui, sans-serif";
+      const w = ctx.measureText(r.txt).width;
+      const bw = Math.min(w + 20, L * 0.44);
+      /* On ramène la bulle dans l'écran d'après SA LARGEUR, pas d'après
+         une marge fixe : borner le centre à 0,14 laissait quand même
+         dépasser une bulle de 0,44 de large, et la phrase était coupée. */
+      const bx = borne(L * m.x, bw / 2 + 6, L - bw / 2 - 6);
+      ctx.globalAlpha = borne(r.t / 0.4, 0, 1);
+      ctx.fillStyle = "rgba(250,248,255,.95)";
+      arrondi(bx - bw / 2, by - H * 0.036, bw, H * 0.072, H * 0.030); ctx.fill();
+      ctx.fillStyle = "#171226";
+      ctx.fillText(r.txt, bx, by);
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      ctx.textAlign = "left";
+    }
+  },
+
   dessinerClients(){
     const H = Camera.H;
     for (const cl of Tournee.clients){

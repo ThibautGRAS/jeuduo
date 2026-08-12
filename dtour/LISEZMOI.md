@@ -264,6 +264,34 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Le bar est plein de monde** (v6.62) : neuf habitués peuplent le
+**premier plan**, en trois grappes — bas gauche, bas centre, bas droite —
+posées si bas qu'on ne voit que leurs épaules et leur tête. Le champion
+circule DERRIÈRE eux : ils lui masquent les jambes et laissent le haut du
+corps lisible.
+
+**Ils ne masquent aucun verre**, et c'est la contrainte qui a décidé de
+tout le reste : leur tête reste plus bas que le comptoir. S'ils avaient
+couvert les verres, il aurait fallu reprendre le garde-fou de faisabilité
+et le niveau devenait un autre jeu. Un test verrouille cette ligne.
+
+**Les grappes se composent par affinité** : `LIENS` sert depuis le niveau
+2, on s'en sert plutôt que de tirer au sort. Mesuré sur quarante
+soirées : plus de la moitié des paires d'une grappe sont des amis, contre
+un cinquième au hasard pur. Le reste se remplit avec qui il reste — le
+maire, l'agent de sécurité et Charles se retrouvent ensemble faute de
+mieux, et ça se lit très bien.
+
+**Rien n'est figé.** De temps en temps l'un quitte sa grappe pour faire
+un tour, et revient dans une AUTRE grappe : la soirée se recompose sans
+chef d'orchestre. Et parfois il s'en va pour de bon.
+
+**Et ils parlent.** Une réplique toutes les sept à treize secondes,
+trois secondes à l'écran, choisie d'abord selon ce qui se passe — coup de
+feu, ambiance à plat, champion pompette — et sinon selon le personnage.
+Mathilde se plaint que Jojo l'ignore, le maire déclare le buffet non
+conforme.
+
 **Jojo ne hoche plus la tête** (v6.61) : ses poses étaient calibrées sur
 le haut de leur boîte englobante. Or un verre brandi ou une bouteille
 levée dépassent du crâne : le cadrage commençait sur l'OBJET, la tête

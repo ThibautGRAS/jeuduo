@@ -42,6 +42,8 @@ fichier, aucun outil de compilation chez le joueur. Il est recollé par
 | `g_enquete_vue.js` | `EnqVue` — rendu du niveau 2 |
 | `h_bar.js` | `Tournee`, champions, barmans, boissons — logique du niveau 3 |
 | `i_bar_vue.js` | `BarVue` — rendu du niveau 3 |
+| `k_foule.js` | la foule du premier plan du bar — grappes, répliques, balades |
+| `j_ruelle.js` | `Ruelle`, `RuelleVue` — logique et rendu du niveau 4 |
 | `d_pilotage.js` | `Progres`, `Intro`, `Interface`, `Entrees`, `Ecran`, `Debug`, `Boucle`, amorçage |
 
 `d_pilotage.js` passe **en dernier** : il lit des constantes déclarées
@@ -1093,6 +1095,36 @@ transparence voulue entre les verres. Ce qui tranche est la COULEUR SOUS
 LE TROU — teinte de corps pour un alpha effacé par erreur, noir ou
 magenta pour du fond réellement enclos. Ma première version comptait
 tout, et déclarait cassées des découpes justes.
+
+### Un premier plan se calibre sur ce qu'il ne doit PAS masquer
+
+Première version de la foule du bar : pieds à 1,30 hauteur d'écran,
+taille 0,78. Leur buste montait à mi-écran et le champion disparaissait
+ENTIÈREMENT derrière une grappe. Or il doit circuler derrière eux, pas
+s'évanouir.
+
+La bonne façon de poser ces deux nombres n'est pas de choisir une taille
+mais de partir des deux choses à ne pas couvrir : le COMPTOIR (donc les
+verres à attraper) et le HAUT DU CORPS du champion. D'où pieds à 1,52 :
+on ne voit que les épaules et la tête. Un test vérifie que le haut de la
+foule reste plus bas que la ligne du comptoir — c'est la seule contrainte
+qui décidait de tout, parce qu'une foule qui masque les verres oblige à
+reprendre le garde-fou de faisabilité.
+
+### Une bulle se borne sur SA largeur, pas sur une marge fixe
+
+Borner le centre de la bulle à 0,14 de la largeur laissait dépasser une
+bulle de 0,44 de large : la phrase était coupée par le bord. C'est la
+même faute qu'au niveau 4 avec la réplique de relève, et elle s'écrit
+pareil — `borne(x, bw / 2 + 6, L - bw / 2 - 6)`.
+
+### Le harnais rechargeait ses images à chaque scène
+
+Chaque scène crée son propre contexte, et `preparer()` rechargeait les
+252 images à chacune : le processus était tué par manque de mémoire bien
+avant les dernières scènes, donc pile sur ce qu'on venait de changer. Les
+images sont en lecture seule ici — un cache unique partagé entre les
+contextes suffit, et le harnais complet passe.
 
 ### Et le cadrage se prend sur le HAUT DU CRÂNE, pas sur la boîte
 

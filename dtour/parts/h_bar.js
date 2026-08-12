@@ -171,6 +171,7 @@ const Tournee = {
     this.prochainClin = hasard(14, 26);
     this.bus = []; this.bourre = 0; this.deborde = false;
     this.clients = []; this.prochainClient = hasard(8, 14);
+    this.composerFoule();
     this.flash = 0; this.boitTotal = 1; this.freinT = 0; this.dureeMarche = 0;
     this.tarte = null; this.esquiveOuverte = false;
     this.tarteEsquivee = 0; this.tarteRecue = 0;
@@ -607,6 +608,7 @@ const Tournee = {
     if (!this.finale && this.restant <= 0){ this.terminer(false, "temps"); return; }
 
     this.majClients(dt);
+    this.majFoule(dt);
 
     /* clins d'œil : Risoto traverse, Hortense passe et regarde */
     this.prochainClin -= dt;
