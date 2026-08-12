@@ -171,7 +171,7 @@ const Ruelle = {
     this.vague = 0; this.actifIdx = 0;
     this.secousse = 0; this.hitStop = 0;
     this.recul = 0; this.replique = null; this.iaT = 0; this.iaActive = false;
-    this.couvert = false; this.razViseur();
+    this.couvert = false; this.introT = RUELLE_INTRO_DUREE; this.razViseur();
     this.heros = [
       { id:"thibaut", arme:"revolver", sprite:"ruel_th", balles:ARMES.revolver.chargeur,
         recharge:0, repos:0, pose:"vise1" },
@@ -248,6 +248,8 @@ const Ruelle = {
 
   pas(dt){
     if (!this.actif) return;
+    /* Pendant l'annonce, rien ne bouge : ni les ennemis, ni le chrono. */
+    if (this.introT > 0){ this.introT -= dt; return; }
     if (this.hitStop > 0){ this.hitStop -= dt; return; }
     this.secousse = Math.max(0, this.secousse - dt * 2.4);
     this.pasViseur(dt);
@@ -558,6 +560,7 @@ Object.assign(Ruelle, {
 
   toucheDebut(id, x, y){
     if (!this.actif) return false;
+    if (this.introT > 0) return this.passerIntro();
     if (this.dans(this.zoneManche(), x, y)){
       this.manche = { actif:true, id, dx:0, dy:0 };
       this.majManche(x, y);
@@ -833,3 +836,55 @@ Object.assign(RuelleVue, {
     ctx.textAlign = "left";
   },
 });
+
+/* ================= l'annonce du niveau =================
+   Une image avant la première vague. Elle sert deux buts d'un coup :
+   annoncer le ton, et laisser au navigateur le temps de finir de
+   charger le décor et les ennemis. Un niveau qui démarre sur un décor
+   à moitié arrivé donne l'impression d'un jeu cassé. */
+const RUELLE_INTRO_DUREE = 2.6;
+
+Object.assign(Ruelle, {
+  introT:0,
+  introEnCours(){ return this.introT > 0; },
+  passerIntro(){ if (this.introT > 0.25){ this.introT = 0.25; return true; } return false; },
+});
+
+RuelleVue.dessinerIntro = function(){
+  const L = Camera.L, H = Camera.H, t = Ruelle.introT;
+  /* elle s'efface sur son dernier quart de seconde */
+  const al = borne(t / 0.25, 0, 1);
+  const fond = Images.table.ruelle_flou;
+  ctx.save();
+  ctx.globalAlpha = al;
+  if (fond && fond.naturalWidth){
+    const e = Math.max(L / fond.naturalWidth, H / fond.naturalHeight);
+    const l = fond.naturalWidth * e, h = fond.naturalHeight * e;
+    ctx.drawImage(fond, (L - l) / 2, H - h, l, h);
+  }
+  ctx.fillStyle = "rgba(8,6,14,.55)";
+  ctx.fillRect(0, 0, L, H);
+  const duo = Images.table.duo_ruelle;
+  if (duo && duo.naturalWidth){
+    /* une arrivée par le bas, très courte : le duo se pose */
+    const av = borne((RUELLE_INTRO_DUREE - t) / 0.5, 0, 1);
+    /* Sous le titre, jamais dessus : le duo montait par-dessus le nom
+       du niveau et les deux devenaient illisibles. */
+    const hh = H * 0.52, ll = hh * duo.naturalWidth / duo.naturalHeight;
+    ctx.globalAlpha = al * av;
+    ctx.drawImage(duo, L / 2 - ll / 2, H * 0.80 - hh + (1 - av) * H * 0.05, ll, hh);
+    ctx.globalAlpha = al;
+  }
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "#F7B32B";
+  ctx.font = "800 " + Math.round(L * 0.105) + "px 'Baloo 2', system-ui, sans-serif";
+  ctx.fillText("LA RUELLE", L / 2, H * 0.145);
+  ctx.fillStyle = "rgba(237,231,250,.90)";
+  ctx.font = "700 " + Math.round(L * 0.042) + "px 'Baloo 2', system-ui, sans-serif";
+  ctx.fillText("Ils veulent la dernière part.", L / 2, H * 0.205);
+  ctx.fillStyle = "rgba(237,231,250,.55)";
+  ctx.font = "700 " + Math.round(L * 0.034) + "px 'Baloo 2', system-ui, sans-serif";
+  ctx.fillText("Touchez pour commencer", L / 2, H * 0.845);
+  ctx.textAlign = "left";
+  ctx.restore();
+};

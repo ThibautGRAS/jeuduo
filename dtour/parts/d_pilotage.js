@@ -31,7 +31,11 @@ function accrocher(){
    téléphone, et lui demander de tourner avant même d'avoir choisi son
    niveau était une brimade. Le pivot devient une demande à l'entrée
    d'un niveau, pas un péage à l'entrée du jeu. */
-const ORIENTATION = { 0:"libre", 1:"paysage", 2:"paysage", 3:"paysage", 4:"portrait" };
+/* Le menu se tient DEBOUT : quatre tuiles empilées se lisent mieux
+   qu'alignées, et c'est la façon dont on prend son téléphone. On demande
+   ensuite de tourner à l'entrée des trois premiers niveaux — jamais
+   avant d'avoir choisi. Le quatrième reste debout. */
+const ORIENTATION = { 0:"portrait", 1:"paysage", 2:"paysage", 3:"paysage", 4:"portrait" };
 function orientationVoulue(niv){ return ORIENTATION[niv] || "paysage"; }
 function paysageOk(L, H){ return L >= H * 1.02; }
 function portraitOk(L, H){ return H >= L * 1.02; }

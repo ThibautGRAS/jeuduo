@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.43";
+const VERSION = "6.44";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -594,7 +594,10 @@ const POSES_RUEL_TH = ["accroupi", "leve1", "leve2", "debout", "arme1", "arme2",
                        "vise1", "vise2", "tir", "recul1", "recul2", "baisse"];
 const POSES_RUEL_PF = ["accroupi", "leve1", "leve2", "arme1", "arme2", "vise",
                        "tir", "fumee", "recul1", "recul2", "baisse"];
-const IMAGES_NIVEAU4 = ["ruelle"]
+/* L'intro du niveau 4 : le duo sur la ruelle floutée. Elle sert à deux
+   choses — annoncer le niveau, et donner au navigateur le temps de
+   charger le décor et les ennemis avant la première image. */
+const IMAGES_NIVEAU4 = ["ruelle", "ruelle_flou", "duo_ruelle"]
   .concat(ENNEMIS_RUELLE.flatMap(e => POSES_ENNEMI.map(po => "enn_" + e + "_" + po)))
   .concat(POSES_RUEL_TH.map(po => "ruel_th_" + po))
   .concat(POSES_RUEL_PF.map(po => "ruel_pf_" + po));

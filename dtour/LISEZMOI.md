@@ -264,6 +264,17 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**Le menu se tient debout** (v6.44) : les quatre tuiles s'empilent,
+vignette à gauche et texte à droite. On demande de tourner le téléphone
+à l'entrée des trois premiers niveaux — jamais avant d'avoir choisi — et
+le quatrième reste debout.
+
+**Le niveau 4 s'annonce** : le duo arrive sur une ruelle floutée, avec
+son titre et sa devise. Elle sert deux buts d'un coup — annoncer le ton,
+et laisser au navigateur le temps de finir de charger le décor et les
+ennemis. Un niveau qui démarre sur un décor à moitié arrivé donne
+l'impression d'un jeu cassé. On la passe d'un doigt.
+
 **L'écran titre se tient comme on veut** (v6.43) : il accepte les deux
 sens, et les quatre tuiles passent sur deux rangs en portrait. Demander
 de tourner son téléphone avant même d'avoir choisi son niveau était une

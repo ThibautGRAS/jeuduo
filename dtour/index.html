@@ -246,11 +246,19 @@ kbd{
   display:flex;gap:clamp(6px,1.4vw,14px);justify-content:center;align-items:stretch;
   width:min(1000px,96vw);
 }
-/* En portrait, quatre tuiles côte à côte deviennent illisibles : elles
-   passent sur deux rangs. */
+/* Le menu se tient debout : les quatre tuiles s'EMPILENT, chacune sur
+   sa ligne, vignette à gauche et texte à droite. Alignées en colonnes
+   étroites, ni le titre ni la légende ne tenaient. */
 @media (max-aspect-ratio: 1/1){
-  #niveaux{flex-wrap:wrap}
-  #niveaux .niv{flex:1 1 42%}
+  #niveaux{flex-direction:column;flex-wrap:nowrap;gap:clamp(6px,1.4vh,12px)}
+  #niveaux .niv{
+    flex:0 0 auto;width:100%;flex-direction:row;align-items:center;
+    gap:clamp(8px,2.5vw,16px);text-align:left;
+    padding:clamp(8px,1.6vh,14px) clamp(10px,3vw,18px);
+  }
+  #niveaux .niv .num{flex:0 0 auto;font-size:clamp(11px,3vw,16px)}
+  #niveaux .niv .cadre{flex:0 0 auto;width:clamp(38px,12vw,58px);height:clamp(38px,12vw,58px)}
+  #niveaux .niv .txt{flex:1 1 auto;align-items:flex-start;text-align:left}
 }
 .niv{
   flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;
@@ -716,7 +724,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.43</div>
+  <div id="version">CALLAGHAN v6.44</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -788,7 +796,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.43";
+const VERSION = "6.44";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1364,7 +1372,10 @@ const POSES_RUEL_TH = ["accroupi", "leve1", "leve2", "debout", "arme1", "arme2",
                        "vise1", "vise2", "tir", "recul1", "recul2", "baisse"];
 const POSES_RUEL_PF = ["accroupi", "leve1", "leve2", "arme1", "arme2", "vise",
                        "tir", "fumee", "recul1", "recul2", "baisse"];
-const IMAGES_NIVEAU4 = ["ruelle"]
+/* L'intro du niveau 4 : le duo sur la ruelle floutée. Elle sert à deux
+   choses — annoncer le niveau, et donner au navigateur le temps de
+   charger le décor et les ennemis avant la première image. */
+const IMAGES_NIVEAU4 = ["ruelle", "ruelle_flou", "duo_ruelle"]
   .concat(ENNEMIS_RUELLE.flatMap(e => POSES_ENNEMI.map(po => "enn_" + e + "_" + po)))
   .concat(POSES_RUEL_TH.map(po => "ruel_th_" + po))
   .concat(POSES_RUEL_PF.map(po => "ruel_pf_" + po));
@@ -2737,6 +2748,7 @@ function dessiner(){
     const dpr4 = Math.min(2, globalThis.devicePixelRatio || 1);
     ctx.setTransform(dpr4, 0, 0, dpr4, 0, 0);
     RuelleVue.dessiner();
+    if (Ruelle.introEnCours()) RuelleVue.dessinerIntro();
     if (Jeu.phase === "fin"){
       ctx.fillStyle = "rgba(7,11,22," + borne(Jeu.finChrono * 0.35, 0, 0.5) + ")";
       ctx.fillRect(0, 0, Camera.L, Camera.H);
@@ -8946,7 +8958,7 @@ const Ruelle = {
     this.vague = 0; this.actifIdx = 0;
     this.secousse = 0; this.hitStop = 0;
     this.recul = 0; this.replique = null; this.iaT = 0; this.iaActive = false;
-    this.couvert = false; this.razViseur();
+    this.couvert = false; this.introT = RUELLE_INTRO_DUREE; this.razViseur();
     this.heros = [
       { id:"thibaut", arme:"revolver", sprite:"ruel_th", balles:ARMES.revolver.chargeur,
         recharge:0, repos:0, pose:"vise1" },
@@ -9023,6 +9035,8 @@ const Ruelle = {
 
   pas(dt){
     if (!this.actif) return;
+    /* Pendant l'annonce, rien ne bouge : ni les ennemis, ni le chrono. */
+    if (this.introT > 0){ this.introT -= dt; return; }
     if (this.hitStop > 0){ this.hitStop -= dt; return; }
     this.secousse = Math.max(0, this.secousse - dt * 2.4);
     this.pasViseur(dt);
@@ -9333,6 +9347,7 @@ Object.assign(Ruelle, {
 
   toucheDebut(id, x, y){
     if (!this.actif) return false;
+    if (this.introT > 0) return this.passerIntro();
     if (this.dans(this.zoneManche(), x, y)){
       this.manche = { actif:true, id, dx:0, dy:0 };
       this.majManche(x, y);
@@ -9609,6 +9624,58 @@ Object.assign(RuelleVue, {
   },
 });
 
+/* ================= l'annonce du niveau =================
+   Une image avant la première vague. Elle sert deux buts d'un coup :
+   annoncer le ton, et laisser au navigateur le temps de finir de
+   charger le décor et les ennemis. Un niveau qui démarre sur un décor
+   à moitié arrivé donne l'impression d'un jeu cassé. */
+const RUELLE_INTRO_DUREE = 2.6;
+
+Object.assign(Ruelle, {
+  introT:0,
+  introEnCours(){ return this.introT > 0; },
+  passerIntro(){ if (this.introT > 0.25){ this.introT = 0.25; return true; } return false; },
+});
+
+RuelleVue.dessinerIntro = function(){
+  const L = Camera.L, H = Camera.H, t = Ruelle.introT;
+  /* elle s'efface sur son dernier quart de seconde */
+  const al = borne(t / 0.25, 0, 1);
+  const fond = Images.table.ruelle_flou;
+  ctx.save();
+  ctx.globalAlpha = al;
+  if (fond && fond.naturalWidth){
+    const e = Math.max(L / fond.naturalWidth, H / fond.naturalHeight);
+    const l = fond.naturalWidth * e, h = fond.naturalHeight * e;
+    ctx.drawImage(fond, (L - l) / 2, H - h, l, h);
+  }
+  ctx.fillStyle = "rgba(8,6,14,.55)";
+  ctx.fillRect(0, 0, L, H);
+  const duo = Images.table.duo_ruelle;
+  if (duo && duo.naturalWidth){
+    /* une arrivée par le bas, très courte : le duo se pose */
+    const av = borne((RUELLE_INTRO_DUREE - t) / 0.5, 0, 1);
+    /* Sous le titre, jamais dessus : le duo montait par-dessus le nom
+       du niveau et les deux devenaient illisibles. */
+    const hh = H * 0.52, ll = hh * duo.naturalWidth / duo.naturalHeight;
+    ctx.globalAlpha = al * av;
+    ctx.drawImage(duo, L / 2 - ll / 2, H * 0.80 - hh + (1 - av) * H * 0.05, ll, hh);
+    ctx.globalAlpha = al;
+  }
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "#F7B32B";
+  ctx.font = "800 " + Math.round(L * 0.105) + "px 'Baloo 2', system-ui, sans-serif";
+  ctx.fillText("LA RUELLE", L / 2, H * 0.145);
+  ctx.fillStyle = "rgba(237,231,250,.90)";
+  ctx.font = "700 " + Math.round(L * 0.042) + "px 'Baloo 2', system-ui, sans-serif";
+  ctx.fillText("Ils veulent la dernière part.", L / 2, H * 0.205);
+  ctx.fillStyle = "rgba(237,231,250,.55)";
+  ctx.font = "700 " + Math.round(L * 0.034) + "px 'Baloo 2', system-ui, sans-serif";
+  ctx.fillText("Touchez pour commencer", L / 2, H * 0.845);
+  ctx.textAlign = "left";
+  ctx.restore();
+};
+
 /* ================= UIManager -> Interface ================= */
 const E = {};
 function accrocher(){
@@ -9641,7 +9708,11 @@ function accrocher(){
    téléphone, et lui demander de tourner avant même d'avoir choisi son
    niveau était une brimade. Le pivot devient une demande à l'entrée
    d'un niveau, pas un péage à l'entrée du jeu. */
-const ORIENTATION = { 0:"libre", 1:"paysage", 2:"paysage", 3:"paysage", 4:"portrait" };
+/* Le menu se tient DEBOUT : quatre tuiles empilées se lisent mieux
+   qu'alignées, et c'est la façon dont on prend son téléphone. On demande
+   ensuite de tourner à l'entrée des trois premiers niveaux — jamais
+   avant d'avoir choisi. Le quatrième reste debout. */
+const ORIENTATION = { 0:"portrait", 1:"paysage", 2:"paysage", 3:"paysage", 4:"portrait" };
 function orientationVoulue(niv){ return ORIENTATION[niv] || "paysage"; }
 function paysageOk(L, H){ return L >= H * 1.02; }
 function portraitOk(L, H){ return H >= L * 1.02; }

@@ -545,6 +545,7 @@ function dessiner(){
     const dpr4 = Math.min(2, globalThis.devicePixelRatio || 1);
     ctx.setTransform(dpr4, 0, 0, dpr4, 0, 0);
     RuelleVue.dessiner();
+    if (Ruelle.introEnCours()) RuelleVue.dessinerIntro();
     if (Jeu.phase === "fin"){
       ctx.fillStyle = "rgba(7,11,22," + borne(Jeu.finChrono * 0.35, 0, 0.5) + ")";
       ctx.fillRect(0, 0, Camera.L, Camera.H);

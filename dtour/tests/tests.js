@@ -1587,7 +1587,12 @@ if (D){
   D.Pause.quitter();
   egal("quitter ramène au menu principal", D.Jeu.phase, "titre");
   egal("et repasse au niveau 1", D.Jeu.niveau, 1);
-  verifier("la boucle est relancée", !D.Boucle.pause);
+  /* Le menu se tient DEBOUT depuis la v6.44 : dans un harnais qui simule
+     un écran couché, le PIVOT met légitimement la boucle en pause au
+     retour au titre. Ce que ce test veut dire, c'est que le panneau de
+     pause a bien rendu la main — pas que rien d'autre ne peut la
+     reprendre. */
+  verifier("la pause a rendu la main", !D.Pause.active);
 
   D.Jeu.demarrer(2); D.Intro.finir();
   D.Pause.mettre();
@@ -2619,10 +2624,11 @@ if (D){
   verifier("le panneau de pivot dit dans quel sens tourner",
     /veutPortrait \? "Rétrécis la fenêtre" : "Élargis la fenêtre"/.test(source) &&
     /La ruelle se joue debout/.test(source));
-  verifier("l'écran titre accepte les deux sens",
-    D.orientationVoulue(0) === "libre" &&
-    D.ecranOk(844, 390, 0) && D.ecranOk(390, 844, 0),
-    "lui demander de tourner avant d'avoir choisi était une brimade");
+  verifier("le menu se tient debout, les niveaux 1 à 3 couchés",
+    D.orientationVoulue(0) === "portrait" &&
+    D.ecranOk(390, 844, 0) && !D.ecranOk(844, 390, 0) &&
+    D.ecranOk(844, 390, 1) && D.ecranOk(390, 844, 4),
+    "on demande de tourner à l'entrée d'un niveau, jamais avant d'avoir choisi");
 
   /* --- la fausse profondeur de la ruelle --- */
   titre("La ruelle");
@@ -2706,10 +2712,29 @@ if (D){
         /recharge > 0[\s\S]{0,200}?accroupi/.test(source);
     })());
 
+  verifier("le niveau s'annonce avant de commencer",
+    (() => {
+      /* L'annonce laisse au navigateur le temps de finir de charger :
+         un niveau qui démarre sur un décor à moitié arrivé donne
+         l'impression d'un jeu cassé. */
+      D.Jeu.demarrer(4);
+      const av = D.Ruelle.introEnCours();
+      D.Ruelle.ajouterEnnemi();
+      const z0 = D.Ruelle.ennemis[0].z;
+      for (let k = 0; k < 30; k++) D.Ruelle.pas(1 / 60);
+      return av && D.Ruelle.ennemis[0].z === z0;
+    })(), "pendant l'annonce, rien ne bouge");
+  verifier("et on peut la passer d'un doigt",
+    (() => {
+      D.Jeu.demarrer(4);
+      const ok = D.Ruelle.toucheDebut(1, 200, 400);
+      return ok && D.Ruelle.introT <= 0.25;
+    })());
+
   verifier("l'équipier couvre sans qu'on change de personnage",
     (() => {
       /* Le joueur garde SON héros : c'est l'autre que l'IA prend. */
-      D.Jeu.demarrer(4);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
       const av = D.Ruelle.actifIdx;
       D.Ruelle.heroActif().balles = 0;
       D.Ruelle.heroActif().recharge = 1.4;
@@ -2718,7 +2743,7 @@ if (D){
     })());
   verifier("et elle consomme ses propres munitions",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.ajouterEnnemi();
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.ajouterEnnemi();
       D.Ruelle.ennemis[0].z = 0.6;
       const lui = D.Ruelle.heros[1 - D.Ruelle.actifIdx];
       const n0 = lui.balles;
@@ -2731,7 +2756,7 @@ if (D){
     "sinon le rechargement ne coûterait plus rien");
   verifier("si les deux sont à sec, personne ne couvre",
     (() => {
-      D.Jeu.demarrer(4);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
       for (const h of D.Ruelle.heros){ h.balles = 0; h.recharge = 1.4; }
       D.Ruelle.pas(1 / 60);
       return !D.Ruelle.iaActive;
@@ -2743,7 +2768,7 @@ if (D){
 
   verifier("le bouton à couvert accroupit les deux et coupe le tir",
     (() => {
-      D.Jeu.demarrer(4); D.Camera.mesurer(390, 780, 1);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
       const za = D.Ruelle.zoneAbri();
       D.Ruelle.toucheDebut(9, za.x, za.y);
       const n0 = D.Ruelle.heroActif().balles;
@@ -2762,7 +2787,7 @@ if (D){
     })());
   verifier("l'équipier ne couvre pas si on est à couvert",
     (() => {
-      D.Jeu.demarrer(4);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
       D.Ruelle.couvert = true;
       D.Ruelle.heroActif().balles = 0; D.Ruelle.heroActif().recharge = 2;
       D.Ruelle.pas(1 / 60);
@@ -2790,7 +2815,7 @@ if (D){
 
   verifier("le champignon pousse le viseur",
     (() => {
-      D.Jeu.demarrer(4); D.Camera.mesurer(390, 780, 1);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Camera.mesurer(390, 780, 1);
       const zm = D.Ruelle.zoneManche();
       const av = D.Ruelle.viseur.x;
       D.Ruelle.toucheDebut(1, zm.x + zm.r * 0.8, zm.y);
@@ -2799,7 +2824,7 @@ if (D){
     })(), "toucher l'ennemi directement rendait le niveau trop simple");
   verifier("le bouton de tir tire, le champignon non",
     (() => {
-      D.Jeu.demarrer(4);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
       const zt = D.Ruelle.zoneTir(), zm = D.Ruelle.zoneManche();
       const n0 = D.Ruelle.heroActif().balles;
       D.Ruelle.toucheDebut(2, zm.x, zm.y);
@@ -2810,7 +2835,7 @@ if (D){
     })());
   verifier("le recul repousse le viseur vers le haut",
     (() => {
-      D.Jeu.demarrer(4);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
       D.Ruelle.viseur.y = 0.5; D.Ruelle.heroActif().repos = 0;
       D.Ruelle.tirerViseur();
       return D.Ruelle.viseur.y < 0.5;
@@ -2819,7 +2844,7 @@ if (D){
     D.VISEE_RECUL.revolver > D.VISEE_RECUL.fusil * 1.5);
   verifier("la bascule au centre change de héros",
     (() => {
-      D.Jeu.demarrer(4);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
       const zb = D.Ruelle.zoneBascule();
       const av = D.Ruelle.actifIdx;
       D.Ruelle.toucheDebut(4, zb.x, zb.y);
@@ -2829,7 +2854,7 @@ if (D){
   /* --- la ruelle se joue --- */
   verifier("le niveau 4 démarre et peuple ses vagues",
     (() => {
-      D.Jeu.demarrer(4);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
       const ok = D.Ruelle.actif && D.Ruelle.heros.length === 2 &&
         D.Ruelle.barricade === 100 && D.Ruelle.aSortir === 5;
       for (let k = 0; k < 600; k++) D.Jeu.pas(1 / 60);
@@ -2838,7 +2863,7 @@ if (D){
   verifier("un ennemi touché à la tête tombe plus vite qu'aux jambes",
     (() => {
       const coups = zone => {
-        D.Jeu.demarrer(4); D.Ruelle.ennemis.length = 0; D.Ruelle.ajouterEnnemi();
+        D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.ennemis.length = 0; D.Ruelle.ajouterEnnemi();
         const e = D.Ruelle.ennemis[0]; e.z = 0.8;
         const b = D.Ruelle.boiteEnnemi(e);
         const f = zone === "tete" ? 0.10 : 0.80;
@@ -2856,28 +2881,28 @@ if (D){
     })());
   verifier("on ne tire pas pendant le rechargement",
     (() => {
-      D.Jeu.demarrer(4);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
       const h = D.Ruelle.heroActif();
       h.balles = 0; h.recharge = 1.5; h.repos = 0;
       return D.Ruelle.tirer(200, 400) === false;
     })());
   verifier("le chargeur se vide et se recharge tout seul",
     (() => {
-      D.Jeu.demarrer(4);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
       const h = D.Ruelle.heroActif();
       for (let k = 0; k < 6; k++){ h.repos = 0; D.Ruelle.tirer(-99, -99); }
       return h.balles === 0 && h.recharge > 0;
     })());
   verifier("changer de héros change d'arme",
     (() => {
-      D.Jeu.demarrer(4);
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0;
       const a1 = D.Ruelle.armeActive().nom;
       D.Ruelle.changerHeros();
       return a1 === "REVOLVER" && D.Ruelle.armeActive().nom === "FUSIL";
     })());
   verifier("un ennemi qui atteint la barricade l'abîme",
     (() => {
-      D.Jeu.demarrer(4); D.Ruelle.ennemis.length = 0; D.Ruelle.ajouterEnnemi();
+      D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.ennemis.length = 0; D.Ruelle.ajouterEnnemi();
       D.Ruelle.ennemis[0].z = 0.999;
       const avant = D.Ruelle.barricade;
       for (let k = 0; k < 20; k++) D.Ruelle.pas(1 / 60);

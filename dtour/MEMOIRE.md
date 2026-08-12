@@ -533,6 +533,21 @@ ne peuvent pas tourner tant que le casting de l'appartement est figé sur
 quatre habitants. Le tirage de distribution n'est pas un raffinement à
 ajouter après les scénarios, c'est ce qui les rend possibles.
 
+### Un état global du jeu casse les tests qui le supposaient fixe
+Trois fois dans la même session, sous trois formes. Le casting de
+l'appartement devient aléatoire → tout ce qui nommait un habitant
+devient faux. Le menu passe en PORTRAIT → dans un harnais qui simule un
+écran couché, le pivot met la boucle en pause et « la boucle est
+relancée » tombe, alors que rien n'est cassé. Le niveau 4 gagne un écran
+d'ANNONCE qui gèle la mécanique → quinze tests qui appelaient
+`demarrer(4)` puis `pas()` se retrouvent à mesurer un monde figé.
+
+La règle : quand on ajoute un état qui BLOQUE ou RANDOMISE, on cherche
+tout de suite qui en dépendait sans le savoir. Et le test se recentre
+sur son INTENTION — « la pause a rendu la main » plutôt que « la boucle
+tourne », parce que la boucle peut légitimement être arrêtée par autre
+chose.
+
 ### L'alignement du texte se règle JUSTE avant d'écrire
 Une bulle du niveau 4 sortait avec son texte à côté de sa pastille : le
 dessin précédent — un bouclier — avait laissé `ctx.textAlign` à sa
