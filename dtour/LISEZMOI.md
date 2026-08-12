@@ -264,6 +264,14 @@ depuis des versions **sans une seule ligne de style** — bouton nu dans le
 flux du document, panneau en texte brut : la fonction était là, personne
 ne pouvait s'en servir.
 
+**La ruelle prend sa place** (v6.37) : la barricade est devenue un
+**premier plan**, redessinée par-dessus les combattants. Un ennemi
+arrivé au contact disparaît derrière les caisses au lieu de marcher
+dessus, et les deux héros la chevauchent — pieds sous le bord de
+l'écran, coupés à la taille par la palissade. PF est retourné pour que
+les deux visent vers le centre de la ruelle. Les ennemis ont rétréci
+d'un tiers, les héros grandi de moitié.
+
 **Le niveau 4 se joue** (v6.35). Quatrième tuile au menu, et une ruelle
 qui se tient debout : Thibaut au revolver et PF au fusil défendent la
 barricade pendant que le quartier accourt. On touche un ennemi pour

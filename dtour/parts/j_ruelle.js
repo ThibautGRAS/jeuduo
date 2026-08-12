@@ -14,7 +14,17 @@
 const RUELLE_HORIZON = 0.300;      /* fraction de hauteur : le fond      */
 const RUELLE_BARRICADE = 0.760;    /* fraction de hauteur : le premier plan */
 const RUELLE_ECH_LOIN = 0.055;     /* hauteur d'un ennemi au fond        */
-const RUELLE_ECH_PRES = 0.520;     /* hauteur d'un ennemi à la barricade */
+const RUELLE_ECH_PRES = 0.330;     /* hauteur d'un ennemi à la barricade */
+/* La barricade occupe le bas du décor. On la redessine PAR-DESSUS les
+   ennemis : sans ça, un homme arrivé au contact passe devant les
+   caisses au lieu d'être masqué par elles, et la profondeur s'effondre
+   au moment précis où elle compte le plus. */
+const RUELLE_PREMIER_PLAN = 0.660;  /* fraction du décor qui passe devant */
+/* Les héros CHEVAUCHENT la barricade : leurs pieds sont sous le bord de
+   l'écran et la palissade les coupe à la taille. C'est ce qui les met
+   vraiment derrière l'abri au lieu de les poser devant. */
+const RUELLE_TAILLE_HEROS = 0.560;
+const RUELLE_PIEDS_HEROS = 1.070;   /* fraction de hauteur : sous l'écran */
 const RUELLE_FUITE = 0.500;        /* le point de fuite, en largeur      */
 
 /* Les cinq trajectoires convergent vers le point de fuite. La valeur
@@ -323,6 +333,7 @@ const RuelleVue = {
       const l = fond.naturalWidth * e, h = fond.naturalHeight * e;
       if (L > H){ ctx.fillStyle = "#0A0710"; ctx.fillRect(0, 0, L, H); }
       ctx.drawImage(fond, (L - l) / 2, H - h, l, h);
+      this._fond = { l, h, x:(L - l) / 2, y:H - h };
     }
     /* les ennemis, du plus lointain au plus proche */
     const liste = Ruelle.ennemis.slice().sort((a, b) => a.z - b.z);
@@ -335,17 +346,32 @@ const RuelleVue = {
       ctx.drawImage(spr, b.x + (b.l - l) / 2, b.y, l, b.h);
       ctx.globalAlpha = 1;
     }
-    /* les deux héros, au premier plan, de dos */
+    /* les deux héros, tout devant, de dos. PF est RETOURNÉ : les deux
+       doivent viser vers le centre de la ruelle, sinon celui de droite
+       tire vers le trottoir. */
     for (let i = 0; i < 2; i++){
       const h = Ruelle.heros[i];
       const spr = Images.table[h.sprite + "_" + Ruelle.poseHeros(i)];
       if (!spr || !spr.naturalWidth) continue;
-      const haut = H * 0.30, larg = haut * spr.naturalWidth / spr.naturalHeight;
-      const x = i === 0 ? L * 0.22 : L * 0.78;
-      ctx.globalAlpha = i === Ruelle.actifIdx ? 1 : 0.82;
-      ctx.drawImage(spr, x - larg / 2, H * 0.985 - haut, larg, haut);
-      ctx.globalAlpha = 1;
+      const haut = H * RUELLE_TAILLE_HEROS;
+      const larg = haut * spr.naturalWidth / spr.naturalHeight;
+      const x = i === 0 ? L * 0.24 : L * 0.76;
+      ctx.save();
+      ctx.globalAlpha = i === Ruelle.actifIdx ? 1 : 0.84;
+      ctx.translate(x, H * RUELLE_PIEDS_HEROS - haut);
+      if (i === 1){ ctx.scale(-1, 1); }
+      ctx.drawImage(spr, -larg / 2, 0, larg, haut);
+      ctx.restore();
     }
+    /* La barricade repasse DEVANT : les ennemis arrivés au contact
+       doivent disparaître derrière les caisses, pas marcher dessus. */
+    const f = this._fond;
+    if (fond && f){
+      const coupe = Math.round(fond.naturalHeight * RUELLE_PREMIER_PLAN);
+      ctx.drawImage(fond, 0, coupe, fond.naturalWidth, fond.naturalHeight - coupe,
+        f.x, f.y + f.h * RUELLE_PREMIER_PLAN, f.l, f.h * (1 - RUELLE_PREMIER_PLAN));
+    }
+    ctx.globalAlpha = 1;
     ctx.restore();
   },
 };

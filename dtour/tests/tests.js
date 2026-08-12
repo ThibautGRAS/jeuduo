@@ -2630,7 +2630,10 @@ if (D){
     (() => {
       const loin = D.Perspective.projeter(0, 2), pres = D.Perspective.projeter(1, 2);
       messageDetail = Math.round(loin.hauteur) + " px au fond, " + Math.round(pres.hauteur) + " px devant";
-      return pres.hauteur > loin.hauteur * 7;
+      /* Les ennemis ont rétréci en v6.37 : ils passaient devant la
+         barricade au lieu d'être masqués par elle. Le rapport reste
+         franc, mais moins extrême. */
+      return pres.hauteur > loin.hauteur * 5;
     })());
   verifier("il grossit sans jamais rétrécir en avançant",
     (() => {
@@ -2674,6 +2677,26 @@ if (D){
   verifier("entrer dans un niveau réévalue l'orientation",
     /entrerJeu\(\)\{[\s\S]{0,400}?this\.pensePivot\(\)/.test(source),
     "sans ça, on passe du titre en paysage à la ruelle sans rien vérifier");
+
+  verifier("la barricade repasse devant les ennemis",
+    (() => {
+      /* Sans premier plan, un homme arrivé au contact marche SUR les
+         caisses et la profondeur s'effondre au moment où elle compte le
+         plus. Le décor est donc redessiné par le bas, après les
+         combattants. */
+      const vue = source.slice(source.indexOf("const RuelleVue"));
+      const iEnn = vue.indexOf("Ruelle.poseEnnemi");
+      const iHer = vue.indexOf("RUELLE_TAILLE_HEROS");
+      const iBar = vue.indexOf("RUELLE_PREMIER_PLAN");
+      return iEnn > 0 && iHer > iEnn && iBar > iHer;
+    })(), "l'ordre doit être : décor, ennemis, héros, barricade");
+  verifier("les héros chevauchent la barricade",
+    (() => {
+      /* Leurs pieds sont sous le bord de l'écran : la palissade les
+         coupe à la taille au lieu de les poser devant. */
+      const m = source.match(/RUELLE_PIEDS_HEROS = ([\d.]+)/);
+      return !!m && parseFloat(m[1]) > 1;
+    })());
 
   /* --- la ruelle se joue --- */
   verifier("le niveau 4 démarre et peuple ses vagues",
