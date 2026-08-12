@@ -318,6 +318,10 @@ const Sons = {
        une bouteille. La matière dit ce qui vient d'arriver mieux qu'un
        message. */
     "impact_bois", "impact_bouteille",
+    /* Le bar a sa musique et sa foule. La foule est une BOUCLE DE FOND,
+       pas un effet : elle tourne pendant tout le niveau, très en
+       retrait, et c'est elle qui fait qu'un bar plein sonne plein. */
+    "musique_bar", "foule_bar",
     "cri_depar", "cri_dsk", "cri_jubi", "cri_abbe", "cri_bruh",
   ],
 
@@ -670,6 +674,30 @@ const Sons = {
     this.musique = false;   /* la grille synthétisée reste muette */
     return true;
   },
+  /* Une boucle de fond : même mécanique que la musique, mais sur son
+     PROPRE gain, parce qu'elle doit pouvoir tourner PENDANT la musique.
+     Les deux partagent le maître, pas le réglage. */
+  fondBoucle:null, gainFond:null,
+  lancerFondFichier(nom, vol){
+    const buf = this.echants[nom];
+    if (!buf || !this.ac || this.fondBoucle) return false;
+    this.gainFond = this.ac.createGain();
+    this.gainFond.gain.value = vol === undefined ? 0.3 : vol;
+    this.gainFond.connect(this.maitre);
+    const s = this.ac.createBufferSource();
+    s.buffer = buf; s.loop = true;
+    s.connect(this.gainFond);
+    s.start(this.ac.currentTime + 0.05);
+    this.fondBoucle = s;
+    return true;
+  },
+  arreterFondFichier(){
+    if (this.fondBoucle){ try { this.fondBoucle.stop(); } catch (e) { void e; } }
+    this.fondBoucle = null;
+    if (this.gainFond){ try { this.gainFond.disconnect(); } catch (e) { void e; } }
+    this.gainFond = null;
+  },
+
   arreterMusiqueFichier(){
     if (this.sourceMus){ try { this.sourceMus.stop(); } catch (e) { void e; } }
     this.sourceMus = null;

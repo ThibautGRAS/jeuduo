@@ -2906,7 +2906,9 @@ if (D){
          28 secondes ne tiennent pas dans 40 Ko. */
       const tailles = D.Sons.ECHANTILLONS.map(n => ({
         n, o:fs.statSync(path.join(RACINE, "son", n + ".ogg")).size,
-        musique:n.indexOf("musique") === 0 }));
+        /* les BOUCLES ont droit à plus : elles tournent tout un niveau,
+           chargées une fois. Un effet ponctuel, non. */
+        musique:n.indexOf("musique") === 0 || n.indexOf("foule") === 0 }));
       const total = tailles.reduce((s, x) => s + x.o, 0);
       messageDetail = Math.round(total / 1024) + " Ko au total";
       return tailles.every(x => x.o > 800 &&
@@ -3304,6 +3306,28 @@ if (D){
         .filter(k => !(D.BESTIAIRE[k] && (D.BESTIAIRE[k].mort || []).length >= 3));
       messageDetail = sans.length ? sans.join(", ") : "";
       return sans.length === 0;
+    })());
+
+  verifier("le bar a sa musique ET sa foule, sur deux gains séparés",
+    (() => {
+      /* La foule doit tourner PENDANT la musique : deux boucles, deux
+         réglages, un seul maître. Un gain partagé aurait obligé à
+         choisir. */
+      return /lancerFondFichier\(nom, vol\)/.test(source) &&
+        /this\.gainFond = this\.ac\.createGain\(\)/.test(source) &&
+        /Sons\.lancerMusiqueFichier\("musique_bar"\)/.test(source) &&
+        /Sons\.lancerFondFichier\("foule_bar"/.test(source) &&
+        ["musique_bar", "foule_bar"].every(
+          n => D.Sons.ECHANTILLONS.indexOf(n) >= 0 &&
+               fs.existsSync(path.join(RACINE, "son", n + ".ogg")));
+    })());
+
+  verifier("les deux boucles du bar s'arrêtent au menu",
+    (() => {
+      /* Une boucle sans arrêt accompagne l'écran titre puis se superpose
+         au niveau suivant. Le piège a déjà coûté une correction. */
+      return /Sons\.arreterFondFichier\(\)/.test(source) &&
+        /arreterFondFichier\(\)\{[\s\S]{0,300}?this\.gainFond = null/.test(source);
     })());
 
   verifier("chaque méchant a son cri",

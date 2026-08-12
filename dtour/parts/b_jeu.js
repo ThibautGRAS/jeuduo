@@ -407,7 +407,12 @@ const Jeu = {
       this.temps = 0; this.vies = 1; this.finChrono = 0; this.phase = "jeu";
       Tournee.monter();
       Interface.entrerJeu();
-      Sons.reveiller(); Sons.lancerFondBar(); Sons.lancerMusique();
+      Sons.reveiller(); Sons.lancerFondBar();
+      /* Le bar a sa musique et sa foule. Repli sur la grille synthétisée
+         si les fichiers manquent — le jeu n'est jamais muet. */
+      Sons.lancerMusiqueFichier("musique_bar");
+      Sons.volumeMusique(0.42);
+      Sons.lancerFondFichier("foule_bar", 0.30);
       return;
     }
     if (this.niveau === 2){
@@ -661,6 +666,7 @@ const Jeu = {
        à celle du niveau suivant. La grille synthétisée, elle, s'éteint
        toute seule avec `musique`. */
     Sons.arreterMusiqueFichier();
+    Sons.arreterFondFichier();
     this.ralenti = 1;
     Difficulte.raz(); Score.raz(); File.raz(); Foule.raz(); Effets.raz(); razHeros(); Tartes.raz();
     this.temps = 0; this.gel = 0; this.moment = 0; this.fondu = 1; this.fonduDe = 0; this.demandes = [];

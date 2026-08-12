@@ -1,6 +1,6 @@
 # son/ — les échantillons du jeu
 
-Douze fichiers OGG mono. 96 Ko d'effets, plus 234 Ko de musique.
+Quatorze fichiers OGG mono. 96 Ko d'effets, plus 234 Ko de musique.
 
 ## Remplacer un son
 
@@ -22,6 +22,8 @@ Douze fichiers OGG mono. 96 Ko d'effets, plus 234 Ko de musique.
 | `musique_ruelle.ogg` | musique du niveau 4, en boucle |
 | `impact_bois.ogg` | un pavé ou un encensoir s'écrase |
 | `impact_bouteille.ogg` | une bouteille éclate |
+| `musique_bar.ogg` | musique du niveau 3, en boucle |
+| `foule_bar.ogg` | rumeur de la salle, en boucle |
 
 ## Ce qui n'est PAS un échantillon, et pourquoi
 
