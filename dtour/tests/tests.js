@@ -1029,10 +1029,22 @@ if (D){
     D.PIECES.length === 4 && D.PIECES.every(p => p.ligne && p.jusqua > 0));
   verifier("le bavardage va par paires", D.BAVARDAGES.length % 2 === 0);
 
-  /* la contradiction ne tombe qu'une fois, et sur la bonne personne */
-  lancer2();
-  D.Enquete.indices = 5;
-  const coupable = D.SUSPECTS.findIndex(s => s.id === D.Affaire.bonneReponse());
+  /* La contradiction ne tombe qu'une fois, et sur la bonne personne.
+
+     ON RELANCE JUSQU'À TOMBER SUR UNE AFFAIRE AVEC COUPABLE, au lieu de
+     sauter les tests quand le tirage n'en donne pas. Avant, le nombre de
+     tests exécutés variait d'une fois sur six : quatre vérifications ne
+     s'exécutaient que si le hasard voulait bien, donc ne protégeaient de
+     rien un jour sur six. Un test qui dépend d'un tirage doit FORCER le
+     tirage. */
+  let coupable = -1;
+  for (let essai = 0; essai < 60 && coupable < 0; essai++){
+    lancer2();
+    D.Enquete.indices = 5;
+    coupable = D.SUSPECTS.findIndex(s => s.id === D.Affaire.bonneReponse());
+  }
+  verifier("une affaire avec coupable a été trouvée pour les tests suivants",
+    coupable >= 0, "sur soixante tirages");
   if (coupable >= 0){
     /* Pierre-François n'obtient jamais la contradiction : la sœur est sa
        belle-sœur, Teo son ami. C'est le sens de la spécialité. */
@@ -1047,7 +1059,7 @@ if (D){
     D.Enquete.interroger(coupable);
     egal("elle ne tombe qu'une fois",
       D.Enquete.fileDial.filter(r => typeof r.qui === "number").length, avantC);
-  } else ok("scénario sans coupable : rien à contredire");
+  }
 
   titre("Les trois dans les deux niveaux");
   /* Les habitants ne font PLUS la queue depuis la v6.15 : ils n'avaient

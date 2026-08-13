@@ -42,8 +42,21 @@ dessine.
 
 ---
 
-Mémoire technique de `dtour/`. Complète `LISEZMOI.md`, qui décrit le
-jeu, et `../MEMOIRE.md`, dont les pièges valent ici aussi.
+Mémoire technique des **Enquêtes de Callaghan**, le jeu de `dtour/`.
+
+**Les cinq documents du projet**, et ce qu'on y cherche :
+
+| fichier | on y va pour |
+|---|---|
+| `dtour/CLAUDE.md` | les commandes et le cycle de travail |
+| `dtour/MEMOIRE.md` | ce qui a mordu, et comment ne pas le refaire |
+| `dtour/LISEZMOI.md` | ce que le jeu fait, version par version |
+| `dtour/PERSONNAGES.md` | qui sont les gens, et où ils apparaissent |
+| `dtour/PROMPTS.md` | comment demander une planche d'images |
+
+Plus `dtour/son/LISEZMOI.md` pour les échantillons, `../CLAUDE.md` pour
+les règles communes au dépôt, et `../MEMOIRE.md` pour DUO — dont les
+pièges valent souvent ici aussi.
 
 **Plan** — mode d'emploi et parcours de lecture, section 0 (les sept
 familles d'erreurs et ce qui marche), 1 (architecture), 2 (réglages
@@ -1950,6 +1963,24 @@ message final et l'ont chevauché. Même famille que la reconstruction de
 listes par regex. Après toute transformation mécanique du code, on
 compte ce qui reste ET on regarde l'image.
 
+#### Un test qui dépend d'un tirage doit FORCER le tirage
+
+Quatre vérifications sur la contradiction n'étaient exécutées que si
+l'affaire tirée au sort avait un coupable — sinon le bloc était sauté au
+profit d'un « rien à contredire ». Résultat mesuré : le nombre de tests
+passait de 692 à 689 environ une fois sur six.
+
+Un test qui ne s'exécute pas ne protège de rien, et personne ne remarque
+son absence : la suite reste verte. Pire, le symptôme se lit comme du
+bruit — « tiens, le compte a bougé » — au lieu d'un défaut.
+
+La parade : relancer le tirage jusqu'à obtenir le cas voulu (soixante
+essais suffisent ici), et VÉRIFIER qu'on l'a obtenu. Ainsi l'échec de la
+mise en place devient lui-même un test rouge.
+
+Signe à surveiller : **un nombre de tests qui varie d'une exécution à
+l'autre**. Il ne devrait jamais varier.
+
 #### Un test statistique au seuil trop proche de la moyenne
 « On préfère envoyer celui qui a quelque chose à dire » : taux réel
 62 %, seuil 55 %, 200 tirages — soit 2,2 σ, un échec toutes les
@@ -2236,10 +2267,58 @@ téléphone.
 
 ## 5. Ce qui n'est pas fait
 
-- Le tableau d'enquête et la reconstitution chronologique : l'asset est
-  découpé, la mécanique n'existe pas. L'accusation se fait sur une liste
-  de suspects, sans avoir à désigner les indices qui la soutiennent.
-- Risoto est interrogeable mais ne se déplace pas.
-- Aucune mesure de performance sur appareil réel.
-- L'équilibrage du niveau 2 — cinq minutes, six indices sur seize
+Tenu à jour à chaque livraison. Une entrée qui disparaît d'ici sans avoir
+été faite est une promesse perdue — c'est arrivé pour le tableau
+d'enquête, resté quarante versions sans que personne y revienne.
+
+### Demandé et pas encore fait
+
+- **Le menu de sélection des personnages** du niveau 3 : Thibaut le
+  trouve peu lisible et « cheap ». Demandé plusieurs fois, jamais
+  commencé. C'est le seul point de sa liste qui reste entier.
+- **La pose `serie` de Jojo** montre une passoire au lieu de la série de
+  shots prête. La bonne pose est dans la rangée chorégraphiée de sa
+  planche, mais celle-ci a un comptoir et un cadre blanc qui gênent la
+  détection.
+
+### Écrit dans la conception, jamais construit
+
+- **Le tableau d'enquête et la reconstitution chronologique.** L'asset
+  est découpé depuis longtemps ; la mécanique n'existe pas. L'accusation
+  se fait sur une liste de suspects, sans avoir à désigner les indices
+  qui la soutiennent. C'est le plus vieux manque du projet.
+- **Risoto** est interrogeable mais ne se déplace pas.
+- **Les allées et venues du bar** : les figurants forment des grappes et
+  se baladent, mais personne ne quitte le bar pour de bon ni n'y entre.
+
+### Su et assumé
+
+- **Aucune mesure de performance sur appareil réel.** Le nombre de
+  particules est plafonné au jugé (90), pas mesuré sur un iPhone.
+- **L'équilibrage du niveau 2** — cinq minutes, six indices sur seize
   meubles — est un pari, pas une mesure.
+- **La licence de l'enregistrement de grognements** (Freesound 745360)
+  n'a pas été vérifiée. Si elle demande une attribution, elle doit
+  figurer quelque part.
+- **Le jeton GitHub a transité par la conversation** à plusieurs
+  reprises. Il doit être régénéré.
+
+### Ce que les tests ne couvrent pas
+
+À savoir avant de faire confiance à une suite verte.
+
+- **Le temps qui passe.** Aucun test ne simule « rien ne se produit
+  pendant une seconde ». C'est ce trou qui a laissé partir en production
+  un voile qui ne se levait jamais.
+- **Le navigateur.** Rotation, repli de la barre d'adresse,
+  `requestAnimationFrame` en arrière-plan : rien de tout ça n'est
+  observable ici. Ces états demandent un raisonnement explicite et jamais
+  un seul mécanisme.
+- **Le nombre de tests doit être STABLE.** S'il varie d'une exécution à
+  l'autre, c'est qu'une vérification dépend d'un tirage et ne s'exécute
+  pas toujours. Mesuré une fois : 692 ou 689 selon le hasard, corrigé en
+  forçant le tirage.
+- **L'oreille.** Les sons sont vérifiés décodables, non silencieux, non
+  saturés, de timbres distincts — jamais écoutés.
+- **Le rendu**, sauf par le harnais d'aperçu, et seulement pour les
+  scènes qu'on a pensé à y ajouter.

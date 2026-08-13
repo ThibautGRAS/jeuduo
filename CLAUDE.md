@@ -1,88 +1,108 @@
 # CLAUDE.md — comment travailler sur ce dépôt
 
-Lire ce fichier **avant toute modification**, puis `MEMOIRE.md` pour le contexte
-technique et les pièges déjà rencontrés.
+Lire ce fichier **avant toute modification**. Il donne ce qui vaut pour
+tout le dépôt ; chaque jeu a ensuite ses propres documents.
 
-## Le projet en une phrase
+## Ce dépôt contient DEUX jeux
 
-Jeu de duel type Pong en pair-à-pair, un seul fichier `index.html`, jouable au
-doigt sur iPhone, hébergé sur GitHub Pages.
+Ils sont indépendants : code séparé, documents séparés, versions
+séparées. La seule chose qu'ils partagent est ce fichier et l'hébergement.
 
-| | |
-|---|---|
-| Dépôt | `ThibautGRAS/jeuduo`, branche `main` |
-| Adresse principale | https://thibautgras.github.io/jeuduo/ |
-| Miroir rapide | Netlify, relié au même dépôt (déploiement en ~15 s) |
-| Cible | iPhone, Safari, réseau mobile |
+| | **DUO** | **Les Enquêtes de Callaghan** |
+|---|---|---|
+| Dossier | racine (`index.html`) | `dtour/` |
+| Quoi | duel type Pong en pair-à-pair | quatre niveaux, un fil narratif |
+| Adresse | `thibautgras.github.io/jeuduo/` | `thibautgras.github.io/jeuduo/dtour/` |
+| Version | `DUO vX.Y`, dans le lobby | `CALLAGHAN vX.YZ`, en haut à gauche |
+| Ses règles | `MEMOIRE.md` (racine) | `dtour/CLAUDE.md` puis `dtour/MEMOIRE.md` |
 
-## Contraintes à ne pas casser
+**Avant de toucher à l'un des deux**, lire le `MEMOIRE.md` correspondant.
+Les pièges de DUO valent souvent pour Callaghan et réciproquement — même
+auteur, même cible, mêmes réflexes — mais les architectures n'ont rien à
+voir.
 
-- **Un seul fichier.** Tout le jeu tient dans `index.html` : HTML, CSS et
-  JavaScript. Pas d'outil de compilation, pas de dépendance à installer. Seules
-  exceptions autorisées : PeerJS chargé depuis un CDN, les décors dans
-  `arenes/`, et la suite de tests dans `tests/`.
-- **Pas de stockage navigateur en dehors de `localStorage`** pour les
-  préférences (nom, photo, réglages, compteur de duels).
-- **Le terrain fait toujours 540 × 720 unités de jeu**, quelle que soit la
-  taille d'écran. Toute la géométrie en dépend.
+## Cible commune
+
+iPhone, Safari, réseau mobile. Tout se joue au doigt. Ce qui n'est pas
+lisible à bout de bras sur un téléphone n'existe pas.
 
 ## Flux de travail obligatoire
 
-Dans cet ordre, sans sauter d'étape :
+Dans cet ordre, sans sauter d'étape. Il vaut pour les deux jeux ; seules
+les commandes changent.
 
-1. **Éditer par remplacement vérifié.** Chaque remplacement compte ses
-   occurrences et refuse d'écrire si le compte n'est pas exact. Un script qui
-   échoue partiellement ne doit **rien** écrire — voir le piège « édition
-   partielle » dans `MEMOIRE.md`.
-2. **Contrôler la syntaxe** : extraire le `<script>` et lancer `node --check`.
-3. **Lancer la suite** : `node tests/tests.js`. Elle rend un code non nul en cas
+1. **Éditer par remplacement compté.** Chaque remplacement compte ses
+   occurrences et refuse d'écrire si le compte n'est pas exact. Un script
+   qui échoue partiellement ne doit **rien** écrire — voir le piège
+   « édition partielle » dans `MEMOIRE.md`.
+2. **Contrôler la syntaxe** : extraire le `<script>` et lancer
+   `node --check`.
+3. **Lancer la suite de tests.** Elle rend un code non nul en cas
    d'échec.
 4. **REGARDER LE RENDU AVANT DE POUSSER.** Règle en dur, sans exception :
-   toute modification qui touche à l'affichage — un sprite, une position, une
-   couleur, un bouton, un ordre de dessin — se vérifie **à l'image** avant le
-   push, avec `node dtour/tests/apercu.js` puis en OUVRANT les fichiers
-   produits. Les tests ne voient pas un bouton coupé, une couture, un halo
-   rose, un personnage qui flotte ou un texte à côté de sa pastille : ils ont
-   laissé passer tout ça. Une suite verte n'autorise pas à pousser du visuel
-   non regardé, et chaque aller-retour évité vaut dix minutes de rendu.
-5. **Ne pousser que si tout est vert.** Enchaîner les commandes avec `&&`, jamais
-   avec des retours à la ligne : sinon le déploiement part malgré un test rouge.
-6. **Vérifier après coup** que le fichier déployé contient bien ce qu'on croit,
-   en particulier le numéro de version affiché en bas du lobby.
+   toute modification qui touche à l'affichage — un sprite, une position,
+   une couleur, un bouton, un ordre de dessin — se vérifie **à l'image**
+   avant le push, en OUVRANT les fichiers produits. Les tests ne voient
+   pas un bouton coupé, une couture, un halo rose, un personnage qui
+   flotte ou un texte à côté de sa pastille : ils ont laissé passer tout
+   ça. Une suite verte n'autorise pas à pousser du visuel non regardé.
+5. **Ne pousser que si tout est vert.** Enchaîner les commandes avec
+   `&&`, jamais avec des retours à la ligne : sinon le déploiement part
+   malgré un test rouge.
+6. **Vérifier après coup** que le fichier déployé contient bien ce qu'on
+   croit, en particulier le numéro de version.
 
-**Piège du tube.** `node tests/x.js | tail -3` renvoie le code de `tail`, pas
-celui du test : un `&&` qui suit ne verra jamais l'échec. Rediriger vers un
-fichier puis afficher, ou tester le code de retour explicitement.
+**Après un rebase, tout recommence à l'étape 2.** Un commit distant
+arrivé entre-temps change le code : il exige un nouveau contrôle,
+exactement comme une édition. Cette étape a déjà été sautée une fois, et
+un test rouge est parti en production.
 
-Incrémenter `VERSION` **et** le texte `DUO vX.Y` du lobby à chaque livraison :
-c'est le seul moyen pour l'utilisateur de savoir ce qu'il teste.
+**Piège du tube.** `node tests/x.js | tail -3` renvoie le code de `tail`,
+pas celui du test : un `&&` qui suit ne verra jamais l'échec. Rediriger
+vers un fichier puis afficher, ou tester le code de retour explicitement.
+
+Incrémenter la version **et** le texte affiché à chaque livraison : c'est
+le seul moyen pour Thibaut de savoir ce qu'il teste — et la première
+chose à lui faire vérifier quand il signale qu'un correctif n'a rien
+changé.
 
 ## Ce que les outils ne voient pas
 
 - `node --check` valide la **syntaxe**, pas les références : une fonction
-  appelée sans être définie passe le contrôle et plante à l'exécution. La
-  section « Références » de la suite couvre ce cas depuis qu'il s'est produit.
-- Une capture d'écran vaut mieux qu'une supposition : demander une capture
-  plutôt que d'imaginer le rendu.
-- L'environnement d'exécution ne peut pas ouvrir `github.io` : s'appuyer sur le
-  journal de déploiement de GitHub, et le dire quand la vérification est
+  appelée sans être définie passe le contrôle et plante à l'exécution.
+  Les deux suites couvrent ce cas depuis qu'il s'est produit.
+- Les tests n'observent ni le TEMPS qui passe ni le navigateur. Un état
+  qui dépend d'un délai, d'une rotation d'écran ou d'un
+  `requestAnimationFrame` n'est pas couvert : il demande un raisonnement
+  explicite, et de ne jamais dépendre d'un seul mécanisme. Un voile qui
+  ne se lève que sur un événement a déjà empêché un jeu de démarrer.
+- Une capture d'écran vaut mieux qu'une supposition : demander une
+  capture plutôt que d'imaginer le rendu.
+- L'environnement d'exécution ne peut pas ouvrir `github.io` : vérifier
+  le déployé par l'API GitHub, et le dire quand la vérification est
   indirecte.
+
+## Publication
+
+`git push` sur `ThibautGRAS/jeuduo`, branche `main`, avec un jeton
+**fourni en séance par Thibaut**. Ne jamais écrire de secret dans le
+dépôt : il est public. Si un jeton a transité par la conversation, le
+dire et conseiller de le régénérer.
+
+GitHub Pages sert **tout le dépôt** : un fichier source lourd déposé pour
+travailler doit en ressortir. Les sources d'images et de sons vivent hors
+dépôt, et les scripts qui les transforment sont versionnés à leur place.
 
 ## Modes de séance
 
-- **EXPLORATION** — on cherche, on jette, on ne pousse pas. Les essais vivent
-  dans des fichiers `index_vX.html` locaux.
-- **PRODUCTION** — on livre. Suite verte, version incrémentée, push, puis
-  message court expliquant ce qui change et ce qu'il faut aller vérifier.
-
-## Déploiement
-
-Push par l'API Contents de GitHub, un fichier à la fois, avec le `sha` du
-fichier existant. Le jeton est **fourni en séance par Thibaut**, jamais stocké
-ici ni dans le code. Ne jamais écrire de secret dans le dépôt : il est public.
+- **EXPLORATION** — on cherche, on jette, on ne pousse pas.
+- **PRODUCTION** — on livre. Suite verte, rendu regardé, version
+  incrémentée, push, puis message court disant ce qui change et ce qu'il
+  faut aller vérifier.
 
 ## Ton des échanges
 
-Français, direct, sans emphase inutile. Annoncer ce qui a été mesuré plutôt que
-ce qui est supposé. Quand une erreur a été commise, le dire clairement et dire
-ce qui a été mis en place pour qu'elle ne revienne pas.
+Français, direct, sans emphase inutile. Annoncer ce qui a été **mesuré**
+plutôt que ce qui est supposé — un chiffre se vérifie, une impression
+non. Quand une erreur a été commise, le dire clairement et dire ce qui a
+été mis en place pour qu'elle ne revienne pas.

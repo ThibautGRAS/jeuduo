@@ -1,6 +1,35 @@
-# MEMOIRE.md — ce que le projet a appris
+# MEMOIRE.md — ce que DUO a appris
 
-Mémoire technique de `jeuduo`. Complète `CLAUDE.md`, qui décrit la méthode.
+Mémoire technique de **DUO**, le jeu de duel à la racine du dépôt.
+Complète `CLAUDE.md`, qui décrit la méthode commune aux deux jeux.
+
+**Ce fichier ne concerne pas Callaghan.** Le jeu de `dtour/` a sa propre
+mémoire, bien plus fournie : `dtour/MEMOIRE.md`. Ses pièges valent
+souvent ici — même auteur, même cible — mais les architectures n'ont rien
+à voir.
+
+---
+
+## 0. Ce que DUO ne doit pas casser
+
+Ces contraintes vivaient dans `CLAUDE.md` à la racine, du temps où ce
+dépôt n'hébergeait qu'un jeu. Elles sont ici parce qu'elles ne concernent
+QUE DUO — `dtour/` a les siennes, différentes.
+
+- **Un seul fichier.** Tout le jeu tient dans `index.html` : HTML, CSS et
+  JavaScript. Pas d'outil de compilation, pas de dépendance à installer.
+  Seules exceptions : PeerJS chargé depuis un CDN, les décors dans
+  `arenes/`, et la suite de tests dans `tests/`.
+- **Pas de stockage navigateur en dehors de `localStorage`** pour les
+  préférences : nom, photo, réglages, compteur de duels.
+- **Le terrain fait toujours 540 × 720 unités de jeu**, quelle que soit
+  la taille d'écran. Toute la géométrie en dépend.
+- **Un miroir Netlify** est relié au même dépôt et déploie en une
+  quinzaine de secondes : utile pour faire vérifier vite, mais ce n'est
+  pas l'adresse de référence.
+
+Commandes : `node tests/tests.js` pour la suite, `node tests/simulation.js`
+pour la simulation de duel.
 
 ---
 

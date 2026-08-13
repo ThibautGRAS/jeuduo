@@ -283,6 +283,36 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**La documentation du dépôt est rangée** (v6.90).
+
+**Le dépôt contient DEUX jeux** — DUO à la racine, Callaghan dans
+`dtour/` — et `CLAUDE.md` décrivait le premier tout en donnant les
+commandes du second. Quelqu'un qui arrivait dessus croyait travailler sur
+un jeu de Pong. Il est devenu la **porte d'entrée du dépôt** : ce qui
+vaut pour les deux, et un tableau qui renvoie chacun à ses documents.
+
+**`dtour/CLAUDE.md` est né** : les commandes de Callaghan n'existaient
+nulle part de façon consultable. L'architecture des morceaux, le cycle en
+sept étapes, les douze scripts d'outillage et ce qu'ils font, les
+contraintes à ne pas casser.
+
+**Les contraintes propres à DUO** — un seul fichier, PeerJS, le terrain
+de 540 × 720, le miroir Netlify — ont rejoint sa mémoire, où elles ont
+leur place.
+
+**La section « ce qui n'est pas fait » est refaite** et rangée en quatre
+catégories : demandé et pas commencé, écrit dans la conception mais
+jamais construit, su et assumé, et ce que les tests ne couvrent pas.
+Elle datait de quarante versions.
+
+**Et un défaut trouvé en route.** Le nombre de tests VARIAIT d'une
+exécution à l'autre — 692 ou 689 environ une fois sur six. Quatre
+vérifications sur la contradiction ne s'exécutaient que si l'affaire
+tirée au sort avait un coupable. Un test qui ne s'exécute pas ne protège
+de rien, et la suite reste verte. Le tirage est maintenant forcé, et
+l'échec de la mise en place est lui-même un test. **Un nombre de tests
+qui bouge est un signal, pas du bruit.**
+
 **La mémoire du projet devient un document de relecture** (v6.89).
 
 Les **137 pièges** y étaient empilés dans l'ordre où ils sont arrivés :
