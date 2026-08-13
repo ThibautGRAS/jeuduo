@@ -297,12 +297,17 @@ SCENES = {
                   "en arrière ; bras gauche en avant"),
       ("marche2", "jambe GAUCHE tendue devant, talon au sol, jambe droite "
                   "en arrière ; bras droit en avant"),
-      ("fouille", "accroupi, une main qui ouvre un tiroir invisible devant "
-                  "lui, l'autre en appui sur le genou"),
+      ("fouille", "accroupi, une main tendue vers la DROITE à hauteur de "
+                  "hanche, doigts refermés comme sur une poignée de tiroir "
+                  "qu'on NE VOIT PAS, l'autre en appui sur le genou. Aucun "
+                  "meuble, aucun tiroir, aucun décor dessinés."),
       ("examine", "debout, un petit objet tenu à hauteur des yeux entre le "
                   "pouce et l'index, sourcils froncés"),
-      ("interroge", "de trois quarts, une main ouverte tendue devant lui à "
-                    "hauteur de taille, comme pour poser une question"),
+      # « devant lui » invitait à dessiner l'interlocuteur
+      ("interroge", "de trois quarts, une main ouverte tendue vers la DROITE "
+                    "à hauteur de taille, paume vers le haut, comme pour "
+                    "poser une question à quelqu'un qu'on NE VOIT PAS. "
+                    "Aucune autre personne dessinée."),
       ("ecoute", "debout, une main au menton, tête légèrement inclinée, "
                  "l'autre bras replié sous le coude"),
       ("carnet", "un carnet ouvert dans une main, un stylo dans l'autre, "
@@ -353,9 +358,9 @@ SCENES = {
       ("frein", "talons plantés, buste rejeté en arrière, bras écartés, "
                 "chaussures qui dérapent"),
       # la séquence du verre, dans l'ordre
-      ("attrape", "le bras tendu de côté vers un comptoir invisible, la main "
-                  "qui se referme sur un verre à hauteur de taille, buste "
-                  "légèrement penché"),
+      ("attrape", "le bras tendu vers la DROITE, la main qui se referme sur "
+                  "un verre à hauteur de taille, buste légèrement penché. Le "
+                  "verre EST dessiné ; le comptoir NON, ni aucun décor."),
       ("tient", "debout, un verre plein tenu contre la poitrine, regard vers "
                 "l'avant, l'autre main libre"),
       ("boit", "la tête rejetée en arrière, le verre porté aux lèvres et "
@@ -403,18 +408,26 @@ SCENES = {
                  "haut, le buste part légèrement en arrière"),
       ("recul2", "recul maximal : l'arme pointe vers le haut, l'épaule est "
                  "rejetée, le pied arrière se cale"),
-      ("fumee", "après le tir : l'arme retombe lentement, le bras se "
-                "détend, le regard reste sur la cible"),
+      # « la cible » invitait à dessiner un ennemi
+      ("fumee", "après le tir : l'arme retombe lentement, le bras se détend, "
+                "le regard reste fixé vers la DROITE. Un mince filet de "
+                "fumée sort du canon. Aucune cible, aucun ennemi, aucun "
+                "décor dessinés."),
       ("arme1", "recharge, premier temps : l'arme ramenée contre la "
                 "poitrine, une main qui saisit le chargeur"),
       ("arme2", "recharge, second temps : la main pousse le chargeur en "
                 "place, le regard baissé sur l'arme"),
       ("baisse", "arme baissée le long de la cuisse, corps de trois quarts, "
                  "il souffle"),
-      ("accroupi", "accroupi derrière un abri, arme ramenée contre la "
-                   "poitrine, tête rentrée dans les épaules"),
+      # « derrière un abri » invitait à dessiner la barricade, qui ne
+      # s'alignerait jamais avec celle du jeu — c'est déjà arrivé avec un
+      # bout de comptoir sous un barman
+      ("accroupi", "accroupi bas sur les talons, arme ramenée contre la "
+                   "poitrine, tête rentrée dans les épaules, comme s'il se "
+                   "cachait. Aucun abri, aucune caisse, aucun décor "
+                   "dessinés — il est seul sur le fond."),
       ("leve1", "début du relevé : un genou encore à terre, une main en "
-                "appui sur l'abri"),
+                "appui devant lui dans le vide. Aucun abri dessiné."),
       ("leve2", "fin du relevé : presque debout, l'arme qui remonte vers "
                 "la ligne de tir"),
     ],

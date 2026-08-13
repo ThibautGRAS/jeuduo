@@ -26,12 +26,12 @@ vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
 LES POSES, de gauche à droite :
-1. [fumee] après le tir : l'arme retombe lentement, le bras se détend, le regard reste sur la cible
+1. [fumee] après le tir : l'arme retombe lentement, le bras se détend, le regard reste fixé vers la DROITE. Un mince filet de fumée sort du canon. Aucune cible, aucun ennemi, aucun décor dessinés.
 2. [arme1] recharge, premier temps : l'arme ramenée contre la poitrine, une main qui saisit le chargeur
 3. [arme2] recharge, second temps : la main pousse le chargeur en place, le regard baissé sur l'arme
 4. [baisse] arme baissée le long de la cuisse, corps de trois quarts, il souffle
-5. [accroupi] accroupi derrière un abri, arme ramenée contre la poitrine, tête rentrée dans les épaules
-6. [leve1] début du relevé : un genou encore à terre, une main en appui sur l'abri
+5. [accroupi] accroupi bas sur les talons, arme ramenée contre la poitrine, tête rentrée dans les épaules, comme s'il se cachait. Aucun abri, aucune caisse, aucun décor dessinés — il est seul sur le fond.
+6. [leve1] début du relevé : un genou encore à terre, une main en appui devant lui dans le vide. Aucun abri dessiné.
 7. [leve2] fin du relevé : presque debout, l'arme qui remonte vers la ligne de tir
 
 

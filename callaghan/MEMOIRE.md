@@ -2260,6 +2260,18 @@ Ce que ça enseigne au-delà : quand une planche revient fautive, **relire
 sa propre formulation avant d'accuser le générateur.** Une consigne qui
 peut se lire de deux façons se lira de la mauvaise.
 
+Et surtout : la même ambiguïté était dans SIX autres poses, découvertes
+en cherchant exprès. `interroge` disait « tendue devant lui », `fumee`
+« le regard sur la cible », `accroupi` « derrière un abri », `fouille`
+« un tiroir », `attrape` « un comptoir », `leve1` « en appui sur l'abri ».
+Chacune invitait à dessiner quelque chose qui ne s'alignerait jamais avec
+le décor du jeu — c'est déjà arrivé, avec un bout de comptoir sous un
+barman.
+
+Un test relit désormais chaque description : toute pose qui évoque un
+interlocuteur, un meuble ou un abri doit dire explicitement qu'il n'est
+PAS dessiné. Il protège les poses à venir, pas seulement celles-ci.
+
 #### Une correction appliquée à moitié laisse le défaut vivant
 
 J'ai retiré le « rappel écrit » des prompts de héros parce qu'il

@@ -2088,6 +2088,36 @@ if (D){
     })());
 
 
+  verifier("aucune pose n'invite à dessiner un TIERS ou un DÉCOR",
+    (() => {
+      /* « serre la main de quelqu'un hors cadre » a été lu comme « la pose
+         voisine » : le générateur a dessiné les deux se serrant la main, à
+         six pixels d'écart. Toute pose qui évoque un interlocuteur, un
+         meuble ou un abri doit dire explicitement qu'il n'est PAS dessiné
+         — sinon il le sera, et il ne s'alignera jamais avec le décor du
+         jeu.
+
+         Ce test protège les poses À VENIR : celui qui ajoutera
+         « s'appuie sur le bar » se fera arrêter ici. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      const risques = ["quelqu'un", "hors cadre", "un abri", "un tiroir",
+                       "la cible", "devant lui", "comptoir"];
+      const parades = ["NE VOIT PAS", "Aucune autre personne", "Aucun abri",
+                       "Aucun meuble", "Aucune cible", "comptoir NON",
+                       "aucun décor"];
+      /* on relit chaque description de pose telle qu'elle est écrite */
+      const poses = [...s.matchAll(/\("([a-z0-9_]+)", "((?:[^"]|"\s*\n\s*")+)"\)/g)];
+      const nus = [];
+      for (const m of poses){
+        const desc = m[2].replace(/"\s*\n\s*"/g, "");
+        if (!risques.some(x => desc.indexOf(x) >= 0)) continue;
+        if (!parades.some(x => desc.indexOf(x) >= 0)) nus.push(m[1]);
+      }
+      messageDetail = nus.length ? "sans garde-fou : " + nus.join(", ")
+                                 : poses.length + " poses relues";
+      return nus.length === 0;
+    })());
+
   verifier("aucun prompt n'est le DOUBLON d'un autre",
     (() => {
       /* Dix-sept fichiers pour onze planches réelles : les cinq méchants
