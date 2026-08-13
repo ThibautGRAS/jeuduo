@@ -2235,6 +2235,39 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Contraindre l'autre plutôt que d'améliorer son propre outil
+
+J'ai fait descendre le nombre de poses par planche de neuf à cinq parce
+que les poses se touchaient et que mon découpage ne savait pas les
+séparer. J'ai présenté ça comme une contrainte du générateur d'images —
+« il n'a pas la place ». Thibaut a demandé si la limite ne venait pas
+plutôt de ma méthode.
+
+Elle en venait. Le détourage n'était pas en cause : retirer un fond
+magenta est facile. Ce qui manquait était la SÉPARATION de deux poses qui
+se touchent par un doigt — et c'est mesurable, donc soluble. Entre deux
+corps il ne reste qu'un avant-bras : le profil de densité descend à 37
+pixels de hauteur occupée là où un personnage en fait 531, sept pour
+cent. Il suffit de couper là.
+
+Le maximum est remonté de cinq à huit, et le nombre de planches est passé
+de dix-huit à onze. Ce que j'avais fait payer à l'utilisateur, l'outil
+pouvait le porter.
+
+**Avant d'imposer une contrainte à l'autre, se demander si elle vient du
+problème ou de son propre outillage.** Une contrainte est confortable :
+elle transforme un défaut d'outil en règle, et la règle n'a l'air de rien
+tant que ce n'est pas soi qui l'applique.
+
+Ce qui reste une VRAIE limite, mesurée et qu'aucun algorithme ne
+rattrape : trop serrées, les poses sont RÉTRÉCIES par le générateur et
+les têtes cessent d'être égales — 6,7 % d'écart à six poses, 31 % à douze
+sur deux rangées. Là, la contrainte est légitime.
+
+Corollaire : la coupe se cherche autour de la position ATTENDUE. Le
+minimum global mettait les deux coupes dans le même corridor et
+produisait un fragment de 61 px.
+
 #### Un test qui RECOPIE une constante devient faux à chaque réglage
 
 Le maximum de poses par planche a bougé trois fois : neuf, puis cinq,

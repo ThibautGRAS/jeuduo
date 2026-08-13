@@ -2307,6 +2307,24 @@ if (D){
         /Un doigt pointé/.test(bloc) && /ÉCARTER PLUS/.test(bloc);
     })());
 
+  verifier("deux poses qui se touchent sont SÉPARÉES, pas perdues",
+    (() => {
+      /* La limite n'était pas le détourage — retirer un fond magenta est
+         facile — mais l'incapacité à séparer deux poses qui se touchent
+         par un doigt. Entre deux corps il ne reste qu'un avant-bras :
+         mesuré sur une planche livrée, le corridor descend à 37 pixels de
+         hauteur occupée là où un personnage en fait 531.
+
+         Le creux se cherche AUTOUR de la position attendue : le minimum
+         global mettait les deux coupes dans le même corridor et
+         produisait un fragment de 61 px. */
+      const a = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      const b = fs.readFileSync(path.join(RACINE, "decouper_planche.py"), "utf8");
+      return /def couper_au_creux/.test(b) &&
+        /larg \/ n \* 0\.35/.test(b) && /larg \/ n \* 0\.35/.test(a) &&
+        /med \* 1\.6/.test(a) && /med \* 1\.6/.test(b);
+    })());
+
   verifier("le fond magenta se reconnaît à sa FORME, pas à sa clarté",
     (() => {
       /* Un cadre magenta plus foncé autour de chaque pose montre au

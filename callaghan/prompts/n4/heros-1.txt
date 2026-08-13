@@ -1,8 +1,8 @@
-Planche de 5 poses d'un même personnage, côte à côte
+Planche de 7 poses d'un même personnage, côte à côte
 sur une seule rangée.
 
 Scène : la ruelle.
-Planche 1 sur 3 — joindre la MÊME image de référence à toutes, c'est ce qui les raccorde.
+Planche 1 sur 2 — joindre la MÊME image de référence à toutes, c'est ce qui les raccorde.
 Image de référence à joindre : reference/<thibaut ou pf>-3.png
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
@@ -31,6 +31,8 @@ LES POSES, de gauche à droite :
 3. [vise1] même visée, l'arme un peu plus basse, épaules détendues
 4. [vise2] même visée, l'arme un peu plus haute, épaules remontées
 5. [tir] au moment du départ du coup : bras encore tendus, épaule remontée, mâchoire serrée, yeux plissés
+6. [recul1] le recul soulève l'avant-bras, le poignet casse vers le haut, le buste part légèrement en arrière
+7. [recul2] recul maximal : l'arme pointe vers le haut, l'épaule est rejetée, le pied arrière se cale
 
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.

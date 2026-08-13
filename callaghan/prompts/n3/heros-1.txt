@@ -1,8 +1,8 @@
-Planche de 6 poses d'un même personnage, côte à côte
+Planche de 8 poses d'un même personnage, côte à côte
 sur une seule rangée.
 
 Scène : la tournée du bar.
-Planche 1 sur 3 — joindre la MÊME image de référence à toutes, c'est ce qui les raccorde.
+Planche 1 sur 2 — joindre la MÊME image de référence à toutes, c'est ce qui les raccorde.
 Image de référence à joindre : reference/<thibaut ou pf>.png
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
@@ -32,6 +32,8 @@ LES POSES, de gauche à droite :
 4. [marche3] jambe GAUCHE tendue devant, talon au sol, jambe droite en arrière ; bras droit en avant
 5. [marche4] les deux jambes se croisent sous le corps, poids sur la gauche ; bras presque le long du corps
 6. [course1] jambe DROITE lancée loin devant, genou haut, jambe gauche tendue en arrière ; bras gauche en avant, coudes pliés
+7. [course2] suspension : les DEUX pieds décollés, jambes croisées sous le corps, buste penché en avant
+8. [course3] jambe GAUCHE lancée loin devant, genou haut, jambe droite tendue en arrière ; bras droit en avant, coudes pliés
 
 
 AVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou d'une course doivent différer sur le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à l'autre. Une planche où toutes les poses ont le même pied en avant est INUTILISABLE — l'animation semble bloquée.

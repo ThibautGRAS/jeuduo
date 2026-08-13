@@ -53,9 +53,20 @@ import sys, pathlib, json
 # six, chaque case fait 300 px sur une planche de 1800 — c'est peu, et
 # c'est justement le cadre qui doit compenser.
 #
-# C'EST UN PARI, à vérifier sur la prochaine planche livrée : si l'écart
-# retombe sous 80 px, redescendre à 5 et ne plus y toucher.
-MAX_POSES = 6
+# REMONTÉ À HUIT depuis que la séparation au creux existe. La contrainte
+# n'était pas le détourage — retirer un fond magenta est facile — mais
+# l'incapacité à SÉPARER deux poses qui se touchent par un doigt. Ce
+# n'est plus le cas : entre deux corps il ne reste qu'un avant-bras, et
+# le profil de densité le trouve.
+#
+# Ce qui reste une vraie limite, et qu'aucun algorithme ne rattrape :
+# quand les poses sont trop serrées, le générateur les RÉTRÉCIT, et les
+# têtes cessent d'être égales. Mesuré à six poses : 6,7 % et 9 % d'écart,
+# donc encore bon. À douze sur deux rangées : 31 %.
+#
+# Huit est le point où l'écart de tête restait sous le seuil sur les
+# planches livrées. À vérifier si on monte plus haut.
+MAX_POSES = 8
 
 MOUVEMENTS = {
     "idle": {
@@ -788,6 +799,36 @@ def verifier(chemin, attendu=None):
         if colonnes[0]: debuts.insert(0, 0)
         if colonnes[-1]: fins.append(L)
         b2 = [(d, f) for d, f in zip(debuts, fins) if f - d > L * 0.01]
+
+        # DEUX POSES QUI SE TOUCHENT PAR UN DOIGT NE SONT PAS PERDUES.
+        # Un bloc anormalement large contient plusieurs personnages : on
+        # le coupe au CREUX du profil de densité, là où il ne reste qu'un
+        # avant-bras entre deux corps. Mesuré sur une planche livrée : le
+        # corridor descend à 37 pixels de hauteur occupée là où un
+        # personnage en fait 531 — sept pour cent.
+        #
+        # Le creux se cherche AUTOUR de la position attendue, pas partout :
+        # le minimum global mettait les deux coupes dans le même corridor
+        # et produisait un fragment de 61 px.
+        if b2:
+            med = sorted(f - d for d, f in b2)[len(b2) // 2]
+            eclate = []
+            for d, f in b2:
+                n = max(1, round((f - d) / max(1, med)))
+                if n == 1 or f - d < med * 1.6:
+                    eclate.append((d, f)); continue
+                col = bande[:, d:f].sum(axis=0).astype(float)
+                larg = f - d
+                bornes = [0]
+                for k in range(1, n):
+                    centre = int(larg * k / n)
+                    demi = int(larg / n * 0.35)
+                    a0, a1 = max(1, centre - demi), min(larg - 1, centre + demi)
+                    if a1 > a0: bornes.append(a0 + int(np.argmin(col[a0:a1])))
+                bornes.append(larg)
+                for i in range(len(bornes) - 1):
+                    eclate.append((d + bornes[i], d + bornes[i + 1]))
+            b2 = eclate
         for i in range(len(b2) - 1):
             ecarts.append(b2[i + 1][0] - b2[i][1])
         blocs += [(d, f, ry, rfin) for d, f in b2]

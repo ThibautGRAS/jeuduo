@@ -38,6 +38,33 @@ def despill(rgb):
     return out
 
 
+def couper_au_creux(bande, d, f, n):
+    """Coupe un bloc trop large là où le profil est le plus CREUX.
+
+    Deux poses qui se touchent par un doigt ne sont pas perdues : entre
+    deux corps il ne reste qu'un avant-bras. Mesuré sur une planche
+    livrée, le corridor descend à 37 pixels de hauteur occupée là où un
+    personnage en fait 531 — sept pour cent.
+
+    Le creux se cherche AUTOUR de la position attendue, jamais partout :
+    le minimum global mettait les deux coupes dans le même corridor et
+    produisait un fragment de 61 px de large.
+
+    Cela remplace les coupures écrites à la main, qui demandaient de
+    relever une abscisse à l'œil pour chaque planche fautive."""
+    col = bande[:, d:f].sum(axis=0).astype(float)
+    larg = f - d
+    bornes = [0]
+    for k in range(1, n):
+        centre = int(larg * k / n)
+        demi = int(larg / n * 0.35)
+        a0, a1 = max(1, centre - demi), min(larg - 1, centre + demi)
+        if a1 > a0:
+            bornes.append(a0 + int(np.argmin(col[a0:a1])))
+    bornes.append(larg)
+    return [(d + bornes[i], d + bornes[i + 1]) for i in range(len(bornes) - 1)]
+
+
 def composantes(a, coupures):
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
     # EST DU FOND TOUT CE QUI EST MAGENTA, quelle que soit sa CLARTÉ.
@@ -68,6 +95,27 @@ def composantes(a, coupures):
             continue
         sl = tranches[i - 1]
         gardes.append((sl[1].start, sl[0].start, sl[1].stop, sl[0].stop, i))
+
+    # UN BLOC ANORMALEMENT LARGE CONTIENT PLUSIEURS POSES qui se touchent.
+    # On le coupe automatiquement au creux, au lieu de demander une
+    # abscisse relevée à l'œil. La largeur médiane sert d'étalon : c'est
+    # la largeur d'UNE pose sur cette planche-là.
+    if len(gardes) >= 2:
+        larges = sorted(x2 - x1 for x1, y1, x2, y2, _ in gardes)
+        med = larges[len(larges) // 2]
+        eclate = []
+        for x1, y1, x2, y2, idx in gardes:
+            n2 = max(1, round((x2 - x1) / max(1, med)))
+            if n2 == 1 or (x2 - x1) < med * 1.6:
+                eclate.append((x1, y1, x2, y2, idx)); continue
+            bande = obj[y1:y2]
+            for d, f in couper_au_creux(bande, x1, x2, n2):
+                col = obj[y1:y2, d:f]
+                ys = np.nonzero(col.any(axis=1))[0]
+                if not len(ys): continue
+                eclate.append((d, y1 + ys.min(), f, y1 + ys.max() + 1, idx))
+        gardes = eclate
+
     return lab, gardes
 
 

@@ -1,7 +1,6 @@
-Planche de 4 poses d'un même personnage, côte à côte
+Planche de 7 poses d'un même personnage, côte à côte
 sur une seule rangée.
 Image de référence à joindre : reference/<le personnage voulu>.png
-Planche 1 sur 2 — joindre la MÊME image de référence à toutes.
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
 qu'il existe déjà.
@@ -24,13 +23,14 @@ vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
 LES POSES, de gauche à droite :
-1. [course1] jambe DROITE lancée loin devant, genou haut, jambe gauche tendue en arrière ; bras gauche en avant, coudes pliés
-2. [course2] suspension : les DEUX pieds décollés, jambes en train de se croiser sous le corps, buste penché en avant
-3. [course3] jambe GAUCHE lancée loin devant, genou haut, jambe droite tendue en arrière ; bras droit en avant, coudes pliés
-4. [course4] suspension inverse : les DEUX pieds décollés, jambes croisées, buste penché en avant
+1. [roulade1] élan : course cassée, buste plongeant vers l'avant, une épaule en avant, bras tendu vers le sol
+2. [roulade2] contact : l'épaule touche, la tête est rentrée contre la poitrine, le dos s'arrondit, jambes encore tendues en arrière
+3. [roulade3] roulé : le corps est en boule, dos au sol, genoux repliés contre le torse, vu de côté — la tête est en bas et les pieds en haut
+4. [roulade4] sortie : un pied se pose, le buste se redresse encore penché, bras qui accompagnent le relevé
+5. [roulade_cote1] détente sur le côté, jambes qui poussent, corps à l'horizontale
+6. [roulade_cote2] épaule au sol, corps en boule sur le flanc
+7. [roulade_cote3] relevé sur un genou, l'autre pied à plat, prêt à repartir
 
-
-AVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou d'une course doivent différer sur le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à l'autre. Une planche où toutes les poses ont le même pied en avant est INUTILISABLE — l'animation semble bloquée. Ne pas se contenter de changer la position des bras.
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
 
