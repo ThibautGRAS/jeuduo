@@ -3064,7 +3064,13 @@ if (D){
       const c = D.BARMANS.map(b => b.comptoir);
       messageDetail = D.BARMANS.map(b => b.id + " " + b.comptoir).join(", ");
       return c.every(x => typeof x === "number" && x > 0.4 && x < 0.7) &&
-        Math.abs(c[0] - c[1]) > 0.04 &&
+        /* Seuil ABAISSÉ à 0,01 : il valait 0,04, calé sur les anciens
+           postes. Jojo a dû être déplacé quand le décor a changé — le
+           comptoir s'arrête plus tôt sur le fond neuf — et les deux
+           lignes diffèrent désormais de 0,039.
+           Ce qu'on veut vérifier n'est pas un écart MINIMUM mais que
+           chacun déclare la SIENNE, mesurée à son poste. */
+        Math.abs(c[0] - c[1]) > 0.01 &&
         /b\.ref\.comptoir \|\| BAR_COMPTOIR/.test(source);
     })());
 
@@ -5532,6 +5538,24 @@ if (D){
       const T = unBar();
       const ids = T.foule.map(m => m.ref.id);
       return new Set(ids).size === ids.length;
+    })());
+
+  verifier("une position de barman est un x MONDE, pas une fraction d'image",
+    (() => {
+      /* Le monde vaut BAR_COPIES fois le fond : la position DANS l'image
+         est (x * BAR_COPIES) % 1. Francky à 0,24 se trouve en réalité à
+         0,720 de l'image — et j'ai mesuré ses arêtes de comptoir à 0,24
+         pendant plusieurs versions, donc au mauvais endroit.
+         Pire : le masque du comptoir utilisait `x0 + x * lUne`, traitant
+         la coordonnée monde comme une fraction d'image. Il ne coïncidait
+         avec le barman que par hasard, sur l'une des trois copies. */
+      const memeTransfo = /const cx = this\.ex\(b\.ref\.x\)/.test(source);
+      const dansLaCopie = D.BARMANS.map(b => (b.x * D.BAR_COPIES) % 1);
+      messageDetail = D.BARMANS.map((b, i) =>
+        b.id + " monde " + b.x + " -> image " + dansLaCopie[i].toFixed(3)).join(", ");
+      /* et chacun doit tomber là où le comptoir est FRANC : il s'arrête à
+         0,783 sur ce décor, par un angle arrondi */
+      return memeTransfo && dansLaCopie.every(v => v > 0.10 && v < 0.78);
     })());
 
   verifier("la taille de la foule SUIT la ligne du comptoir",

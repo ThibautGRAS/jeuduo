@@ -2235,6 +2235,31 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Vérifier dans QUEL repère est une coordonnée avant de mesurer
+
+Les barmans ont un `x` : 0,24 pour Francky. J'ai mesuré les arêtes du
+comptoir à 0,24 de l'image, pendant plusieurs versions, en croyant les
+mesurer sous lui.
+
+C'est une coordonnée MONDE. Le monde vaut trois fois le fond répété, donc
+Francky est à (0,24 × 3) mod 1 = **0,720 de l'image**. Toutes mes mesures
+étaient prises à un autre endroit du décor.
+
+Et j'avais introduit la même confusion dans le code : le masque du
+comptoir calculait `x0 + x * lUne`, traitant la coordonnée monde comme une
+fraction d'image. Il ne tombait sur le barman **que par hasard**, parce
+qu'on le dessine pour les trois copies et que l'une d'elles coïncidait à
+peu près.
+
+Ce qui l'a révélé : un test qui vérifiait que chaque barman est « en face
+des étagères », en convertissant correctement. Il est tombé quand j'ai
+déplacé Jojo — et c'est en cherchant pourquoi que la confusion est
+apparue.
+
+**Une même valeur peut vivre dans deux repères ; le nom de la variable ne
+le dit pas.** Avant de mesurer sur une image, convertir — et vérifier la
+conversion sur un cas dont on connaît la réponse.
+
 #### Un décor « juste retouché » est un décor NEUF
 
 Thibaut a fourni le fond du bar sans les tabourets. J'ai failli n'y voir

@@ -248,10 +248,15 @@ const BarVue = {
       const sy = img.naturalHeight * yF;
       const sh = img.naturalHeight - sy;
       const larg = H * BAR_TAILLE_BARMAN * 1.2;
-      for (let k = 0; k < BAR_COPIES; k++){
-        const x0 = this.origine() + k * lUne;
-        if (x0 > L || x0 + lUne < 0) continue;
-        const cx = x0 + b.ref.x * lUne;
+      {
+        const x0 = this.origine();
+        /* LE MASQUE DOIT SUIVRE LE BARMAN, donc utiliser la MÊME
+           transformation que lui : `ex()`, qui va du monde à l'écran.
+           J'avais écrit `x0 + b.ref.x * lUne`, en traitant une coordonnée
+           MONDE comme une fraction d'image — le masque tombait à un autre
+           endroit que le barman, et ne coïncidait avec lui que par
+           hasard, sur l'une des trois copies. */
+        const cx = this.ex(b.ref.x);
         const gx = cx - larg / 2;
         if (gx > L || gx + larg < 0) continue;
         /* la portion de SOURCE qui correspond à cette bande */

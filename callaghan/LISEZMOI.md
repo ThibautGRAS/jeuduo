@@ -573,6 +573,27 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**Jojo retrouve son comptoir, et le raccord ne saute plus** (v7.14).
+
+**Une confusion de repère qui durait depuis plusieurs versions** : `x` est
+une coordonnée MONDE, et le monde vaut trois fois le fond. Francky à 0,24
+se trouve en réalité à **0,720 de l'image** — je mesurais ses arêtes de
+comptoir à 0,24, donc au mauvais endroit. Pire, le masque du comptoir
+traitait la même valeur comme une fraction d'image : il ne coïncidait avec
+le barman **que par hasard**, sur l'une des trois copies.
+
+**Jojo passe de 0,76 à 0,55.** À 0,76 il tombait à 0,280 dans l'image, sur
+l'angle arrondi où le comptoir s'arrête — à moitié dans le vide.
+
+**Le raccord entre deux copies** : le bord gauche du fond neuf est à 16,3
+de luminance, le droit à 24,7. Un pas de huit, qui se voit comme une barre
+verticale. Un fondu ramène l'écart à **1,5**.
+
+Premier essai raté, et instructif : à 8 % de la largeur, le fondu
+mélangeait le frigo Corona avec la cible de fléchettes — un fantôme bien
+pire que la couture. Sur 24 pixels, on ne corrige que le saut de
+luminance.
+
 **Décor du bar sans tabourets peints** (v7.13). C'était ça, le défaut :
 avec l'ancien fond, on avait les tabourets PEINTS **et** les sprites —
 deux rangées à des échelles et des perspectives différentes. Le fond

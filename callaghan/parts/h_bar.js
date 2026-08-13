@@ -163,7 +163,25 @@ const BOISSONS = {
    geste avant que le verre soit posé. L'eau a sa préparation à part,
    plus posée — c'est l'indice. */
 const BARMANS = [
-  /* Les postes sont revenus à 0,24 et 0,76 : le décor est le même fond
+  /* ATTENTION : `x` EST UNE COORDONNÉE MONDE, PAS UNE FRACTION D'IMAGE.
+     Le monde vaut BAR_COPIES fois le fond, donc la position DANS l'image
+     est (x * BAR_COPIES) % 1. Francky à 0,24 se trouve en réalité à 0,720
+     de l'image, pas à 0,24 — et j'ai mesuré ses arêtes de comptoir au
+     mauvais endroit pendant plusieurs versions.
+     Toute mesure prise sur le fond doit être convertie avant d'être
+     comparée à un `x` de barman.
+
+     JOJO PASSE DE 0,76 À 0,55, soit 0,650 dans l'image. À 0,76 il tombait
+     à 0,280 dans l'image — sur l'angle arrondi où le comptoir s'arrête,
+     0,783 par un angle arrondi : à 0,76 Jojo se retrouvait SUR cet angle,
+     à moitié dans le vide, avec le masque qui le coupait n'importe
+     comment. Mesuré colonne par colonne, le plateau est franc et continu
+     à 0,64.
+     Une position mesurée sur un décor devient fausse quand le décor
+     change — même quand le changement annoncé ne concerne que les
+     tabourets.
+  */
+  /* Les postes étaient à 0,24 et 0,76 : le décor est le même fond
      répété trois fois, et ces deux valeurs tombent en face des étagères
      à bouteilles. À 0,34 et 0,66 ils se retrouvaient au BORD d'une
      copie, devant les toilettes et le frigo — techniquement visibles,
@@ -190,14 +208,14 @@ const BARMANS = [
      le comptoir fuit en perspective. Une barre unique cuperait l'un trop
      haut et l'autre trop bas ; c'est exactement le défaut d'avant, à
      l'envers. */
-  { id:"francky", nom:"FRANCKY", x:0.24, comptoir:0.553, arriere:0.534, sert:"cocktail",
+  { id:"francky", nom:"FRANCKY", x:0.24, comptoir:0.619, arriere:0.515, sert:"cocktail",
     poses:{ repos:"bar_francky_idle", eau:"bar_francky_essuie", sert:"bar_francky_sert" },
     /* cinq temps : il choisit, il dose, il verse, il shake, il remplit,
        il décore. Plus la séquence est longue, plus le joueur a le temps
        de LIRE ce qui arrive — c'est là que se gagne le niveau. */
     prepare:["bar_francky_choisit", "bar_francky_dose", "bar_francky_verse",
              "bar_francky_shake", "bar_francky_remplit", "bar_francky_decore"] },
-  { id:"jojo", nom:"JOJO", x:0.76, comptoir:0.625, arriere:0.570, sert:"jager",
+  { id:"jojo", nom:"JOJO", x:0.55, comptoir:0.580, arriere:0.561, sert:"jager",
     poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_serie" },
     /* quatre temps : il choisit, il dose, il verse, il superpose. Un peu
        plus court que Francky, et cette différence de RYTHME est en soi
