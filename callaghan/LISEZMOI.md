@@ -573,6 +573,29 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**Ils se parlent beaucoup plus, et ils sont méchants** (v7.06).
+
+**Vingt-quatre répliques de relève** au lieu de huit — quatre chacun, ça
+tournait en une vague. Thibaut est frontal, PF est sec et administratif.
+
+**Trente piques sur les méchants**, six par ennemi, dans les deux voix.
+Chacune tape sur le travers que sa mécanique de combat traduit déjà :
+l'hypocrisie de l'Abbé qui bombarde sans approcher, le déni de Jubilar qui
+annonce tout, l'impunité de DSKKK qui ne protège que sa figure. On se
+moque de ce qu'ils ont FAIT et de ce qu'ils prétendent être — jamais de ce
+qu'ils sont.
+
+**Et le vrai frein n'était pas le nombre de phrases.** Mesuré en
+simulation : avec douze secondes de repos entre deux bulles et une chance
+sur cinq, **une seule phrase entendue en deux cents secondes de jeu.**
+Écrire les vingt-quatre répliques n'aurait rien changé — on ne les aurait
+jamais lues. Le repos passe à 4,5 s et la chance à 45 %.
+
+**Les prompts du niveau 4 pointaient la mauvaise tenue.** Ils joignaient
+`-flic` — manteau et brassard — alors que les sprites en jeu sont en polo
+beige. Vérifié en ouvrant `ruel_pf_vise.webp`. La ruelle se joue en civil
+comme le bar ; le manteau appartient au niveau 2.
+
 **Retour aux anciens personnages de la ruelle** (v7.05). Les 25 sprites
 d'avant sont restaurés depuis le dépôt — c'est justement pour ça que les
 planches y sont archivées.

@@ -261,7 +261,14 @@ const GROGNE_DELAI = [1.1, 2.8];
    sept secondes, une horde de dix morts en lâchait trois ou quatre et le
    sel devenait du bavardage. Et `mot` est unique par construction — il
    ne peut jamais y en avoir deux à l'écran. */
-const MOT_DUREE = 2.0, MOT_REPOS = 12.0, MOT_CHANCE = 0.20;
+/* LE REPOS ÉTAIT LE VRAI FREIN. Douze secondes entre deux bulles et une
+   chance sur cinq : mesuré en simulation, UNE phrase entendue en deux
+   cents secondes de jeu. Écrire vingt-quatre répliques de plus n'y aurait
+   rien changé — on ne les aurait simplement jamais lues.
+   Ces deux réglages datent du moment où il y avait quatre phrases : ils
+   servaient à masquer la répétition. Avec cinquante-quatre, c'est la
+   rareté qui devient le défaut. */
+const MOT_DUREE = 2.0, MOT_REPOS = 4.5, MOT_CHANCE = 0.45;
 
 /* LA BOUCHE DU CANON, POSE PAR POSE. Mesurée sur chaque sprite : le
    point le plus à droite de la moitié haute de la silhouette. Fractions
@@ -540,19 +547,96 @@ const RUELLE_BARRICADE_PV = 100;
    le chargeur vide n'est plus un temps mort, c'est un passage de main.
    Ils s'appellent par leurs surnoms — Thibaut dit « inspecteur » à PF,
    PF dit « Callaghan » à Thibaut. */
+/* QUATRE RÉPLIQUES CHACUN NE SUFFISAIENT PAS : sur une vague, la relève
+   se déclenche à chaque chargeur vide, et on entendait la même phrase
+   trois fois. Douze chacun, ce qui espace largement les répétitions.
+   Thibaut dit « inspecteur » à PF, PF dit « Callaghan » à Thibaut. */
 const RELEVE_TH = [
   "Je te couvre, inspecteur.",
   "Bouge pas, j'ai ça.",
   "À moi, inspecteur.",
   "Recharge, je m'en occupe.",
+  "Prends ton temps. Ils sont patients.",
+  "Respire, inspecteur. Moi je compte.",
+  "Six balles, six problèmes. Ça tombe bien.",
+  "T'as le droit à une pause. Une.",
+  "Je m'occupe du service. Comme d'habitude.",
+  "Reste derrière, y'a du monde devant.",
+  "Ne te retourne pas, inspecteur. Vraiment pas.",
+  "Va boire un coup, je gère.",
 ];
 const RELEVE_PF = [
   "Je prends la suite, Callaghan.",
   "Laisse, Callaghan.",
   "À moi.",
   "Souffle, Callaghan.",
+  "Recharge. Je fais la conversation.",
+  "Tiens-toi tranquille, ça va être sale.",
+  "Méthodiquement, Callaghan. Comme toujours.",
+  "Je note leurs noms. Pour le rapport.",
+  "Un instant, je termine celui-là.",
+  "Je n'aime pas ça. Mais je le fais bien.",
+  "Baisse-toi. Voilà. Merci.",
+  "Callaghan, ton chargeur. Maintenant.",
 ];
 const RELEVE_DUREE = 2.0;
+
+/* ---------- ce qu'ils disent des MÉCHANTS ----------
+   Une pique quand un ennemi entre en scène. Chacune tape sur SON travers,
+   celui que sa mécanique de combat traduit déjà — c'est ce qui les rend
+   mordantes plutôt que gratuites, et ça apprend au joueur à qui il a
+   affaire.
+
+   La règle qu'on s'est fixée : on se moque de ce que le personnage a FAIT
+   et de ce qu'il prétend être, jamais de ce qu'il est. L'hypocrisie, le
+   déni, l'impunité — pas le physique.
+
+   Deux voix : Thibaut est frontal, PF est sec et administratif. */
+const PIQUES = {
+  depar: {
+    th: ["Celui-là, il a fui le fisc. Pas nous.",
+         "Grosse cible. Grand appétit. Ça va aller.",
+         "Il croit qu'on lui pardonnera. Encore."],
+    pf: ["Contribuable non résident. Ironie notée.",
+         "Il avance lentement. Il a le temps, lui.",
+         "Monstre sacré. Le mot « sacré » est de trop."],
+  },
+  dsk: {
+    th: ["Il se protège la figure. Que la figure.",
+         "L'intouchable. On va vérifier ça.",
+         "Costume impeccable. Le reste beaucoup moins."],
+    pf: ["Il ne garde que ce qui passe à la télévision.",
+         "Chambre d'hôtel. Peignoir. Vous vous souvenez.",
+         "Position élevée, tenue basse. Classique."],
+  },
+  jubi: {
+    th: ["Il va nier. Attends, tu vas voir.",
+         "Il annonce tout ce qu'il fait. Merci.",
+         "Celui-là mentirait à un miroir."],
+    pf: ["Il niera. Calmement. Longtemps.",
+         "Menteur patient. La pire espèce.",
+         "Il préviendra avant de lancer. Il prévient toujours."],
+  },
+  abbe: {
+    th: ["Le sermon d'une main, l'encensoir de l'autre.",
+         "Il bombarde de loin. Comme il a toujours fait.",
+         "Une statue de son vivant. On va la descendre."],
+    pf: ["Il ne s'approche jamais. Il n'a jamais rien assumé en face.",
+         "Adoré de tous. C'était le problème.",
+         "La vertu en façade. Derrière, personne."],
+  },
+  bruh: {
+    th: ["Un cœur sur le t-shirt. Rien dessous.",
+         "Il donne en public. Il prend en privé.",
+         "Il lance de loin pour pas se salir."],
+    pf: ["Générosité imprimée. Pratique, ça se lave.",
+         "Il reste à distance. Comme l'Abbé.",
+         "Le floquage tient mieux que la conduite."],
+  },
+};
+/* Plus RARE qu'un mot de mort : une pique commente l'arrivée d'un type,
+   pas un événement d'action. Une sur quatre apparitions. */
+const PIQUE_CHANCE = 0.25;
 /* L'IA ne prend pas TA place : elle prend celle de l'autre. Tu gardes
    Thibaut, et pendant qu'il recharge, PF se lève et tire tout seul — en
    ratant la moitié de ses coups, sinon le rechargement ne coûterait
@@ -799,6 +883,10 @@ const Ruelle = {
       usureGarde:0,
       attenteGarde:ref.garde ? melange(ref.garde.attente[0], ref.garde.attente[1], Math.random()) : 0,
     });
+    /* LA PIQUE VIENT APRÈS l'ajout : elle nomme un type effectivement en
+       scène. Placée avant, elle aurait pu commenter un ennemi que la
+       vague n'a finalement pas sorti. */
+    this.piqueEntree(cle);
     this.aSortir--;
   },
 
@@ -982,6 +1070,28 @@ const Ruelle = {
     const b = BESTIAIRE[cle];
     if (!b || !b.mort || !b.mort.length) return;
     this.mot = { txt:piocher(b.mort), qui:Math.random() < 0.5 ? 0 : 1, t:0 };
+    this.motT = MOT_REPOS;
+  },
+
+  /* UNE PIQUE À L'APPARITION. On réutilise le mécanisme des mots de
+     combat au lieu d'en écrire un second : mêmes garde-fous — jamais
+     par-dessus une annonce, jamais deux bulles à la fois, et un repos
+     entre deux.
+     La pique est plus RARE qu'un mot de mort : elle commente l'arrivée
+     d'un type, pas un événement d'action, et on la lit mieux si elle
+     surprend. */
+  piqueEntree(cle){
+    if (this.annonce) return;
+    if (this.motT > 0) return;
+    if (Math.random() > PIQUE_CHANCE) return;
+    const p = PIQUES[cle];
+    if (!p) return;
+    /* c'est celui qu'on NE tient pas qui commente : le joueur regarde sa
+       propre visée, la voix vient d'à côté */
+    const qui = 1 - this.actifIdx;
+    const voix = qui === 0 ? p.th : p.pf;
+    if (!voix || !voix.length) return;
+    this.mot = { txt:piocher(voix), qui, t:0 };
     this.motT = MOT_REPOS;
   },
 

@@ -537,7 +537,15 @@ SCENES = {
   "n4": {
     "titre": "la ruelle",
     "prefixe": {"thibaut": "ruel_th", "pf": "ruel_pf"},
-    "ref": "-flic",   # la même tenue de policier qu'au niveau 2
+    # LA TENUE DU NIVEAU 4 EST CELLE DU BAR, pas celle du niveau 2.
+    # Le prompt joignait `-flic` — manteau et brassard — alors que les
+    # sprites en jeu sont en polo beige sans manteau. Vérifié en ouvrant
+    # `ruel_pf_vise.webp` : une planche générée sur `-flic` n'aurait pas
+    # raccordé, et c'est ce qui est arrivé.
+    #
+    # Le manteau appartient au niveau 2, l'enquête. La ruelle se joue en
+    # civil, comme le bar.
+    "ref": "-muscle",
     # QUATORZE POSES. Le prompt n'en demandait que cinq : troisième niveau
     # de suite avec le même défaut, après le n2 (5 sur 11) et le n3
     # (9 sur 16). Elles sont tirées de POSES_RUEL_TH et POSES_RUEL_PF.

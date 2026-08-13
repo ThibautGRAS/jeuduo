@@ -2450,6 +2450,59 @@ if (D){
         o > 200 * 1024;
     })());
 
+  verifier("les héros ont de quoi se PARLER sans se répéter",
+    (() => {
+      /* Quatre répliques de relève chacun : sur une vague, le chargeur se
+         vide plusieurs fois et on entendait la même phrase trois fois. */
+      const s = fs.readFileSync(
+        path.join(RACINE, "parts", "j_ruelle.js"), "utf8");
+      const compte = nom => {
+        const i = s.indexOf("const " + nom + " = [");
+        const j = s.indexOf("];", i);
+        return (s.slice(i, j).match(/^\s+"/gm) || []).length;
+      };
+      const th = compte("RELEVE_TH"), pf = compte("RELEVE_PF");
+      messageDetail = th + " pour Thibaut, " + pf + " pour PF";
+      return th >= 10 && pf >= 10;
+    })());
+
+  verifier("chaque méchant a ses PIQUES, dans les deux voix",
+    (() => {
+      /* Une pique tape sur le travers que la mécanique de combat traduit
+         déjà — l'hypocrisie de l'Abbé, le déni de Jubilar, l'impunité de
+         DSKKK. C'est ce qui les rend mordantes plutôt que gratuites, et
+         ça apprend au joueur à qui il a affaire.
+         La règle : on se moque de ce que le personnage a FAIT et de ce
+         qu'il prétend être, jamais de ce qu'il est. */
+      const cles = ["depar", "dsk", "jubi", "abbe", "bruh"];
+      const manquants = cles.filter(c => {
+        const p2 = D.PIQUES && D.PIQUES[c];
+        return !p2 || !p2.th || !p2.pf || p2.th.length < 2 || p2.pf.length < 2;
+      });
+      const total = cles.reduce((n, c) => n +
+        ((D.PIQUES[c] || {}).th || []).length +
+        ((D.PIQUES[c] || {}).pf || []).length, 0);
+      messageDetail = manquants.length ? "incomplets : " + manquants.join(", ")
+                                      : total + " piques, 5 méchants, 2 voix";
+      return manquants.length === 0;
+    })());
+
+  verifier("une bulle n'attend plus DOUZE secondes",
+    (() => {
+      /* Mesuré en simulation : avec 12 s de repos et une chance sur cinq,
+         UNE phrase entendue en deux cents secondes de jeu. Écrire
+         vingt-quatre répliques de plus n'y aurait rien changé — on ne les
+         aurait jamais lues. Ces réglages datent du temps où il y avait
+         quatre phrases : ils masquaient la répétition. Avec cinquante,
+         c'est la rareté qui devient le défaut. */
+      const s = fs.readFileSync(
+        path.join(RACINE, "parts", "j_ruelle.js"), "utf8");
+      const m = s.match(/MOT_REPOS = ([\d.]+), MOT_CHANCE = ([\d.]+)/);
+      if (!m) return false;
+      messageDetail = "repos " + m[1] + " s, chance " + m[2];
+      return parseFloat(m[1]) <= 6 && parseFloat(m[2]) >= 0.35;
+    })());
+
   verifier("le lancer d'Hortense enchaîne ses TROIS phases",
     (() => {
       /* Il affichait `h_lance` pendant 0,22 s et le rire la MÊME image
@@ -2660,8 +2713,11 @@ if (D){
          cherchait des fichiers qui n'existent plus. On lit les tenues
          nommées par les prompts eux-mêmes. */
       const tenues = [...new Set(Object.values(v))];
-      return v.n2 === v.n4 && v.n1 !== v.n2 && v.n3 !== v.n2 && v.n1 !== v.n3 &&
-        tenues.length === 3 &&
+      /* LA RUELLE SE JOUE EN CIVIL, comme le bar — vérifié en ouvrant
+         `ruel_pf_vise.webp` : polo beige, ni manteau ni brassard. Le
+         prompt joignait `-flic` et n'aurait donc pas raccordé.
+         Le manteau de policier appartient au niveau 2, l'enquête. */
+      return v.n3 === v.n4 && v.n1 !== v.n2 && v.n2 !== v.n4 && v.n1 !== v.n4 &&
         ["thibaut", "pf"].every(pp => tenues.every(
           x => fs.existsSync(path.join(d, "reference", pp + "-" + x + ".png"))));
     })());
@@ -4617,8 +4673,11 @@ if (D){
 
   verifier("un méchant qui tombe fait parfois réagir un héros",
     (() => {
-      /* Une phrase à chaque mort se lit deux fois puis ne se voit plus :
-         une chance sur trois, et un repos entre deux. */
+      /* Une phrase à chaque mort se lit deux fois puis ne se voit plus,
+         mais l'inverse est vrai aussi : à une chance sur cinq et douze
+         secondes de repos, on n'en entendait QU'UNE en deux cents
+         secondes de jeu — mesuré. Le seuil suit donc MOT_CHANCE au lieu
+         de le recopier, sinon ce test tombe à chaque réglage. */
       D.Jeu.demarrer(4); D.Ruelle.introT = 0; D.Ruelle.annonce = null;
       let dits = 0;
       for (let k = 0; k < 200; k++){
@@ -4627,7 +4686,11 @@ if (D){
         if (D.Ruelle.mot) dits++;
       }
       messageDetail = dits + " répliques sur 200 morts";
-      return dits > 20 && dits < 70;
+      const s2 = fs.readFileSync(
+        path.join(RACINE, "parts", "j_ruelle.js"), "utf8");
+      const ch = parseFloat((s2.match(/MOT_CHANCE = ([\d.]+)/) || [0, 0.2])[1]);
+      /* on attend la chance annoncée, à un tiers près : c'est un tirage */
+      return dits > 200 * ch * 0.6 && dits < 200 * ch * 1.4;
     })());
 
   verifier("deux morts rapprochées ne font pas deux bulles",
