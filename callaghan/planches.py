@@ -446,7 +446,22 @@ SCENES = {
   # Quatre phases pour le lancer, et une pose de rire distincte. Le
   # découpage automatique n'est pas nécessaire : huit poses tiennent sur
   # une planche.
-  "hortense": {
+  # LE RANGEMENT SUIT CE QUI DÉTERMINE LA LISTE DE POSES.
+  #
+  # Pour les héros, c'est la MÉCANIQUE DU NIVEAU : boire au bar, viser
+  # dans la ruelle, fouiller un meuble. Leurs planches vont donc dans
+  # `n1/`, `n2/`… même si le personnage est le même.
+  #
+  # Pour Hortense, c'est ELLE : son lancer de tarte est le même geste au
+  # niveau 1 et au niveau 2, et ses sprites vivent déjà dans
+  # `img/commun/`. Sa planche va donc dans `communs/`.
+  #
+  # Mesuré avant de trancher : seuls Thibaut, PF et Hortense traversent
+  # les niveaux. Les PNJ de la file, les habitués du bar et les cinq
+  # méchants appartiennent chacun à UN niveau — leurs planches restent
+  # dans le dossier de ce niveau. Un dossier « personnages » pour tout le
+  # monde aurait rangé selon une distinction qui n'existe pas.
+  "communs": {
     "titre": "Hortense et son lancer de tarte",
     "prefixe": {"hortense": "h"},
     "poses": [

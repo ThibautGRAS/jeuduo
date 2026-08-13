@@ -3,13 +3,30 @@
 ```
 prompts/
 ├── reference/   les images à joindre, une par personnage et par tenue
-├── n1/  heros-1.txt  heros-2.txt      la file d'attente
-├── n2/  heros-1.txt  heros-2.txt      l'enquête
-├── n3/  heros-1.txt  heros-2.txt      la tournée du bar
-├── n4/  heros-1.txt  heros-2.txt      la ruelle
-│         mechants.txt                 les cinq méchants
-└── sup/ saut.txt  roulades.txt        en réserve, aucun niveau ne s'en sert
+├── n1/ n2/ n3/ n4/   ce que la mécanique du niveau demande
+├── communs/     les personnages qui TRAVERSENT les niveaux
+└── sup/         en réserve, aucun niveau ne s'en sert
 ```
+
+## Où ranger une nouvelle planche
+
+**Le rangement suit ce qui DÉTERMINE la liste de poses.**
+
+Pour les héros, c'est la mécanique du niveau : boire au bar, viser dans
+la ruelle, fouiller un meuble. Leurs planches vont dans `n1/`, `n2/`…
+même s'il s'agit du même personnage — c'est pour ça qu'il y en a quatre
+jeux.
+
+Pour Hortense, c'est elle : son lancer de tarte est le même geste au
+niveau 1 et au niveau 2, et ses sprites vivent déjà dans `img/commun/`.
+Sa planche va donc dans `communs/`.
+
+Mesuré avant de trancher : **seuls Thibaut, PF et Hortense traversent les
+niveaux.** Les PNJ de la file, les habitués du bar et les cinq méchants
+appartiennent chacun à un seul — leurs planches restent dans le dossier
+de ce niveau. Un dossier « personnages » pour tout le monde aurait rangé
+selon une distinction qui n'existe pas.
+
 
 **Onze prompts.** Il y en avait dix-sept : les cinq méchants partageaient
 un texte identique à quatre lignes près, et les mouvements de réserve

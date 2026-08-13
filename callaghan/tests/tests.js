@@ -2307,6 +2307,28 @@ if (D){
         /Un doigt pointé/.test(bloc) && /ÉCARTER PLUS/.test(bloc);
     })());
 
+  verifier("un personnage qui TRAVERSE les niveaux est dans communs/",
+    (() => {
+      /* Le rangement suit ce qui DÉTERMINE la liste de poses. Pour les
+         héros c'est la mécanique du niveau — boire au bar, viser dans la
+         ruelle — donc leurs planches vont dans n1/, n2/… Pour Hortense
+         c'est elle : son lancer est le même geste aux niveaux 1 et 2, et
+         ses sprites vivent déjà dans img/commun/.
+
+         Mesuré avant de trancher : seuls Thibaut, PF et Hortense
+         traversent les niveaux. Les PNJ, les habitués et les cinq
+         méchants appartiennent chacun à UN niveau. */
+      const d = path.join(RACINE, "prompts");
+      const dansCommuns = fs.existsSync(path.join(d, "communs", "hortense.txt"));
+      /* et les personnages liés à un seul niveau y restent */
+      const mechantsDansN4 = fs.existsSync(path.join(d, "n4", "mechants.txt"));
+      const sprites = fs.readdirSync(path.join(RACINE, "img", "commun"));
+      const hortenseEstCommune = sprites.some(n => n.startsWith("h_"));
+      messageDetail = dansCommuns ? "hortense dans communs/, mechants dans n4/" : "mal rangé";
+      return dansCommuns && mechantsDansN4 && hortenseEstCommune &&
+        !fs.existsSync(path.join(d, "hortense"));
+    })());
+
   verifier("le lancer d'Hortense ne tient plus sur UNE image",
     (() => {
       /* Mesuré dans le code : l'état LANCE dure 0,22 s et RIRE 0,80 s, et
@@ -2316,7 +2338,7 @@ if (D){
          Le prompt demande quatre phases de lancer et un rire distinct ;
          il restera à les câbler quand les images arriveront. */
       const s = fs.readFileSync(
-        path.join(RACINE, "prompts", "hortense", "hortense.txt"), "utf8");
+        path.join(RACINE, "prompts", "communs", "hortense.txt"), "utf8");
       const demandees = (s.match(/\[(lance\d|rire)\]/g) || []).length;
       messageDetail = demandees + " phases de lancer et de rire demandées";
       return demandees >= 4 &&

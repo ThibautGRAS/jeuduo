@@ -2235,6 +2235,28 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Ranger selon ce qui DÉTERMINE, pas selon ce qu'on voit
+
+Fallait-il un dossier « personnages » à côté des dossiers de niveau ? La
+question semblait ouverte : il y a des personnages, il y a des niveaux,
+donc deux axes.
+
+Le compte tranche : sur six familles de personnages, **seules trois
+traversent les niveaux** — Thibaut, PF et Hortense. Les PNJ de la file,
+les habitués du bar et les cinq méchants appartiennent chacun à un seul.
+Un dossier par personnage aurait rangé selon une distinction qui
+n'existe pas pour la moitié d'entre eux.
+
+Le bon critère n'est ni « c'est un personnage » ni « c'est un niveau »,
+mais : **qu'est-ce qui détermine la liste de poses ?** Pour les héros,
+c'est la mécanique du niveau — leurs quatre jeux de poses n'ont rien de
+commun. Pour Hortense, c'est elle : son lancer est le même geste partout.
+
+D'où `communs/`, et non `personnages/` — un nom qui dit le critère au
+lieu de nommer la catégorie. Il rejoint d'ailleurs `img/commun/`, où ses
+sprites vivaient déjà : la bonne structure existait dans le code avant
+qu'on la nomme.
+
 #### Un personnage dont l'apparence n'est écrite nulle part sera réinventé
 
 `PERSONNAGES.md` décrivait Hortense avec précision : son rôle, par où elle
