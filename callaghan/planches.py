@@ -277,7 +277,60 @@ SCENES = {
   "n3": {
     "titre": "la tournée du bar",
     "prefixe": {"thibaut": "bar_th", "pf": "bar_pf"},
-    "mouvements": ["marche", "course", "frein"],
+    # QUATORZE POSES. Le prompt n'en demandait que neuf — les
+    # déplacements — et ignorait TOUT ce qui touche au verre : attraper,
+    # tenir, boire, vider, jeter, tituber. Or c'est le cœur du niveau :
+    # la tournée consiste à boire ou à jeter. Une planche générée sur
+    # l'ancien prompt n'aurait pas permis de jouer.
+    #
+    # `attrape → tient → boit → vide` est une SÉQUENCE : elle se lit
+    # comme un geste continu, donc les quatre poses doivent s'enchaîner.
+    "poses": [
+      ("idle", "debout, détendu, les mains vides le long du corps"),
+      ("marche1", "jambe DROITE tendue devant, talon au sol, jambe gauche "
+                  "en arrière ; bras gauche en avant"),
+      ("marche2", "les deux jambes se croisent sous le corps, poids sur la "
+                  "droite ; bras presque le long du corps"),
+      ("marche3", "jambe GAUCHE tendue devant, talon au sol, jambe droite "
+                  "en arrière ; bras droit en avant"),
+      ("marche4", "les deux jambes se croisent sous le corps, poids sur la "
+                  "gauche ; bras presque le long du corps"),
+      ("course1", "jambe DROITE lancée loin devant, genou haut, jambe gauche "
+                  "tendue en arrière ; bras gauche en avant, coudes pliés"),
+      ("course2", "suspension : les DEUX pieds décollés, jambes croisées "
+                  "sous le corps, buste penché en avant"),
+      # course3 et course4 N'EXISTENT PAS ENCORE en jeu : ce sont les deux
+      # phases avec l'AUTRE jambe devant, sans lesquelles la foulée ne
+      # peut pas alterner. Elles sont demandées ici pour qu'une seule
+      # planche règle la question.
+      ("course3", "jambe GAUCHE lancée loin devant, genou haut, jambe droite "
+                  "tendue en arrière ; bras droit en avant, coudes pliés"),
+      ("course4", "suspension inverse : les DEUX pieds décollés, jambes "
+                  "croisées, buste penché en avant"),
+      ("frein", "talons plantés, buste rejeté en arrière, bras écartés, "
+                "chaussures qui dérapent"),
+      # la séquence du verre, dans l'ordre
+      ("attrape", "le bras tendu de côté vers un comptoir invisible, la main "
+                  "qui se referme sur un verre à hauteur de taille, buste "
+                  "légèrement penché"),
+      ("tient", "debout, un verre plein tenu contre la poitrine, regard vers "
+                "l'avant, l'autre main libre"),
+      ("boit", "la tête rejetée en arrière, le verre porté aux lèvres et "
+               "incliné, yeux fermés, coude haut"),
+      ("vide", "le verre vide brandi à bout de bras au-dessus de l'épaule, "
+               "grand sourire, l'autre poing serré"),
+      ("jette", "en plein lancer : le bras part vers l'arrière puis se "
+                "détend, le verre encore dans la main, buste tourné, "
+                "grimace de dégoût"),
+      ("titube", "ivre : les jambes écartées et molles, le buste qui part de "
+                 "côté, un bras battant l'air pour l'équilibre, paupières "
+                 "lourdes"),
+    ],
+    # SEIZE poses, donc deux planches. La coupure tombe entre le
+    # déplacement et le verre : neuf d'un côté, sept de l'autre, et
+    # chaque planche reste un ensemble cohérent qu'on peut juger d'un
+    # coup d'œil.
+    "scinder": 9,
   },
   "n4": {
     "titre": "la ruelle",

@@ -2203,6 +2203,27 @@ qu'il faut joindre. Plus de bascule, plus de contradiction possible.
 Corollaire : quand un texte doit dire « sauf que », se demander s'il ne
 manque pas une donnée. Ici il manquait une image.
 
+#### Un contrôle écrit pour UN cas laisse passer tous les autres
+
+Le prompt du niveau 2 demandait 5 poses sur 11. J'ai corrigé, et écrit un
+test — qui ne vérifiait que le niveau 2. Thibaut a demandé le lendemain
+si le niveau 3 avait bien ses verres : il demandait 9 poses sur 16, et
+ignorait TOUT ce qui touche au verre, c'est-à-dire le cœur du niveau.
+
+Mon test n'aurait jamais vu ce défaut. Il était écrit pour le cas que je
+venais de corriger, pas pour la classe de défauts à laquelle ce cas
+appartient.
+
+**Après avoir corrigé un défaut, se demander où le même défaut peut
+exister ailleurs — et écrire le test pour LÀ, pas pour ICI.** Le test est
+désormais générique : il tire les poses attendues du code, niveau par
+niveau, et les compare aux prompts.
+
+Même séance, même famille : trois tests différents ont dû être repris
+parce qu'ils ouvraient `n3/thibaut.txt` alors que la scène venait d'être
+scindée en deux fichiers. Une aide unique de lecture a remplacé les trois
+corrections, et évite la quatrième.
+
 #### Un prompt de planche se vérifie contre ce que le CODE consomme
 
 Le prompt du niveau 2 demandait cinq poses. Le jeu en charge onze : il

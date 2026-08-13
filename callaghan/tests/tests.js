@@ -2068,28 +2068,51 @@ if (D){
         /reference\/thibaut-2\.png/.test(s);
     })());
 
-  verifier("un prompt couvre TOUTES les poses que le jeu consomme",
+  /* Le prompt d'un niveau, scindé ou non. Une scène qui passe au-dessus
+     de neuf poses se coupe en `thibaut-1.txt` et `thibaut-2.txt`, et
+     trois tests différents ont dû être repris parce qu'ils ouvraient le
+     fichier à plat. Une aide unique évite la quatrième fois. */
+  const promptNiveau = (niv, perso) => {
+    const d = path.join(RACINE, "prompts", niv);
+    let s = "";
+    for (const n of fs.readdirSync(d))
+      if (n.endsWith(".txt") && n.startsWith(perso))
+        s += fs.readFileSync(path.join(d, n), "utf8");
+    return s;
+  };
+
+  verifier("CHAQUE niveau demande toutes les poses que le jeu consomme",
     (() => {
-      /* Le prompt du niveau 2 n'en demandait que cinq sur onze : il
-         oubliait l'esquive, le splat, le carnet, l'accusation, l'écoute
-         et l'interrogatoire — dont trois n'existent qu'à ce niveau. Une
-         planche générée dessus aurait été à moitié inutilisable, et on
-         ne s'en serait aperçu qu'au découpage. */
+      /* Deux fois le même défaut, à deux niveaux différents : le prompt
+         du n2 demandait 5 poses sur 11, celui du n3 en demandait 9 sur
+         16 — il ignorait TOUT ce qui touche au verre, c'est-à-dire le
+         cœur du niveau. Le premier test ne couvrait que le n2 ; il
+         n'aurait donc jamais vu le second.
+
+         Un contrôle écrit pour un cas particulier laisse passer tous les
+         autres. Il est désormais générique : les poses attendues sont
+         tirées du CODE, niveau par niveau. */
       const d = path.join(RACINE, "prompts");
-      const lire = niv => {
-        let s = "";
-        for (const n of fs.readdirSync(path.join(d, niv)))
-          if (n.startsWith("thibaut")) s += fs.readFileSync(path.join(d, niv, n), "utf8");
-        return s;
+      const lire = niv => promptNiveau(niv, "thibaut");
+      /* ce que le code charge, par niveau */
+      const attendu = {
+        n1: D.POSES_HEROS,
+        n2: [...new Set((source.match(/"enq_th_([a-z0-9]+)"/g) || [])
+              .map(x => x.replace(/"enq_th_|"/g, "")))],
+        n3: D.POSES_BAR,
+        n4: [...new Set((source.match(/"ruel_th_([a-z0-9]+)"/g) || [])
+              .map(x => x.replace(/"ruel_th_|"/g, "")))],
       };
-      /* les noms attendus viennent du CODE, pas d'une liste recopiée */
-      const attendus = (source.match(/"enq_th_([a-z0-9]+)"/g) || [])
-        .map(x => x.replace(/"enq_th_|"/g, ""));
-      const txt = lire("n2");
-      const manquants = [...new Set(attendus)].filter(p2 => txt.indexOf("[" + p2 + "]") < 0);
-      messageDetail = manquants.length ? "absentes : " + manquants.join(", ")
-                                       : attendus.length + " poses couvertes";
-      return attendus.length >= 10 && manquants.length === 0;
+      const trous = [];
+      for (const [niv, poses] of Object.entries(attendu)){
+        if (!poses || !poses.length) continue;
+        const txt = lire(niv);
+        for (const po of poses)
+          if (txt.indexOf("[" + po + "]") < 0) trous.push(niv + "/" + po);
+      }
+      messageDetail = trous.length ? "absentes : " + trous.join(", ")
+        : Object.entries(attendu).map(([k, v]) => k + " " + v.length).join(", ");
+      return trous.length === 0;
     })());
 
   verifier("au niveau 1, prendre une tarte et l'esquiver se ressemblent trop",
@@ -2162,9 +2185,7 @@ if (D){
          dans le texte. */
       const d = path.join(RACINE, "prompts");
       const ref = n => {
-        const f = fs.existsSync(path.join(d, n, "thibaut.txt"))
-          ? "thibaut.txt" : "thibaut-1.txt";
-        const s = fs.readFileSync(path.join(d, n, f), "utf8");
+          const s = promptNiveau(n, "thibaut");
         const m = s.match(/reference\/(\S+\.png)/);
         return m ? m[1] : "?";
       };
@@ -2241,7 +2262,7 @@ if (D){
          la consigne. */
       const d = path.join(RACINE, "prompts");
       const roul = fs.readFileSync(path.join(d, "sup", "thibaut_roulades.txt"), "utf8");
-      const bar = fs.readFileSync(path.join(d, "n3", "thibaut.txt"), "utf8");
+      const bar = promptNiveau("n3", "thibaut");
       return !/AVERTISSEMENT SUR LES CYCLES/.test(roul) &&
         /AVERTISSEMENT SUR LES CYCLES/.test(bar);
     })());
@@ -2254,8 +2275,7 @@ if (D){
          référence sur magenta est donc pratique — c'est le fond attendu
          en sortie — mais elle ne doit pas teinter le personnage. */
       const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
-      const un = fs.readFileSync(
-        path.join(RACINE, "prompts", "n3", "thibaut.txt"), "utf8");
+      const un = promptNiveau("n3", "thibaut");
       return /SI L'IMAGE DE RÉFÉRENCE EST SUR FOND MAGENTA/.test(un) &&
         /ne teinte RIEN/.test(un) &&
         /134, 58, 116/.test(s) &&
@@ -2303,7 +2323,7 @@ if (D){
       /* Une description complète qui accompagne une image entre en
          concurrence avec elle, et le générateur tranche au hasard. */
       const d = path.join(RACINE, "prompts");
-      const s = fs.readFileSync(path.join(d, "n3", "thibaut.txt"), "utf8");
+      const s = promptNiveau("n3", "thibaut");
       return /RÉFÉRENCE DE PERSONNAGE/.test(s) &&
         /fait FOI/.test(s) &&
         /Rappel de contrôle/.test(s) &&
