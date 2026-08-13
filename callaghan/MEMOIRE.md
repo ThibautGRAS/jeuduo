@@ -2235,6 +2235,30 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Un mouvement porté DEUX FOIS tressaute
+
+« Quand il court ça sautille. » Trois causes s'additionnaient, et la
+première est la plus instructive : le sursaut vertical était porté à la
+fois par le CODE et par les SPRITES.
+
+Il avait été ajouté au code du temps où le cycle n'avait que deux poses —
+il portait alors seul le mouvement, et c'était juste. Les quatre nouvelles
+poses le portent elles-mêmes : la suspension est dessinée 41 px en l'air.
+Les deux se cumulaient en 31 px de tressautement, onze fois par seconde.
+
+**Quand on enrichit une donnée, vérifier ce que le code compensait à sa
+place.** Une compensation devenue inutile ne se signale pas : elle
+s'ajoute.
+
+Deux autres causes, mesurées au passage :
+- **les sommets de crâne étaient à 45, 37, 60 et 50 px.** Calé sur ses
+  pieds, le personnage voyait sa tête sauter de 23 px. `course3` était
+  dessinée 15 px plus courte — un homme debout sur le même sol a la même
+  taille, donc c'est une incohérence de dessin, corrigée au calage plutôt
+  qu'en faisant régénérer la planche.
+- **l'inclinaison oscillait quatre fois par cycle** pour deux appuis. Un
+  détail ajouté « pour donner de la vie » qui ne correspondait à rien.
+
 #### Relever l'affectation sur l'IMAGE, pas la déduire du prompt
 
 Le prompt du bar demandait quatre phases de marche et trois de course. La

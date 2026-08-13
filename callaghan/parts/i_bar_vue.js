@@ -238,15 +238,28 @@ const BarVue = {
        Il est maintenant accroché à la MÊME phase que la pose, à deux
        battements par cycle : un par contact de pied. C'est ce qui fait
        qu'un cycle à deux images se lit comme une course. */
+    /* LE SURSAUT DU CODE DISPARAÎT PENDANT LA COURSE. Il datait du temps
+       où il n'y avait que DEUX poses : il portait alors seul le mouvement
+       vertical. Le cycle en a quatre maintenant, et les sprites portent
+       ce mouvement eux-mêmes — la phase de suspension est dessinée 41 px
+       en l'air.
+       Les deux se cumulaient : 23 px de saut de tête entre sprites plus
+       8 px de code, soit 31 px de tressautement onze fois par seconde.
+       C'est ça, le « ça sautille ».
+       Il reste pour la MARCHE, dont les trois sprites sont posés au sol
+       et ne portent aucun mouvement vertical. */
     const court = T.dureeMarche > 0.6;
     const phase = T.foulee * BAR_CADENCE_COURSE * Math.PI;
     const enMouvement = T.marche !== 0 && T.boitT <= 0;
-    const ampli = court ? BAR_SAUT_COURSE : BAR_SAUT_COURSE * 0.45;
-    const saut = enMouvement ? Math.abs(Math.sin(phase)) * H * ampli : 0;
+    const saut = (enMouvement && !court)
+      ? Math.abs(Math.sin(phase)) * H * BAR_SAUT_COURSE * 0.45 : 0;
     /* et il se penche vers l'avant quand il court : sans ça il a l'air de
        glisser debout */
-    const penche = (enMouvement && court)
-      ? BAR_PENCHE_COURSE * T.dir * (0.75 + 0.25 * Math.sin(phase * 2)) : 0;
+    /* L'inclinaison ne PULSE plus. Elle oscillait à `phase * 2`, soit
+       quatre fois par cycle alors qu'une foulée n'a que deux appuis : un
+       tremblement de plus, sans rapport avec les jambes. Un coureur se
+       penche en avant et y reste. */
+    const penche = (enMouvement && court) ? BAR_PENCHE_COURSE * T.dir : 0;
     ctx.save();
     /* ombre courte au contact des pieds — même recette qu'au niveau 2 */
     ctx.fillStyle = "rgba(0,0,0,.30)";

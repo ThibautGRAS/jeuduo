@@ -573,6 +573,28 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**La course ne sautille plus** (v7.03) : **trois** causes qui
+s'additionnaient, et deux venaient de moi.
+
+**Le saut de tête entre sprites.** Les sommets de crâne étaient à 45, 37,
+60 et 50 px. Le personnage étant calé sur ses PIEDS, sa tête sautait de
+23 px onze fois par seconde. `course3` était dessinée 15 px plus courte
+que `course1` — un homme debout sur le même sol a la même taille, donc
+c'est une incohérence de dessin. Les poses au sol sont alignées sur le même
+sommet, écart ramené à **0 px**. La suspension reste plus haute : elle est
+en l'air pour de vrai.
+
+**Le sursaut du code s'ajoutait à celui des sprites.** Il datait du temps
+où il n'y avait que DEUX poses de course : il portait alors seul le
+mouvement vertical. Les sprites le portent maintenant — la suspension est
+dessinée 41 px en l'air — et les deux se cumulaient en 31 px de
+tressautement. Il est retiré pour la course, et conservé pour la marche,
+dont les trois sprites sont posés au sol.
+
+**L'inclinaison pulsait.** Elle oscillait quatre fois par cycle alors
+qu'une foulée n'a que deux appuis : un tremblement sans rapport avec les
+jambes. Un coureur se penche en avant et y reste.
+
 **La foulée du bar est enfin un vrai cycle** (v7.02). Trente sprites
 découpés de quatre planches : la course a ses QUATRE phases, avec la jambe
 opposée. C'était le manque le plus ancien de ce niveau — mesuré,

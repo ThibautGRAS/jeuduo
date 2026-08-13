@@ -2895,6 +2895,38 @@ if (D){
       return cycles > 2.0 && cycles < 4.0;
     })());
 
+  verifier("les poses de course AU SOL ont le même sommet de crâne",
+    (() => {
+      /* « Quand il court ça sautille. » Mesuré : les sommets étaient à 45,
+         37, 60 et 50 px. Le personnage étant calé sur ses PIEDS, sa tête
+         sautait de 23 px onze fois par seconde. `course3` était dessinée
+         15 px plus courte que `course1` — un homme debout sur le même sol
+         a la même taille, donc c'est une incohérence de dessin, corrigée
+         au calage.
+         La phase de SUSPENSION reste plus haute : elle est en l'air. */
+      /* node-canvas ne lit pas le WebP : on ne peut pas mesurer les
+         sommets ici. Le contrôle réel est dans `reparer_sprites.py
+         --verifier`, et ce test garde la trace de la CORRECTION — le
+         sursaut du code a été retiré pour la course, sinon les deux se
+         cumulent. Dire ce qu'on ne mesure pas vaut mieux que faire
+         semblant. */
+      const dossier = path.join(RACINE, "img", "n3");
+      const presents = ["bar_th", "bar_pf"].every(pref =>
+        ["course1", "course2", "course3", "course4"].every(p2 =>
+          fs.existsSync(path.join(dossier, pref + "_" + p2 + ".webp"))));
+      return presents && /enMouvement && !court/.test(source) &&
+        /LE SURSAUT DU CODE DISPARAÎT PENDANT LA COURSE/.test(source);
+    })());
+
+  verifier("l'inclinaison de course ne PULSE plus",
+    (() => {
+      /* Elle oscillait à `phase * 2`, soit quatre fois par cycle alors
+         qu'une foulée n'a que deux appuis : un tremblement de plus, sans
+         rapport avec les jambes. Un coureur se penche et y reste. */
+      return /BAR_PENCHE_COURSE \* T\.dir : 0/.test(source) &&
+        !/^[^\/\n]*0\.25 \* Math\.sin\(phase \* 2\)/m.test(source);
+    })());
+
   verifier("le sursaut et l'inclinaison accompagnent la foulée",
     (() => {
       /* Quand il n'y avait que DEUX poses de course, le sursaut et
