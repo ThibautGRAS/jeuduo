@@ -62,11 +62,17 @@ const BarVue = {
     /* LA FOULE PASSE APRÈS LE CHAMPION : c'est tout l'intérêt du premier
        plan, il circule DERRIÈRE eux. Mais après les verres aussi, sans
        jamais les couvrir — ils sont bien plus bas que le comptoir. */
-    this.dessinerFoule();
-    /* LES TABOURETS EN DERNIER : après les héros ET après la foule, donc
-       les deux passent derrière. C'était la demande — que le champion
-       circule ENTRE le comptoir et les tabourets. */
+    /* LES TABOURETS ENTRE LE HÉROS ET LA FOULE. Trois plans, et chacun a
+       sa raison :
+         - le héros passe DERRIÈRE les tabourets, pour qu'il circule entre
+           le comptoir et eux ;
+         - la foule passe DEVANT, parce qu'elle est le premier plan : elle
+           est plus grande que le héros et se tient plus près de la
+           caméra, donc les tabourets sont derrière elle.
+       Les dessiner en dernier les mettait devant tout le monde, et la
+       foule se retrouvait derrière un mobilier plus petit qu'elle. */
     this.dessinerTabourets();
+    this.dessinerFoule();
     if (T.tarte) this.dessinerTarte();
 
     /* Le coup de feu réchauffe la salle. */

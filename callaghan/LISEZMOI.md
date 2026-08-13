@@ -573,6 +573,18 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**Trois plans au bar, dans le bon ordre** (v7.17) : le héros, puis les
+tabourets, puis la foule.
+
+Chacun a sa raison. Le héros passe **derrière** les tabourets — c'était la
+demande, qu'il circule entre le comptoir et eux. La foule passe **devant**,
+parce qu'elle est le premier plan : elle est plus grande que le héros et se
+tient plus près de la caméra, donc le mobilier est derrière elle.
+
+Les dessiner en dernier les mettait devant tout le monde, et la foule se
+retrouvait derrière un mobilier plus petit qu'elle — ce qui inversait la
+profondeur au lieu de la donner.
+
 **Une plante masque la jonction, et la foule reprend sa taille** (v7.16).
 
 **La plante suspendue** est posée à 0,497, pile sur la seule couture

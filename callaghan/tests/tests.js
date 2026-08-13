@@ -5615,7 +5615,7 @@ if (D){
       return taille > D.BAR_TAILLE_HEROS && (pieds - taille) > D.BAR_COMPTOIR;
     })());
 
-  verifier("les tabourets passent DEVANT les héros et la foule",
+  verifier("trois plans : héros, puis tabourets, puis foule",
     (() => {
       /* Ceux du décor sont peints dans `fond_bar.webp` : impossible de
          passer devant eux. Ceux-ci sont des sprites dessinés en DERNIER,
@@ -5634,7 +5634,11 @@ if (D){
          donnaient douze tabourets. Depuis que le fond contient ses
          sections et que BAR_COPIES vaut 1, il faut les énumérer sur toute
          la longueur. Ce qu'on vérifie est l'ORDRE de dessin. */
-      return present && s > h && s > f && D.BAR_TABOURETS.length >= 4;
+      /* TROIS PLANS : héros, puis tabourets, puis foule. Le héros passe
+         DERRIÈRE les tabourets — il circule entre le comptoir et eux — et
+         la foule passe DEVANT, parce qu'elle est le premier plan : plus
+         grande que le héros, plus près de la caméra. */
+      return present && s > h && s < f && D.BAR_TABOURETS.length >= 4;
     })());
 
   verifier("chaque barman a SON arête arrière de comptoir",
