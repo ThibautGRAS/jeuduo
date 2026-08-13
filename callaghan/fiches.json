@@ -1,23 +1,37 @@
 {
   "thibaut": {
-    "physique": "Un homme d'une quarantaine d'années, cheveux bruns courts en bataille, moustache et barbe de trois jours, silhouette athlétique. Polo VERT à col boutonné et jean bleu, baskets blanches."
+    "physique": "Un homme d'une quarantaine d'années, cheveux bruns courts en bataille, moustache et barbe de trois jours, silhouette athlétique. Polo VERT à col boutonné et jean bleu, baskets blanches.",
+    "costume": "Polo VERT à col boutonné, jean bleu, baskets blanches. Silhouette athlétique.",
+    "rappel": "polo vert, jean bleu, cheveux bruns en bataille, barbe de trois jours"
   },
   "pf": {
-    "physique": "Un homme d'une quarantaine d'années, CHAUVE, lunettes rondes cerclées de noir, barbe courte poivre et sel, silhouette athlétique. T-shirt BEIGE clair et jean bleu, baskets blanches."
+    "physique": "Un homme d'une quarantaine d'années, CHAUVE, lunettes rondes cerclées de noir, barbe courte poivre et sel, silhouette athlétique. T-shirt BEIGE clair et jean bleu, baskets blanches.",
+    "costume": "T-shirt BEIGE clair, jean bleu, baskets blanches. Silhouette athlétique.",
+    "rappel": "chauve, lunettes rondes cerclées de noir, t-shirt beige, jean bleu"
   },
   "depar": {
-    "physique": "Un homme corpulent d'une soixantaine d'années, cheveux blond-gris mi-longs, visage large et rougeaud, veste de costume sombre ouverte sur une chemise blanche froissée, pantalon sombre, chaussures grises."
+    "physique": "Un homme corpulent d'une soixantaine d'années, cheveux blond-gris mi-longs, visage large et rougeaud, veste de costume sombre ouverte sur une chemise blanche froissée, pantalon sombre, chaussures grises.",
+    "costume": "Veste de costume sombre ouverte sur une chemise blanche froissée, pantalon sombre, chaussures grises. Corpulent.",
+    "rappel": "corpulent, cheveux blond-gris mi-longs, veste sombre sur chemise blanche"
   },
   "dsk": {
-    "physique": "Un homme d'une soixantaine d'années, cheveux blancs coiffés en arrière, visage anguleux, costume sombre impeccable sur une chemise bleu clair, chaussures de ville."
+    "physique": "Un homme d'une soixantaine d'années, cheveux blancs coiffés en arrière, visage anguleux, costume sombre impeccable sur une chemise bleu clair, chaussures de ville.",
+    "costume": "Costume sombre impeccable, chemise bleu clair, chaussures de ville.",
+    "rappel": "cheveux blancs coiffés en arrière, costume sombre, chemise bleu clair"
   },
   "jubi": {
-    "physique": "Un homme d'une quarantaine d'années, cheveux châtains courts, visage osseux, chemise blanche aux manches retroussées, jean, bottes de chantier."
+    "physique": "Un homme d'une quarantaine d'années, cheveux châtains courts, visage osseux, chemise blanche aux manches retroussées, jean, bottes de chantier.",
+    "costume": "Chemise blanche aux manches retroussées, jean, bottes de chantier.",
+    "rappel": "chemise blanche manches retroussées, jean, visage osseux"
   },
   "abbe": {
-    "physique": "Un homme âgé, béret noir, petites lunettes rondes cerclées, barbe blanche taillée, long pardessus noir usé, pendentif en forme de cœur au bout d'un cordon rouge."
+    "physique": "Un homme âgé, béret noir, petites lunettes rondes cerclées, barbe blanche taillée, long pardessus noir usé, pendentif en forme de cœur au bout d'un cordon rouge.",
+    "costume": "Long pardessus noir usé, béret noir, pendentif en forme de cœur au bout d'un cordon rouge.",
+    "rappel": "béret noir, lunettes rondes, barbe blanche, pardessus noir, pendentif cœur rouge"
   },
   "bruh": {
-    "physique": "Un homme d'une quarantaine d'années, cheveux noirs épais, moustache et barbe courte grisonnante, veste de costume noire ouverte sur un t-shirt BLANC à grand cœur rose, jean bleu, baskets grises."
+    "physique": "Un homme d'une quarantaine d'années, cheveux noirs épais, moustache et barbe courte grisonnante, veste de costume noire ouverte sur un t-shirt BLANC à grand cœur rose, jean bleu, baskets grises.",
+    "costume": "Veste de costume noire ouverte sur un t-shirt BLANC à grand cœur rose, jean bleu, baskets grises.",
+    "rappel": "t-shirt blanc à grand cœur rose sous veste noire, moustache et barbe grisonnante"
   }
 }

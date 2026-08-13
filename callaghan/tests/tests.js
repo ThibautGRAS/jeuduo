@@ -2031,11 +2031,42 @@ if (D){
       /* chacun doit être autonome : personnage, poses ET contraintes */
       const complets = f.every(n => {
         const s = fs.readFileSync(path.join(d, n), "utf8");
-        return /LE PERSONNAGE/.test(s) && /LES POSES/.test(s) &&
+        /* deux façons d'identifier le personnage : une description
+           écrite, ou une image qui fait foi. L'une OU l'autre. */
+        const qui = /LE PERSONNAGE/.test(s) || /RÉFÉRENCE DE PERSONNAGE/.test(s);
+        return qui && /LES POSES/.test(s) &&
                /CONTRAINTES TECHNIQUES/.test(s) && /FF00FF/.test(s);
       });
       return f.length >= 8 && complets &&
         fs.existsSync(path.join(d, "LISEZMOI.md"));
+    })());
+
+  verifier("chaque prompt a son IMAGE de référence",
+    (() => {
+      /* Une description écrite est relue et réinterprétée à chaque
+         planche : le t-shirt de BruHell a changé sans qu'un mot du texte
+         bouge. L'image montre le personnage tel qu'il est EN JEU. */
+      const d = path.join(RACINE, "prompts");
+      const txt = fs.readdirSync(d).filter(n => n.endsWith(".txt"));
+      const manquants = txt.filter(n => {
+        const perso = n.replace(/\.txt$/, "").split("_").pop();
+        return !fs.existsSync(path.join(d, "reference_" + perso + ".png"));
+      });
+      messageDetail = manquants.length ? manquants.join(", ")
+        : txt.length + " prompts, tous référencés";
+      return manquants.length === 0;
+    })());
+
+  verifier("un prompt À RÉFÉRENCE ne redécrit pas le personnage",
+    (() => {
+      /* Une description complète qui accompagne une image entre en
+         concurrence avec elle, et le générateur tranche au hasard. */
+      const d = path.join(RACINE, "prompts");
+      const s = fs.readFileSync(path.join(d, "heros_bar_thibaut.txt"), "utf8");
+      return /RÉFÉRENCE DE PERSONNAGE/.test(s) &&
+        /fait FOI/.test(s) &&
+        /Rappel de contrôle/.test(s) &&
+        !/quarantaine d'années/.test(s);
     })());
 
   verifier("PROMPTS.md dit de NE PAS le coller",

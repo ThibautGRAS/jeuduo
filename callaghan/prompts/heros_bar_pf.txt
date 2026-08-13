@@ -1,9 +1,22 @@
 Planche de 9 poses d'un même personnage, côte à côte
 sur une seule rangée.
 
-LE PERSONNAGE — identique sur toutes les poses, sans aucune variation de
-vêtement, de coupe ou de corpulence :
-Un homme d'une quarantaine d'années, CHAUVE, lunettes rondes cerclées de noir, barbe courte poivre et sel, silhouette athlétique. T-shirt BEIGE clair et jean bleu, baskets blanches.
+RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
+qu'il existe déjà.
+
+Elle fait FOI sur tout ce qui le définit : visage, coupe de cheveux,
+pilosité, corpulence, vêtements, couleurs, chaussures, accessoires, et
+le style de dessin lui-même — trait, palette, éclairage.
+
+Reproduire ces éléments à l'identique. Ne rien réinventer, ne rien
+moderniser, ne rien « améliorer ». Une planche qui change la couleur d'un
+vêtement ou la coupe d'une barbe est inutilisable : elle ne se raccorde
+pas aux images déjà en jeu.
+
+SEULES les poses décrites ci-dessous changent.
+
+Rappel de contrôle, à confirmer sur l'image et non à interpréter :
+chauve, lunettes rondes cerclées de noir, t-shirt beige, jean bleu
 
 LES POSES, de gauche à droite :
 1. [marche1] jambe DROITE tendue devant, talon droit au sol, jambe gauche en arrière ; bras gauche en avant

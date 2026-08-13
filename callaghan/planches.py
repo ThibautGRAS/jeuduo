@@ -151,7 +151,55 @@ def charger_fiches():
     return json.loads(p.read_text(encoding="utf-8"))
 
 
-def fabriquer(perso, mouvements):
+# ─────────────────────────────────────────────────────────────────────
+# TROIS MODES, et ils correspondent à trois moments différents.
+#
+# Une description ÉCRITE est lossy par nature : elle est relue et
+# réinterprétée à chaque planche. Le t-shirt de BruHell a changé entre
+# deux planches pour cette raison, et rien dans le texte n'avait bougé.
+# Une image de référence supprime cette réinterprétation.
+#
+# D'où la règle : le texte sert à créer, l'image sert à REPRODUIRE.
+# ─────────────────────────────────────────────────────────────────────
+MODES = {
+    # Premier contact : le personnage n'existe pas encore en sprite.
+    "texte": None,
+
+    # Un visage réel à transposer. Le costume reste écrit, parce qu'une
+    # photo de visage n'en dit rien.
+    "photo": """RÉFÉRENCE DE VISAGE — l'image jointe est une photographie.
+
+Reproduire fidèlement le VISAGE de cette photo : structure du crâne,
+implantation et couleur des cheveux, forme du nez, des yeux, de la
+bouche, pilosité. Le personnage dessiné doit être RECONNAISSABLE comme
+cette personne.
+
+Ne rien reprendre d'autre de la photo : ni le cadrage, ni les vêtements,
+ni le fond, ni l'éclairage, ni l'expression. Le costume est décrit
+ci-dessous et prime sur ce que porte la photo.
+
+Traduire le visage dans le style dessiné décrit plus bas — ce n'est pas
+un photomontage.""",
+
+    # Le cas le PLUS fréquent, et celui qui doit devenir le défaut : le
+    # personnage existe déjà en jeu, on lui ajoute des poses.
+    "poses": """RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
+qu'il existe déjà.
+
+Elle fait FOI sur tout ce qui le définit : visage, coupe de cheveux,
+pilosité, corpulence, vêtements, couleurs, chaussures, accessoires, et
+le style de dessin lui-même — trait, palette, éclairage.
+
+Reproduire ces éléments à l'identique. Ne rien réinventer, ne rien
+moderniser, ne rien « améliorer ». Une planche qui change la couleur d'un
+vêtement ou la coupe d'une barbe est inutilisable : elle ne se raccorde
+pas aux images déjà en jeu.
+
+SEULES les poses décrites ci-dessous changent.""",
+}
+
+
+def fabriquer(perso, mouvements, mode="texte"):
     fiches = charger_fiches()
     if perso not in fiches:
         sys.exit(f"ABANDON : aucune fiche pour « {perso} ».\n"
@@ -179,12 +227,29 @@ def fabriquer(perso, mouvements):
                  "INUTILISABLE — l'animation semble bloquée. Ne pas se "
                  "contenter de changer la position des bras.")
 
+    if mode not in MODES:
+        sys.exit(f"ABANDON : mode inconnu « {mode} ». "
+                 f"Connus : {', '.join(MODES)}")
+
+    if mode == "texte":
+        bloc = ("LE PERSONNAGE — identique sur toutes les poses, sans aucune "
+                "variation de\nvêtement, de coupe ou de corpulence :\n"
+                + f["physique"])
+    elif mode == "photo":
+        bloc = (MODES["photo"] + "\n\nLE COSTUME, qui prime sur la photo :\n"
+                + f["costume"])
+    else:
+        # Avec une référence de poses, on ne REDÉCRIT PAS le personnage :
+        # une description qui accompagne une image entre en concurrence
+        # avec elle, et le générateur tranche au hasard. On se contente
+        # d'un rappel court, formulé comme une confirmation.
+        bloc = (MODES["poses"] + "\n\nRappel de contrôle, à confirmer sur "
+                "l'image et non à interpréter :\n" + f["rappel"])
+
     return f"""Planche de {len(poses)} poses d'un même personnage, côte à côte
 sur une seule rangée.
 
-LE PERSONNAGE — identique sur toutes les poses, sans aucune variation de
-vêtement, de coupe ou de corpulence :
-{f['physique']}
+{bloc}
 
 LES POSES, de gauche à droite :
 {chr(10).join(details)}
@@ -303,6 +368,50 @@ def verifier(chemin, attendu=None):
     return 0
 
 
+def reference(perso):
+    """Fabrique l'image de référence à joindre au prompt : deux ou trois
+    poses du personnage TELLES QU'ELLES SONT EN JEU, sur fond neutre.
+
+    Elle est fabriquée et non choisie à la main pour une raison précise :
+    la référence doit montrer le personnage comme le jeu l'affiche
+    aujourd'hui, pas comme une planche d'origine le montrait. Entre les
+    deux, il y a eu des redécoupages et des corrections de sprites."""
+    from PIL import Image
+    racine = pathlib.Path(__file__).parent / "img"
+    # on cherche le personnage là où il vit, dans l'ordre de préférence
+    candidats = []
+    for dossier, prefixe, poses in (
+            ("n3", f"bar_{'th' if perso == 'thibaut' else perso}", ["idle", "marche1", "attrape"]),
+            ("n4", f"enn_{perso}", ["run1", "run3", "arret"]),
+            ("n4", f"ruel_{'th' if perso == 'thibaut' else perso}", ["vise1", "vise", "tir"])):
+        trouve = [racine / dossier / f"{prefixe}_{po}.webp" for po in poses]
+        trouve = [f for f in trouve if f.exists()]
+        if len(trouve) >= 2:
+            candidats = trouve[:3]; break
+    if not candidats:
+        sys.exit(f"ABANDON : aucun sprite trouvé pour « {perso} ». "
+                 "Un personnage qui n'existe pas encore se demande en mode "
+                 "`photo` ou `texte`.")
+
+    ims = [Image.open(f).convert("RGBA") for f in candidats]
+    h = max(i.height for i in ims)
+    marge = int(h * 0.10)
+    L = sum(i.width for i in ims) + marge * (len(ims) + 1)
+    # fond gris neutre : ni magenta (qu'on ne veut pas voir recopié),
+    # ni blanc (qui écrase les vêtements clairs)
+    out = Image.new("RGB", (L, h + marge * 2), (128, 128, 132))
+    x = marge
+    for i in ims:
+        out.paste(i, (x, marge + h - i.height), i)
+        x += i.width + marge
+    dst = pathlib.Path(__file__).parent / "prompts" / f"reference_{perso}.png"
+    dst.parent.mkdir(exist_ok=True)
+    out.save(dst, "PNG", optimize=True)
+    print(f"  {dst}  {out.size[0]}x{out.size[1]}  "
+          f"({len(ims)} poses : {', '.join(f.stem for f in candidats)})")
+    return dst
+
+
 def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
@@ -311,12 +420,20 @@ def main():
         if len(sys.argv) < 4:
             sys.exit("usage : planches.py prompt <personnage> <mouvement...>\n"
                      f"mouvements : {', '.join(sorted(MOUVEMENTS))}")
-        print(fabriquer(sys.argv[2], sys.argv[3:]))
+        args = [a for a in sys.argv[3:] if not a.startswith("--")]
+        mode = "texte"
+        for a in sys.argv[3:]:
+            if a.startswith("--mode="): mode = a[7:]
+        print(fabriquer(sys.argv[2], args, mode))
     elif cmd == "verifier":
         if len(sys.argv) < 3:
             sys.exit("usage : planches.py verifier <planche.png> [nombre de poses]")
         att = int(sys.argv[3]) if len(sys.argv) > 3 else None
         sys.exit(verifier(sys.argv[2], att))
+    elif cmd == "reference":
+        if len(sys.argv) < 3:
+            sys.exit("usage : planches.py reference <personnage>")
+        reference(sys.argv[2])
     elif cmd == "mouvements":
         for k, v in sorted(MOUVEMENTS.items()):
             print(f"  {k:10s} {len(v['phases'])} phase(s)  {v['titre']}")

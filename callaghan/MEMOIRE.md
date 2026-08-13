@@ -2171,6 +2171,29 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Une image de référence bat une description écrite
+
+Le t-shirt de BruHell a changé entre deux planches. Rien dans le texte
+n'avait bougé : c'est le texte lui-même qui avait été relu et
+réinterprété. Une description écrite est lossy par construction — chaque
+lecture est une reconstruction.
+
+D'où la règle : **le texte sert à CRÉER, l'image sert à REPRODUIRE.**
+Premier contact, on décrit ; ensuite, on montre.
+
+Trois précautions apprises en le posant :
+
+- La référence se FABRIQUE depuis les sprites du jeu, pas depuis la
+  planche d'origine. Entre les deux il y a eu des redécoupages, des
+  réparations de trous, des recadrages : la planche d'origine ne montre
+  plus ce que le joueur voit.
+- Fond gris neutre. Ni magenta — on ne veut pas qu'il soit recopié comme
+  un élément du personnage — ni blanc, qui écrase les vêtements clairs.
+- **Ne PAS redécrire le personnage à côté de l'image.** Une description
+  complète entre en concurrence avec la référence, et le générateur
+  tranche au hasard. Deux lignes de rappel suffisent, formulées comme un
+  contrôle à confirmer et non comme une consigne.
+
 #### Un outil que l'autre ne peut pas lancer ne lui sert à rien
 
 J'ai construit un générateur de prompts en ligne de commande, l'ai

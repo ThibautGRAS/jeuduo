@@ -284,6 +284,38 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Les prompts marchent par IMAGE de référence** (v6.97) : ton idée est
+meilleure que ce que j'avais construit, et pour une raison qu'on peut
+nommer.
+
+**Une description écrite est relue et réinterprétée à chaque planche.**
+Le t-shirt de BruHell a changé entre deux planches sans qu'un mot du
+texte ait bougé. Une image supprime cette réinterprétation.
+
+**Trois modes**, qui correspondent à trois moments :
+
+| situation | mode | ce qu'on joint |
+|---|---|---|
+| le personnage existe déjà en jeu | **poses** | `reference_<perso>.png` |
+| nouveau personnage, photo du vrai | **photo** | la photo du visage |
+| nouveau personnage, rien | **texte** | rien |
+
+Le mode `poses` est devenu le défaut, et **les neuf prompts existants y
+sont passés** — ce sont tous des personnages déjà en jeu.
+
+**Les images de référence sont FABRIQUÉES**, pas choisies : deux ou trois
+poses extraites des sprites du jeu, sur fond gris neutre. Elles montrent
+donc le personnage tel qu'il est **aujourd'hui**, après tous les
+redécoupages — pas tel qu'une planche d'origine le montrait.
+
+**Et en mode référence, le prompt ne redécrit PAS le personnage.** Une
+description complète qui accompagne une image entre en concurrence avec
+elle, et le générateur tranche au hasard. Il ne reste que deux lignes de
+rappel, formulées comme un contrôle à confirmer.
+
+Le mode `photo` garde la description du COSTUME, puisqu'une photo de
+visage n'en dit rien.
+
 **Onze prompts prêts à coller** (v6.96) : ta question a révélé que
 l'outil que je venais de construire ne te servait à rien.
 

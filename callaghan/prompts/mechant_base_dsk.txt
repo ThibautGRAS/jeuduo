@@ -1,9 +1,22 @@
 Planche de 8 poses d'un même personnage, côte à côte
 sur une seule rangée.
 
-LE PERSONNAGE — identique sur toutes les poses, sans aucune variation de
-vêtement, de coupe ou de corpulence :
-Un homme d'une soixantaine d'années, cheveux blancs coiffés en arrière, visage anguleux, costume sombre impeccable sur une chemise bleu clair, chaussures de ville.
+RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
+qu'il existe déjà.
+
+Elle fait FOI sur tout ce qui le définit : visage, coupe de cheveux,
+pilosité, corpulence, vêtements, couleurs, chaussures, accessoires, et
+le style de dessin lui-même — trait, palette, éclairage.
+
+Reproduire ces éléments à l'identique. Ne rien réinventer, ne rien
+moderniser, ne rien « améliorer ». Une planche qui change la couleur d'un
+vêtement ou la coupe d'une barbe est inutilisable : elle ne se raccorde
+pas aux images déjà en jeu.
+
+SEULES les poses décrites ci-dessous changent.
+
+Rappel de contrôle, à confirmer sur l'image et non à interpréter :
+cheveux blancs coiffés en arrière, costume sombre, chemise bleu clair
 
 LES POSES, de gauche à droite :
 1. [course1] jambe DROITE lancée loin devant, genou haut, jambe gauche tendue en arrière ; bras gauche en avant, coudes pliés

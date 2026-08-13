@@ -1,54 +1,68 @@
 # prompts/ — les textes à coller, tels quels
 
-**Un fichier de ce dossier = un prompt complet.** On l'ouvre, on copie
-TOUT le contenu, on le colle dans le générateur d'images. Rien à
-compléter, rien à enlever.
+**Un fichier `.txt` = un prompt complet, et une image `reference_*.png`
+à JOINDRE avec.** On copie tout le texte, on joint l'image du même
+personnage, on envoie.
 
-**Ne PAS coller `PROMPTS.md`** : c'est de la documentation — quatorze
-sections, des explications, l'historique des erreurs. Le coller noierait
-le générateur. Ces fichiers-ci sont l'inverse : du texte brut, sans un
-mot qui ne soit destiné au générateur.
+**Ne PAS coller `../PROMPTS.md`** : c'est de la documentation. Ces
+fichiers-ci sont du texte brut, sans un mot qui ne soit destiné au
+générateur.
+
+## Pourquoi une image de référence
+
+Une description écrite est **relue et réinterprétée** à chaque planche.
+Le t-shirt de BruHell a changé entre deux planches sans qu'un mot du
+texte ait bougé. Une image de référence supprime cette réinterprétation :
+elle montre le personnage tel qu'il est EN JEU aujourd'hui, après tous
+les redécoupages et corrections.
+
+C'est pour ça que la référence est fabriquée depuis les sprites du jeu et
+non choisie parmi les planches d'origine.
+
+## Les trois modes, et quand les utiliser
+
+| situation | mode | ce qu'on joint |
+|---|---|---|
+| le personnage existe déjà en jeu | **poses** | `reference_<perso>.png` |
+| nouveau personnage, on a une photo du vrai | **photo** | la photo du visage |
+| nouveau personnage, rien d'existant | **texte** | rien |
+
+Tous les fichiers de ce dossier sont en mode **poses** : ce sont des
+personnages déjà en jeu. Pour les deux autres modes, le demander dans la
+conversation.
+
+En mode `poses`, le prompt ne redécrit PAS le personnage — il dit à
+l'image de faire foi, avec deux lignes de rappel formulées comme un
+contrôle. Une description complète qui accompagne une image entre en
+concurrence avec elle, et le générateur tranche au hasard.
 
 ## Ce qui est prêt
 
 | fichier | personnage | mouvements | poses |
 |---|---|---|---|
-| `heros_bar_pf.txt` | pf | marche + course + frein | 9 |
-| `heros_bar_thibaut.txt` | thibaut | marche + course + frein | 9 |
-| `heros_base_pf.txt` | pf | idle + marche + course | 9 |
-| `heros_base_thibaut.txt` | thibaut | idle + marche + course | 9 |
-| `mechant_base_abbe.txt` | abbe | course + touche + chute | 8 |
-| `mechant_base_bruh.txt` | bruh | course + touche + chute | 8 |
-| `mechant_base_depar.txt` | depar | course + touche + chute | 8 |
-| `mechant_base_dsk.txt` | dsk | course + touche + chute | 8 |
-| `mechant_base_jubi.txt` | jubi | course + touche + chute | 8 |
-| `mouvements_sup_pf.txt` | pf | saut + accroupi | 6 |
-| `mouvements_sup_thibaut.txt` | thibaut | saut + accroupi | 6 |
+| `heros_bar_thibaut.txt` | Thibaut | marche + course + frein | 9 |
+| `heros_bar_pf.txt` | PF | marche + course + frein | 9 |
+| `heros_sup_thibaut.txt` | Thibaut | saut + accroupi | 6 |
+| `heros_sup_pf.txt` | PF | saut + accroupi | 6 |
+| `mechant_base_depar.txt` | Depardiahree | course + touche + chute | 8 |
+| `mechant_base_dsk.txt` | DSKKK | course + touche + chute | 8 |
+| `mechant_base_jubi.txt` | Jubilar | course + touche + chute | 8 |
+| `mechant_base_abbe.txt` | l'Abbé | course + touche + chute | 8 |
+| `mechant_base_bruh.txt` | BruHell | course + touche + chute | 8 |
 
-## Ce qu'il faut faire de la planche reçue
+## Après réception de la planche
 
-**La faire vérifier avant de la découper.** L'envoyer dans la
-conversation en demandant le contrôle : fond, bords, séparation des
-poses, égalité des têtes, alignement des pieds, et surtout
-**l'alternance des jambes** pour un cycle de marche ou de course. Trois
-séances ont été perdues sur une course dont toutes les phases avaient le
-même pied en avant.
+**L'envoyer dans la conversation AVANT de la découper.** Une commande la
+contrôle : fond, quatre bords, poses séparables, écart, égalité des
+têtes, alignement des pieds — et **l'alternance des jambes** pour un
+cycle. Trois séances ont été perdues sur une course dont toutes les
+phases avaient le même pied en avant ; ce contrôle l'aurait vu tout de
+suite.
 
-## Si le jeu de mouvements voulu n'est pas là
+## Les planches spéciales ne sont pas ici
 
-Le demander dans la conversation : ces fichiers sont générés par
-`planches.py`, qui assemble le catalogue de mouvements, la fiche du
-personnage et les règles techniques. Il suffit de dire quel personnage et
-quels mouvements.
-
-Mouvements au catalogue : `idle`, `marche`, `course`, `saut`, `accroupi`,
-`frein`, `touche`, `chute`.
-
-## Les planches SPÉCIALES ne sont pas ici
-
-Décors, boutons d'interface, icônes d'indices, portraits de dialogue, et
-les gestes propres à un niveau — servir un verre, lancer un pavé,
-brandir un encensoir. Elles sont uniques, donc écrites à la main dans
-`../PROMPTS.md`, sections 2 à 14. Pour celles-là, copier la section
-concernée **plus** le bloc de contraintes techniques qu'on trouve à la fin
-de n'importe quel fichier de ce dossier.
+Décors, boutons, icônes, portraits, et les gestes propres à un niveau —
+servir un verre, lancer un pavé. Ils sont uniques, donc écrits dans
+`../PROMPTS.md`. Pour ceux-là, copier la section concernée **plus** le
+bloc de contraintes techniques qu'on trouve à la fin de n'importe quel
+fichier de ce dossier.
