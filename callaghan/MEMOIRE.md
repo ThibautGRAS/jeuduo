@@ -58,7 +58,7 @@ Plus `callaghan/son/LISEZMOI.md` pour les échantillons, `../CLAUDE.md` pour
 les règles communes au dépôt, et `../MEMOIRE.md` pour DUO — dont les
 pièges valent souvent ici aussi.
 
-**Plan** — mode d'emploi et parcours de lecture, section 0 (les sept
+**Plan** — mode d'emploi et parcours de lecture, section 0 (les huit
 familles d'erreurs et ce qui marche), 1 (architecture), 2 (réglages
 calibrés), 3 (les cent trente-sept pièges rangés en onze chapitres
 thématiques), 4 (le harnais d'aperçu), 5 (ce qui n'est pas fait).
@@ -74,7 +74,7 @@ réorganisé pour ça, et sa structure répond à trois usages différents.
 ### Trois parcours
 
 **Je reprends le projet après une pause** — lire la section 0 en entier
-(dix minutes). Elle donne les sept familles d'erreurs et ce qui marche.
+(dix minutes). Elle donne les huit familles d'erreurs et ce qui marche.
 Puis les deux RÈGLES EN DUR ci-dessus. Rien d'autre.
 
 **Je m'apprête à faire quelque chose de précis** — ouvrir le chapitre
@@ -83,6 +83,7 @@ entrées détaillées se consultent quand un symptôme apparaît, pas avant.
 
 | je fais... | je lis |
 |---|---|
+| un outil de contrôle, un test | **3.9 en entier** — c'est la famille la plus nombreuse après les mesures |
 | des sprites, un décor, une échelle | 3.1 et 3.2 |
 | du texte, un bouton, une bulle | 3.3 |
 | un écran, une transition, une rotation | 3.4 |
@@ -140,14 +141,14 @@ que ce qui a mordu.
 
 ## 0. Retour d'expérience — ce qui revient
 
-Cent soixante-neuf pièges sont consignés plus bas, un par défaut
+Cent cinquante-trois pièges sont consignés plus bas, un par défaut
 rencontré. Vus séparément ils sont anecdotiques ; regroupés, ils
-dessinent **sept familles** qui expliquent la quasi-totalité des
+dessinent **huit familles** qui expliquent la quasi-totalité des
 allers-retours de ce projet. Cette section existe pour qu'on lise les
 familles avant de refaire l'erreur, plutôt que de retrouver la leçon
 après coup.
 
-### Les sept familles d'erreurs, par coût décroissant
+### Les huit familles d'erreurs, par coût décroissant
 
 **1. Deviner une grandeur au lieu de la mesurer.** La plus chère, et de
 loin. Position de la bouche du canon, ligne du comptoir, hauteur de tête
@@ -186,7 +187,21 @@ d'apparition ne suspend pas la file : la boucle continue. Arrêter un
 ennemi ne suffit pas, il faut **borner** sa position. *Réflexe* : un état
 qui suspend se teste dans la condition de la boucle.
 
-**7. Interrompre un travail qui écrit.** Deux sprites corrompus, deux
+**7. L'OUTIL DE CONTRÔLE EST FAUX.** Famille découverte tard, et la plus
+nombreuse après les mesures — dix-sept entrées. Un contrôleur qui suppose
+un fond `#FF00FF` alors que la capture est à (216, 2, 213) et compte donc
+le fond comme un défaut. Une heuristique qui prend un bras levé pour un
+crâne et annonce 32 % d'écart sur une planche parfaitement à l'échelle.
+Un contrôle qui ne regarde qu'une rangée sur deux. Un test écrit pour le
+cas qu'on vient de corriger et aveugle au même défaut ailleurs. Un prompt
+qui demande cinq poses là où le jeu en charge onze.
+*Réflexe* : essayer chaque contrôle sur un cas dont on CONNAÎT la
+réponse — un défaut fabriqué exprès, une planche qu'on a mesurée à la
+main. **Un contrôle qui signale un défaut inexistant est pire qu'une
+absence de contrôle : il apprend à ignorer ses alertes.** Et après avoir
+corrigé un défaut, écrire le test pour la CLASSE, pas pour le cas.
+
+**8. Interrompre un travail qui écrit.** Deux sprites corrompus, deux
 fois, par un `timeout` sur un script d'écriture — la seconde fois le
 lendemain d'avoir noté qu'il ne fallait pas l'interrompre. *Réflexe* :
 la consigne ne suffit pas, il faut rendre la faute impossible. Écriture
@@ -222,11 +237,22 @@ zéro.
 énumère. Un personnage à moitié fini ne peut pas être oublié à moitié
 fini.
 
-### Deux erreurs de méthode, pas de code
+### Trois erreurs de méthode, pas de code
 
 **Affirmer sans vérifier.** J'ai dit à Thibaut que l'intro du niveau 4
 attendait le clic. Elle ne l'attendait pas. Vérifier aurait coûté trente
 secondes ; l'affirmation a coûté une séance et de la confiance.
+
+**Livrer un garde-fou sans l'éprouver.** Plusieurs fois cette séance,
+j'ai écrit un contrôle et annoncé qu'il protégeait de quelque chose —
+sans l'essayer sur un cas fautif. Trois se sont révélés faux quand une
+vraie planche est arrivée : l'un comptait le fond comme un défaut, l'un
+prenait un bras pour une tête, l'un ne voyait qu'une rangée sur deux.
+
+C'est la pire des trois, parce qu'elle produit de la CONFIANCE FAUSSE :
+un contrôle vert donne le droit de passer à la suite. Fabriquer le cas
+fautif exprès coûte deux minutes — une planche volontairement rosie, des
+poses dont on a mesuré à la main qu'elles sont à l'échelle.
 
 **Pousser sans relancer après un rebase.** Un commit distant est arrivé
 pendant mon travail, j'ai rebasé et poussé sans relancer les tests. Un

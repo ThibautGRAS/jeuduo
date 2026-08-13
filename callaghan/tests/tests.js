@@ -3374,8 +3374,14 @@ if (D){
       const m = fs.readFileSync(path.join(RACINE, "MEMOIRE.md"), "utf8");
       const chapitres = (m.match(/^### 3\.\d+ — /gm) || []).length;
       const pieges = (m.match(/^#### /gm) || []).length;
-      messageDetail = chapitres + " chapitres, " + pieges + " pièges";
-      return chapitres >= 10 && pieges >= 130 &&
+      const familles = (m.match(/^\*\*\d+\. /gm) || []).length;
+      messageDetail = chapitres + " chapitres, " + pieges + " pièges, "
+                    + familles + " familles";
+      /* La synthèse doit suivre le contenu : elle annonçait sept familles
+         et 137 pièges alors qu'il y en avait huit et 153. Une synthèse
+         périmée est pire qu'aucune — on la lit en croyant tout savoir. */
+      return chapitres >= 10 && pieges >= 130 && familles >= 8 &&
+        m.indexOf("huit familles") > 0 &&
         /^## Comment lire ce document$/m.test(m) &&
         /^## 0\. Retour d'expérience/m.test(m) &&
         /je fais\.\.\. \| je lis/.test(m);
