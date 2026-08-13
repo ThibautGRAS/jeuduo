@@ -1972,6 +1972,22 @@ l'appelait**. Deux règles en sortent :
    vérifier le CÂBLAGE — chercher l'appel dans le gestionnaire — et pas
    seulement le comportement de la fonction.
 
+#### Tester AVANT d'assembler, c'est tester l'ancien fichier
+
+Variante sournoise de la précédente, et je viens de la commettre. La
+suite lit `index.html`, qui est PRODUIT par l'assembleur. Lancer les
+tests avant d'assembler mesure donc l'état d'avant l'édition : le
+résultat affiché ne dit rien du code qu'on s'apprête à livrer.
+
+Ce jour-là il était rouge — la version du script et celle affichée ne
+concordaient pas encore, puisque l'assembleur n'avait pas tourné. La
+chaîne a ensuite assemblé, retesté au vert et poussé le bon état. Rien de
+mauvais n'est parti, mais j'ai affiché un rouge et poussé dans la même
+commande : la prochaine fois, ce sera vrai.
+
+L'ordre est donc invariable, et le premier terme n'est pas facultatif :
+**assembler → `node --check` → tester → regarder → pousser.**
+
 #### Une chaîne de commandes masque un test rouge
 J'ai poussé la v6.21 avec un test en échec. La boucle de vérification
 affichait bien le rouge, mais elle se terminait avec un code de succès,
