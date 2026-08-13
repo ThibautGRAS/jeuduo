@@ -2066,6 +2066,53 @@ if (D){
         /reference\/thibaut-2\.png/.test(s);
     })());
 
+  verifier("un prompt couvre TOUTES les poses que le jeu consomme",
+    (() => {
+      /* Le prompt du niveau 2 n'en demandait que cinq sur onze : il
+         oubliait l'esquive, le splat, le carnet, l'accusation, l'écoute
+         et l'interrogatoire — dont trois n'existent qu'à ce niveau. Une
+         planche générée dessus aurait été à moitié inutilisable, et on
+         ne s'en serait aperçu qu'au découpage. */
+      const d = path.join(RACINE, "prompts");
+      const lire = niv => {
+        let s = "";
+        for (const n of fs.readdirSync(path.join(d, niv)))
+          if (n.startsWith("thibaut")) s += fs.readFileSync(path.join(d, niv, n), "utf8");
+        return s;
+      };
+      /* les noms attendus viennent du CODE, pas d'une liste recopiée */
+      const attendus = (source.match(/"enq_th_([a-z0-9]+)"/g) || [])
+        .map(x => x.replace(/"enq_th_|"/g, ""));
+      const txt = lire("n2");
+      const manquants = [...new Set(attendus)].filter(p2 => txt.indexOf("[" + p2 + "]") < 0);
+      messageDetail = manquants.length ? "absentes : " + manquants.join(", ")
+                                       : attendus.length + " poses couvertes";
+      return attendus.length >= 10 && manquants.length === 0;
+    })());
+
+  verifier("l'espacement est la PREMIÈRE consigne technique",
+    (() => {
+      /* C'est la règle la plus souvent ratée, et celle qui bloque tout :
+         deux poses qui se touchent, même par un doigt, ne peuvent pas
+         être séparées. Mesuré sur une planche livrée : 49 px au lieu de
+         80, à cause d'un index pointé. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      const i = s.indexOf("CONTRAINTES TECHNIQUES");
+      const bloc = s.slice(i, i + 700);
+      return /LA PLUS IMPORTANTE, ET LA PLUS SOUVENT RATÉE : L'ESPACEMENT/.test(bloc) &&
+        /Un doigt pointé/.test(bloc) && /ÉCARTER PLUS/.test(bloc);
+    })());
+
+  verifier("une scène de plus de neuf poses est SCINDÉE",
+    (() => {
+      const d = path.join(RACINE, "prompts", "n2");
+      const f = fs.readdirSync(d).filter(n => n.endsWith(".txt"));
+      const un = fs.readFileSync(path.join(d, "thibaut-1.txt"), "utf8");
+      messageDetail = f.join(", ");
+      return f.length === 4 && /Planche 1 sur 2/.test(un) &&
+        /joindre la MÊME image de référence aux deux/.test(un);
+    })());
+
   verifier("chaque prompt NOMME la référence à joindre",
     (() => {
       /* Un personnage peut avoir plusieurs références — une par tenue.
@@ -2095,7 +2142,9 @@ if (D){
          dans le texte. */
       const d = path.join(RACINE, "prompts");
       const ref = n => {
-        const s = fs.readFileSync(path.join(d, n, "thibaut.txt"), "utf8");
+        const f = fs.existsSync(path.join(d, n, "thibaut.txt"))
+          ? "thibaut.txt" : "thibaut-1.txt";
+        const s = fs.readFileSync(path.join(d, n, f), "utf8");
         const m = s.match(/reference\/(\S+\.png)/);
         return m ? m[1] : "?";
       };
@@ -2216,8 +2265,12 @@ if (D){
       }
       /* UNE référence par personnage, partagée par tous les niveaux :
          c'est ce qui permet de tout réaligner en changeant une image. */
+      /* Le nom du fichier peut porter un suffixe de planche — `-1`, `-2`
+         quand une scène est scindée. Le PERSONNAGE est ce qui reste une
+         fois ce suffixe retiré. */
       const manquants = txt.filter(n => {
-        const perso = n.replace(/\.txt$/, "").replace(/^mechant_/, "");
+        const perso = n.replace(/\.txt$/, "").replace(/^mechant_/, "")
+                       .replace(/-\d+$/, "");
         return !fs.existsSync(path.join(d, "reference", perso + ".png"));
       });
       messageDetail = manquants.length ? manquants.join(", ")

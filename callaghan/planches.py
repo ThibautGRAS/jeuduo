@@ -138,6 +138,17 @@ MOUVEMENTS = {
 # ─────────────────────────────────────────────────────────────────────
 REGLES = """CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
 
+LA PLUS IMPORTANTE, ET LA PLUS SOUVENT RATÉE : L'ESPACEMENT.
+Chaque pose doit être séparée de sa voisine par au moins 80 pixels de
+fond VIDE. Un doigt pointé, un bras tendu, un coude, un pied de course,
+un objet tenu : RIEN ne doit entrer dans la colonne d'à côté. Deux poses
+qui se touchent, même par un seul doigt, ne peuvent pas être séparées
+automatiquement, et toute la planche est à refaire.
+Test à faire mentalement : entre deux poses voisines, peut-on tracer un
+trait vertical du haut en bas de l'image sans jamais toucher un
+personnage ? Si non, écarter davantage.
+Dans le doute, ÉCARTER PLUS. Une planche trop aérée se découpe très bien.
+
 - Fond MAGENTA PUR uni #FF00FF sur toute l'image. Aucun dégradé, aucune
   ombre portée, aucun décor, aucun élément de mobilier, aucun sol
   dessiné, aucun cadre, aucune bordure.
@@ -218,17 +229,38 @@ SCENES = {
     # pour PF, blouson pour Thibaut. Une seule image pour les deux, donc
     # aucun risque qu'ils divergent.
     "ref": "-3",
+    # ONZE POSES, et c'est ce que le jeu consomme réellement. Le prompt
+    # n'en demandait que cinq : il en oubliait six, dont l'esquive et le
+    # splat, qui n'existent qu'ici. Une planche générée dessus aurait été
+    # à moitié inutilisable, et on ne s'en serait aperçu qu'au découpage.
+    #
+    # Onze dépasse le maximum de neuf par planche : elles sont donc
+    # SCINDÉES en deux, avec la même référence jointe aux deux.
     "poses": [
       ("idle", "debout, en alerte, le regard qui balaie la pièce"),
       ("marche1", "jambe DROITE tendue devant, talon au sol, jambe gauche "
                   "en arrière ; bras gauche en avant"),
       ("marche2", "jambe GAUCHE tendue devant, talon au sol, jambe droite "
                   "en arrière ; bras droit en avant"),
-      ("fouille", "penché en avant, une main qui ouvre un tiroir invisible, "
-                  "l'autre en appui sur le genou"),
-      ("examine", "debout, un objet tenu à hauteur des yeux entre le pouce "
-                  "et l'index, sourcils froncés"),
+      ("fouille", "accroupi, une main qui ouvre un tiroir invisible devant "
+                  "lui, l'autre en appui sur le genou"),
+      ("examine", "debout, un petit objet tenu à hauteur des yeux entre le "
+                  "pouce et l'index, sourcils froncés"),
+      ("interroge", "de trois quarts, une main ouverte tendue devant lui à "
+                    "hauteur de taille, comme pour poser une question"),
+      ("ecoute", "debout, une main au menton, tête légèrement inclinée, "
+                 "l'autre bras replié sous le coude"),
+      ("carnet", "un carnet ouvert dans une main, un stylo dans l'autre, "
+                 "regard baissé sur la page"),
+      ("accuse", "bras tendu à l'horizontale, index pointé loin devant, "
+                 "buste tourné dans le même sens, mâchoire serrée"),
+      ("esquive", "accroupi en torsion, les deux bras croisés devant le "
+                  "visage pour se protéger, un pied en arrière"),
+      ("splat", "touché en pleine figure : tête rejetée en arrière, bras "
+                "écartés, corps qui recule d'un pas"),
     ],
+    # deux planches : le maximum est de neuf poses
+    "scinder": 6,
   },
   "n3": {
     "titre": "la tournée du bar",
@@ -603,7 +635,7 @@ def verifier(chemin, attendu=None):
     return 0
 
 
-def fabriquer_scene(niveau, perso):
+def fabriquer_scene(niveau, perso, part=None):
     """Le prompt d'un niveau pour un personnage.
 
     Un niveau demande soit des poses qui lui sont propres — attendre dans
@@ -623,8 +655,14 @@ def fabriquer_scene(niveau, perso):
         cycle = any(MOUVEMENTS[m].get("cycle") and m in ("marche", "course")
                     for m in sc["mouvements"])
     else:
-        details = [f"{i}. [{nom}] {d}" for i, (nom, d) in enumerate(sc["poses"], 1)]
-        cycle = any(nom.startswith(("marche", "course")) for nom, _ in sc["poses"])
+        poses = sc["poses"]
+        # SCINDÉE : au-delà de neuf poses, deux planches. La même
+        # référence est jointe aux deux, c'est ce qui les raccorde.
+        coupe = sc.get("scinder")
+        if coupe and part:
+            poses = poses[:coupe] if part == 1 else poses[coupe:]
+        details = [f"{i}. [{nom}] {d}" for i, (nom, d) in enumerate(poses, 1)]
+        cycle = any(nom.startswith(("marche", "course")) for nom, _ in poses)
 
     cost = (sc.get("costume") or {}).get(perso)
     if cost:
@@ -644,10 +682,17 @@ def fabriquer_scene(niveau, perso):
                  "INUTILISABLE — l'animation semble bloquée.")
 
     suff = sc.get("ref", "")
+    if len(details) > 9:
+        sys.exit(f"ABANDON : {len(details)} poses pour {niveau}/{perso}. "
+                 f"Ajouter « scinder » à la scène.")
+    surtitre = ""
+    if sc.get("scinder") and part:
+        surtitre = (f"\nPlanche {part} sur 2 — joindre la MÊME image de "
+                    f"référence aux deux, c'est ce qui les raccorde.")
     return f"""Planche de {len(details)} poses d'un même personnage, côte à côte
 sur une seule rangée.
 
-Scène : {sc['titre']}.
+Scène : {sc['titre']}.{surtitre}
 Image de référence à joindre : reference/{perso}{suff}.png
 
 {ident}
@@ -673,8 +718,13 @@ def tout():
         d.mkdir(parents=True, exist_ok=True)
         for f in d.glob("*.txt"): f.unlink()
         for perso in sc["prefixe"]:
-            (d / f"{perso}.txt").write_text(
-                fabriquer_scene(niveau, perso), encoding="utf-8")
+            if sc.get("scinder"):
+                for part in (1, 2):
+                    (d / f"{perso}-{part}.txt").write_text(
+                        fabriquer_scene(niveau, perso, part), encoding="utf-8")
+            else:
+                (d / f"{perso}.txt").write_text(
+                    fabriquer_scene(niveau, perso), encoding="utf-8")
     # les méchants n'appartiennent qu'à la ruelle
     d = base / "n4"
     for m in ("depar", "dsk", "jubi", "abbe", "bruh"):

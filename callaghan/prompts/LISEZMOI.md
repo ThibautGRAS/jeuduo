@@ -72,6 +72,13 @@ la morphologie et le style**, mais pas sur les vêtements, qui sont
 décrits en dessous. Sans cette bascule, régénérer le niveau 1 depuis la
 référence du bar leur mettrait un polo dans la file.
 
+## Quand une scène est scindée
+
+Le niveau 2 demande onze poses — plus que le maximum de neuf. Il est donc
+livré en **deux planches**, `thibaut-1.txt` et `thibaut-2.txt`, et chacune
+dit en tête qu'il faut joindre la **même** image de référence. C'est elle
+qui garantit que les deux se raccordent.
+
 ## Neuf poses par planche, pas plus
 
 Au-delà, le générateur rétrécit chaque sujet pour tout faire tenir sur la

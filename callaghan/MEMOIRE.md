@@ -2203,6 +2203,24 @@ qu'il faut joindre. Plus de bascule, plus de contradiction possible.
 Corollaire : quand un texte doit dire « sauf que », se demander s'il ne
 manque pas une donnée. Ici il manquait une image.
 
+#### Un prompt de planche se vérifie contre ce que le CODE consomme
+
+Le prompt du niveau 2 demandait cinq poses. Le jeu en charge onze : il
+oubliait l'écoute, l'interrogatoire, le carnet, l'accusation, l'esquive
+et le splat de tarte — dont trois n'existent qu'à ce niveau.
+
+Une planche générée dessus aurait été à moitié inutilisable, et on ne
+s'en serait aperçu qu'au découpage, après avoir attendu la génération.
+
+La liste des poses d'un prompt ne se rédige pas de mémoire : elle se
+compare à celle que le code charge. Un test le fait désormais, et il tire
+les noms attendus du CODE et non d'une liste recopiée — une liste
+recopiée aurait le même défaut que le prompt qu'elle vérifie.
+
+Corollaire : quand la liste dépasse neuf poses, la scène se déclare
+scindée et le générateur produit deux planches, en écrivant dans chacune
+qu'il faut joindre la même référence.
+
 #### Une heuristique de mesure se vérifie sur un cas où l'on connaît la réponse
 
 Mon contrôleur signalait « les têtes varient de 32 % » sur une planche

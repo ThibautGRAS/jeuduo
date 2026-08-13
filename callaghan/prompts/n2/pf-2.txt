@@ -2,7 +2,8 @@ Planche de 5 poses d'un même personnage, côte à côte
 sur une seule rangée.
 
 Scène : l'enquête de l'appartement.
-Image de référence à joindre : reference/thibaut-3.png
+Planche 2 sur 2 — joindre la MÊME image de référence aux deux, c'est ce qui les raccorde.
+Image de référence à joindre : reference/pf-3.png
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
 qu'il existe déjà.
@@ -25,19 +26,28 @@ vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
 Rappel de contrôle, à confirmer sur l'image et non à interpréter :
-polo vert, jean bleu, cheveux bruns en bataille, barbe de trois jours
+chauve, lunettes rondes cerclées de noir, t-shirt beige, jean bleu
 
 LES POSES, de gauche à droite :
-1. [idle] debout, en alerte, le regard qui balaie la pièce
-2. [marche1] jambe DROITE tendue devant, talon au sol, jambe gauche en arrière ; bras gauche en avant
-3. [marche2] jambe GAUCHE tendue devant, talon au sol, jambe droite en arrière ; bras droit en avant
-4. [fouille] penché en avant, une main qui ouvre un tiroir invisible, l'autre en appui sur le genou
-5. [examine] debout, un objet tenu à hauteur des yeux entre le pouce et l'index, sourcils froncés
+1. [ecoute] debout, une main au menton, tête légèrement inclinée, l'autre bras replié sous le coude
+2. [carnet] un carnet ouvert dans une main, un stylo dans l'autre, regard baissé sur la page
+3. [accuse] bras tendu à l'horizontale, index pointé loin devant, buste tourné dans le même sens, mâchoire serrée
+4. [esquive] accroupi en torsion, les deux bras croisés devant le visage pour se protéger, un pied en arrière
+5. [splat] touché en pleine figure : tête rejetée en arrière, bras écartés, corps qui recule d'un pas
 
-
-AVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou d'une course doivent différer sur le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à l'autre. Une planche où toutes les poses ont le même pied en avant est INUTILISABLE — l'animation semble bloquée.
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
+
+LA PLUS IMPORTANTE, ET LA PLUS SOUVENT RATÉE : L'ESPACEMENT.
+Chaque pose doit être séparée de sa voisine par au moins 80 pixels de
+fond VIDE. Un doigt pointé, un bras tendu, un coude, un pied de course,
+un objet tenu : RIEN ne doit entrer dans la colonne d'à côté. Deux poses
+qui se touchent, même par un seul doigt, ne peuvent pas être séparées
+automatiquement, et toute la planche est à refaire.
+Test à faire mentalement : entre deux poses voisines, peut-on tracer un
+trait vertical du haut en bas de l'image sans jamais toucher un
+personnage ? Si non, écarter davantage.
+Dans le doute, ÉCARTER PLUS. Une planche trop aérée se découpe très bien.
 
 - Fond MAGENTA PUR uni #FF00FF sur toute l'image. Aucun dégradé, aucune
   ombre portée, aucun décor, aucun élément de mobilier, aucun sol
