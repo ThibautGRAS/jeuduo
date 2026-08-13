@@ -1,5 +1,7 @@
-Planche de 6 poses d'un même personnage, côte à côte
+Planche de 5 poses d'un même personnage, côte à côte
 sur une seule rangée.
+
+Scène : l'enquête de l'appartement.
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
 qu'il existe déjà.
@@ -25,13 +27,14 @@ Rappel de contrôle, à confirmer sur l'image et non à interpréter :
 chauve, lunettes rondes cerclées de noir, t-shirt beige, jean bleu
 
 LES POSES, de gauche à droite :
-1. [saut1] flexion : genoux pliés, buste en avant, bras en arrière, juste avant l'impulsion
-2. [saut2] montée : jambes tendues vers le bas, bras levés, corps étiré
-3. [saut3] sommet : genoux ramenés vers la poitrine
-4. [saut4] réception : genoux fléchis, un pied touche le sol, bras écartés pour l'équilibre
-5. [accroupi1] accroupi, talons au sol, avant-bras sur les genoux, tête haute
-6. [accroupi2] accroupi en train de se relever, une main au sol
+1. [idle] debout, en alerte, le regard qui balaie la pièce
+2. [marche1] jambe DROITE tendue devant, talon au sol, jambe gauche en arrière ; bras gauche en avant
+3. [marche2] jambe GAUCHE tendue devant, talon au sol, jambe droite en arrière ; bras droit en avant
+4. [fouille] penché en avant, une main qui ouvre un tiroir invisible, l'autre en appui sur le genou
+5. [examine] debout, un objet tenu à hauteur des yeux entre le pouce et l'index, sourcils froncés
 
+
+AVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou d'une course doivent différer sur le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à l'autre. Une planche où toutes les poses ont le même pied en avant est INUTILISABLE — l'animation semble bloquée.
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
 

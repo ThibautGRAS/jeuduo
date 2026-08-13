@@ -1,5 +1,7 @@
-Planche de 6 poses d'un même personnage, côte à côte
+Planche de 5 poses d'un même personnage, côte à côte
 sur une seule rangée.
+
+Scène : la ruelle.
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
 qu'il existe déjà.
@@ -25,12 +27,11 @@ Rappel de contrôle, à confirmer sur l'image et non à interpréter :
 polo vert, jean bleu, cheveux bruns en bataille, barbe de trois jours
 
 LES POSES, de gauche à droite :
-1. [saut1] flexion : genoux pliés, buste en avant, bras en arrière, juste avant l'impulsion
-2. [saut2] montée : jambes tendues vers le bas, bras levés, corps étiré
-3. [saut3] sommet : genoux ramenés vers la poitrine
-4. [saut4] réception : genoux fléchis, un pied touche le sol, bras écartés pour l'équilibre
-5. [accroupi1] accroupi, talons au sol, avant-bras sur les genoux, tête haute
-6. [accroupi2] accroupi en train de se relever, une main au sol
+1. [vise1] de profil, arme tendue à deux mains vers la droite, buste légèrement penché
+2. [tir] même position, le bras qui encaisse le recul, épaule remontée
+3. [recul1] le bras part vers le haut sous le recul, buste rejeté
+4. [accroupi] accroupi derrière un abri, arme ramenée contre la poitrine, tête baissée
+5. [leve1] en train de se relever de l'accroupi, une main en appui
 
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.

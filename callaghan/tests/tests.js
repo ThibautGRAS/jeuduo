@@ -2024,9 +2024,17 @@ if (D){
       /* Le générateur était utile à moi, pas à Thibaut : il travaille
          depuis son téléphone et ne peut pas lancer un script Python.
          Un outil qu'il ne peut pas exécuter ne lui sert à rien. */
+      /* Les prompts sont rangés PAR NIVEAU depuis la réorganisation :
+         prompts/n1/, n2/, n3/, n4/, plus prompts/reference/. */
       const d = path.join(RACINE, "prompts");
       if (!fs.existsSync(d)) return false;
-      const f = fs.readdirSync(d).filter(n => n.endsWith(".txt"));
+      const f = [];
+      for (const niv of ["n1", "n2", "n3", "n4"]){
+        const dn = path.join(d, niv);
+        if (!fs.existsSync(dn)) continue;
+        for (const n of fs.readdirSync(dn))
+          if (n.endsWith(".txt")) f.push(path.join(niv, n));
+      }
       messageDetail = f.length + " prompts prêts";
       /* chacun doit être autonome : personnage, poses ET contraintes */
       const complets = f.every(n => {
@@ -2050,7 +2058,7 @@ if (D){
          en sortie — mais elle ne doit pas teinter le personnage. */
       const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
       const un = fs.readFileSync(
-        path.join(RACINE, "prompts", "heros_bar_thibaut.txt"), "utf8");
+        path.join(RACINE, "prompts", "n3", "thibaut.txt"), "utf8");
       return /SI L'IMAGE DE RÉFÉRENCE EST SUR FOND MAGENTA/.test(un) &&
         /ne teinte RIEN/.test(un) &&
         /134, 58, 116/.test(s) &&
@@ -2072,10 +2080,17 @@ if (D){
          planche : le t-shirt de BruHell a changé sans qu'un mot du texte
          bouge. L'image montre le personnage tel qu'il est EN JEU. */
       const d = path.join(RACINE, "prompts");
-      const txt = fs.readdirSync(d).filter(n => n.endsWith(".txt"));
+      const txt = [];
+      for (const niv of ["n1", "n2", "n3", "n4"]){
+        const dn = path.join(d, niv);
+        if (!fs.existsSync(dn)) continue;
+        for (const n of fs.readdirSync(dn)) if (n.endsWith(".txt")) txt.push(n);
+      }
+      /* UNE référence par personnage, partagée par tous les niveaux :
+         c'est ce qui permet de tout réaligner en changeant une image. */
       const manquants = txt.filter(n => {
-        const perso = n.replace(/\.txt$/, "").split("_").pop();
-        return !fs.existsSync(path.join(d, "reference_" + perso + ".png"));
+        const perso = n.replace(/\.txt$/, "").replace(/^mechant_/, "");
+        return !fs.existsSync(path.join(d, "reference", perso + ".png"));
       });
       messageDetail = manquants.length ? manquants.join(", ")
         : txt.length + " prompts, tous référencés";
@@ -2087,7 +2102,7 @@ if (D){
       /* Une description complète qui accompagne une image entre en
          concurrence avec elle, et le générateur tranche au hasard. */
       const d = path.join(RACINE, "prompts");
-      const s = fs.readFileSync(path.join(d, "heros_bar_thibaut.txt"), "utf8");
+      const s = fs.readFileSync(path.join(d, "n3", "thibaut.txt"), "utf8");
       return /RÉFÉRENCE DE PERSONNAGE/.test(s) &&
         /fait FOI/.test(s) &&
         /Rappel de contrôle/.test(s) &&

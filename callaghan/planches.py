@@ -147,6 +147,82 @@ REGLES = """CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
   de la tête aux pieds."""
 
 
+# ─────────────────────────────────────────────────────────────────────
+# LES SCÈNES — un jeu de poses par niveau.
+#
+# Les mouvements ci-dessus sont génériques : ils valent pour n'importe
+# quel personnage de n'importe quel jeu. Les SCÈNES, elles, disent ce
+# dont un niveau précis a besoin, avec ses poses propres — attendre dans
+# une file, fouiller un meuble, servir un verre.
+#
+# `costume` n'est renseigné que si le niveau habille le personnage
+# AUTREMENT que la référence. C'est le cas du niveau 1, où les héros sont
+# en tenue de rue. Sans cette possibilité, régénérer le niveau 1 depuis
+# une référence du bar leur mettrait un polo dans la file d'attente.
+# ─────────────────────────────────────────────────────────────────────
+SCENES = {
+  "n1": {
+    "titre": "la file d'attente",
+    "prefixe": {"thibaut": "thibaut", "pf": "pierre"},
+    "costume": {
+      "thibaut": "Blouson bomber VERT OLIVE ouvert sur un t-shirt crème, "
+                 "jean bleu, baskets blanches.",
+      "pf": "Manteau BEIGE long et ouvert sur un col roulé BLEU MARINE, "
+            "jean bleu, baskets blanches.",
+    },
+    "poses": [
+      ("idle", "debout, détendu, les bras le long du corps, léger sourire"),
+      ("attente", "debout, les bras croisés, poids sur une jambe, l'air de "
+                  "patienter depuis un moment"),
+      ("marche", "un pas en avant, tranquille, bras relâchés"),
+      ("regarde", "tourné de trois quarts, la tête pivotée vers le côté, "
+                  "une main en visière au-dessus des yeux"),
+      ("surpris", "sursaut : yeux écarquillés, sourcils hauts, épaules "
+                  "remontées, mains ouvertes à hauteur de poitrine"),
+      ("stress", "crispé : sourcils froncés, une main qui frotte la nuque, "
+                 "poids déporté en arrière"),
+      ("tendue", "tension maximale : poings serrés, mâchoire crispée, buste "
+                 "penché en avant"),
+      ("victoire", "les deux bras levés en V, tête en arrière, grand sourire, "
+                   "un pied décollé du sol"),
+    ],
+  },
+  "n2": {
+    "titre": "l'enquête de l'appartement",
+    "prefixe": {"thibaut": "enq_th", "pf": "enq_pf"},
+    "poses": [
+      ("idle", "debout, en alerte, le regard qui balaie la pièce"),
+      ("marche1", "jambe DROITE tendue devant, talon au sol, jambe gauche "
+                  "en arrière ; bras gauche en avant"),
+      ("marche2", "jambe GAUCHE tendue devant, talon au sol, jambe droite "
+                  "en arrière ; bras droit en avant"),
+      ("fouille", "penché en avant, une main qui ouvre un tiroir invisible, "
+                  "l'autre en appui sur le genou"),
+      ("examine", "debout, un objet tenu à hauteur des yeux entre le pouce "
+                  "et l'index, sourcils froncés"),
+    ],
+  },
+  "n3": {
+    "titre": "la tournée du bar",
+    "prefixe": {"thibaut": "bar_th", "pf": "bar_pf"},
+    "mouvements": ["marche", "course", "frein"],
+  },
+  "n4": {
+    "titre": "la ruelle",
+    "prefixe": {"thibaut": "ruel_th", "pf": "ruel_pf"},
+    "poses": [
+      ("vise1", "de profil, arme tendue à deux mains vers la droite, buste "
+                "légèrement penché"),
+      ("tir", "même position, le bras qui encaisse le recul, épaule remontée"),
+      ("recul1", "le bras part vers le haut sous le recul, buste rejeté"),
+      ("accroupi", "accroupi derrière un abri, arme ramenée contre la "
+                   "poitrine, tête baissée"),
+      ("leve1", "en train de se relever de l'accroupi, une main en appui"),
+    ],
+  },
+}
+
+
 def charger_fiches():
     """Les fiches de personnage vivent dans PERSONNAGES.md, pas ici : un
     physique décrit à deux endroits diverge — le t-shirt de BruHell a
@@ -402,7 +478,101 @@ def verifier(chemin, attendu=None):
     return 0
 
 
-def reference(perso):
+def fabriquer_scene(niveau, perso):
+    """Le prompt d'un niveau pour un personnage.
+
+    Un niveau demande soit des poses qui lui sont propres — attendre dans
+    une file, fouiller un meuble — soit des mouvements du catalogue. Les
+    deux passent par la même fabrique, donc par les mêmes règles."""
+    sc = SCENES[niveau]
+    fiches = charger_fiches()
+    f = fiches[perso]
+
+    if "mouvements" in sc:
+        details, n = [], 0
+        for m in sc["mouvements"]:
+            for i, ph in enumerate(MOUVEMENTS[m]["phases"], 1):
+                n += 1
+                nom = f"{m}{i}" if len(MOUVEMENTS[m]["phases"]) > 1 else m
+                details.append(f"{n}. [{nom}] {ph}")
+        cycle = any(MOUVEMENTS[m].get("cycle") for m in sc["mouvements"])
+    else:
+        details = [f"{i}. [{nom}] {d}" for i, (nom, d) in enumerate(sc["poses"], 1)]
+        cycle = any(nom.startswith(("marche", "course")) for nom, _ in sc["poses"])
+
+    cost = (sc.get("costume") or {}).get(perso)
+    if cost:
+        # LE COSTUME PRIME SUR LA RÉFÉRENCE. Sans ça, régénérer le niveau 1
+        # depuis une référence du bar mettrait un polo dans la file.
+        ident = (MODES["poses"].replace(
+            "Elle fait FOI sur tout ce qui le définit : visage, coupe de "
+            "cheveux,\npilosité, corpulence, vêtements, couleurs, chaussures, "
+            "accessoires, et\nle style de dessin lui-même — trait, palette, "
+            "éclairage.",
+            "Elle fait FOI sur le VISAGE, la coupe de cheveux, la pilosité, la\n"
+            "corpulence et le style de dessin — trait, palette, éclairage.\n\n"
+            "Elle ne fait PAS foi sur les vêtements : ce niveau habille le\n"
+            "personnage autrement, et le costume décrit ci-dessous prime sur "
+            "celui\nde la référence.")
+            + "\n\nLE COSTUME DE CE NIVEAU, qui remplace celui de la référence :\n"
+            + cost)
+    else:
+        ident = (MODES["poses"] + "\n\nRappel de contrôle, à confirmer sur "
+                 "l'image et non à interpréter :\n" + f["rappel"])
+
+    avert = ""
+    if cycle:
+        avert = ("\n\nAVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou "
+                 "d'une course doivent différer sur le BAS DU CORPS : ce n'est "
+                 "pas la même jambe qui est devant d'une phase à l'autre. Une "
+                 "planche où toutes les poses ont le même pied en avant est "
+                 "INUTILISABLE — l'animation semble bloquée.")
+
+    return f"""Planche de {len(details)} poses d'un même personnage, côte à côte
+sur une seule rangée.
+
+Scène : {sc['titre']}.
+
+{ident}
+
+LES POSES, de gauche à droite :
+{chr(10).join(details)}
+{avert}
+
+{REGLES}"""
+
+
+def tout():
+    """Régénère TOUT : références et prompts, pour tous les niveaux.
+
+    C'est la commande qui donne son intérêt à l'organisation. Le jour où
+    une image de référence change — un personnage redessiné, un style
+    resserré — on relance ceci et les quatre niveaux repartent alignés
+    sur elle. Sans ça, il faudrait se souvenir de quels prompts la
+    citaient."""
+    base = pathlib.Path(__file__).parent / "prompts"
+    for niveau, sc in SCENES.items():
+        d = base / niveau
+        d.mkdir(parents=True, exist_ok=True)
+        for f in d.glob("*.txt"): f.unlink()
+        for perso in sc["prefixe"]:
+            (d / f"{perso}.txt").write_text(
+                fabriquer_scene(niveau, perso), encoding="utf-8")
+    # les méchants n'appartiennent qu'à la ruelle
+    d = base / "n4"
+    for m in ("depar", "dsk", "jubi", "abbe", "bruh"):
+        (d / f"mechant_{m}.txt").write_text(
+            fabriquer(m, ["course", "touche", "chute"], "poses"), encoding="utf-8")
+    ref = base / "reference"
+    ref.mkdir(exist_ok=True)
+    for perso in ["thibaut", "pf", "depar", "dsk", "jubi", "abbe", "bruh"]:
+        try: reference(perso, ref)
+        except SystemExit: print(f"  (aucun sprite pour {perso})")
+    n = len(list(base.rglob("*.txt")))
+    print(f"\n{n} prompts et {len(list(ref.glob('*.png')))} références régénérés")
+
+
+def reference(perso, dossier=None):
     """Fabrique l'image de référence à joindre au prompt : deux ou trois
     poses du personnage TELLES QU'ELLES SONT EN JEU, sur fond neutre.
 
@@ -414,11 +584,14 @@ def reference(perso):
     racine = pathlib.Path(__file__).parent / "img"
     # on cherche le personnage là où il vit, dans l'ordre de préférence
     candidats = []
-    for dossier, prefixe, poses in (
+    # `sous` et non `dossier` : la boucle écrasait le PARAMÈTRE du même
+    # nom, et la fonction écrivait ensuite dans « n4/thibaut.png ». Une
+    # variable de boucle qui porte le nom d'un paramètre est un piège muet.
+    for sous, prefixe, poses in (
             ("n3", f"bar_{'th' if perso == 'thibaut' else perso}", ["idle", "marche1", "attrape"]),
             ("n4", f"enn_{perso}", ["run1", "run3", "arret"]),
             ("n4", f"ruel_{'th' if perso == 'thibaut' else perso}", ["vise1", "vise", "tir"])):
-        trouve = [racine / dossier / f"{prefixe}_{po}.webp" for po in poses]
+        trouve = [racine / sous / f"{prefixe}_{po}.webp" for po in poses]
         trouve = [f for f in trouve if f.exists()]
         if len(trouve) >= 2:
             candidats = trouve[:3]; break
@@ -438,8 +611,8 @@ def reference(perso):
     for i in ims:
         out.paste(i, (x, marge + h - i.height), i)
         x += i.width + marge
-    dst = pathlib.Path(__file__).parent / "prompts" / f"reference_{perso}.png"
-    dst.parent.mkdir(exist_ok=True)
+    dst = (dossier or (pathlib.Path(__file__).parent / "prompts")) / f"{perso}.png"
+    dst.parent.mkdir(parents=True, exist_ok=True)
     out.save(dst, "PNG", optimize=True)
     print(f"  {dst}  {out.size[0]}x{out.size[1]}  "
           f"({len(ims)} poses : {', '.join(f.stem for f in candidats)})")
@@ -464,6 +637,8 @@ def main():
             sys.exit("usage : planches.py verifier <planche.png> [nombre de poses]")
         att = int(sys.argv[3]) if len(sys.argv) > 3 else None
         sys.exit(verifier(sys.argv[2], att))
+    elif cmd == "tout":
+        tout()
     elif cmd == "reference":
         if len(sys.argv) < 3:
             sys.exit("usage : planches.py reference <personnage>")

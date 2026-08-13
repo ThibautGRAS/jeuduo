@@ -1,0 +1,67 @@
+Planche de 5 poses d'un même personnage, côte à côte
+sur une seule rangée.
+
+Scène : la ruelle.
+
+RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
+qu'il existe déjà.
+
+Elle fait FOI sur tout ce qui le définit : visage, coupe de cheveux,
+pilosité, corpulence, vêtements, couleurs, chaussures, accessoires, et
+le style de dessin lui-même — trait, palette, éclairage.
+
+Reproduire ces éléments à l'identique. Ne rien réinventer, ne rien
+moderniser, ne rien « améliorer ». Une planche qui change la couleur d'un
+vêtement ou la coupe d'une barbe est inutilisable : elle ne se raccorde
+pas aux images déjà en jeu.
+
+SEULES les poses décrites ci-dessous changent.
+
+SI L'IMAGE DE RÉFÉRENCE EST SUR FOND MAGENTA : ce fond est un fond de
+travail, rien d'autre. Il ne fait PAS partie du personnage. Ne pas en
+tirer de lumière rose ou violette sur la peau, les cheveux, les
+vêtements ou les contours. L'éclairage du personnage doit rester neutre,
+identique à celui de la référence une fois le fond mis de côté.
+
+Rappel de contrôle, à confirmer sur l'image et non à interpréter :
+chauve, lunettes rondes cerclées de noir, t-shirt beige, jean bleu
+
+LES POSES, de gauche à droite :
+1. [vise1] de profil, arme tendue à deux mains vers la droite, buste légèrement penché
+2. [tir] même position, le bras qui encaisse le recul, épaule remontée
+3. [recul1] le bras part vers le haut sous le recul, buste rejeté
+4. [accroupi] accroupi derrière un abri, arme ramenée contre la poitrine, tête baissée
+5. [leve1] en train de se relever de l'accroupi, une main en appui
+
+
+CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
+
+- Fond MAGENTA PUR uni #FF00FF sur toute l'image. Aucun dégradé, aucune
+  ombre portée, aucun décor, aucun élément de mobilier, aucun sol
+  dessiné, aucun cadre, aucune bordure.
+- AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro de pose.
+- Toutes les poses sur UNE SEULE RANGÉE horizontale, alignées.
+- Au moins 80 pixels de fond magenta VIDE entre deux poses voisines.
+  Aucune partie d'un personnage — bras tendu, jambe de course, objet
+  tenu — ne doit entrer dans la colonne de sa voisine. On doit pouvoir
+  tracer un trait vertical entièrement magenta entre deux poses.
+- Au moins 60 pixels de magenta vide sur les QUATRE bords de l'image.
+  Une lueur ou un vêtement coupé par le bord ne peut pas être détouré
+  proprement.
+- MÊME ÉCHELLE pour toutes les poses : la tête doit avoir exactement la
+  même taille d'une pose à l'autre. C'est le défaut le plus fréquent.
+- Les PIEDS de toutes les poses reposent sur la même ligne horizontale
+  imaginaire, sauf pour les phases où le personnage est explicitement en
+  l'air.
+- Aucune lueur, aucun halo, aucun effet lumineux qui déborde de la
+  silhouette. Mesuré sur une planche livrée : une bande rose de 15 à
+  30 px de couleur (134, 58, 116) tout autour du sujet — du magenta
+  délavé, que rien ne sait retirer puisqu'on ignore la couleur qui était
+  dessous. Le bord doit être FRANC.
+- Le fond magenta ne teinte RIEN. Aucun reflet rose ou violet sur la
+  peau, les cheveux, les vêtements ou les contours : l'éclairage du
+  personnage est neutre.
+- Style : bande dessinée aux couleurs franches, contours nets, éclairage
+  neutre et identique pour toutes les poses.
+- Personnage vu de TROIS QUARTS, tourné vers la DROITE, corps entier,
+  de la tête aux pieds.

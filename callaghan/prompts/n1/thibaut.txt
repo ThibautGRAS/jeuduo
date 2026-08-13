@@ -1,12 +1,17 @@
-Planche de 9 poses d'un même personnage, côte à côte
+Planche de 8 poses d'un même personnage, côte à côte
 sur une seule rangée.
+
+Scène : la file d'attente.
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
 qu'il existe déjà.
 
-Elle fait FOI sur tout ce qui le définit : visage, coupe de cheveux,
-pilosité, corpulence, vêtements, couleurs, chaussures, accessoires, et
-le style de dessin lui-même — trait, palette, éclairage.
+Elle fait FOI sur le VISAGE, la coupe de cheveux, la pilosité, la
+corpulence et le style de dessin — trait, palette, éclairage.
+
+Elle ne fait PAS foi sur les vêtements : ce niveau habille le
+personnage autrement, et le costume décrit ci-dessous prime sur celui
+de la référence.
 
 Reproduire ces éléments à l'identique. Ne rien réinventer, ne rien
 moderniser, ne rien « améliorer ». Une planche qui change la couleur d'un
@@ -21,22 +26,21 @@ tirer de lumière rose ou violette sur la peau, les cheveux, les
 vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
-Rappel de contrôle, à confirmer sur l'image et non à interpréter :
-chauve, lunettes rondes cerclées de noir, t-shirt beige, jean bleu
+LE COSTUME DE CE NIVEAU, qui remplace celui de la référence :
+Blouson bomber VERT OLIVE ouvert sur un t-shirt crème, jean bleu, baskets blanches.
 
 LES POSES, de gauche à droite :
-1. [marche1] jambe DROITE tendue devant, talon droit au sol, jambe gauche en arrière ; bras gauche en avant
-2. [marche2] les deux jambes se croisent sous le corps, poids sur la droite ; bras presque le long du corps
-3. [marche3] jambe GAUCHE tendue devant, talon gauche au sol, jambe droite en arrière ; bras droit en avant
-4. [marche4] les deux jambes se croisent sous le corps, poids sur la gauche ; bras presque le long du corps
-5. [course1] jambe DROITE lancée loin devant, genou haut, jambe gauche tendue en arrière ; bras gauche en avant, coudes pliés
-6. [course2] suspension : les DEUX pieds décollés, jambes en train de se croiser sous le corps, buste penché en avant
-7. [course3] jambe GAUCHE lancée loin devant, genou haut, jambe droite tendue en arrière ; bras droit en avant, coudes pliés
-8. [course4] suspension inverse : les DEUX pieds décollés, jambes croisées, buste penché en avant
-9. [frein] talons plantés, buste rejeté en arrière, bras écartés, chaussures qui dérapent
+1. [idle] debout, détendu, les bras le long du corps, léger sourire
+2. [attente] debout, les bras croisés, poids sur une jambe, l'air de patienter depuis un moment
+3. [marche] un pas en avant, tranquille, bras relâchés
+4. [regarde] tourné de trois quarts, la tête pivotée vers le côté, une main en visière au-dessus des yeux
+5. [surpris] sursaut : yeux écarquillés, sourcils hauts, épaules remontées, mains ouvertes à hauteur de poitrine
+6. [stress] crispé : sourcils froncés, une main qui frotte la nuque, poids déporté en arrière
+7. [tendue] tension maximale : poings serrés, mâchoire crispée, buste penché en avant
+8. [victoire] les deux bras levés en V, tête en arrière, grand sourire, un pied décollé du sol
 
 
-AVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou d'une course doivent différer sur le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à l'autre. Une planche où toutes les poses ont le même pied en avant est INUTILISABLE — l'animation semble bloquée. Ne pas se contenter de changer la position des bras.
+AVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou d'une course doivent différer sur le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à l'autre. Une planche où toutes les poses ont le même pied en avant est INUTILISABLE — l'animation semble bloquée.
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
 

@@ -1,0 +1,69 @@
+Planche de 5 poses d'un même personnage, côte à côte
+sur une seule rangée.
+
+Scène : l'enquête de l'appartement.
+
+RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
+qu'il existe déjà.
+
+Elle fait FOI sur tout ce qui le définit : visage, coupe de cheveux,
+pilosité, corpulence, vêtements, couleurs, chaussures, accessoires, et
+le style de dessin lui-même — trait, palette, éclairage.
+
+Reproduire ces éléments à l'identique. Ne rien réinventer, ne rien
+moderniser, ne rien « améliorer ». Une planche qui change la couleur d'un
+vêtement ou la coupe d'une barbe est inutilisable : elle ne se raccorde
+pas aux images déjà en jeu.
+
+SEULES les poses décrites ci-dessous changent.
+
+SI L'IMAGE DE RÉFÉRENCE EST SUR FOND MAGENTA : ce fond est un fond de
+travail, rien d'autre. Il ne fait PAS partie du personnage. Ne pas en
+tirer de lumière rose ou violette sur la peau, les cheveux, les
+vêtements ou les contours. L'éclairage du personnage doit rester neutre,
+identique à celui de la référence une fois le fond mis de côté.
+
+Rappel de contrôle, à confirmer sur l'image et non à interpréter :
+polo vert, jean bleu, cheveux bruns en bataille, barbe de trois jours
+
+LES POSES, de gauche à droite :
+1. [idle] debout, en alerte, le regard qui balaie la pièce
+2. [marche1] jambe DROITE tendue devant, talon au sol, jambe gauche en arrière ; bras gauche en avant
+3. [marche2] jambe GAUCHE tendue devant, talon au sol, jambe droite en arrière ; bras droit en avant
+4. [fouille] penché en avant, une main qui ouvre un tiroir invisible, l'autre en appui sur le genou
+5. [examine] debout, un objet tenu à hauteur des yeux entre le pouce et l'index, sourcils froncés
+
+
+AVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou d'une course doivent différer sur le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à l'autre. Une planche où toutes les poses ont le même pied en avant est INUTILISABLE — l'animation semble bloquée.
+
+CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
+
+- Fond MAGENTA PUR uni #FF00FF sur toute l'image. Aucun dégradé, aucune
+  ombre portée, aucun décor, aucun élément de mobilier, aucun sol
+  dessiné, aucun cadre, aucune bordure.
+- AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro de pose.
+- Toutes les poses sur UNE SEULE RANGÉE horizontale, alignées.
+- Au moins 80 pixels de fond magenta VIDE entre deux poses voisines.
+  Aucune partie d'un personnage — bras tendu, jambe de course, objet
+  tenu — ne doit entrer dans la colonne de sa voisine. On doit pouvoir
+  tracer un trait vertical entièrement magenta entre deux poses.
+- Au moins 60 pixels de magenta vide sur les QUATRE bords de l'image.
+  Une lueur ou un vêtement coupé par le bord ne peut pas être détouré
+  proprement.
+- MÊME ÉCHELLE pour toutes les poses : la tête doit avoir exactement la
+  même taille d'une pose à l'autre. C'est le défaut le plus fréquent.
+- Les PIEDS de toutes les poses reposent sur la même ligne horizontale
+  imaginaire, sauf pour les phases où le personnage est explicitement en
+  l'air.
+- Aucune lueur, aucun halo, aucun effet lumineux qui déborde de la
+  silhouette. Mesuré sur une planche livrée : une bande rose de 15 à
+  30 px de couleur (134, 58, 116) tout autour du sujet — du magenta
+  délavé, que rien ne sait retirer puisqu'on ignore la couleur qui était
+  dessous. Le bord doit être FRANC.
+- Le fond magenta ne teinte RIEN. Aucun reflet rose ou violet sur la
+  peau, les cheveux, les vêtements ou les contours : l'éclairage du
+  personnage est neutre.
+- Style : bande dessinée aux couleurs franches, contours nets, éclairage
+  neutre et identique pour toutes les poses.
+- Personnage vu de TROIS QUARTS, tourné vers la DROITE, corps entier,
+  de la tête aux pieds.
