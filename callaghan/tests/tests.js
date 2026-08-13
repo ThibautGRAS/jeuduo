@@ -2081,6 +2081,56 @@ if (D){
     return s;
   };
 
+  verifier("les planches d'origine sont GARDÉES",
+    (() => {
+      /* Elles ne l'étaient pas. Trois redécoupages ont eu lieu — barmans,
+         Jubilar, BruHell — et à chaque fois l'original n'existait que
+         dans la conversation. Une conversation se ferme.
+         Le coût est mesuré : 147 Ko en WebP contre 1,9 Mo en PNG. */
+      const d = path.join(RACINE, "planches");
+      if (!fs.existsSync(d)) return false;
+      let n = 0, o = 0;
+      for (const sous of fs.readdirSync(d)){
+        const ds = path.join(d, sous);
+        if (!fs.statSync(ds).isDirectory()) continue;
+        for (const f of fs.readdirSync(ds))
+          if (f.endsWith(".webp")){ n++; o += fs.statSync(path.join(ds, f)).size; }
+      }
+      messageDetail = n + " planches, " + (o / 1024 / 1024).toFixed(1) + " Mo";
+      return n >= 20 && fs.existsSync(path.join(d, "LISEZMOI.md"));
+    })());
+
+  verifier("archiver une planche N'ÉCRASE JAMAIS l'ancienne",
+    (() => {
+      /* Une nouvelle planche du même personnage n'est pas une correction :
+         c'est un autre dessin. Le t-shirt de BruHell a changé entre deux
+         planches ; écraser aurait effacé le seul document expliquant à
+         quoi ressemblaient les sprites alors en jeu. */
+      const s = fs.readFileSync(path.join(RACINE, "archiver.py"), "utf8");
+      return /NE JAMAIS ÉCRASER/.test(s) &&
+        /while cible\.exists\(\)/.test(s) &&
+        /empreinte\(cand\) == neuf/.test(s);
+    })());
+
+  verifier("l'index des planches est RÉÉCRIT, jamais tenu à la main",
+    (() => {
+      /* Une liste tenue à la main diverge de son dossier en trois
+         semaines. */
+      const s = fs.readFileSync(path.join(RACINE, "archiver.py"), "utf8");
+      const idx = fs.readFileSync(path.join(RACINE, "planches", "LISEZMOI.md"), "utf8");
+      const surDisque = [];
+      const d = path.join(RACINE, "planches");
+      for (const sous of fs.readdirSync(d)){
+        const ds = path.join(d, sous);
+        if (!fs.statSync(ds).isDirectory()) continue;
+        for (const f of fs.readdirSync(ds)) if (f.endsWith(".webp")) surDisque.push(f);
+      }
+      const absents = surDisque.filter(f => idx.indexOf("`" + f + "`") < 0);
+      messageDetail = absents.length ? absents.slice(0, 3).join(", ")
+                                     : surDisque.length + " planches indexées";
+      return /def ecrire_index/.test(s) && absents.length === 0;
+    })());
+
   verifier("CHAQUE niveau demande toutes les poses que le jeu consomme",
     (() => {
       /* Deux fois le même défaut, à deux niveaux différents : le prompt

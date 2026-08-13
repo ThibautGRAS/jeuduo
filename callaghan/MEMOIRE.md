@@ -1004,6 +1004,28 @@ au-dessus du seuil de fragment — était compté comme une pose de plus. Le
 contrôle de compte a refusé d'écrire, ce qui a évité la livraison. Une
 coupure se déclare donc avec sa plage de hauteur.
 
+#### « Garder ou jeter » se tranche au CHIFFRE, pas au principe
+
+Deux décisions opposées, prises à quelques jours d'écart, et toutes deux
+justes :
+
+- le WAV de 4,9 Mo qui a servi à découper cinq cris est SORTI du dépôt ;
+  on ne le relit jamais, et le découpage est reproductible par script.
+- les planches de sprites y sont ENTRÉES ; on les relit souvent — trois
+  redécoupages déjà — et elles pèsent 147 Ko en WebP contre 1,9 Mo en
+  PNG.
+
+La règle n'est ni « tout garder » ni « rien garder » : **garder ce qu'on
+relit, quand c'est petit.** Et les deux termes se mesurent — combien de
+fois a-t-on eu besoin de ce fichier, et combien pèse-t-il une fois
+converti.
+
+Corollaire sur l'écrasement : une nouvelle planche du même personnage
+n'est pas une correction de l'ancienne, c'est un autre dessin. Le t-shirt
+de BruHell a changé entre deux planches ; écraser aurait effacé le seul
+document expliquant à quoi ressemblaient les sprites alors en jeu.
+L'archivage refuse donc d'écraser et range en `-v2`.
+
 #### Un fichier source lourd n'a rien à faire dans un dépôt servi
 
 4,9 Mo de WAV pour cinq fichiers de 8 Ko que le jeu charge. GitHub Pages

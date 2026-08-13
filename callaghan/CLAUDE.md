@@ -78,11 +78,30 @@ convertit d'abord `img/**/*.webp` vers un dossier temporaire.
 | `ranger_memoire.py` | range `MEMOIRE.md` par thèmes |
 | `planches.py prompt` | assemble un prompt de planche depuis le catalogue |
 | `planches.py verifier` | contrôle une planche livrée AVANT découpage |
+| `archiver.py` | range une planche reçue, sans jamais écraser |
 | `tests/apercu.js` | rend toutes les scènes du jeu, sans navigateur |
 
 Tous écrivent de façon **atomique** — dans un `.tmp` puis remplacent. Ne
 jamais les interrompre : deux sprites ont été corrompus par un `timeout`
 avant que l'écriture atomique soit posée.
+
+## Une planche reçue s'ARCHIVE avant d'être découpée
+
+```bash
+python3 callaghan/archiver.py planche.png n3 bar_th
+```
+
+Elles ne l'étaient pas, et trois redécoupages ont eu lieu en dépendant de
+la conversation pour retrouver l'original. Le coût est faible et mesuré :
+147 Ko en WebP contre 1,9 Mo en PNG.
+
+**Jamais d'écrasement.** Une nouvelle planche du même personnage est un
+autre dessin, pas une correction : elle est rangée en `-v2`. Une planche
+identique déjà présente est simplement ignorée.
+
+C'est l'inverse du cas des sons, où un WAV de 4,9 Mo servant une fois a
+été exclu du dépôt. La règle n'est pas « tout garder » ni « rien
+garder » : **garder ce qu'on relit, quand c'est petit.**
 
 ## Les sources lourdes restent dehors
 
