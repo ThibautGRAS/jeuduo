@@ -5534,6 +5534,24 @@ if (D){
       return new Set(ids).size === ids.length;
     })());
 
+  verifier("la taille de la foule SUIT la ligne du comptoir",
+    (() => {
+      /* La hauteur de la foule est une donnée DÉRIVÉE : sa tête doit
+         rester sous le comptoir, sinon elle masque les verres. Quand le
+         décor a changé et que le comptoir est passé de 0,555 à 0,585,
+         la valeur d'avant est devenue fausse en silence.
+         Le test la recalcule au lieu de la recopier. */
+      const s = fs.readFileSync(
+        path.join(RACINE, "parts", "k_foule.js"), "utf8");
+      const pieds = parseFloat((s.match(/FOULE_PIEDS = ([\d.]+)/) || [0, 0])[1]);
+      const taille = parseFloat((s.match(/FOULE_TAILLE = ([\d.]+)/) || [0, 0])[1]);
+      const tete = pieds - taille;
+      messageDetail = "tête à " + tete.toFixed(3) + ", comptoir à " + D.BAR_COMPTOIR;
+      /* et elle ne doit pas être trop basse non plus, sinon on ne voit
+         plus que des bustes — c'était le défaut d'origine */
+      return tete > D.BAR_COMPTOIR && tete < D.BAR_COMPTOIR + 0.10;
+    })());
+
   verifier("les tabourets passent DEVANT les héros et la foule",
     (() => {
       /* Ceux du décor sont peints dans `fond_bar.webp` : impossible de
@@ -5572,7 +5590,10 @@ if (D){
          quel que soit le facteur ajusté. Ancré sur l'arête arrière, la
          part visible est la même pour les deux par construction. */
       return sans.length === 0 &&
-        lignes.every(y => y > 0.3 && y < 0.55) &&
+        /* borne large : ces valeurs se REMESURENT à chaque nouveau fond,
+           et elles ont déjà bougé de 0,501/0,456 à 0,534/0,570. Le test
+           vérifie qu'elles existent et diffèrent, pas leur valeur. */
+        lignes.every(y => y > 0.3 && y < 0.70) &&
         new Set(lignes).size === lignes.length &&
         /dessinerMasqueComptoir/.test(source) &&
         /b\.ref\.arriere \|\| b\.ref\.comptoir/.test(source);

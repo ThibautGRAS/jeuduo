@@ -2235,6 +2235,26 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Un décor « juste retouché » est un décor NEUF
+
+Thibaut a fourni le fond du bar sans les tabourets. J'ai failli n'y voir
+qu'une soustraction — or c'est un rendu entier : mesuré, l'écart moyen
+avec l'ancien est de 14 à 30 niveaux sur TOUTES les bandes de l'image, pas
+seulement en bas. Les arêtes du comptoir ont bougé de quinze millièmes.
+
+Tout ce qui avait été mesuré sur l'ancien fond était donc faux : les deux
+arêtes de chaque barman, la ligne moyenne, et par ricochet la taille de la
+foule, qui s'en déduit.
+
+**Une image refaite invalide toutes les mesures prises sur elle, même
+quand le changement annoncé est local.** Le réflexe est de comparer les
+deux images avant de supposer, ce qui prend dix secondes.
+
+Corollaire, et c'est le plus traître : la hauteur de la foule est une
+donnée DÉRIVÉE du comptoir. Elle est devenue fausse sans que rien ne
+bouge dans son propre fichier. Un test la recalcule désormais depuis la
+ligne du comptoir au lieu de la recopier.
+
 #### Un seuil de couleur se règle sur le CAS LE PLUS PROCHE du fond
 
 Le fond magenta se reconnaissait à `r > g + 40 && b > g + 120`… non : à

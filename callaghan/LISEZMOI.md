@@ -573,6 +573,31 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**Décor du bar sans tabourets peints** (v7.13). C'était ça, le défaut :
+avec l'ancien fond, on avait les tabourets PEINTS **et** les sprites —
+deux rangées à des échelles et des perspectives différentes. Le fond
+fourni par Thibaut n'en a plus, il ne reste que la rangée du premier plan.
+
+**Tout a dû être remesuré**, parce que c'est un rendu ENTIER et pas
+seulement les tabourets retirés : les arêtes du comptoir ont bougé de
+quelques millièmes partout. Arête avant 0,553 et 0,625, arête arrière
+0,534 et 0,570.
+
+**Et le gradient de luminance ne suffisait plus** : les tireuses à bière
+créent leur propre arête, la mesure sortait 0,300 en plein milieu du
+comptoir. On repère désormais le plateau à sa COULEUR — bois chaud et
+clair, le rouge dominant le bleu.
+
+**Une donnée dérivée est devenue fausse en silence** : la hauteur de la
+foule se calcule depuis la ligne du comptoir, qui a monté de 0,555 à
+0,585. Sa tête est repassée AU-DESSUS, donc elle masquait les verres. Un
+test la recalcule maintenant au lieu de la recopier.
+
+**Le comptoir détouré n'est pas utilisé**, et c'est mesuré : superposé au
+fond, sa perspective ne correspond pas — on obtient deux comptoirs
+décalés. Le masque tiré du fond lui-même reste exact par construction. Il
+est archivé si un jour le décor est refait autour de lui.
+
 **Le champion passe entre le comptoir et les tabourets** (v7.12).
 Quatre tabourets détourés, dessinés en DERNIER — après les héros et après
 la foule.

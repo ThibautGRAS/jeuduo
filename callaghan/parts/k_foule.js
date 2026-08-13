@@ -61,7 +61,12 @@ const FOULE_PLACES = [
    dix pour cent de lui, pieds légèrement hors cadre. C'est ce qu'on
    voulait, et c'est le maximum possible sans manger les verres. */
 const FOULE_PIEDS = 1.06;
-const FOULE_TAILLE = 0.50;
+/* RECALCULÉE quand le comptoir est passé de 0,555 à 0,585 sur le fond
+   neuf : tête = 1,06 − 0,50 = 0,56, donc AU-DESSUS du comptoir, donc les
+   verres masqués. À 0,46 la tête est à 0,60, juste dessous.
+   C'est une donnée DÉRIVÉE du comptoir : elle doit être refaite chaque
+   fois que le décor change. */
+const FOULE_TAILLE = 0.46;
 const FOULE_ECART = 0.030;         /* écart entre deux voisins, EN MONDE */
 /* DEUX PAR GRAPPE, PAS TROIS. Il n'y a que dix personnages pour quatre
    grappes : à trois, la foule les prenait TOUS et plus aucun client ne
