@@ -283,6 +283,31 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**La mémoire du projet devient un document de relecture** (v6.89).
+
+Les **137 pièges** y étaient empilés dans l'ordre où ils sont arrivés :
+le bon ordre pour les écrire, le mauvais pour les lire. Personne ne relit
+137 entrées avant de coder, et on ne pouvait pas consulter « ce que je
+dois savoir sur les images » puisque c'était éparpillé sur mille lignes.
+
+Ils sont désormais rangés en **onze chapitres thématiques**, chacun avec
+un chapeau de trois lignes qui dit l'essentiel — mesures, chaîne
+d'images, interface, écrans, boucle, contenu, son, équilibrage, tests,
+décor, structure. Aucune leçon n'a été perdue : 137 avant, 137 après,
+vérifié titre par titre.
+
+S'y ajoutent **trois parcours de lecture** — je reprends après une pause,
+je m'apprête à faire quelque chose de précis, je démarre un nouveau jeu —
+avec un tableau qui renvoie chaque tâche à son chapitre.
+
+Et une section **« ce qu'on emporterait dans un autre jeu »** : les deux
+règles en dur, le harnais d'aperçu, l'édition par remplacement compté,
+les tables qui récitent l'inachevé, le repli systématique, et la
+discipline du chiffre. Rien de tout cela ne dépend de ce projet.
+
+Deux tests gardent la structure : un chapitre qui disparaîtrait
+emporterait ses leçons sans que personne s'en aperçoive.
+
 **Les écrans d'attente annoncent le niveau** (v6.88) : « CHARGEMENT » ne
 disait rien, et l'écran de rotation parlait de « la file du D'Tour » quel
 que soit le niveau demandé — faux depuis qu'il y en a quatre, et

@@ -2849,6 +2849,34 @@ if (D){
   verifier("un écran carré ne convient à personne",
     !D.ecranOk(500, 500, 1) && !D.ecranOk(500, 500, 4),
     "la tolérance de 2 % évite de basculer sans arrêt près du carré");
+  verifier("la mémoire du projet reste consultable",
+    (() => {
+      /* Un document de relecture ne vaut que s'il est RANGÉ : cent
+         trente-sept pièges empilés dans l'ordre d'arrivée ne se
+         consultent pas, ils se subissent. Ce test garde la structure —
+         un chapitre qui disparaîtrait emporterait ses leçons sans que
+         personne s'en aperçoive. */
+      const m = fs.readFileSync(path.join(RACINE, "MEMOIRE.md"), "utf8");
+      const chapitres = (m.match(/^### 3\.\d+ — /gm) || []).length;
+      const pieges = (m.match(/^#### /gm) || []).length;
+      messageDetail = chapitres + " chapitres, " + pieges + " pièges";
+      return chapitres >= 10 && pieges >= 130 &&
+        /^## Comment lire ce document$/m.test(m) &&
+        /^## 0\. Retour d'expérience/m.test(m) &&
+        /je fais\.\.\. \| je lis/.test(m);
+    })());
+
+  verifier("les deux règles en dur sont en tête de la mémoire",
+    (() => {
+      /* Ce sont les seules qu'on lit à chaque reprise. Enfouies, elles ne
+         serviraient à rien. */
+      const m = fs.readFileSync(path.join(RACINE, "MEMOIRE.md"), "utf8");
+      const i = m.indexOf("### RÈGLE EN DUR — aucune image pendant un changement d'écran");
+      const j = m.indexOf("### RÈGLE EN DUR — regarder le rendu avant de pousser");
+      const k = m.indexOf("## Comment lire ce document");
+      return i > 0 && j > 0 && i < k && j < k;
+    })());
+
   verifier("le panneau de pivot porte le NOM DU NIVEAU",
     (() => {
       /* Il parlait de « la file du D'Tour » quel que soit le niveau
