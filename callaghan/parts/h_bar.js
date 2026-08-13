@@ -748,7 +748,20 @@ const Tournee = {
     this.prochainClient -= dt;
     if (this.prochainClient <= 0 && this.clients.length < 2){
       this.prochainClient = hasard(10, 20) / (this.coupDeFeu ? 1.8 : 1);
-      const ref = BAR_CLIENTS[Math.floor(Math.random() * BAR_CLIENTS.length)];
+      /* PAS DEUX FOIS LE MÊME VISAGE À L'ÉCRAN. Le client de passage
+         piochait dans BAR_CLIENTS sans regarder qui peuple déjà les
+         grappes du premier plan : on pouvait voir Gabi traverser pendant
+         qu'une autre Gabi buvait en bas de l'écran.
+         On écarte donc ceux qui sont déjà pris — par une grappe ou par
+         l'autre client. Si tout le monde est pris, on ne fait entrer
+         personne : une salle sans nouveau venu vaut mieux qu'un
+         dédoublement. */
+      const pris = new Set();
+      for (const m of (this.foule || [])) if (m.ref) pris.add(m.ref.id);
+      for (const c of this.clients) if (c.ref) pris.add(c.ref.id);
+      const dispo = BAR_CLIENTS.filter(c => !pris.has(c.id));
+      if (!dispo.length) return;
+      const ref = dispo[Math.floor(Math.random() * dispo.length)];
       const parGauche = Math.random() < 0.5;
       this.clients.push({
         ref, x:parGauche ? -0.05 : 1.05, dir:parGauche ? 1 : -1,

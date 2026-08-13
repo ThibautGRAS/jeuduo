@@ -45,10 +45,30 @@ const FOULE_PLACES = [
    circuler derrière eux, pas s'évanouir. À 1,52 on ne voit que les
    épaules et la tête, tout en bas : ils lui masquent les jambes et
    laissent le haut du corps lisible. */
-const FOULE_PIEDS = 1.52;
-const FOULE_TAILLE = 0.78;         /* fraction de la hauteur d'écran */
+/* DES PERSONNAGES ENTIERS, PAS DES BUSTES. Les pieds étaient à 1,52 —
+   très loin sous l'écran — donc on ne voyait que les épaules et la tête.
+   Ils passent à 1,06 : les pieds dépassent à peine du cadre, et on voit
+   enfin qui ils sont.
+   La TAILLE baisse en conséquence, sinon un personnage entier à 0,78 de
+   la hauteur d'écran masquerait le champion au lieu de lui laisser le
+   passage. C'est le compromis d'origine, mais résolu dans l'autre sens :
+   on rapetisse au lieu de couper. */
+/* LA TÊTE DOIT RESTER SOUS LE COMPTOIR, à 0,555 : au-dessus, la foule
+   masque les verres, qui sont l'enjeu du niveau. C'est la contrainte qui
+   commande, et elle se calcule — tête = pieds - taille, donc
+   1,06 - 0,50 = 0,56, juste dessous.
+   On voit alors 0,555 à 1,0 d'un personnage haut de 0,50 : quatre-vingt-
+   dix pour cent de lui, pieds légèrement hors cadre. C'est ce qu'on
+   voulait, et c'est le maximum possible sans manger les verres. */
+const FOULE_PIEDS = 1.06;
+const FOULE_TAILLE = 0.50;
 const FOULE_ECART = 0.030;         /* écart entre deux voisins, EN MONDE */
-const FOULE_PAR_GRAPPE = 3;        /* au plus, sinon ils se recouvrent */
+/* DEUX PAR GRAPPE, PAS TROIS. Il n'y a que dix personnages pour quatre
+   grappes : à trois, la foule les prenait TOUS et plus aucun client ne
+   pouvait entrer depuis qu'on interdit les doublons. À deux, il en reste
+   deux de libres — exactement le nombre de clients simultanés autorisés.
+   Et des personnages entiers tiennent moins bien à trois de front. */
+const FOULE_PAR_GRAPPE = 2;
 
 const FOULE_REPLIQUE = [7.0, 13.0];   /* délai entre deux répliques      */
 const FOULE_REPL_DUREE = 3.2;         /* elle vit assez pour être lue    */

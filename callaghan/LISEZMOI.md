@@ -573,6 +573,30 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**La foule du bar montre enfin de VRAIS gens** (v7.09). Leurs pieds
+étaient à 1,52 — très loin sous l'écran — donc on ne voyait que les épaules
+et la tête. À 1,06, les pieds dépassent à peine du cadre.
+
+**La contrainte qui commande est le comptoir, à 0,555** : au-dessus, la
+foule masque les verres, qui sont l'enjeu du niveau. La taille se calcule
+donc — tête = pieds moins taille, soit 1,06 − 0,50 = 0,56, juste dessous.
+On voit ainsi quatre-vingt-dix pour cent de chaque personnage, ce qui est
+le maximum possible sans manger les verres.
+
+**Plus jamais deux fois le même visage.** Le client de passage piochait
+sans regarder qui peuple les grappes : on pouvait voir Gabi traverser
+pendant qu'une autre Gabi buvait en bas de l'écran.
+
+Corollaire mesuré : il n'y a que **dix personnages pour douze places** de
+foule. À trois par grappe, la foule les prenait tous et plus aucun client
+ne pouvait entrer. Deux par grappe en laissent deux libres — exactement le
+nombre de clients simultanés autorisés.
+
+**Les tabourets ne sont pas faits**, et c'est écrit : eux et le comptoir
+sont peints dans une seule image de fond. J'ai essayé d'en extraire un —
+l'assise sort proprement, les pieds fins se confondent avec le sol sombre
+et disparaissent. Le prompt est dans `PROMPTS.md`.
+
 **La flamme de PF part enfin du bout du fusil** (v7.08). Les onze
 positions de bouche de canon sont REMESURÉES sur les nouveaux sprites :
 les anciennes valeurs venaient de la planche précédente, et pour la pose

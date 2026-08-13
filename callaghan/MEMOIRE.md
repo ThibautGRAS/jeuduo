@@ -3242,6 +3242,13 @@ d'enquête, resté quarante versions sans que personne y revienne.
   la référence et le jeu ne concordent pas — c'est voulu et transitoire,
   mais toute planche générée d'ici là sera en noir et ne se raccordera
   pas aux sprites existants.
+- **Les tabourets au PREMIER PLAN.** Thibaut veut que le champion passe
+  ENTRE le comptoir et les tabourets. Impossible en l'état : les deux sont
+  peints dans `fond_bar.webp`, une seule image. J'ai essayé d'extraire un
+  tabouret — l'assise sort proprement, les pieds fins se confondent avec
+  le sol sombre et disparaissent. Le prompt est écrit dans `PROMPTS.md` ;
+  il restera à dessiner les sprites après les héros, sur une ligne de sol
+  plus basse.
 - **La pose `serie` de Jojo** montre une passoire au lieu de la série de
   shots prête. La bonne pose est dans la rangée chorégraphiée de sa
   planche, mais celle-ci a un comptoir et un cadre blanc qui gênent la

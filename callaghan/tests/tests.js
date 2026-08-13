@@ -5525,6 +5525,40 @@ if (D){
       return new Set(ids).size === ids.length;
     })());
 
+  verifier("jamais DEUX FOIS le même visage à l'écran",
+    (() => {
+      /* Le client de passage piochait dans BAR_CLIENTS sans regarder qui
+         peuple les grappes : on pouvait voir Gabi traverser pendant qu'une
+         autre Gabi buvait en bas de l'écran. */
+      D.Jeu.demarrer(3); D.Tournee.introT = 0; D.Tournee.lancer();
+      D.Tournee.introT = 0; D.Camera.mesurer(844, 390, 1);
+      let pire = 0;
+      for (let i = 0; i < 6000; i++){
+        D.Jeu.pas(1 / 60);
+        const vus = {};
+        for (const m of D.Tournee.foule) if (m.ref) vus[m.ref.id] = (vus[m.ref.id] || 0) + 1;
+        for (const c of D.Tournee.clients) if (c.ref) vus[c.ref.id] = (vus[c.ref.id] || 0) + 1;
+        for (const k in vus) if (vus[k] > pire) pire = vus[k];
+      }
+      messageDetail = "au pire " + pire + " exemplaire(s) du même personnage";
+      return pire === 1;
+    })());
+
+  verifier("il reste des personnages LIBRES pour entrer",
+    (() => {
+      /* Corollaire de l'interdiction des doublons : s'il n'y a que dix
+         personnages et que la foule en prend douze, plus aucun client ne
+         peut entrer. Mesuré, c'est ce qui arrivait à trois par grappe. */
+      const s = fs.readFileSync(
+        path.join(RACINE, "parts", "k_foule.js"), "utf8");
+      const parGrappe = parseInt(
+        (s.match(/FOULE_PAR_GRAPPE = (\d+)/) || [0, 3])[1], 10);
+      const places = D.FOULE_PLACES.length * parGrappe;
+      const total = D.BAR_CLIENTS.length;
+      messageDetail = total + " personnages, " + places + " places de foule";
+      return total - places >= 2;
+    })());
+
   verifier("la foule est SOUS le comptoir, elle ne masque aucun verre",
     (() => {
       /* La réponse à la seule question qui décidait de tout : s'ils

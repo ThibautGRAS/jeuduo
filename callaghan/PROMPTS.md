@@ -585,3 +585,39 @@ personnage saute d'une image à l'autre :
 > existantes — c'est-à-dire l'autre jambe devant — tout en gardant le
 > personnage tourné vers la DROITE. Ne pas retourner l'image : un
 > personnage retourné regarderait à gauche.
+
+
+## Les tabourets du premier plan — `bar_tabouret.webp`
+
+**Pourquoi il faut un sprite.** Le comptoir ET les tabourets sont peints
+dans `fond_bar.webp`, une seule image. Pour que le champion passe ENTRE le
+bar et les tabourets, il faut que les tabourets soient dessinés APRÈS lui —
+donc en sprite séparé.
+
+J'ai essayé de les extraire du fond : l'assise sort proprement, mais les
+pieds fins se confondent avec le sol sombre et disparaissent. Inutilisable.
+
+```
+Un tabouret de bar en métal, vu de trois quarts, sur fond MAGENTA PUR
+(#FF00FF) uni.
+
+Assise carrée en métal peint, coins arrondis, avec une petite ouverture
+carrée au centre du plateau. Quatre pieds droits en tube métallique
+légèrement évasés vers le bas, avec une barre de renfort basse entre les
+pieds. Métal peint mat, usé aux arêtes, style bistrot industriel.
+
+Le tabouret entier tient dans l'image, pieds compris, avec au moins
+40 pixels de fond magenta vide autour.
+
+Style : bande dessinée, trait net, palette et éclairage d'un bar en
+soirée — lumière chaude venant du haut, ombres franches. Aucun sol, aucun
+décor, aucune ombre portée : rien que le tabouret sur le magenta.
+
+Quatre tabourets IDENTIQUES en forme, dans QUATRE couleurs différentes,
+côte à côte sur une seule rangée, séparés par au moins 80 pixels de
+magenta : vert olive, violet, bleu-vert, orange rouille. Ce sont les
+couleurs de ceux déjà peints dans le décor.
+```
+
+**Ensuite** : quatre sprites `bar_tabouret1..4`, dessinés après les héros,
+à une ligne de sol plus basse que la leur pour être au premier plan.
