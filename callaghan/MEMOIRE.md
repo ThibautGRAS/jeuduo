@@ -2235,6 +2235,39 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Relever l'affectation sur l'IMAGE, pas la déduire du prompt
+
+Le prompt du bar demandait quatre phases de marche et trois de course. La
+planche livrée en donnait trois et quatre. J'ai commencé à mesurer
+l'alternance des jambes en supposant l'ordre du prompt — et j'ai obtenu
+des chiffres absurdes, 9,6 % là où j'attendais une opposition franche.
+
+C'est en regardant la rangée que j'ai vu quatre courses là où j'en
+attendais trois. Le générateur n'avait pas désobéi : il avait réparti
+autrement, et mieux — le cycle de course complet était justement ce qui
+manquait depuis le début.
+
+**Avant de mesurer une planche, vérifier ce qu'elle contient, pas ce
+qu'on avait demandé.** Une mesure faite sur une mauvaise hypothèse
+d'affectation ne dit rien, et elle a l'air de dire quelque chose.
+
+#### Deux planches d'un même personnage peuvent avoir DEUX échelles
+
+Mesuré sur les deux planches du bar : hauteurs médianes de 450 et 381
+pixels, soit 18 % d'écart. Les caler sur le même sprite de référence
+aurait donné un personnage 18 % plus grand sur l'une que sur l'autre — le
+défaut le plus visible en jeu, un héros qui change de taille selon qu'il
+marche ou qu'il boit.
+
+Chaque planche se cale donc sur un témoin QU'ELLE CONTIENT, en choisissant
+deux poses comparables — `idle` pour l'une, `tient` pour l'autre, deux
+poses debout. Les échelles obtenues, 0,84 et 0,90, sont assez proches pour
+que l'écart ne se voie pas.
+
+Corollaire : le témoin était figé sur la première pose de la première
+rangée. Or une planche peut commencer par une pose redondante qu'on ne
+découpe pas. Il se choisit désormais.
+
 #### Décrire ce qui SE VOIT, pas ce qui est vrai
 
 Je décrivais les phases de passage d'une marche par « poids sur la jambe

@@ -434,7 +434,10 @@ SCENES = {
       ("marche1", ("marche", 1)),
       ("marche2", ("marche", 2)),
       ("marche3", ("marche", 3)),
-      ("marche4", ("marche", 4)),
+      # `marche4` A ÉTÉ RETIRÉE. La planche livrée donnait trois phases de
+      # marche et quatre de course, là où ce prompt demandait l'inverse —
+      # et c'est mieux : le cycle de course complet est ce qui manquait
+      # depuis le début. Une marche à trois temps se lit très bien.
       ("course1", ("course", 1)),
       ("course2", ("course", 2)),
       # course3 et course4 N'EXISTENT PAS ENCORE en jeu : ce sont les deux

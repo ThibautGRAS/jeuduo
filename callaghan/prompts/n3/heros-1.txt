@@ -30,10 +30,10 @@ LES POSES, de gauche à droite :
 2. [marche1] CONTACT : la jambe la plus PROCHE du spectateur est tendue vers l'avant, son talon touche le sol ; l'autre jambe part loin en arrière, talon décollé. On voit clairement DEUX jambes écartées
 3. [marche2] PASSAGE : les jambes se croisent sous le corps et la jambe la plus PROCHE du spectateur passe DEVANT l'autre, en masquant presque entièrement la jambe du fond. Genou proche légèrement plié et remonté
 4. [marche3] CONTACT INVERSE : c'est maintenant la jambe du FOND qui est tendue vers l'avant, talon au sol, et la jambe proche qui part en arrière. Exactement l'inverse de la première pose
-5. [marche4] PASSAGE INVERSE : les jambes se croisent, mais c'est la jambe du FOND qui passe devant et masque la jambe proche. Cette pose doit être VISIBLEMENT différente du second passage : si on superposait les deux, les jambes ne coïncideraient pas
-6. [course1] APPUI : la jambe la plus PROCHE du spectateur est lancée loin devant, genou haut ; l'autre jambe est tendue loin en arrière. Bras opposés, coudes pliés
-7. [course2] SUSPENSION : les DEUX pieds sont décollés du sol, la jambe proche se replie sous le corps et passe DEVANT l'autre, buste penché en avant
-8. [course3] APPUI INVERSE : c'est la jambe du FOND qui est lancée loin devant, genou haut, et la jambe proche qui part en arrière. Exactement l'inverse de la première pose
+5. [course1] APPUI : la jambe la plus PROCHE du spectateur est lancée loin devant, genou haut ; l'autre jambe est tendue loin en arrière. Bras opposés, coudes pliés
+6. [course2] SUSPENSION : les DEUX pieds sont décollés du sol, la jambe proche se replie sous le corps et passe DEVANT l'autre, buste penché en avant
+7. [course3] APPUI INVERSE : c'est la jambe du FOND qui est lancée loin devant, genou haut, et la jambe proche qui part en arrière. Exactement l'inverse de la première pose
+8. [course4] SUSPENSION INVERSE : les deux pieds décollés, mais c'est la jambe du FOND qui se replie devant. Cette pose doit être VISIBLEMENT différente de la seconde : si on superposait les deux, les jambes ne coïncideraient pas
 
 
 AVERTISSEMENT SUR LES CYCLES DE MARCHE ET DE COURSE.

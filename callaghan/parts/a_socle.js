@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.01";
+const VERSION = "7.02";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -895,8 +895,14 @@ const IMAGES_NIVEAU2 = [
    n'a la jambe opposée en avant — la foulée ne peut donc pas alterner,
    quelle que soit la cadence. Le compte de phases est déduit des images
    présentes : déposer les deux fichiers suffit. Prompt dans PROMPTS.md. */
-const POSES_BAR = ["idle", "marche1", "marche2", "marche3", "marche4",
-                   "course1", "course2", "frein",
+/* LA MARCHE PASSE À TROIS PHASES, LA COURSE À QUATRE. La planche livrée
+   donnait trois marches et quatre courses, là où le prompt demandait
+   l'inverse — et c'est mieux : le cycle de course complet, avec la jambe
+   opposée, est justement ce qui manquait depuis le début.
+   Le nombre de phases est déduit de cette liste, donc l'animation suit
+   sans qu'on touche au code. */
+const POSES_BAR = ["idle", "marche1", "marche2", "marche3",
+                   "course1", "course2", "course3", "course4", "frein",
                    "attrape", "tient", "boit", "vide", "jette", "titube"];
 const PREFIXES_BAR = ["bar_th", "bar_pf"];
 

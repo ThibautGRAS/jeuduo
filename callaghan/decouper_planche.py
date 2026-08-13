@@ -187,7 +187,16 @@ def main(cfg):
     haut_ref = int(ys.max() - ys.min() + 1)
 
     # le témoin est la première pose de la première rangée
-    tx0, ty0, tx1, ty1, _ = rgs[0][0]
+    # LE TÉMOIN SE CHOISIT. Il était figé sur la première pose de la
+    # première rangée — or la seconde planche du bar commence par une pose
+    # REDONDANTE qu'on ne découpe pas, et prendre `frein` comme témoin
+    # donnait une échelle de 0,97 contre 0,84 pour la première planche :
+    # le même personnage changeait de taille selon la pose.
+    #
+    # Le témoin doit être le MÊME sprite pour toutes les planches d'un
+    # personnage. `temoin` dit lequel prendre, en rang dans la rangée.
+    it = int(cfg.get("temoin", 1)) - 1
+    tx0, ty0, tx1, ty1, _ = rgs[0][min(it, len(rgs[0]) - 1)]
     haut_temoin = ty1 - ty0
     ech = haut_ref / haut_temoin
     print(f"témoin : {haut_temoin} px sur la planche, {haut_ref} px sur {pathlib.Path(cfg['reference']).name}")

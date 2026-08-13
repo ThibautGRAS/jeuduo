@@ -2885,20 +2885,26 @@ if (D){
         const p2 = D.Tournee.pose();
         if (p2 !== avant){ change++; avant = p2; }
       }
-      const cycles = change / 2 / 3;                     /* deux poses par cycle */
+      /* LE NOMBRE DE PHASES EST LU, pas écrit. Il est passé de deux à
+         quatre le jour où la planche complète est arrivée, et ce test
+         est tombé pour une intention qui n'avait pas changé — comme
+         celui du maximum de poses, trois fois avant lui. */
+      const phases = D.POSES_BAR.filter(x => /^course\d$/.test(x)).length;
+      const cycles = change / phases / 3;
       messageDetail = cycles.toFixed(1) + " cycles/s";
       return cycles > 2.0 && cycles < 4.0;
     })());
 
-  verifier("deux poses de course, donc le RESTE doit bouger",
+  verifier("le sursaut et l'inclinaison accompagnent la foulée",
     (() => {
-      /* Un cycle à deux images ne suffit pas seul : le sursaut et
-         l'inclinaison portent ce que les images ne portent pas. Le
-         sursaut faisait 0,008 de hauteur — trois pixels, invisible — et
-         battait à une fréquence sans rapport avec la pose affichée. */
-      return /BAR_SAUT_COURSE = 0\.0[2-9]/.test(source) &&
-        /const phase = T\.foulee \* BAR_CADENCE_COURSE \* Math\.PI/.test(source) &&
-        /BAR_PENCHE_COURSE/.test(source);
+      /* Quand il n'y avait que DEUX poses de course, le sursaut et
+         l'inclinaison portaient seuls l'animation. Le cycle en a quatre
+         désormais, mais les garder reste juste : ils donnent le poids du
+         corps, que les jambes seules ne montrent pas. */
+      const s = source;
+      return /BAR_SAUT_COURSE = 0\.0[2-9]/.test(s) &&
+        /const phase = T\.foulee \* BAR_CADENCE_COURSE \* Math\.PI/.test(s) &&
+        /BAR_PENCHE_COURSE/.test(s);
     })());
 
   verifier("l'inclinaison pivote sur les PIEDS",

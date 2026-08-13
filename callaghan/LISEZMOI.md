@@ -573,6 +573,30 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**La foulée du bar est enfin un vrai cycle** (v7.02). Trente sprites
+découpés de quatre planches : la course a ses QUATRE phases, avec la jambe
+opposée. C'était le manque le plus ancien de ce niveau — mesuré,
+2,83 cycles par seconde sur un cycle complet.
+
+**La planche a donné trois marches et quatre courses**, là où le prompt
+demandait l'inverse. J'ai relevé l'affectation sur les images plutôt que de
+la déduire du prompt, et gardé celle-là : une marche à trois temps se lit
+très bien, tandis que le cycle de course complet est justement ce qui
+manquait. `marche4` est retirée.
+
+**Trois défauts d'outillage corrigés en découpant** :
+
+- **les deux planches d'un même personnage n'étaient pas à la même
+  échelle** : médianes de 450 et 381 px, soit 18 % d'écart. Les caler sur
+  le même sprite aurait donné un personnage 18 % plus grand sur l'une que
+  sur l'autre. Chacune est calée sur un témoin qu'elle CONTIENT.
+- **le témoin était figé sur la première pose**, or la seconde planche
+  commence par une pose redondante qu'on ne découpe pas. Il se choisit
+  désormais.
+- **deux tests comptaient les phases en dur** — deux poses de course. Ils
+  sont tombés le jour où il y en a eu quatre, pour une intention qui
+  n'avait pas changé. Ils lisent la liste maintenant.
+
 **« Gauche » et « droite » ne se voient pas de profil** (v7.01).
 
 La planche de déplacement de PF alternait mieux que je ne le croyais —
