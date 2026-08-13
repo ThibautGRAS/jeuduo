@@ -82,32 +82,52 @@ MOUVEMENTS = {
         "phases": ["debout, poids sur les deux pieds, bras le long du corps, "
                    "regard vers l'avant"],
     },
+    # « GAUCHE » ET « DROITE » NE SE VOIENT PAS DE PROFIL. Mesuré sur une
+    # planche livrée : les deux phases de PASSAGE ne différaient que de
+    # 7,7 % — je les distinguais par le « poids sur la droite » contre
+    # « poids sur la gauche », ce qui est invisible sur une silhouette. Les
+    # phases de contact, elles, alternaient bien (27 %) parce que la jambe
+    # tendue devant, ça se voit.
+    #
+    # On décrit donc ce qui SE VOIT : quelle jambe passe DEVANT l'autre à
+    # l'écran, et quel pied est en avant dans le sens de la marche.
     "marche": {
         "titre": "marche",
         "cycle": True,
         "phases": [
-            "jambe DROITE tendue devant, talon droit au sol, jambe gauche "
-            "en arrière ; bras gauche en avant",
-            "les deux jambes se croisent sous le corps, poids sur la droite ; "
-            "bras presque le long du corps",
-            "jambe GAUCHE tendue devant, talon gauche au sol, jambe droite "
-            "en arrière ; bras droit en avant",
-            "les deux jambes se croisent sous le corps, poids sur la gauche ; "
-            "bras presque le long du corps",
+            "CONTACT : la jambe la plus PROCHE du spectateur est tendue vers "
+            "l'avant, son talon touche le sol ; l'autre jambe part loin en "
+            "arrière, talon décollé. On voit clairement DEUX jambes écartées",
+            "PASSAGE : les jambes se croisent sous le corps et la jambe la "
+            "plus PROCHE du spectateur passe DEVANT l'autre, en masquant "
+            "presque entièrement la jambe du fond. Genou proche légèrement "
+            "plié et remonté",
+            "CONTACT INVERSE : c'est maintenant la jambe du FOND qui est "
+            "tendue vers l'avant, talon au sol, et la jambe proche qui part "
+            "en arrière. Exactement l'inverse de la première pose",
+            "PASSAGE INVERSE : les jambes se croisent, mais c'est la jambe "
+            "du FOND qui passe devant et masque la jambe proche. Cette pose "
+            "doit être VISIBLEMENT différente du second passage : si on "
+            "superposait les deux, les jambes ne coïncideraient pas",
         ],
     },
     "course": {
         "titre": "course",
         "cycle": True,
         "phases": [
-            "jambe DROITE lancée loin devant, genou haut, jambe gauche "
-            "tendue en arrière ; bras gauche en avant, coudes pliés",
-            "suspension : les DEUX pieds décollés, jambes en train de se "
-            "croiser sous le corps, buste penché en avant",
-            "jambe GAUCHE lancée loin devant, genou haut, jambe droite "
-            "tendue en arrière ; bras droit en avant, coudes pliés",
-            "suspension inverse : les DEUX pieds décollés, jambes croisées, "
-            "buste penché en avant",
+            "APPUI : la jambe la plus PROCHE du spectateur est lancée loin "
+            "devant, genou haut ; l'autre jambe est tendue loin en arrière. "
+            "Bras opposés, coudes pliés",
+            "SUSPENSION : les DEUX pieds sont décollés du sol, la jambe "
+            "proche se replie sous le corps et passe DEVANT l'autre, buste "
+            "penché en avant",
+            "APPUI INVERSE : c'est la jambe du FOND qui est lancée loin "
+            "devant, genou haut, et la jambe proche qui part en arrière. "
+            "Exactement l'inverse de la première pose",
+            "SUSPENSION INVERSE : les deux pieds décollés, mais c'est la "
+            "jambe du FOND qui se replie devant. Cette pose doit être "
+            "VISIBLEMENT différente de la seconde : si on superposait les "
+            "deux, les jambes ne coïncideraient pas",
         ],
     },
     "saut": {
@@ -372,10 +392,8 @@ SCENES = {
     # SCINDÉES en deux, avec la même référence jointe aux deux.
     "poses": [
       ("idle", "debout, en alerte, le regard qui balaie la pièce"),
-      ("marche1", "jambe DROITE tendue devant, talon au sol, jambe gauche "
-                  "en arrière ; bras gauche en avant"),
-      ("marche2", "jambe GAUCHE tendue devant, talon au sol, jambe droite "
-                  "en arrière ; bras droit en avant"),
+      ("marche1", ("marche", 1)),
+      ("marche2", ("marche", 3)),   # phase 3 : le CONTACT inverse
       ("fouille", "accroupi, une main tendue vers la DROITE à hauteur de "
                   "hanche, doigts refermés comme sur une poignée de tiroir "
                   "qu'on NE VOIT PAS, l'autre en appui sur le genou. Aucun "
@@ -413,26 +431,18 @@ SCENES = {
     # comme un geste continu, donc les quatre poses doivent s'enchaîner.
     "poses": [
       ("idle", "debout, détendu, les mains vides le long du corps"),
-      ("marche1", "jambe DROITE tendue devant, talon au sol, jambe gauche "
-                  "en arrière ; bras gauche en avant"),
-      ("marche2", "les deux jambes se croisent sous le corps, poids sur la "
-                  "droite ; bras presque le long du corps"),
-      ("marche3", "jambe GAUCHE tendue devant, talon au sol, jambe droite "
-                  "en arrière ; bras droit en avant"),
-      ("marche4", "les deux jambes se croisent sous le corps, poids sur la "
-                  "gauche ; bras presque le long du corps"),
-      ("course1", "jambe DROITE lancée loin devant, genou haut, jambe gauche "
-                  "tendue en arrière ; bras gauche en avant, coudes pliés"),
-      ("course2", "suspension : les DEUX pieds décollés, jambes croisées "
-                  "sous le corps, buste penché en avant"),
+      ("marche1", ("marche", 1)),
+      ("marche2", ("marche", 2)),
+      ("marche3", ("marche", 3)),
+      ("marche4", ("marche", 4)),
+      ("course1", ("course", 1)),
+      ("course2", ("course", 2)),
       # course3 et course4 N'EXISTENT PAS ENCORE en jeu : ce sont les deux
       # phases avec l'AUTRE jambe devant, sans lesquelles la foulée ne
       # peut pas alterner. Elles sont demandées ici pour qu'une seule
       # planche règle la question.
-      ("course3", "jambe GAUCHE lancée loin devant, genou haut, jambe droite "
-                  "tendue en arrière ; bras droit en avant, coudes pliés"),
-      ("course4", "suspension inverse : les DEUX pieds décollés, jambes "
-                  "croisées, buste penché en avant"),
+      ("course3", ("course", 3)),
+      ("course4", ("course", 4)),
       ("frein", "talons plantés, buste rejeté en arrière, bras écartés, "
                 "chaussures qui dérapent"),
       # la séquence du verre, dans l'ordre
@@ -1075,6 +1085,20 @@ def fabriquer_scene(niveau, perso=None, part=None, parts=None):
                 debut += base + (1 if j <= reste else 0)
             fin = debut + base + (1 if part <= reste else 0)
             poses = poses[debut:fin]
+        # UNE SCÈNE PEUT PIOCHER DANS LE CATALOGUE au lieu de recopier.
+        # `("marche", 1)` désigne la phase 1 du mouvement `marche`. La
+        # description de la marche existait en TROIS exemplaires — le
+        # catalogue, le niveau 2, le niveau 3 — et corriger le catalogue
+        # ne changeait donc rien aux deux niveaux. C'est le même défaut
+        # que les prompts dupliqués, à l'échelle d'une phase.
+        etoffees = []
+        for nom, d in poses:
+            if isinstance(d, tuple):
+                mv, k = d
+                etoffees.append((nom, MOUVEMENTS[mv]["phases"][k - 1]))
+            else:
+                etoffees.append((nom, d))
+        poses = etoffees
         details = [f"{i}. [{nom}] {d}" for i, (nom, d) in enumerate(poses, 1)]
         cycle = any(nom.startswith(("marche", "course")) for nom, _ in poses)
 
@@ -1095,11 +1119,15 @@ def fabriquer_scene(niveau, perso=None, part=None, parts=None):
 
     avert = ""
     if cycle:
-        avert = ("\n\nAVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou "
-                 "d'une course doivent différer sur le BAS DU CORPS : ce n'est "
-                 "pas la même jambe qui est devant d'une phase à l'autre. Une "
-                 "planche où toutes les poses ont le même pied en avant est "
-                 "INUTILISABLE — l'animation semble bloquée.")
+        avert = ("\n\nAVERTISSEMENT SUR LES CYCLES DE MARCHE ET DE COURSE.\n"
+                 "Ne pas raisonner en « jambe gauche » et « jambe droite » : de "
+                 "profil, cela ne se voit pas et le résultat est toujours le "
+                 "même dessin. Raisonner en JAMBE PROCHE du spectateur et "
+                 "JAMBE DU FOND — c'est visible, puisque l'une masque l'autre.\n"
+                 "Test à faire pose par pose : si on superposait deux phases du "
+                 "même cycle, les JAMBES ne doivent pas coïncider. Deux phases "
+                 "dont les jambes se ressemblent rendent l'animation immobile, "
+                 "et la planche est à refaire.")
 
     # PAS DE SUFFIXE VIDE PAR DÉFAUT : une tenue sans nom obligeait à
     # savoir laquelle était « celle par défaut ». Chaque scène nomme la

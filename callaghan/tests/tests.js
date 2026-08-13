@@ -2437,6 +2437,43 @@ if (D){
         rire === "h_rire";
     })());
 
+  verifier("les cycles se décrivent en jambe PROCHE et jambe du FOND",
+    (() => {
+      /* « gauche » et « droite » ne se voient pas de profil. Mesuré sur une
+         planche livrée : les deux phases de PASSAGE ne différaient que de
+         7,7 % — elles étaient distinguées par « poids sur la droite »
+         contre « poids sur la gauche », invisible sur une silhouette. Les
+         phases de contact, elles, alternaient bien à 27 % : la jambe
+         tendue devant, ça se voit.
+
+         On décrit donc ce qui SE VOIT : quelle jambe masque l'autre. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      const un = fs.readFileSync(
+        path.join(RACINE, "prompts", "n3", "heros-1.txt"), "utf8");
+      return /JAMBE PROCHE du spectateur et/.test(un) &&
+        /les JAMBES ne doivent pas coïncider/.test(un) &&
+        /plus PROCHE du spectateur/.test(s) &&
+        /jambe du FOND/.test(s) &&
+        /* on cherche dans le CODE et non dans les commentaires : la note
+           qui explique une correction contient forcément l'ancienne
+           formule. Deuxième fois que je tombe dedans aujourd'hui. */
+        !/^[^#\n]*poids sur la droite/m.test(s);
+    })());
+
+  verifier("une phase de mouvement n'est décrite qu'à UN endroit",
+    (() => {
+      /* La marche existait en TROIS exemplaires : le catalogue, le niveau 2
+         et le niveau 3. Corriger le catalogue ne changeait donc rien aux
+         deux niveaux — c'est le défaut des prompts dupliqués, à l'échelle
+         d'une phase. Les scènes PIOCHENT désormais : ("marche", 1). */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      const contacts = (s.match(/CONTACT : la jambe la plus PROCHE/g) || []).length;
+      const appuis = (s.match(/APPUI : la jambe la plus PROCHE/g) || []).length;
+      messageDetail = contacts + " description(s) du contact, " + appuis + " de l'appui";
+      return contacts === 1 && appuis === 1 &&
+        /etoffees\.append\(\(nom, MOUVEMENTS\[mv\]\["phases"\]\[k - 1\]\)\)/.test(s);
+    })());
+
   verifier("un fragment détaché n'est pas pris pour une pose",
     (() => {
       /* La planche d'Hortense a une TARTE EN VOL, séparée de sa main : un
@@ -2765,20 +2802,6 @@ if (D){
         /prompts\//.test(pr);
     })());
 
-  verifier("le catalogue de mouvements décrit les DEUX jambes",
-    (() => {
-      /* Le vocabulaire de pose était réinventé à chaque planche : c'est
-         pour ça qu'une course a pu naître avec la même jambe devant sur
-         toutes ses phases. Un cycle doit dire, phase par phase, quelle
-         jambe est devant. */
-      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
-      const cycles = (s.match(/"cycle": True/g) || []).length;
-      const droite = (s.match(/jambe DROITE/g) || []).length;
-      const gauche = (s.match(/jambe GAUCHE/g) || []).length;
-      messageDetail = cycles + " cycles, " + droite + " phases droite, " + gauche + " gauche";
-      return cycles >= 2 && droite >= 2 && gauche >= 2 &&
-        /AVERTISSEMENT SUR LES CYCLES/.test(s);
-    })());
 
   verifier("les règles de planche n'existent qu'à UN endroit",
     (() => {

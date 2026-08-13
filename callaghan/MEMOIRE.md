@@ -2235,6 +2235,32 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Décrire ce qui SE VOIT, pas ce qui est vrai
+
+Je décrivais les phases de passage d'une marche par « poids sur la jambe
+droite » puis « poids sur la gauche ». C'est exact, et c'est inutilisable :
+de profil, le poids ne se voit pas. Mesuré, les deux phases ne
+différaient que de 7,7 % — l'animation restait immobile à ce moment du
+cycle.
+
+Les phases de CONTACT, elles, alternaient bien à 27 % : « jambe tendue
+devant », ça se voit.
+
+La correction n'est pas d'insister sur gauche et droite, mais de changer
+de vocabulaire : **jambe PROCHE du spectateur et jambe du FOND** — l'une
+masque l'autre, donc c'est visible et dessinable. Avec un test que le
+générateur peut appliquer lui-même : si on superposait deux phases du même
+cycle, les jambes ne doivent pas coïncider.
+
+Règle générale : une consigne de dessin doit porter sur ce qui apparaît à
+l'image. « Il tient un verre » se voit ; « il a soif » non. Le poids, la
+tension, l'intention : à traduire en position, en occlusion, en direction.
+
+Corollaire mesuré au passage : la marche était décrite en TROIS
+exemplaires — le catalogue et deux niveaux. Corriger le catalogue ne
+changeait rien. Les scènes piochent désormais dedans, ce qui est la même
+correction que la fusion des prompts, à l'échelle d'une phase.
+
 #### Ce qui limite une planche c'est la LARGEUR, pas le nombre de poses
 
 J'ai fait descendre le maximum de neuf poses à cinq, puis remonté à six,

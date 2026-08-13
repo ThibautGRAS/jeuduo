@@ -27,14 +27,16 @@ identique à celui de la référence une fois le fond mis de côté.
 
 LES POSES, de gauche à droite :
 1. [idle] debout, en alerte, le regard qui balaie la pièce
-2. [marche1] jambe DROITE tendue devant, talon au sol, jambe gauche en arrière ; bras gauche en avant
-3. [marche2] jambe GAUCHE tendue devant, talon au sol, jambe droite en arrière ; bras droit en avant
+2. [marche1] CONTACT : la jambe la plus PROCHE du spectateur est tendue vers l'avant, son talon touche le sol ; l'autre jambe part loin en arrière, talon décollé. On voit clairement DEUX jambes écartées
+3. [marche2] CONTACT INVERSE : c'est maintenant la jambe du FOND qui est tendue vers l'avant, talon au sol, et la jambe proche qui part en arrière. Exactement l'inverse de la première pose
 4. [fouille] accroupi, une main tendue vers la DROITE à hauteur de hanche, doigts refermés comme sur une poignée de tiroir qu'on NE VOIT PAS, l'autre en appui sur le genou. Aucun meuble, aucun tiroir, aucun décor dessinés.
 5. [examine] debout, un petit objet tenu à hauteur des yeux entre le pouce et l'index, sourcils froncés
 6. [interroge] de trois quarts, une main ouverte tendue vers la DROITE à hauteur de taille, paume vers le haut, comme pour poser une question à quelqu'un qu'on NE VOIT PAS. Aucune autre personne dessinée.
 
 
-AVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou d'une course doivent différer sur le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à l'autre. Une planche où toutes les poses ont le même pied en avant est INUTILISABLE — l'animation semble bloquée.
+AVERTISSEMENT SUR LES CYCLES DE MARCHE ET DE COURSE.
+Ne pas raisonner en « jambe gauche » et « jambe droite » : de profil, cela ne se voit pas et le résultat est toujours le même dessin. Raisonner en JAMBE PROCHE du spectateur et JAMBE DU FOND — c'est visible, puisque l'une masque l'autre.
+Test à faire pose par pose : si on superposait deux phases du même cycle, les JAMBES ne doivent pas coïncider. Deux phases dont les jambes se ressemblent rendent l'animation immobile, et la planche est à refaire.
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
 

@@ -26,7 +26,7 @@ vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
 LES POSES, de gauche à droite :
-1. [course4] suspension inverse : les DEUX pieds décollés, jambes croisées, buste penché en avant
+1. [course4] SUSPENSION INVERSE : les deux pieds décollés, mais c'est la jambe du FOND qui se replie devant. Cette pose doit être VISIBLEMENT différente de la seconde : si on superposait les deux, les jambes ne coïncideraient pas
 2. [frein] talons plantés, buste rejeté en arrière, bras écartés, chaussures qui dérapent
 3. [attrape] le bras tendu vers la DROITE, la main qui se referme sur un verre à hauteur de taille, buste légèrement penché. Le verre EST dessiné ; le comptoir NON, ni aucun décor.
 4. [tient] debout, un verre plein tenu contre la poitrine, regard vers l'avant, l'autre main libre
@@ -36,7 +36,9 @@ LES POSES, de gauche à droite :
 8. [titube] ivre : les jambes écartées et molles, le buste qui part de côté, un bras battant l'air pour l'équilibre, paupières lourdes
 
 
-AVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou d'une course doivent différer sur le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à l'autre. Une planche où toutes les poses ont le même pied en avant est INUTILISABLE — l'animation semble bloquée.
+AVERTISSEMENT SUR LES CYCLES DE MARCHE ET DE COURSE.
+Ne pas raisonner en « jambe gauche » et « jambe droite » : de profil, cela ne se voit pas et le résultat est toujours le même dessin. Raisonner en JAMBE PROCHE du spectateur et JAMBE DU FOND — c'est visible, puisque l'une masque l'autre.
+Test à faire pose par pose : si on superposait deux phases du même cycle, les JAMBES ne doivent pas coïncider. Deux phases dont les jambes se ressemblent rendent l'animation immobile, et la planche est à refaire.
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
 

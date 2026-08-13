@@ -573,6 +573,27 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**« Gauche » et « droite » ne se voient pas de profil** (v7.01).
+
+La planche de déplacement de PF alternait mieux que je ne le croyais —
+mesuré, trois paires sur quatre : contacts de marche 27,5 %, appuis de
+course 33,1 %, suspensions 22,0 %. **Une seule paire échouait** : les deux
+phases de PASSAGE, à 7,7 % de différence.
+
+Et c'était ma faute. Je les distinguais par « poids sur la droite » contre
+« poids sur la gauche » — invisible sur une silhouette. Les phases de
+contact, elles, marchaient : une jambe tendue devant, ça se voit.
+
+Les cycles se décrivent désormais par **ce qui se voit** : la jambe
+PROCHE du spectateur et la jambe du FOND, l'une masquant l'autre. Avec un
+test à faire soi-même : si on superposait deux phases, les jambes ne
+doivent pas coïncider.
+
+**Et une duplication trouvée en corrigeant** : la marche était décrite en
+TROIS exemplaires — le catalogue, le niveau 2, le niveau 3. Corriger le
+catalogue ne changeait donc rien aux deux niveaux. Les scènes PIOCHENT
+maintenant dans le catalogue plutôt que de recopier.
+
 **Le lancer d'Hortense est un geste en trois temps** (v7.00). Il tenait
 1,02 seconde sur une image fixe : l'état LANCE affichait `h_lance` pendant
 0,22 s, et le RIRE la MÊME image pendant 0,80 s. Pour le geste qu'on
