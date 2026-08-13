@@ -472,10 +472,20 @@ function arrondi(x, y, l, h, r){
 /* --- un héros --- */
 function poseHeros(i){
   const h = Heros[i];
-  if (h.tarte > 0) return "surpris";
-  if (h.esquive) return "surpris";
+  /* CHAQUE SITUATION A DÉSORMAIS SON IMAGE. Avant, « surpris » servait à
+     prendre une tarte, à l'esquiver ET à la fin de partie, et « tendue »
+     servait à réussir un salut comme à le rater. Quatre situations pour
+     deux images, alors que saluer au bon moment EST la mécanique du
+     niveau : réussir et rater se voyaient pareil. */
+  if (h.tarte > 0) return "splat";
+  if (h.esquive) return "esquive";
   if (Jeu.phase === "fin") return i === 0 ? "surpris" : "stress";
-  if (h.geste) return h.geste.type === "victoire" ? "victoire" : "tendue";
+  if (h.geste){
+    if (h.geste.type === "victoire") return "victoire";
+    if (h.geste.type === "poignee") return "poignee";
+    if (h.geste.type === "vide") return "vide";
+    return "tendue";
+  }
   if (h.sueur > 0.7) return "stress";
   if (Jeu.demandes.some(p => p.cible === i)) return "regarde";
   return (Math.floor(h.phase) % 6 === 0) ? "attente" : "idle";

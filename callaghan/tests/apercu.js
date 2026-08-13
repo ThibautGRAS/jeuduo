@@ -992,5 +992,15 @@ function jouerJusqua(D, condition, limite){
    passant par le point d'entrée public. */
 function dessinerVia(D, canevas){
   void canevas;
+  /* LE VOILE DE TRANSITION EST NEUTRALISÉ. Depuis la v6.87, un voile
+     opaque tombe à chaque changement d'écran et se lève après deux images
+     dessinées. Le harnais n'en dessine qu'UNE : toutes les scènes
+     sortaient donc NOIRES, et je n'ai vu ma propre règle masquer mes
+     contrôles visuels qu'en découpant les sprites du niveau 1 — plusieurs
+     livraisons plus tard.
+     C'est le pire cas de figure : un outil de vérification rendu aveugle
+     par une correction, sans que rien ne le signale. */
+  if (D.Transition){ D.Transition.voile = 0; D.Transition.nom = D.Transition.nomActuel(); }
   D.__dessiner();
+  if (D.Transition) D.Transition.voile = 0;
 }

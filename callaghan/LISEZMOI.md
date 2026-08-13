@@ -573,6 +573,29 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**Les héros du niveau 1 refaits, et quatre situations distinguées**
+(v6.99). Vingt-deux sprites découpés de quatre planches, calés sur les
+sprites existants — échelles 0,84 à 0,98, donc aucune dérive.
+
+**Chaque situation a désormais son image.** « surpris » servait à prendre
+une tarte, à l'esquiver ET à la fin de partie ; « tendue » servait à
+réussir un salut comme à le rater. Quatre situations pour deux images,
+alors que **saluer au bon moment est la mécanique du niveau** : réussir et
+rater se voyaient pareil.
+
+- `poignee` — la main serrée, sourire franc
+- `vide` — la main que personne n'a prise, la gêne
+- `esquive` — le buste qui se jette de côté
+- `splat` — la tarte en pleine figure, crème et éclaboussures
+
+**Et un défaut de mon outillage, trouvé en faisant ce contrôle.** Depuis la
+v6.87, le voile de transition tombe à chaque changement d'écran et se lève
+après DEUX images. Le harnais d'aperçu n'en dessine qu'une : **toutes les
+scènes sortaient noires**. Mes contrôles visuels des livraisons
+précédentes étaient donc en partie aveugles, et les tests restaient verts
+— ils ne regardent pas les images. Le harnais neutralise le voile
+désormais.
+
 **Plus de scintillement à l'entrée d'un niveau** (v6.86) : et ta
 proposition était la bonne — c'est bien le voile de chargement qui règle
 ça, à condition de le retirer AU BON MOMENT.

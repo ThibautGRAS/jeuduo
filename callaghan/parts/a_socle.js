@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.98";
+const VERSION = "6.99";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -120,7 +120,8 @@ for (const p of PERSOS_DEBOUT) SPRITES_PNJ.push(p);
    Une pose déclarée mais jamais choisie coûte trois fois : le
    téléchargement, la place sur la planche à générer, et l'illusion
    qu'une mécanique existe. */
-const POSES_HEROS = ["idle","attente","regarde","surpris","stress","tendue","victoire"];
+const POSES_HEROS = ["idle","attente","regarde","surpris","stress","tendue",
+                     "victoire","poignee","vide","esquive","splat"];
 /* Les cinq poses d'un PNJ de la file. Le bras qui se tend est DESSINÉ
    maintenant : plus besoin de le peindre à partir des couleurs relevées
    sur le sprite. Les habitués, qui n'ont pas encore de planche, gardent

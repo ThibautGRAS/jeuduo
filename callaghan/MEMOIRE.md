@@ -2235,6 +2235,30 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Une correction peut rendre AVEUGLE l'outil qui la vérifie
+
+La règle du voile de transition — aucune image montrée pendant un
+changement d'écran — était juste, et je l'ai livrée avec cinq tests. Ce
+que je n'ai pas vu : le voile se lève après DEUX images dessinées, et le
+harnais d'aperçu n'en dessine qu'UNE.
+
+**Toutes les scènes sortaient noires.** Pendant plusieurs livraisons, mes
+« contrôles visuels » ont regardé des rectangles vides en croyant vérifier
+des sprites. Les tests restaient verts — ils ne regardent pas les images.
+Je ne l'ai découvert qu'en découpant les sprites du niveau 1, parce que
+cette fois j'attendais de voir quelque chose de précis.
+
+Ce qui rend ce cas particulièrement mauvais : la règle en dur de ce projet
+est « regarder le rendu avant de pousser », et j'avais cassé l'outil qui
+la rend possible. Un garde-fou qui neutralise un autre garde-fou ne
+déclenche aucune alarme.
+
+**Après avoir modifié le pipeline de rendu, vérifier que le harnais voit
+encore quelque chose.** Le signe qui aurait dû m'alerter : une image de
+contrôle uniformément sombre est un résultat, pas un rendu.
+
+Le harnais neutralise désormais le voile explicitement, et un test l'exige.
+
 #### Changer une consigne oblige à revoir les CONTRÔLES qui la supposaient
 
 J'ai demandé un cadre magenta plus foncé autour de chaque pose. Les

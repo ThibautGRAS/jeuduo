@@ -2331,6 +2331,39 @@ if (D){
         !fs.existsSync(path.join(d, "hortense"));
     })());
 
+  verifier("le harnais NEUTRALISE le voile de transition",
+    (() => {
+      /* Depuis la v6.87, un voile opaque tombe à chaque changement d'écran
+         et se lève après DEUX images. Le harnais n'en dessine qu'une :
+         toutes les scènes sortaient NOIRES, et je ne l'ai vu que plusieurs
+         livraisons plus tard, en découpant des sprites.
+
+         C'est le pire cas : un outil de vérification rendu aveugle par une
+         correction, sans que rien ne le signale. Les tests restaient verts
+         — ils ne regardent pas les images. */
+      const s = fs.readFileSync(path.join(RACINE, "tests", "apercu.js"), "utf8");
+      return /D\.Transition\.voile = 0/.test(s) &&
+        /LE VOILE DE TRANSITION EST NEUTRALISÉ/.test(s);
+    })());
+
+  verifier("les quatre situations du niveau 1 ont chacune leur pose",
+    (() => {
+      /* « surpris » servait à prendre une tarte, à l'esquiver et à la fin
+         de partie ; « tendue » servait à réussir un salut comme à le
+         rater. Quatre situations pour deux images, alors que saluer au bon
+         moment EST la mécanique du niveau. */
+      const rendu = fs.readFileSync(
+        path.join(RACINE, "parts", "c_rendu.js"), "utf8");
+      const i = rendu.indexOf("function poseHeros(");
+      const bloc = rendu.slice(i, rendu.indexOf("\n}", i));
+      const attendues = ["splat", "esquive", "poignee", "vide"];
+      const absentes = attendues.filter(p2 => bloc.indexOf('"' + p2 + '"') < 0);
+      messageDetail = absentes.length ? "pas câblées : " + absentes.join(", ")
+                                     : "les quatre sont câblées";
+      return absentes.length === 0 &&
+        attendues.every(p2 => D.POSES_HEROS.indexOf(p2) >= 0);
+    })());
+
   verifier("le contrôleur sait qu'un CADRE change ce qui est mesurable",
     (() => {
       /* Le cadre magenta qu'on demande maintenant a fait crier le
