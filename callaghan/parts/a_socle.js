@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.15";
+const VERSION = "7.16";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1044,6 +1044,7 @@ const IMAGES_NIVEAU3 = [
   /* Les tabourets du PREMIER PLAN : ceux du décor sont peints dans le
      fond, ceux-ci sont dessinés après les héros pour qu'on passe
      derrière eux. */
+  "bar_plante",
   "bar_tabouret_vert", "bar_tabouret_violet",
   "bar_tabouret_bleu", "bar_tabouret_orange",
   /* les habitués animés, et le passage d'Hortense */

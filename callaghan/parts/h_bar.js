@@ -49,6 +49,17 @@ const BAR_MASQUE = 0.528;
    BAR_COPIES vaut 1, il n'en restait que trois sur toute la longueur.
    On les énumère donc explicitement, trois par section, espacés
    irrégulièrement pour laisser des trouées. */
+/* LA PLANTE RETOMBANTE MASQUE LA JONCTION. Le fond est l'image complète
+   répétée deux fois : la seule couture visible est au milieu, à 0,50, et
+   le passage frigo Corona -> porte des toilettes s'y voit encore un peu.
+   Une plante suspendue posée dessus la couvre — c'est la solution que
+   Thibaut a proposée, et elle vaut mieux que tous mes correctifs
+   photométriques, qui n'ont fait qu'empirer la mesure.
+   Elle est HAUTE, au-dessus du comptoir : elle pend du mur. */
+const BAR_PLANTES = [
+  { x:0.497, y:0.055, taille:0.46 },
+];
+
 const BAR_TABOURETS = [
   { x:0.03, teinte:"vert"   }, { x:0.16, teinte:"bleu"   },
   { x:0.26, teinte:"orange" }, { x:0.38, teinte:"violet" },
@@ -245,7 +256,7 @@ const BARMANS = [
        de LIRE ce qui arrive — c'est là que se gagne le niveau. */
     prepare:["bar_francky_choisit", "bar_francky_dose", "bar_francky_verse",
              "bar_francky_shake", "bar_francky_remplit", "bar_francky_decore"] },
-  { id:"jojo", nom:"JOJO", x:0.62, comptoir:0.546, arriere:0.522, sert:"jager",
+  { id:"jojo", nom:"JOJO", x:0.72, comptoir:0.546, arriere:0.522, sert:"jager",
     poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_serie" },
     /* quatre temps : il choisit, il dose, il verse, il superpose. Un peu
        plus court que Francky, et cette différence de RYTHME est en soi

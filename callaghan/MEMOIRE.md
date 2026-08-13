@@ -3356,6 +3356,15 @@ d'enquête, resté quarante versions sans que personne y revienne.
   la référence et le jeu ne concordent pas — c'est voulu et transitoire,
   mais toute planche générée d'ici là sera en noir et ne se raccordera
   pas aux sprites existants.
+- **La planche d'éléments de décor du bar** est archivée dans
+  `planches/n3/elements_decor.webp` : tonneau, mange-debout, deux
+  tabourets, néons, plantes, cageot de bières, seau Corona, chevalet,
+  distributeur de serviettes, pot à pailles, coupelle, cendrier, tireuses,
+  bouteilles, verres, cocktails, cible de fléchettes, ardoise, suspension,
+  flèche. Seule la plante retombante est utilisée pour l'instant — elle
+  masque la jonction du fond. Le reste attend un besoin précis : poser un
+  élément « pour habiller » sans qu'il serve à rien alourdit le
+  chargement.
 - **La pose `serie` de Jojo** montre une passoire au lieu de la série de
   shots prête. La bonne pose est dans la rangée chorégraphiée de sa
   planche, mais celle-ci a un comptoir et un cadre blanc qui gênent la

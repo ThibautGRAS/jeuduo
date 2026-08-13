@@ -54,6 +54,7 @@ Rangées par `archiver.py`, jamais à la main.
 | `n2` | `heros_pf_policier.webp` | 163 Ko |
 | `n2` | `heros_th_policier.webp` | 147 Ko |
 | `n3` | `comptoir_detoure.webp` | 113 Ko |
+| `n3` | `elements_decor.webp` | 210 Ko |
 | `n3` | `fond_bar_complet.webp` | 200 Ko |
 | `n3` | `fond_bar_sans_tabourets.webp` | 194 Ko |
 | `n3` | `fond_bar_section_a.webp` | 191 Ko |
@@ -64,6 +65,7 @@ Rangées par `archiver.py`, jamais à la main.
 | `n3` | `heros_pf_verre.webp` | 109 Ko |
 | `n3` | `heros_th_deplacement.webp` | 97 Ko |
 | `n3` | `heros_th_verre.webp` | 98 Ko |
+| `n3` | `plante_suspendue.webp` | 130 Ko |
 | `n3` | `tabourets.webp` | 76 Ko |
 | `n4` | `heros_pf_flic.webp` | 113 Ko |
 | `n4` | `heros_pf_recharge.webp` | 95 Ko |
@@ -71,7 +73,7 @@ Rangées par `archiver.py`, jamais à la main.
 | `n4` | `heros_th_recharge.webp` | 95 Ko |
 | `n4` | `heros_th_tir.webp` | 94 Ko |
 
-**7.3 Mo au total.**
+**7.7 Mo au total.**
 
 ## 24 planches à identifier
 

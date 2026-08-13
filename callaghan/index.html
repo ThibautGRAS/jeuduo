@@ -783,7 +783,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v7.15</div>
+  <div id="version">CALLAGHAN v7.16</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -855,7 +855,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.15";
+const VERSION = "7.16";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1881,6 +1881,7 @@ const IMAGES_NIVEAU3 = [
   /* Les tabourets du PREMIER PLAN : ceux du décor sont peints dans le
      fond, ceux-ci sont dessinés après les héros pour qu'on passe
      derrière eux. */
+  "bar_plante",
   "bar_tabouret_vert", "bar_tabouret_violet",
   "bar_tabouret_bleu", "bar_tabouret_orange",
   /* les habitués animés, et le passage d'Hortense */
@@ -8260,6 +8261,17 @@ const BAR_MASQUE = 0.528;
    BAR_COPIES vaut 1, il n'en restait que trois sur toute la longueur.
    On les énumère donc explicitement, trois par section, espacés
    irrégulièrement pour laisser des trouées. */
+/* LA PLANTE RETOMBANTE MASQUE LA JONCTION. Le fond est l'image complète
+   répétée deux fois : la seule couture visible est au milieu, à 0,50, et
+   le passage frigo Corona -> porte des toilettes s'y voit encore un peu.
+   Une plante suspendue posée dessus la couvre — c'est la solution que
+   Thibaut a proposée, et elle vaut mieux que tous mes correctifs
+   photométriques, qui n'ont fait qu'empirer la mesure.
+   Elle est HAUTE, au-dessus du comptoir : elle pend du mur. */
+const BAR_PLANTES = [
+  { x:0.497, y:0.055, taille:0.46 },
+];
+
 const BAR_TABOURETS = [
   { x:0.03, teinte:"vert"   }, { x:0.16, teinte:"bleu"   },
   { x:0.26, teinte:"orange" }, { x:0.38, teinte:"violet" },
@@ -8456,7 +8468,7 @@ const BARMANS = [
        de LIRE ce qui arrive — c'est là que se gagne le niveau. */
     prepare:["bar_francky_choisit", "bar_francky_dose", "bar_francky_verse",
              "bar_francky_shake", "bar_francky_remplit", "bar_francky_decore"] },
-  { id:"jojo", nom:"JOJO", x:0.62, comptoir:0.546, arriere:0.522, sert:"jager",
+  { id:"jojo", nom:"JOJO", x:0.72, comptoir:0.546, arriere:0.522, sert:"jager",
     poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_serie" },
     /* quatre temps : il choisit, il dose, il verse, il superpose. Un peu
        plus court que Francky, et cette différence de RYTHME est en soi
@@ -9188,6 +9200,7 @@ const BarVue = {
       ctx.drawImage(img, x0, 0, lUne + 1, H);
     }
 
+    this.dessinerPlantes();
     this.dessinerNeon();
     this.dessinerBarmans();
     /* LE COMPTOIR REPASSE PAR-DESSUS LES BARMANS. C'est la même image de
@@ -9408,6 +9421,22 @@ const BarVue = {
         const sl = larg / lUne * img.naturalWidth;
         ctx.drawImage(img, sx, sy, sl, sh, gx, yEcran, larg, H - yEcran);
       }
+    }
+  },
+
+  /* LES PLANTES SUSPENDUES : dessinées après le fond et AVANT tout le
+     reste, elles font partie du décor. Elles servent à masquer la
+     jonction entre les deux moitiés du fond. */
+  dessinerPlantes(){
+    const spr = Images.table["bar_plante"];
+    if (!spr || !spr.naturalWidth) return;
+    const H = Camera.H, L = Camera.L;
+    for (const pl of BAR_PLANTES){
+      const sh = H * pl.taille;
+      const sl = sh * spr.naturalWidth / spr.naturalHeight;
+      const cx = this.ex(pl.x);
+      if (cx < -sl || cx > L + sl) continue;
+      ctx.drawImage(spr, cx - sl / 2, H * pl.y, sl, sh);
     }
   },
 
@@ -9996,13 +10025,21 @@ const FOULE_PLACES = [
    On voit alors 0,555 à 1,0 d'un personnage haut de 0,50 : quatre-vingt-
    dix pour cent de lui, pieds légèrement hors cadre. C'est ce qu'on
    voulait, et c'est le maximum possible sans manger les verres. */
-const FOULE_PIEDS = 1.06;
+const FOULE_PIEDS = 1.18;
 /* RECALCULÉE quand le comptoir est passé de 0,555 à 0,585 sur le fond
    neuf : tête = 1,06 − 0,50 = 0,56, donc AU-DESSUS du comptoir, donc les
    verres masqués. À 0,46 la tête est à 0,60, juste dessous.
    C'est une donnée DÉRIVÉE du comptoir : elle doit être refaite chaque
    fois que le décor change. */
-const FOULE_TAILLE = 0.46;
+/* AGRANDIE : elle faisait 0,46 contre 0,52 pour le héros, soit 88 % de
+   sa taille — alors qu'elle est au PREMIER PLAN, donc plus près de la
+   caméra. Elle devrait être plus GRANDE, pas plus petite.
+   À 0,62 elle fait 119 % du héros, ce qui donne la profondeur.
+   La contrainte reste la même : sa tête doit rester SOUS le comptoir, à
+   0,546, sinon elle masque les verres. Tête = 1,18 - 0,62 = 0,56, juste
+   dessous. Les pieds dépassent donc de 18 % — c'est le prix, et Thibaut
+   l'a accepté explicitement. */
+const FOULE_TAILLE = 0.62;
 const FOULE_ECART = 0.030;         /* écart entre deux voisins, EN MONDE */
 /* DEUX PAR GRAPPE, PAS TROIS. Il n'y a que dix personnages pour quatre
    grappes : à trois, la foule les prenait TOUS et plus aucun client ne
@@ -14077,13 +14114,13 @@ globalThis.DTOUR = {
   attenuation, PORTEE_MIN, PORTEE_PLEINE, PROJ_HAUTEUR, ANNONCE_CARTE_MIN, GROGNE_DELAI,
   CANONS, POSES_RUEL_TH, POSES_RUEL_PF,
   HEURES, PART_TYPES, PART_MAX, FLAQUES, MOT_DUREE,
-  BARMANS, BAR_COMPTOIR, BAR_MASQUE, BAR_TABOURETS, BAR_INTRO_PALIER, INTRO_PALIER, POSES_HEROS,
+  BARMANS, BAR_COMPTOIR, BAR_MASQUE, BAR_TABOURETS, BAR_PLANTES, BAR_INTRO_PALIER, INTRO_PALIER, POSES_HEROS,
   SENS_NATIF, SENS_VOULU, PIQUES,
   Transition, nomNiveau, sensNiveau, NOMS_NIVEAUX,
   ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, IA_REUSSITE, IA_CADENCE, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, RUELLE_DEGAT_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
-  POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE, BAR_TAILLE_BARMAN, BAR_COPIES,
+  POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE, BAR_TAILLE_BARMAN, BAR_TAILLE_HEROS, BAR_COPIES,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, ENQ_ESQUIVE_FENETRE, SUJETS, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
   FENETRE_ESQUIVE, VOL_DEBUT, VOL_PLANCHER, HORTENSE_REPIT, HORTENSE_REPOS, HORTENSE_ECART, TARTE_DUREE,

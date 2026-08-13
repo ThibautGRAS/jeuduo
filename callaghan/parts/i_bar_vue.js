@@ -44,6 +44,7 @@ const BarVue = {
       ctx.drawImage(img, x0, 0, lUne + 1, H);
     }
 
+    this.dessinerPlantes();
     this.dessinerNeon();
     this.dessinerBarmans();
     /* LE COMPTOIR REPASSE PAR-DESSUS LES BARMANS. C'est la même image de
@@ -264,6 +265,22 @@ const BarVue = {
         const sl = larg / lUne * img.naturalWidth;
         ctx.drawImage(img, sx, sy, sl, sh, gx, yEcran, larg, H - yEcran);
       }
+    }
+  },
+
+  /* LES PLANTES SUSPENDUES : dessinées après le fond et AVANT tout le
+     reste, elles font partie du décor. Elles servent à masquer la
+     jonction entre les deux moitiés du fond. */
+  dessinerPlantes(){
+    const spr = Images.table["bar_plante"];
+    if (!spr || !spr.naturalWidth) return;
+    const H = Camera.H, L = Camera.L;
+    for (const pl of BAR_PLANTES){
+      const sh = H * pl.taille;
+      const sl = sh * spr.naturalWidth / spr.naturalHeight;
+      const cx = this.ex(pl.x);
+      if (cx < -sl || cx > L + sl) continue;
+      ctx.drawImage(spr, cx - sl / 2, H * pl.y, sl, sh);
     }
   },
 

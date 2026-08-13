@@ -60,13 +60,21 @@ const FOULE_PLACES = [
    On voit alors 0,555 à 1,0 d'un personnage haut de 0,50 : quatre-vingt-
    dix pour cent de lui, pieds légèrement hors cadre. C'est ce qu'on
    voulait, et c'est le maximum possible sans manger les verres. */
-const FOULE_PIEDS = 1.06;
+const FOULE_PIEDS = 1.18;
 /* RECALCULÉE quand le comptoir est passé de 0,555 à 0,585 sur le fond
    neuf : tête = 1,06 − 0,50 = 0,56, donc AU-DESSUS du comptoir, donc les
    verres masqués. À 0,46 la tête est à 0,60, juste dessous.
    C'est une donnée DÉRIVÉE du comptoir : elle doit être refaite chaque
    fois que le décor change. */
-const FOULE_TAILLE = 0.46;
+/* AGRANDIE : elle faisait 0,46 contre 0,52 pour le héros, soit 88 % de
+   sa taille — alors qu'elle est au PREMIER PLAN, donc plus près de la
+   caméra. Elle devrait être plus GRANDE, pas plus petite.
+   À 0,62 elle fait 119 % du héros, ce qui donne la profondeur.
+   La contrainte reste la même : sa tête doit rester SOUS le comptoir, à
+   0,546, sinon elle masque les verres. Tête = 1,18 - 0,62 = 0,56, juste
+   dessous. Les pieds dépassent donc de 18 % — c'est le prix, et Thibaut
+   l'a accepté explicitement. */
+const FOULE_TAILLE = 0.62;
 const FOULE_ECART = 0.030;         /* écart entre deux voisins, EN MONDE */
 /* DEUX PAR GRAPPE, PAS TROIS. Il n'y a que dix personnages pour quatre
    grappes : à trois, la foule les prenait TOUS et plus aucun client ne

@@ -5586,6 +5586,35 @@ if (D){
       return tete > D.BAR_COMPTOIR && tete < D.BAR_COMPTOIR + 0.10;
     })());
 
+  verifier("une plante MASQUE la jonction du fond",
+    (() => {
+      /* Le fond est l'image complète répétée deux fois : la seule couture
+         visible est au milieu, à 0,50. Une plante suspendue posée dessus
+         la couvre — la solution de Thibaut, qui vaut mieux que mes trois
+         correctifs photométriques, lesquels n'ont fait qu'empirer la
+         mesure.
+         Elle doit être PROCHE de 0,50, sinon elle ne masque rien. */
+      const ok = fs.existsSync(path.join(RACINE, "img", "n3", "bar_plante.webp"));
+      const pres = (D.BAR_PLANTES || []).some(p2 => Math.abs(p2.x - 0.5) < 0.02);
+      messageDetail = (D.BAR_PLANTES || []).map(p2 => "x " + p2.x).join(", ");
+      return ok && pres && /dessinerPlantes/.test(source);
+    })());
+
+  verifier("la foule est PLUS GRANDE que le héros, elle est devant",
+    (() => {
+      /* Elle faisait 0,46 contre 0,52 pour le héros — 88 % — alors qu'elle
+         est au PREMIER PLAN, donc plus près de la caméra. Une foule plus
+         petite que celui qu'elle doit masquer détruit la profondeur.
+         La contrainte reste sa tête sous le comptoir. */
+      const s = fs.readFileSync(
+        path.join(RACINE, "parts", "k_foule.js"), "utf8");
+      const taille = parseFloat((s.match(/FOULE_TAILLE = ([\d.]+)/) || [0,0])[1]);
+      const pieds = parseFloat((s.match(/FOULE_PIEDS = ([\d.]+)/) || [0,0])[1]);
+      messageDetail = "foule " + taille + " contre héros " + D.BAR_TAILLE_HEROS
+                    + ", tête à " + (pieds - taille).toFixed(3);
+      return taille > D.BAR_TAILLE_HEROS && (pieds - taille) > D.BAR_COMPTOIR;
+    })());
+
   verifier("les tabourets passent DEVANT les héros et la foule",
     (() => {
       /* Ceux du décor sont peints dans `fond_bar.webp` : impossible de

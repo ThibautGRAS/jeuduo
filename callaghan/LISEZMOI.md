@@ -573,6 +573,24 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**Une plante masque la jonction, et la foule reprend sa taille** (v7.16).
+
+**La plante suspendue** est posée à 0,497, pile sur la seule couture
+visible du fond. C'est la solution de Thibaut, et elle vaut mieux que mes
+trois correctifs photométriques — qui n'ont fait qu'empirer la mesure.
+
+**La foule était plus PETITE que le héros** : 0,46 contre 0,52, soit 88 %
+de sa taille, alors qu'elle est au PREMIER PLAN donc plus près de la
+caméra. Une foule plus petite que celui qu'elle doit masquer détruit la
+profondeur au lieu de la créer. Elle passe à **0,62**, soit 119 % du
+héros.
+
+La contrainte reste la même et se calcule : sa tête doit rester sous le
+comptoir à 0,546, sinon elle masque les verres. Tête = 1,18 − 0,62 = 0,56,
+juste dessous. Les pieds dépassent donc du cadre de 18 %.
+
+**Jojo passe de 0,62 à 0,72.**
+
 **Décor du bar FRONTAL, et les barmans enfin derrière** (v7.15).
 
 L'ancien décor fuyait en perspective : l'arête du comptoir descendait de
