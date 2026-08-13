@@ -573,6 +573,22 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**Retour aux anciens personnages de la ruelle** (v7.05). Les 25 sprites
+d'avant sont restaurés depuis le dépôt — c'est justement pour ça que les
+planches y sont archivées.
+
+Ce qui est GARDÉ, parce que c'est indépendant des dessins :
+- **l'orientation déclarée.** Le rendu retournait l'héros d'indice 1 en
+  dur ; il compare maintenant le sens VOULU au sens NATIF de chaque
+  planche. C'est ce mécanisme qui a rendu ce retour en arrière possible
+  sans toucher au rendu : il a suffi de redéclarer PF en « regarde à
+  droite ».
+- **les deux scènes de contrôle**, tir et rechargement des deux héros.
+  Elles serviront à chaque planche future.
+
+Les nouvelles planches restent archivées dans `planches/n4/` : elles ne
+sont pas perdues si l'avis change.
+
 **L'orientation des héros se DÉCLARE** (v7.04). Vingt-huit sprites de
 la ruelle refaits, et une correction de fond : le rendu retournait
 l'héros d'indice 1 **en dur**, ce qui ne marchait que si toutes les

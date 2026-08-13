@@ -783,7 +783,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v7.04</div>
+  <div id="version">CALLAGHAN v7.05</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -855,7 +855,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.04";
+const VERSION = "7.05";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1829,17 +1829,16 @@ const OBJETS_RUELLE = [
    Un `+1` regarde à droite, un `-1` à gauche. Le rendu retourne
    l'image quand le sens VOULU diffère du sens natif, au lieu de retourner
    un indice choisi une fois pour toutes. */
-const SENS_NATIF = { ruel_th: +1, ruel_pf: -1 };
+const SENS_NATIF = { ruel_th: +1, ruel_pf: +1 };
 
 /* Le sens vers lequel chaque héros doit regarder dans la ruelle : ils
    encadrent la barricade, donc ils se font face. */
 const SENS_VOULU = [+1, -1];
 
 const POSES_RUEL_TH = ["accroupi", "leve1", "leve2", "debout", "arme1", "arme2",
-                       "vise1", "vise2", "tir", "fumee", "recul1", "recul2",
-                       "baisse"];
-const POSES_RUEL_PF = ["accroupi", "leve1", "leve2", "debout", "arme1", "arme2",
-                       "vise", "tir", "fumee", "recul1", "recul2", "baisse"];
+                       "vise1", "vise2", "tir", "recul1", "recul2", "baisse"];
+const POSES_RUEL_PF = ["accroupi", "leve1", "leve2", "arme1", "arme2", "vise",
+                       "tir", "fumee", "recul1", "recul2", "baisse"];
 /* L'intro du niveau 4 : le duo sur la ruelle floutée. Elle sert à deux
    choses — annoncer le niveau, et donner au navigateur le temps de
    charger le décor et les ennemis avant la première image. */
@@ -10338,13 +10337,8 @@ const CANONS = {
     baisse:[0.701, 0.421],   debout:[0.834, 0.496], leve1:[0.562, 0.407],
     leve2:[0.671, 0.393],    recul1:[0.825, 0.136], recul2:[0.725, 0.186],
     tir:[0.964, 0.160],      vise1:[0.894, 0.153],  vise2:[0.906, 0.167],
-    /* MESURÉE sur le nouveau sprite : l'arme retombe, la bouche descend
-       à mi-hauteur et recule au milieu du corps. */
-    fumee:[0.574, 0.416],
   },
   pf: {
-    /* MESURÉE sur le nouveau sprite. */
-    debout:[0.222, 0.603],
     accroupi:[0.701, 0.451], arme1:[0.911, 0.240], arme2:[0.958, 0.093],
     baisse:[0.729, 0.411],   fumee:[0.864, 0.128], leve1:[0.571, 0.492],
     leve2:[0.601, 0.494],    recul1:[0.787, 0.192], recul2:[0.751, 0.342],
