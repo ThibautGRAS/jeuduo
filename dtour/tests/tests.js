@@ -1920,13 +1920,27 @@ if (D){
 
   verifier("le duo de l'affiche se compose en ADDITIF, il n'est pas détouré",
     (() => {
-      /* Le fond de l'image est un noir pur : en `lighter` il n'ajoute
-         rien et disparaît de lui-même, tandis qu'un détourage laissait
-         un halo sale autour du néon. */
+      /* Une planche lumineuse sur noir se compose en additif : le noir
+         n'ajoute rien, donc ni voile sombre ni découpe à rater. */
       const i = source.indexOf("const duo = Images.table.duo_bar");
-      const bloc = source.slice(i, i + 600);
+      const bloc = source.slice(i, i + 800);
       return i > 0 && /globalCompositeOperation = "lighter"/.test(bloc);
     })());
+
+  verifier("le duo s'éteint AU BORD, sans laisser de rectangle",
+    (() => {
+      /* Le néon touchait les bords de l'image d'origine — luminance
+         jusqu'à 246 en bas — donc il était coupé net et le cadre se
+         devinait. L'extinction porte sur la COULEUR, pas sur l'alpha :
+         en additif, l'alpha ne sert à rien. */
+      const b2 = fs.readFileSync(path.join(RACINE, "img", "n3", "duo_bar.webp"));
+      /* on relit les dimensions, puis on vérifie que le fichier n'a PAS
+         de canal alpha : un VP8L ou un VP8X avec alpha trahirait un
+         détourage */
+      const tag = b2.toString("ascii", 12, 16);
+      messageDetail = "format " + tag.trim();
+      return tag === "VP8 ";
+    })(), "sans alpha : la composition additive n'en a pas besoin");
 
   verifier("les deux champions existent et se distinguent",
     D.BAR_CHAMPIONS.length === 2 &&

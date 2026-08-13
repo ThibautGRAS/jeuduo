@@ -1154,7 +1154,23 @@ Le réflexe : avant de corriger un affichage, chercher TOUS les endroits
 qui le pilotent. `grep` sur le nom de l'élément, pas seulement sur la
 condition qu'on croit fautive.
 
-### Un fond noir pur se compose en ADDITIF, il ne se détoure pas
+### Une planche lumineuse sur noir : l'extinction va sur la COULEUR
+
+Trois essais pour un seul bord visible, et les deux premiers étaient des
+contresens instructifs.
+
+1. Détourer : le dégradé du néon se coupe quelque part, la coupure se
+   voit comme un halo sale.
+2. Fabriquer un alpha depuis la luminance : la zone autour du sujet n'est
+   pas noire mais gris très foncé (10 à 40), elle devient donc
+   semi-opaque avec du NOIR dessous — un voile sombre, pire que le bord.
+3. La bonne : composer en ADDITIF, où le noir n'ajoute rien, et faire
+   mourir la COULEUR au bord. En additif, l'alpha ne sert à rien.
+
+Et la cause du bord, mesurable : le néon TOUCHE les bords de l'image
+d'origine — luminance jusqu'à 246 sur la ligne du bas. Il est coupé net
+par le cadre. Aucun mode de composition ne rattrape ça : il faut ajouter
+une marge et éteindre dedans.
 
 Détourer un personnage entouré de néon laisse un halo sale : le dégradé
 lumineux se coupe quelque part, et cette coupure se voit. En mode

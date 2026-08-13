@@ -283,6 +283,23 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Plus de démarcation sur l'affiche** (v6.83) : le rectangle se devinait
+autour du duo, et il a fallu trois essais pour comprendre pourquoi.
+
+**Le néon TOUCHE les bords de l'image d'origine** — luminance jusqu'à 246
+en bas, mesurée. Il est donc coupé net par le cadre, et cette coupure se
+voit quel que soit le mode de composition. J'ai ajouté une marge noire
+pour lui laisser de la place, puis une extinction douce dessus.
+
+**L'extinction porte sur la COULEUR, pas sur l'alpha.** Mon deuxième
+essai fabriquait un canal alpha depuis la luminance : la zone autour du
+duo n'étant pas noire mais gris très foncé, elle devenait semi-opaque et
+produisait un voile sombre — pire que le rectangle. Une planche lumineuse
+sur noir se compose en ADDITIF, et en additif l'alpha ne sert à rien :
+seule compte la couleur, qui doit mourir au bord.
+
+Le fichier n'a donc plus de canal alpha du tout, et un test le vérifie.
+
 **L'affiche du bar réparée** (v6.82) : tes deux captures montraient deux
 défauts différents, et ils avaient deux causes différentes.
 

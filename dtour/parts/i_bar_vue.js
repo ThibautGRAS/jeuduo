@@ -379,8 +379,8 @@ const BarVue = {
     const duo = Images.table.duo_bar;
     if (duo && duo.naturalWidth){
       const av = borne((BAR_INTRO_DUREE - t) / 0.5, 0, 1);
-      const e2 = Math.min((L * 0.98) / duo.naturalWidth,
-                          (H * 0.80) / duo.naturalHeight);
+      const e2 = Math.min((L * 1.00) / duo.naturalWidth,
+                          (H * 0.86) / duo.naturalHeight);
       const l2 = duo.naturalWidth * e2, h2 = duo.naturalHeight * e2;
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
