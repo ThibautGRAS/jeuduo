@@ -3,7 +3,7 @@ sur une seule rangée.
 
 Scène : la tournée du bar.
 Planche 2 sur 2 — joindre la MÊME image de référence à toutes, c'est ce qui les raccorde.
-Image de référence à joindre : reference/<thibaut ou pf>.png
+Image de référence à joindre : reference/<thibaut ou pf>-muscle.png
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
 qu'il existe déjà.

@@ -259,7 +259,10 @@ SCENES = {
     # référence du bar de ne pas faire foi sur les vêtements : deux
     # consignes qui se marchaient dessus. Une image par tenue est plus
     # simple et plus sûre qu'une bascule dans le texte.
-    "ref": "-2",
+    # LA TENUE SE NOMME, elle ne se numérote pas. « -2 » et « -3 » ne
+    # disaient rien : il fallait ouvrir l'image pour savoir laquelle
+    # joindre. Un suffixe qui nomme la tenue se relit.
+    "ref": "-jeune",
     "poses": [
       ("idle", "debout, détendu, les bras le long du corps, léger sourire"),
       ("attente", "debout, les bras croisés, poids sur une jambe, l'air de "
@@ -344,7 +347,7 @@ SCENES = {
     # jouent dans la même soirée d'enquête : brassard, holster, manteau
     # pour PF, blouson pour Thibaut. Une seule image pour les deux, donc
     # aucun risque qu'ils divergent.
-    "ref": "-3",
+    "ref": "-flic",
     # ONZE POSES, et c'est ce que le jeu consomme réellement. Le prompt
     # n'en demandait que cinq : il en oubliait six, dont l'esquive et le
     # splat, qui n'existent qu'ici. Une planche générée dessus aurait été
@@ -384,6 +387,7 @@ SCENES = {
   "n3": {
     "titre": "la tournée du bar",
     "prefixe": {"thibaut": "bar_th", "pf": "bar_pf"},
+    "ref": "-muscle",
     # QUATORZE POSES. Le prompt n'en demandait que neuf — les
     # déplacements — et ignorait TOUT ce qui touche au verre : attraper,
     # tenir, boire, vider, jeter, tituber. Or c'est le cœur du niveau :
@@ -463,6 +467,9 @@ SCENES = {
   # monde aurait rangé selon une distinction qui n'existe pas.
   "communs": {
     "titre": "Hortense et son lancer de tarte",
+    # Hortense n'a qu'une tenue : le suffixe est vide, mais il est
+    # DÉCLARÉ. Un vide explicite se distingue d'un oubli.
+    "ref": "",
     "prefixe": {"hortense": "h"},
     "poses": [
       ("sournoise", "à l'affût : buste penché en avant, épaules basses, elle "
@@ -493,7 +500,7 @@ SCENES = {
   "n4": {
     "titre": "la ruelle",
     "prefixe": {"thibaut": "ruel_th", "pf": "ruel_pf"},
-    "ref": "-3",   # la même tenue de policier qu'au niveau 2
+    "ref": "-flic",   # la même tenue de policier qu'au niveau 2
     # QUATORZE POSES. Le prompt n'en demandait que cinq : troisième niveau
     # de suite avec le même défaut, après le n2 (5 sur 11) et le n3
     # (9 sur 16). Elles sont tirées de POSES_RUEL_TH et POSES_RUEL_PF.
@@ -1023,10 +1030,24 @@ def fabriquer_scene(niveau, perso=None, part=None, parts=None):
                  "planche où toutes les poses ont le même pied en avant est "
                  "INUTILISABLE — l'animation semble bloquée.")
 
-    suff = sc.get("ref", "")
+    # PAS DE SUFFIXE VIDE PAR DÉFAUT : une tenue sans nom obligeait à
+    # savoir laquelle était « celle par défaut ». Chaque scène nomme la
+    # sienne, et l'oubli est une erreur bruyante.
+    suff = sc.get("ref")
+    if suff is None:
+        sys.exit(f"ABANDON : la scène « {niveau} » ne nomme pas sa tenue "
+                 f"(clé « ref »).")
     # Le personnage n'apparaît plus que dans le nom du fichier à joindre :
     # un seul prompt sert donc aux deux héros.
-    qui = "<thibaut ou pf>" if perso is None else perso
+    # LE GABARIT NOMME LES PERSONNAGES DE LA SCÈNE, pas « thibaut ou pf »
+    # en dur. La planche d'Hortense demandait de joindre la référence
+    # d'un héros — un texte écrit une fois pour un cas et recopié
+    # ailleurs, encore.
+    if perso is not None:
+        qui = perso
+    else:
+        gens = list(sc["prefixe"])
+        qui = gens[0] if len(gens) == 1 else "<" + " ou ".join(gens) + ">"
     if len(details) > MAX_POSES:
         sys.exit(f"ABANDON : {len(details)} poses pour {niveau}, "
                  f"maximum {MAX_POSES}.")
@@ -1119,15 +1140,19 @@ def tout():
 
     ref = base / "reference"
     ref.mkdir(exist_ok=True)
-    for perso in ["thibaut", "pf", "hortense",
-                  "depar", "dsk", "jubi", "abbe", "bruh"]:
-        try: reference(perso, ref)
+    # Les héros ont TROIS tenues ; seule celle du bar se fabrique depuis
+    # les sprites — les deux autres sont des planches fournies, qu'on ne
+    # doit surtout pas écraser.
+    for perso, tenue in (("thibaut", "-muscle"), ("pf", "-muscle"),
+                         ("hortense", ""), ("depar", ""), ("dsk", ""),
+                         ("jubi", ""), ("abbe", ""), ("bruh", "")):
+        try: reference(perso, ref, tenue)
         except SystemExit: print(f"  (aucun sprite pour {perso})")
     n = len(list(base.rglob("*.txt")))
     print(f"\n{n} prompts et {len(list(ref.glob('*.png')))} références régénérés")
 
 
-def reference(perso, dossier=None):
+def reference(perso, dossier=None, tenue=""):
     """Fabrique l'image de référence à joindre au prompt : deux ou trois
     poses du personnage TELLES QU'ELLES SONT EN JEU, sur fond neutre.
 
@@ -1168,7 +1193,7 @@ def reference(perso, dossier=None):
     for i in ims:
         out.paste(i, (x, marge + h - i.height), i)
         x += i.width + marge
-    dst = (dossier or (pathlib.Path(__file__).parent / "prompts")) / f"{perso}.png"
+    dst = (dossier or (pathlib.Path(__file__).parent / "prompts")) / f"{perso}{tenue}.png"
     dst.parent.mkdir(parents=True, exist_ok=True)
     out.save(dst, "PNG", optimize=True)
     print(f"  {dst}  {out.size[0]}x{out.size[1]}  "

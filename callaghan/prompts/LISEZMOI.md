@@ -42,10 +42,17 @@ change est l'image jointe. Le prompt écrit en tête
 
 | image | tenue | prompts |
 |---|---|---|
-| `thibaut.png` `pf.png` | civil | n3, sup |
-| `thibaut-2.png` `pf-2.png` | tenue de rue | n1 |
-| `thibaut-3.png` `pf-3.png` | policier | n2 et n4 |
+| `thibaut-jeune.png` `pf-jeune.png` | tenue de rue | n1 |
+| `thibaut-flic.png` `pf-flic.png` | policier | n2 **et** n4 |
+| `thibaut-muscle.png` `pf-muscle.png` | civil, au bar | n3, sup |
+| `hortense.png` | — | communs |
 | `depar` `dsk` `jubi` `abbe` `bruh` | — | n4/mechants |
+
+**Les tenues portent des NOMS, plus des numéros.** `-2` et `-3` ne
+disaient rien : il fallait ouvrir l'image pour savoir laquelle joindre.
+
+Les niveaux 2 et 4 partagent la même : même soirée d'enquête, même tenue,
+donc aucun risque qu'ils divergent.
 
 Les niveaux 2 et 4 partagent la même image : même soirée d'enquête, même
 tenue, donc aucun risque qu'ils divergent.

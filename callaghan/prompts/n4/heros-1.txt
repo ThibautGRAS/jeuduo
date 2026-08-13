@@ -3,7 +3,7 @@ sur une seule rangée.
 
 Scène : la ruelle.
 Planche 1 sur 2 — joindre la MÊME image de référence à toutes, c'est ce qui les raccorde.
-Image de référence à joindre : reference/<thibaut ou pf>-3.png
+Image de référence à joindre : reference/<thibaut ou pf>-flic.png
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
 qu'il existe déjà.

@@ -2084,7 +2084,9 @@ if (D){
       return !/ne fait PAS foi sur les VÊTEMENTS/.test(s) &&
         !/LE COSTUME DE CE NIVEAU/.test(s) &&
         !/polo vert|t-shirt beige/.test(s) &&
-        /reference\/<thibaut ou pf>-2\.png/.test(s);
+        /* on vérifie que la tenue est NOMMÉE, pas son nom du jour : ce
+           test a déjà été repris à chaque renommage. */
+        /reference\/<thibaut ou pf>-[a-z]+\.png/.test(s);
     })());
 
 
@@ -2436,34 +2438,6 @@ if (D){
         /Planche 1 sur/.test(fs.readFileSync(path.join(d, "heros-1.txt"), "utf8"));
     })());
 
-  verifier("chaque prompt NOMME la référence à joindre",
-    (() => {
-      /* Un personnage peut avoir plusieurs références — une par tenue.
-         Sans le nom écrit dans le prompt, on ne sait pas laquelle
-         joindre, et on renvoie le bar dans la file d'attente. */
-      const d = path.join(RACINE, "prompts");
-      const manquants = [];
-      for (const niv of ["n1", "n2", "n3", "n4"]){
-        for (const n of fs.readdirSync(path.join(d, niv))){
-          if (!n.endsWith(".txt")) continue;
-          const s = fs.readFileSync(path.join(d, niv, n), "utf8");
-          /* le nom peut être un GABARIT — `<thibaut ou pf>-3.png` — qui
-             contient une espace : `\S+` ne l'attrapait pas. */
-          const m = s.match(/Image de référence à joindre : reference\/(.+\.png)/);
-          if (!m){ manquants.push(niv + "/" + n + " (pas nommée)"); continue; }
-          /* le prompt des héros nomme un GABARIT — <thibaut ou pf> — parce
-             qu'un seul texte sert aux deux. On vérifie alors les deux. */
-          const cibles = m[1].indexOf("<") >= 0
-            ? ["thibaut", "pf"].map(x => m[1].replace(/<[^>]+>/, x))
-            : [m[1]];
-          for (const c of cibles)
-            if (!fs.existsSync(path.join(d, "reference", c)))
-              manquants.push(niv + "/" + n + " -> " + c);
-        }
-      }
-      messageDetail = manquants.length ? manquants.join(", ") : "toutes nommées et présentes";
-      return manquants.length === 0;
-    })());
 
   verifier("les quatre niveaux ont chacun leur TENUE",
     (() => {
@@ -2476,15 +2450,22 @@ if (D){
          les niveaux est le SUFFIXE de tenue. */
       const ref = n => {
         const s = promptNiveau(n);
-        const m = s.match(/reference\/<[^>]+>(\S*)\.png/);
-        return m ? (m[1] || "(civil)") : "?";
+        const m = s.match(/reference\/<[^>]+>-([a-z]+)\.png/);
+        return m ? m[1] : "?";
       };
       const v = { n1:ref("n1"), n2:ref("n2"), n3:ref("n3"), n4:ref("n4") };
+      /* les tenues portent des NOMS depuis le renommage : jeune, flic,
+         muscle. Un numéro n'apprenait rien et obligeait à ouvrir l'image. */
       messageDetail = Object.entries(v).map(([k, x]) => k + " " + x).join(", ");
+      /* les trois tenues portent des NOMS, plus des numéros : la
+         condition les CONSTRUISAIT à partir de 1, 2, 3 — donc elle
+         cherchait des fichiers qui n'existent plus. On lit les tenues
+         nommées par les prompts eux-mêmes. */
+      const tenues = [...new Set(Object.values(v))];
       return v.n2 === v.n4 && v.n1 !== v.n2 && v.n3 !== v.n2 && v.n1 !== v.n3 &&
-        ["thibaut", "pf"].every(pp => [1, 2, 3].every(
-          i => fs.existsSync(path.join(d, "reference",
-            pp + (i === 1 ? "" : "-" + i) + ".png"))));
+        tenues.length === 3 &&
+        ["thibaut", "pf"].every(pp => tenues.every(
+          x => fs.existsSync(path.join(d, "reference", pp + "-" + x + ".png"))));
     })());
 
   verifier("le contrôleur voit les planches à DEUX RANGÉES",
@@ -2621,9 +2602,13 @@ if (D){
           const s = fs.readFileSync(f, "utf8");
           const mr = s.match(/Image de référence à joindre : reference\/(.+\.png)/);
           if (!mr){ manquants.push(n + " (référence pas nommée)"); continue; }
+          /* un gabarit énumère les personnages possibles : on essaie
+             tous les noms de référence présents sur le disque plutôt
+             qu'une liste recopiée, qui vieillit. */
+          const dispo = fs.readdirSync(path.join(d, "reference"))
+            .filter(x => x.endsWith(".png")).map(x => x.slice(0, -4));
           const cibles = mr[1].indexOf("<") >= 0
-            ? ["thibaut", "pf", "depar", "dsk", "jubi", "abbe", "bruh"]
-                .map(x => mr[1].replace(/<[^>]+>/, x))
+            ? dispo.map(x => x + ".png")
             : [mr[1]];
           /* un gabarit est bon dès qu'AU MOINS une cible existe : le
              prompt des méchants nomme les cinq, celui des héros les deux */

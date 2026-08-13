@@ -2235,6 +2235,28 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Un suffixe NUMÉROTÉ oblige à ouvrir le fichier
+
+Les trois tenues des héros s'appelaient `thibaut.png`, `thibaut-2.png`,
+`thibaut-3.png`. Pour savoir laquelle joindre, il fallait ouvrir l'image
+ou se souvenir. Elles s'appellent maintenant `-muscle`, `-jeune`, `-flic`.
+
+Deux effets de bord instructifs :
+
+- **le suffixe par défaut VIDE était un piège.** `thibaut.png` était « la
+  tenue par défaut », mais rien ne disait laquelle. Chaque scène nomme
+  désormais la sienne, et l'oubli est une erreur bruyante — le garde-fou
+  a d'ailleurs attrapé Hortense, qui n'en déclarait aucune.
+- **quatre tests ont dû être corrigés**, tous parce qu'ils CONSTRUISAIENT
+  les noms au lieu de les lire : `pp + "-" + i` pour i de 1 à 3. Ils
+  cherchaient des fichiers qui n'existaient plus. Un test qui fabrique
+  une donnée au lieu de la lire tombe à chaque renommage.
+
+Et en les corrigeant, j'ai trouvé DEUX tests qui vérifiaient la même
+chose — l'un parcourait quatre dossiers, l'autre tous. Le piège « deux
+tests qui mesurent la même chose finissent par se contredire » était déjà
+consigné, et je venais de le refaire. Le doublon est supprimé.
+
 #### Ranger selon ce qui DÉTERMINE, pas selon ce qu'on voit
 
 Fallait-il un dossier « personnages » à côté des dossiers de niveau ? La
