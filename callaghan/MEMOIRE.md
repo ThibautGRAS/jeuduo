@@ -2235,6 +2235,25 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Mesurer UN cas et généraliser
+
+J'ai ouvert `ruel_pf_vise.webp` pour vérifier la tenue du niveau 4 : polo
+beige, ni manteau ni brassard. J'en ai conclu que la ruelle se jouait en
+civil, et j'ai basculé le prompt — en l'annonçant avec assurance, mesure à
+l'appui.
+
+Je n'avais pas ouvert le sprite de THIBAUT. Il porte le brassard POLICE et
+le holster depuis toujours. PF était l'anomalie, pas la règle.
+
+Ce qui rend la faute intéressante : j'ai fait exactement ce que ce projet
+reproche à ses propres outils depuis des heures — un contrôle écrit pour
+un cas, une mesure prise sur un échantillon d'un. Et le fait d'avoir
+MESURÉ m'a donné une fausse assurance : une mesure juste sur un mauvais
+échantillon est plus trompeuse qu'une intuition, parce qu'elle a l'air
+d'un fait.
+
+**Quand deux objets doivent se ressembler, en ouvrir DEUX.**
+
 #### Une orientation se DÉCLARE, elle ne se déduit pas d'un indice
 
 Le rendu de la ruelle retournait l'héros d'indice 1 en dur :

@@ -573,6 +573,24 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**PF passe en tenue de policier dans la ruelle** (v7.07). Onze sprites
+d'une planche à deux rangées, et les deux héros sont enfin à la même
+échelle — 393 px contre 396.
+
+**Il était l'anomalie, et j'avais conclu l'inverse.** Une heure plus tôt,
+j'ai ouvert `ruel_pf_vise.webp`, vu un polo beige, et basculé le prompt du
+niveau 4 en « civil » — sans ouvrir le sprite de Thibaut, qui porte le
+brassard POLICE et le holster depuis toujours. Mesurer UN cas et
+généraliser est exactement ce que ce projet reproche à ses propres outils.
+La ruelle se joue en tenue de policier, comme le niveau 2.
+
+**Le contrôleur utilise enfin le nombre de poses ATTENDU.** Deux poses
+étroites et proches fusionnaient : 366 px contre 245 de médiane, soit
+1,49 — juste sous le seuil de séparation. Un seuil universel ne peut pas
+couvrir tous les cas, alors que le nombre attendu, on le connaît. Quand le
+compte est inférieur, le bloc le plus large est redécoupé, une fois par
+pose manquante.
+
 **Ils se parlent beaucoup plus, et ils sont méchants** (v7.06).
 
 **Vingt-quatre répliques de relève** au lieu de huit — quatre chacun, ça

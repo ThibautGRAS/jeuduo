@@ -537,15 +537,16 @@ SCENES = {
   "n4": {
     "titre": "la ruelle",
     "prefixe": {"thibaut": "ruel_th", "pf": "ruel_pf"},
-    # LA TENUE DU NIVEAU 4 EST CELLE DU BAR, pas celle du niveau 2.
-    # Le prompt joignait `-flic` — manteau et brassard — alors que les
-    # sprites en jeu sont en polo beige sans manteau. Vérifié en ouvrant
-    # `ruel_pf_vise.webp` : une planche générée sur `-flic` n'aurait pas
-    # raccordé, et c'est ce qui est arrivé.
+    # LA RUELLE SE JOUE EN TENUE DE POLICIER, comme le niveau 2.
     #
-    # Le manteau appartient au niveau 2, l'enquête. La ruelle se joue en
-    # civil, comme le bar.
-    "ref": "-muscle",
+    # J'ai un instant conclu l'inverse, en ouvrant `ruel_pf_vise.webp` :
+    # polo beige, ni manteau ni brassard. J'ai basculé le prompt en
+    # « civil » sur cette seule mesure — sans ouvrir le sprite de THIBAUT,
+    # qui porte le brassard POLICE et le holster.
+    #
+    # PF était l'anomalie, pas la règle. Mesurer UN cas et généraliser est
+    # exactement ce que ce projet reproche à ses propres outils.
+    "ref": "-flic",
     # QUATORZE POSES. Le prompt n'en demandait que cinq : troisième niveau
     # de suite avec le même défaut, après le n2 (5 sur 11) et le n3
     # (9 sur 16). Elles sont tirées de POSES_RUEL_TH et POSES_RUEL_PF.
@@ -988,6 +989,27 @@ def verifier(chemin, attendu=None):
         for i in range(len(b2) - 1):
             ecarts.append(b2[i + 1][0] - b2[i][1])
         blocs += [(d, f, ry, rfin) for d, f in b2]
+    # ON SAIT COMBIEN DE POSES ON ATTEND : autant s'en servir. Le seuil
+    # de séparation — un bloc plus large que 1,6 fois la médiane — laissait
+    # passer deux poses ÉTROITES et proches : mesuré, 366 px contre 245 de
+    # médiane, soit 1,49. Un seuil universel ne peut pas couvrir tous les
+    # cas de figure.
+    #
+    # Quand le compte est INFÉRIEUR à l'attendu, on redécoupe le bloc le
+    # plus large, une fois par pose manquante. C'est une information qu'on
+    # avait déjà et qu'on n'utilisait pas.
+    if attendu and len(blocs) < attendu:
+        for _ in range(attendu - len(blocs)):
+            i = max(range(len(blocs)), key=lambda k: blocs[k][1] - blocs[k][0])
+            d, f, ry, rfin = blocs[i]
+            col = obj[ry:rfin, d:f].sum(axis=0).astype(float)
+            larg = f - d
+            a0, a1 = int(larg * 0.30), int(larg * 0.70)
+            if a1 <= a0: break
+            coupe = d + a0 + int(np.argmin(col[a0:a1]))
+            blocs[i:i+1] = [(d, coupe, ry, rfin), (coupe, f, ry, rfin)]
+            blocs.sort(key=lambda b: (b[2], b[0]))
+
     print(f"  poses détectées       {len(blocs)}"
           + (f" (attendu {attendu})" if attendu else ""))
     if attendu and len(blocs) != attendu:

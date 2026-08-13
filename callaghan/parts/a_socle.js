@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.06";
+const VERSION = "7.07";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -993,6 +993,9 @@ const OBJETS_RUELLE = [
    l'image quand le sens VOULU diffère du sens natif, au lieu de retourner
    un indice choisi une fois pour toutes. */
 const SENS_NATIF = { ruel_th: +1, ruel_pf: +1 };
+/* Les deux planches regardent à droite. C'est le mécanisme qui compte,
+   pas la valeur : quand une planche arrive tournée dans l'autre sens, on
+   change ce chiffre et rien d'autre. */
 
 /* Le sens vers lequel chaque héros doit regarder dans la ruelle : ils
    encadrent la barricade, donc ils se font face. */

@@ -2713,11 +2713,14 @@ if (D){
          cherchait des fichiers qui n'existent plus. On lit les tenues
          nommées par les prompts eux-mêmes. */
       const tenues = [...new Set(Object.values(v))];
-      /* LA RUELLE SE JOUE EN CIVIL, comme le bar — vérifié en ouvrant
-         `ruel_pf_vise.webp` : polo beige, ni manteau ni brassard. Le
-         prompt joignait `-flic` et n'aurait donc pas raccordé.
-         Le manteau de policier appartient au niveau 2, l'enquête. */
-      return v.n3 === v.n4 && v.n1 !== v.n2 && v.n2 !== v.n4 && v.n1 !== v.n4 &&
+      /* LA RUELLE SE JOUE EN TENUE DE POLICIER, comme le niveau 2 : même
+         soirée d'enquête, même tenue.
+         J'ai un instant conclu l'inverse en ouvrant `ruel_pf_vise.webp` —
+         polo beige, ni manteau ni brassard — et j'ai basculé le prompt en
+         civil sur cette seule mesure, sans ouvrir le sprite de THIBAUT,
+         qui porte le brassard POLICE et le holster. PF était l'anomalie,
+         pas la règle. */
+      return v.n2 === v.n4 && v.n1 !== v.n2 && v.n3 !== v.n2 && v.n1 !== v.n3 &&
         ["thibaut", "pf"].every(pp => tenues.every(
           x => fs.existsSync(path.join(d, "reference", pp + "-" + x + ".png"))));
     })());
