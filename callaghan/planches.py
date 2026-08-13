@@ -82,6 +82,28 @@ MOUVEMENTS = {
             "pour l'équilibre",
         ],
     },
+    "roulade": {
+        "titre": "roulade avant",
+        "cycle": True,
+        "phases": [
+            "élan : course cassée, buste plongeant vers l'avant, une épaule "
+            "en avant, bras tendu vers le sol",
+            "contact : l'épaule touche, la tête est rentrée contre la "
+            "poitrine, le dos s'arrondit, jambes encore tendues en arrière",
+            "roulé : le corps est en boule, dos au sol, genoux repliés contre "
+            "le torse, vu de côté — la tête est en bas et les pieds en haut",
+            "sortie : un pied se pose, le buste se redresse encore penché, "
+            "bras qui accompagnent le relevé",
+        ],
+    },
+    "roulade_cote": {
+        "titre": "roulade latérale (esquive)",
+        "phases": [
+            "détente sur le côté, jambes qui poussent, corps à l'horizontale",
+            "épaule au sol, corps en boule sur le flanc",
+            "relevé sur un genou, l'autre pied à plat, prêt à repartir",
+        ],
+    },
     "accroupi": {
         "titre": "accroupi",
         "phases": [
@@ -263,6 +285,28 @@ ci-dessous et prime sur ce que porte la photo.
 Traduire le visage dans le style dessiné décrit plus bas — ce n'est pas
 un photomontage.""",
 
+    # Même personne, AUTRE tenue. Le niveau 1 met les héros en tenue de
+    # rue : la référence doit faire foi sur l'identité et sur rien
+    # d'autre. Ce mode est écrit en entier plutôt que dérivé du suivant
+    # par des remplacements de phrases — rapiécer de la prose produit des
+    # textes qui se contredisent deux lignes plus bas, ce qui est
+    # exactement arrivé.
+    "poses_costume": """RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
+qu'il existe déjà.
+
+Elle fait FOI sur le VISAGE, la coupe de cheveux, la pilosité, la
+corpulence et le style de dessin — trait, palette, éclairage. Reproduire
+ces éléments à l'identique : une planche qui change la coupe d'une barbe,
+la morphologie ou les traits est inutilisable, elle ne se raccorde pas
+aux images déjà en jeu.
+
+Elle ne fait PAS foi sur les VÊTEMENTS. Ce niveau habille le personnage
+autrement, et le costume décrit ci-dessous remplace entièrement celui de
+la référence — coupe, couleurs, chaussures comprises.
+
+En dehors du costume et des poses, ne rien réinventer, ne rien
+moderniser, ne rien « améliorer ».""",
+
     # Le cas le PLUS fréquent, et celui qui doit devenir le défaut : le
     # personnage existe déjà en jeu, on lui ajoute des poses.
     "poses": """RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
@@ -307,7 +351,7 @@ def fabriquer(perso, mouvements, mode="texte"):
             details.append(f"{len(poses)}. [{nom}] {ph}")
 
     avert = ""
-    if any(MOUVEMENTS[m].get("cycle") for m in mouvements):
+    if any(m in ("marche", "course") for m in mouvements):
         avert = ("\n\nAVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou "
                  "d'une course doivent différer sur le BAS DU CORPS : ce n'est "
                  "pas la même jambe qui est devant d'une phase à l'autre. Une "
@@ -333,6 +377,16 @@ def fabriquer(perso, mouvements, mode="texte"):
         # d'un rappel court, formulé comme une confirmation.
         bloc = (MODES["poses"] + "\n\nRappel de contrôle, à confirmer sur "
                 "l'image et non à interpréter :\n" + f["rappel"])
+
+    # AU-DELÀ DE NEUF POSES, LA QUALITÉ CHUTE. Une rangée trop longue
+    # oblige le générateur à rétrécir chaque sujet, et les têtes cessent
+    # d'être égales — le défaut le plus coûteux au découpage. On refuse
+    # plutôt que de livrer une planche qu'on sait mauvaise.
+    if len(poses) > 9:
+        sys.exit(f"ABANDON : {len(poses)} poses demandées, 9 au maximum.\n"
+                 f"Au-delà, le générateur rétrécit les sujets et les têtes "
+                 f"cessent d'être égales.\nDemander deux planches, en "
+                 f"joignant la MÊME référence aux deux.")
 
     return f"""Planche de {len(poses)} poses d'un même personnage, côte à côte
 sur une seule rangée.
@@ -495,27 +549,17 @@ def fabriquer_scene(niveau, perso):
                 n += 1
                 nom = f"{m}{i}" if len(MOUVEMENTS[m]["phases"]) > 1 else m
                 details.append(f"{n}. [{nom}] {ph}")
-        cycle = any(MOUVEMENTS[m].get("cycle") for m in sc["mouvements"])
+        cycle = any(MOUVEMENTS[m].get("cycle") and m in ("marche", "course")
+                    for m in sc["mouvements"])
     else:
         details = [f"{i}. [{nom}] {d}" for i, (nom, d) in enumerate(sc["poses"], 1)]
         cycle = any(nom.startswith(("marche", "course")) for nom, _ in sc["poses"])
 
     cost = (sc.get("costume") or {}).get(perso)
     if cost:
-        # LE COSTUME PRIME SUR LA RÉFÉRENCE. Sans ça, régénérer le niveau 1
-        # depuis une référence du bar mettrait un polo dans la file.
-        ident = (MODES["poses"].replace(
-            "Elle fait FOI sur tout ce qui le définit : visage, coupe de "
-            "cheveux,\npilosité, corpulence, vêtements, couleurs, chaussures, "
-            "accessoires, et\nle style de dessin lui-même — trait, palette, "
-            "éclairage.",
-            "Elle fait FOI sur le VISAGE, la coupe de cheveux, la pilosité, la\n"
-            "corpulence et le style de dessin — trait, palette, éclairage.\n\n"
-            "Elle ne fait PAS foi sur les vêtements : ce niveau habille le\n"
-            "personnage autrement, et le costume décrit ci-dessous prime sur "
-            "celui\nde la référence.")
-            + "\n\nLE COSTUME DE CE NIVEAU, qui remplace celui de la référence :\n"
-            + cost)
+        ident = (MODES["poses_costume"]
+                 + "\n\nLE COSTUME DE CE NIVEAU, qui remplace celui de la "
+                   "référence :\n" + cost)
     else:
         ident = (MODES["poses"] + "\n\nRappel de contrôle, à confirmer sur "
                  "l'image et non à interpréter :\n" + f["rappel"])

@@ -2049,6 +2049,55 @@ if (D){
         fs.existsSync(path.join(d, "LISEZMOI.md"));
     })());
 
+  verifier("un prompt à costume ne se CONTREDIT pas",
+    (() => {
+      /* Le niveau 1 habille les héros autrement : son prompt disait que la
+         référence fait foi sur les vêtements, puis deux lignes plus bas
+         que le costume la remplace. Le mode est écrit en entier au lieu
+         d'être dérivé par des remplacements de phrases. */
+      const s = fs.readFileSync(
+        path.join(RACINE, "prompts", "n1", "thibaut.txt"), "utf8");
+      return /ne fait PAS foi sur les VÊTEMENTS/.test(s) &&
+        /LE COSTUME DE CE NIVEAU/.test(s) &&
+        !/change la couleur d'un\nvêtement/.test(s);
+    })());
+
+  verifier("neuf poses par planche au maximum",
+    (() => {
+      /* Au-delà, le générateur rétrécit les sujets et les têtes cessent
+         d'être égales — le défaut qui ne se rattrape pas au découpage. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      const d = path.join(RACINE, "prompts");
+      let pire = 0, ou = "";
+      const compter = f => {
+        const txt = fs.readFileSync(f, "utf8");
+        return (txt.match(/^\d+\. \[/gm) || []).length;
+      };
+      for (const niv of fs.readdirSync(d)){
+        const dn = path.join(d, niv);
+        if (!fs.statSync(dn).isDirectory()) continue;
+        for (const n of fs.readdirSync(dn)){
+          if (!n.endsWith(".txt")) continue;
+          const c = compter(path.join(dn, n));
+          if (c > pire){ pire = c; ou = niv + "/" + n; }
+        }
+      }
+      messageDetail = "le plus gros : " + ou + ", " + pire + " poses";
+      return pire <= 9 && /9 au maximum/.test(s);
+    })());
+
+  verifier("l'avertissement sur les jambes ne va QU'AUX foulées",
+    (() => {
+      /* Une roulade est un cycle, mais pas une foulée : lui coller
+         « ce n'est pas la même jambe devant » n'a aucun sens et brouille
+         la consigne. */
+      const d = path.join(RACINE, "prompts");
+      const roul = fs.readFileSync(path.join(d, "sup", "thibaut_roulades.txt"), "utf8");
+      const bar = fs.readFileSync(path.join(d, "n3", "thibaut.txt"), "utf8");
+      return !/AVERTISSEMENT SUR LES CYCLES/.test(roul) &&
+        /AVERTISSEMENT SUR LES CYCLES/.test(bar);
+    })());
+
   verifier("une référence sur fond magenta est prévue, et gardée",
     (() => {
       /* Le magenta bave sur ce qui brille : mesuré une fois à

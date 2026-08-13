@@ -6,8 +6,14 @@ prompts/
 ├── n1/          la file d'attente
 ├── n2/          l'enquête de l'appartement
 ├── n3/          la tournée du bar
-└── n4/          la ruelle (+ les cinq méchants)
+├── n4/          la ruelle (+ les cinq méchants)
+└── sup/         mouvements en réserve : saut, roulades
 ```
+
+**`sup/` n'est utilisé par aucun niveau aujourd'hui.** Ces planches sont
+là pour le jour où un niveau en aura besoin — une esquive roulée, un saut
+par-dessus un obstacle. Les générer maintenant produirait des images que
+rien n'affiche.
 
 **Une planche = un fichier `.txt` + l'image `reference/<perso>.png`.**
 On copie tout le texte, on joint l'image, on envoie. Rien à compléter.
@@ -39,6 +45,18 @@ pour PF. Son prompt dit donc que la référence fait foi sur **le visage,
 la morphologie et le style**, mais pas sur les vêtements, qui sont
 décrits en dessous. Sans cette bascule, régénérer le niveau 1 depuis la
 référence du bar leur mettrait un polo dans la file.
+
+## Neuf poses par planche, pas plus
+
+Au-delà, le générateur rétrécit chaque sujet pour tout faire tenir sur la
+rangée, et les têtes cessent d'être égales — le défaut le plus coûteux au
+découpage, parce qu'il ne se rattrape pas. Le générateur REFUSE désormais
+plutôt que de livrer une planche qu'on sait mauvaise.
+
+Si une série dépasse neuf poses, **deux planches**, en joignant la MÊME
+image de référence aux deux : c'est ce qui garantit qu'elles se
+raccordent. C'est ce qui a été fait pour les mouvements de réserve —
+saut d'un côté, roulades de l'autre.
 
 ## Après réception de la planche
 
