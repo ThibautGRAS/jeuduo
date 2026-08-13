@@ -11,7 +11,19 @@ la main.
 
 ---
 
-## 0. Comment ce document s'utilise
+## 0. NE PAS COLLER CE FICHIER DANS UN GÉNÉRATEUR
+
+Ce document explique comment demander une planche. Ce n'est **pas** un
+prompt : quatorze sections, des règles, l'historique des erreurs. Collé
+tel quel, il noie le générateur.
+
+**Les prompts prêts à coller sont dans `prompts/`** — un fichier par
+planche, du texte brut, à copier en entier sans rien y ajouter. Commencer
+par `prompts/LISEZMOI.md`, qui dit lequel prendre.
+
+---
+
+## 0bis. Comment ce document s'utilise
 
 Il y a **deux familles de planches**, et elles ne se demandent pas de la
 même façon.

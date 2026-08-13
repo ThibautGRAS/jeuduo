@@ -2019,6 +2019,34 @@ if (D){
       return tropTot && D.Tournee.introSortie &&
         D.Tournee.introT <= D.BAR_INTRO_PALIER + 0.01;
     })());
+  verifier("des prompts PRÊTS À COLLER existent, sans outil à lancer",
+    (() => {
+      /* Le générateur était utile à moi, pas à Thibaut : il travaille
+         depuis son téléphone et ne peut pas lancer un script Python.
+         Un outil qu'il ne peut pas exécuter ne lui sert à rien. */
+      const d = path.join(RACINE, "prompts");
+      if (!fs.existsSync(d)) return false;
+      const f = fs.readdirSync(d).filter(n => n.endsWith(".txt"));
+      messageDetail = f.length + " prompts prêts";
+      /* chacun doit être autonome : personnage, poses ET contraintes */
+      const complets = f.every(n => {
+        const s = fs.readFileSync(path.join(d, n), "utf8");
+        return /LE PERSONNAGE/.test(s) && /LES POSES/.test(s) &&
+               /CONTRAINTES TECHNIQUES/.test(s) && /FF00FF/.test(s);
+      });
+      return f.length >= 8 && complets &&
+        fs.existsSync(path.join(d, "LISEZMOI.md"));
+    })());
+
+  verifier("PROMPTS.md dit de NE PAS le coller",
+    (() => {
+      /* Il ressemble à un prompt et n'en est pas un : c'est le genre de
+         piège qu'on ne voit qu'en regardant quelqu'un s'en servir. */
+      const pr = fs.readFileSync(path.join(RACINE, "PROMPTS.md"), "utf8");
+      return /NE PAS COLLER CE FICHIER/.test(pr) &&
+        /prompts\//.test(pr);
+    })());
+
   verifier("le catalogue de mouvements décrit les DEUX jambes",
     (() => {
       /* Le vocabulaire de pose était réinventé à chaque planche : c'est

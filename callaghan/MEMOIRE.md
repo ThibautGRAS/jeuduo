@@ -2171,6 +2171,25 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Un outil que l'autre ne peut pas lancer ne lui sert à rien
+
+J'ai construit un générateur de prompts en ligne de commande, l'ai
+présenté comme la solution aux allers-retours, et Thibaut a répondu :
+« je peux donc coller le .md dans mon générateur ? »
+
+Deux erreurs dans la même livraison. `PROMPTS.md` ressemble à un prompt et
+n'en est pas un — c'est de la documentation, et le coller noierait le
+générateur d'images. Et surtout, `planches.py` demande un terminal :
+Thibaut travaille depuis son téléphone. L'outil était utile à MOI.
+
+La correction : pré-générer les textes et les déposer dans `prompts/`, un
+fichier autonome par planche, du texte brut à copier tel quel.
+
+Règle à garder : **avant de livrer un outil, se demander qui l'exécute.**
+Si c'est l'autre, il doit pouvoir le faire dans SON environnement — et son
+environnement n'est pas le mien. Un script est une réponse pour moi ; pour
+lui, la réponse est un fichier prêt.
+
 #### Un prompt écrit à la main dérive, un prompt assemblé non
 
 Quatorze prompts de planche vivaient dans PROMPTS.md, chacun avec sa

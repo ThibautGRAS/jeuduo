@@ -1,0 +1,41 @@
+Planche de 6 poses d'un même personnage, côte à côte
+sur une seule rangée.
+
+LE PERSONNAGE — identique sur toutes les poses, sans aucune variation de
+vêtement, de coupe ou de corpulence :
+Un homme d'une quarantaine d'années, CHAUVE, lunettes rondes cerclées de noir, barbe courte poivre et sel, silhouette athlétique. T-shirt BEIGE clair et jean bleu, baskets blanches.
+
+LES POSES, de gauche à droite :
+1. [saut1] flexion : genoux pliés, buste en avant, bras en arrière, juste avant l'impulsion
+2. [saut2] montée : jambes tendues vers le bas, bras levés, corps étiré
+3. [saut3] sommet : genoux ramenés vers la poitrine
+4. [saut4] réception : genoux fléchis, un pied touche le sol, bras écartés pour l'équilibre
+5. [accroupi1] accroupi, talons au sol, avant-bras sur les genoux, tête haute
+6. [accroupi2] accroupi en train de se relever, une main au sol
+
+
+CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
+
+- Fond MAGENTA PUR uni #FF00FF sur toute l'image. Aucun dégradé, aucune
+  ombre portée, aucun décor, aucun élément de mobilier, aucun sol
+  dessiné, aucun cadre, aucune bordure.
+- AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro de pose.
+- Toutes les poses sur UNE SEULE RANGÉE horizontale, alignées.
+- Au moins 80 pixels de fond magenta VIDE entre deux poses voisines.
+  Aucune partie d'un personnage — bras tendu, jambe de course, objet
+  tenu — ne doit entrer dans la colonne de sa voisine. On doit pouvoir
+  tracer un trait vertical entièrement magenta entre deux poses.
+- Au moins 60 pixels de magenta vide sur les QUATRE bords de l'image.
+  Une lueur ou un vêtement coupé par le bord ne peut pas être détouré
+  proprement.
+- MÊME ÉCHELLE pour toutes les poses : la tête doit avoir exactement la
+  même taille d'une pose à l'autre. C'est le défaut le plus fréquent.
+- Les PIEDS de toutes les poses reposent sur la même ligne horizontale
+  imaginaire, sauf pour les phases où le personnage est explicitement en
+  l'air.
+- Aucune lueur, aucun halo, aucun effet lumineux qui déborde de la
+  silhouette : le halo se mélange au magenta et laisse une bavure rose.
+- Style : bande dessinée aux couleurs franches, contours nets, éclairage
+  neutre et identique pour toutes les poses.
+- Personnage vu de TROIS QUARTS, tourné vers la DROITE, corps entier,
+  de la tête aux pieds.

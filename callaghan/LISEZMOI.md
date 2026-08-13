@@ -284,6 +284,27 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Onze prompts prêts à coller** (v6.96) : ta question a révélé que
+l'outil que je venais de construire ne te servait à rien.
+
+`planches.py` assemble un prompt — mais **tu ne peux pas lancer un script
+Python depuis ton téléphone**. J'avais construit quelque chose d'utile à
+moi. Et `PROMPTS.md` n'est pas collable : c'est de la documentation,
+quatorze sections d'explications et d'historique.
+
+**`callaghan/prompts/` contient maintenant onze fichiers texte**, un par
+planche, chacun autonome : le personnage, les poses décrites une à une,
+les contraintes techniques. On ouvre, on copie tout, on colle. Rien à
+compléter.
+
+- deux héros × marche + course + frein
+- deux héros × idle + marche + course
+- deux héros × saut + accroupi
+- cinq méchants × course + touche + chute
+
+`prompts/LISEZMOI.md` dit lequel prendre, et `PROMPTS.md` porte désormais
+en première ligne l'avertissement de ne pas le coller.
+
 **Les planches se génèrent et se contrôlent** (v6.95) : ta question sur
 les allers-retours avait une réponse mesurable.
 
