@@ -2235,6 +2235,31 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Optimiser la bonne quantité, sinon on empire
+
+Le raccord entre deux copies du décor sautait. J'ai mesuré « le saut »
+comme l'écart absolu moyen entre les deux colonnes adjacentes, et j'ai
+tenté trois correctifs : un fondu large, une égalisation globale, une
+rampe par section. Les trois ont fait MONTER la valeur — 16, puis 21.
+
+La mesure était fausse. L'écart absolu par pixel est dominé par le
+CONTENU : une plaque de laiton contre du bois donne un écart énorme, quel
+que soit l'éclairage. Il ne pouvait donc pas descendre.
+
+Le vrai pas est la différence de luminance MOYENNE de part et d'autre :
+−6,5 au raccord, contre +1,3 en pleine section. Une fois cette quantité
+mesurée, une dichotomie l'a ramenée à −2 en trois secondes.
+
+**Quand trois correctifs de suite empirent la mesure, c'est la mesure
+qu'il faut vérifier, pas le quatrième correctif.** Le signe est là :
+aucune direction ne réduit la valeur.
+
+Épilogue : la meilleure solution n'était aucun de mes correctifs, mais
+l'image complète que Thibaut proposait, répétée deux fois. Mesurée contre
+mon assemblage de trois rendus, elle gagne partout — une jonction au lieu
+de deux, +1,27 de pas au lieu de −2,4. J'avais passé une heure à
+optimiser la mauvaise option.
+
 #### Vérifier dans QUEL repère est une coordonnée avant de mesurer
 
 Les barmans ont un `x` : 0,24 pour Francky. J'ai mesuré les arêtes du

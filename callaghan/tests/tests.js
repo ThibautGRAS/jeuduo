@@ -3070,7 +3070,12 @@ if (D){
            lignes diffèrent désormais de 0,039.
            Ce qu'on veut vérifier n'est pas un écart MINIMUM mais que
            chacun déclare la SIENNE, mesurée à son poste. */
-        Math.abs(c[0] - c[1]) > 0.01 &&
+        /* PLUS D'ÉCART EXIGÉ. Le décor est désormais FRONTAL : l'arête du
+           comptoir est horizontale, mesurée entre 0,584 et 0,601 sur
+           toute la largeur, donc les deux barmans partagent la même
+           ligne. Exiger qu'elles diffèrent était juste tant que le décor
+           fuyait en perspective — c'est une propriété du DÉCOR, pas une
+           règle. Ce qu'on vérifie est que chacun DÉCLARE la sienne. */
         /b\.ref\.comptoir \|\| BAR_COMPTOIR/.test(source);
     })());
 
@@ -3592,9 +3597,14 @@ if (D){
          toilettes ou le frigo : techniquement visible, visuellement
          faux. On exige donc qu'il tombe dans la partie CENTRALE d'une
          copie, là où sont le comptoir et les bouteilles. */
+      /* Avec BAR_COPIES à 1, `x` EST la fraction d'image : le fond
+         contient ses deux sections. Chaque barman doit tomber sur une
+         partie où le comptoir est franc, et pas sur le mur des toilettes
+         ni sur le frigo — mesuré, le comptoir court sur toute la largeur
+         depuis qu'on a rogné les biseaux. */
       return D.BARMANS.every(b => {
         const dansLaCopie = (b.x * D.BAR_COPIES) % 1;
-        return dansLaCopie >= 0.22 && dansLaCopie <= 0.80;
+        return dansLaCopie >= 0.05 && dansLaCopie <= 0.95;
       });
     })(),
     D.BARMANS.map(b => b.id + " -> " + (((b.x * D.BAR_COPIES) % 1).toFixed(2))).join(", "));
@@ -5590,7 +5600,12 @@ if (D){
       const present = ["vert", "violet", "bleu", "orange"].every(c =>
         fs.existsSync(path.join(RACINE, "img", "n3", "bar_tabouret_" + c + ".webp")));
       messageDetail = D.BAR_TABOURETS.length + " par répétition du décor";
-      return present && s > h && s > f && D.BAR_TABOURETS.length <= 4;
+      /* PLUS DE PLAFOND À QUATRE. Ces positions sont en coordonnées
+         MONDE : quand le fond était répété trois fois, quatre entrées
+         donnaient douze tabourets. Depuis que le fond contient ses
+         sections et que BAR_COPIES vaut 1, il faut les énumérer sur toute
+         la longueur. Ce qu'on vérifie est l'ORDRE de dessin. */
+      return present && s > h && s > f && D.BAR_TABOURETS.length >= 4;
     })());
 
   verifier("chaque barman a SON arête arrière de comptoir",
@@ -5618,7 +5633,8 @@ if (D){
            et elles ont déjà bougé de 0,501/0,456 à 0,534/0,570. Le test
            vérifie qu'elles existent et diffèrent, pas leur valeur. */
         lignes.every(y => y > 0.3 && y < 0.70) &&
-        new Set(lignes).size === lignes.length &&
+        /* idem : sur un décor frontal les deux arêtes arrière sont
+           identiques, et c'est correct. */
         /dessinerMasqueComptoir/.test(source) &&
         /b\.ref\.arriere \|\| b\.ref\.comptoir/.test(source);
     })());

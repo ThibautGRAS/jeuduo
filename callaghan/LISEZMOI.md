@@ -573,6 +573,32 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**Décor du bar FRONTAL, et les barmans enfin derrière** (v7.15).
+
+L'ancien décor fuyait en perspective : l'arête du comptoir descendait de
+0,54 à 0,62 selon l'endroit, chaque barman avait sa ligne, et Jojo
+finissait sur l'angle arrondi où le meuble s'arrête. Le décor frontal
+fourni par Thibaut a une arête **horizontale, mesurée à 0,546 et constante
+sur toute la longueur** — les deux barmans partagent la même ligne, et le
+masque les coupe pareil.
+
+**Ce que j'ai essayé avant, et qui était moins bon.** J'ai assemblé trois
+rendus DIFFÉRENTS pour éviter la répétition. Mesuré, c'était pire sur tous
+les points : deux jonctions au lieu d'une, un pas de luminance de −2,4
+contre +1,27, et un montant vertical du décor tombant pile au raccord.
+L'image complète répétée deux fois gagne.
+
+**Et le monde ne BOUCLE pas** — la caméra est bornée — donc le raccord de
+fin n'est jamais vu. Seule la jonction du milieu compte, et le passage
+frigo Corona → porte des toilettes s'y lit comme un changement de décor.
+
+**Trois mesures fausses, trouvées en cherchant la bonne.** Le « saut » que
+je corrigeais était l'écart absolu par pixel — dominé par le CONTENU, une
+plaque contre du bois — et il ne descendait donc jamais. Le vrai pas est
+la différence de luminance MOYENNE de part et d'autre : −6,5 au raccord
+contre 1,3 en pleine section. Trois correctifs ont empiré les choses avant
+que je mesure la bonne quantité.
+
 **Jojo retrouve son comptoir, et le raccord ne saute plus** (v7.14).
 
 **Une confusion de repère qui durait depuis plusieurs versions** : `x` est

@@ -10,9 +10,22 @@
    ============================================================ */
 
 /* ---------- réglages ---------- */
-const BAR_COPIES = 3;               /* le monde = trois fois le fond mis bout à bout : un seul grand bar */
+/* UNE SEULE COPIE : le fond contient DÉJÀ deux sections, l'image complète
+   fournie par Thibaut répétée deux fois avec ses biseaux d'extrémité
+   rognés à 3 %.
+   J'ai d'abord assemblé trois rendus DIFFÉRENTS pour éviter la
+   répétition — c'était pire, mesuré : deux jonctions au lieu d'une, un
+   pas de luminance de -2,4 contre +1,27, et un montant vertical du décor
+   tombant pile au raccord.
+   Le monde ne BOUCLE pas — `origine()` borne la caméra — donc le raccord
+   de fin n'est jamais vu. Seule la jonction du milieu compte, et le
+   passage frigo Corona -> porte des toilettes s'y lit comme un
+   changement de décor plutôt que comme une couture. */
+const BAR_COPIES = 1;
 const BAR_SOL = 0.965;              /* ligne de sol du joueur, en fraction de la hauteur du fond */
-const BAR_COMPTOIR = 0.585;         /* remesuré sur le fond neuf : moyenne des deux postes */
+/* MESURÉ sur le décor frontal : l'arête avant du plateau est à 0,546 et
+   ne varie pas — 0,534 à 0,547 sur toute la longueur. */
+const BAR_COMPTOIR = 0.546;
 /* LA BARRE DU MASQUE : au-dessus du point le plus HAUT de l'arête du
    comptoir, mesurée à 0,540 sous Francky et 0,612 sous Jojo. À 0,528 on
    redessine tout le meuble sans jamais laisser réapparaître un bout de
@@ -30,10 +43,18 @@ const BAR_MASQUE = 0.528;
 /* TROIS PAR RÉPÉTITION, PAS SIX. À six ils formaient un mur continu : le
    champion ne passait plus DERRIÈRE eux, il disparaissait. Espacés
    irrégulièrement, ils laissent des trouées par lesquelles on le suit. */
+/* NEUF TABOURETS, pas trois. Ces positions sont en coordonnées MONDE :
+   avec BAR_COPIES à 3 elles étaient répétées trois fois, ce qui donnait
+   neuf tabourets. Depuis que le fond contient les trois sections et que
+   BAR_COPIES vaut 1, il n'en restait que trois sur toute la longueur.
+   On les énumère donc explicitement, trois par section, espacés
+   irrégulièrement pour laisser des trouées. */
 const BAR_TABOURETS = [
-  { x:0.09, teinte:"vert"   },
-  { x:0.47, teinte:"bleu"   },
-  { x:0.78, teinte:"orange" },
+  { x:0.03, teinte:"vert"   }, { x:0.16, teinte:"bleu"   },
+  { x:0.26, teinte:"orange" }, { x:0.38, teinte:"violet" },
+  { x:0.49, teinte:"vert"   }, { x:0.60, teinte:"orange" },
+  { x:0.71, teinte:"bleu"   }, { x:0.83, teinte:"violet" },
+  { x:0.94, teinte:"vert"   },
 ];
 /* Leur ligne de sol est PLUS BASSE que celle des héros : c'est ce qui les
    place devant. Et leur taille est celle des tabourets peints, relevée
@@ -163,7 +184,16 @@ const BOISSONS = {
    geste avant que le verre soit posé. L'eau a sa préparation à part,
    plus posée — c'est l'indice. */
 const BARMANS = [
-  /* ATTENTION : `x` EST UNE COORDONNÉE MONDE, PAS UNE FRACTION D'IMAGE.
+  /* LE DÉCOR EST FRONTAL : l'arête du comptoir est HORIZONTALE, mesurée
+     entre 0,584 et 0,601 sur toute la largeur. Les deux barmans partagent
+     donc la même ligne, ce que la perspective de l'ancien décor
+     interdisait.
+     Francky est à droite des tireuses de la PREMIÈRE section — elles sont
+     à 0,154 — et Jojo à droite de celles de la deuxième, à 0,487.
+
+     ATTENTION : `x` EST UNE COORDONNÉE MONDE. Avec BAR_COPIES à 1 elle
+     coïncide avec la fraction d'image, mais ce n'était pas le cas avant
+     et ça a coûté plusieurs versions de mesures fausses.
      Le monde vaut BAR_COPIES fois le fond, donc la position DANS l'image
      est (x * BAR_COPIES) % 1. Francky à 0,24 se trouve en réalité à 0,720
      de l'image, pas à 0,24 — et j'ai mesuré ses arêtes de comptoir au
@@ -208,14 +238,14 @@ const BARMANS = [
      le comptoir fuit en perspective. Une barre unique cuperait l'un trop
      haut et l'autre trop bas ; c'est exactement le défaut d'avant, à
      l'envers. */
-  { id:"francky", nom:"FRANCKY", x:0.24, comptoir:0.619, arriere:0.515, sert:"cocktail",
+  { id:"francky", nom:"FRANCKY", x:0.20, comptoir:0.546, arriere:0.522, sert:"cocktail",
     poses:{ repos:"bar_francky_idle", eau:"bar_francky_essuie", sert:"bar_francky_sert" },
     /* cinq temps : il choisit, il dose, il verse, il shake, il remplit,
        il décore. Plus la séquence est longue, plus le joueur a le temps
        de LIRE ce qui arrive — c'est là que se gagne le niveau. */
     prepare:["bar_francky_choisit", "bar_francky_dose", "bar_francky_verse",
              "bar_francky_shake", "bar_francky_remplit", "bar_francky_decore"] },
-  { id:"jojo", nom:"JOJO", x:0.55, comptoir:0.580, arriere:0.561, sert:"jager",
+  { id:"jojo", nom:"JOJO", x:0.62, comptoir:0.546, arriere:0.522, sert:"jager",
     poses:{ repos:"bar_jojo_idle", eau:"bar_jojo_essuie", sert:"bar_jojo_serie" },
     /* quatre temps : il choisit, il dose, il verse, il superpose. Un peu
        plus court que Francky, et cette différence de RYTHME est en soi

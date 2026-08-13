@@ -278,7 +278,9 @@ const BarVue = {
         if (!spr || !spr.naturalWidth) continue;
         const sh = H * BAR_TAB_TAILLE;
         const sl = sh * spr.naturalWidth / spr.naturalHeight;
-        const cx = x0 + t2.x * lUne;
+        /* même transformation que pour les barmans : `x` est une
+           coordonnée MONDE */
+        const cx = this.ex(t2.x);
         if (cx < -sl || cx > L + sl) continue;
         ctx.drawImage(spr, cx - sl / 2, H * BAR_TAB_PIEDS - sh, sl, sh);
       }
