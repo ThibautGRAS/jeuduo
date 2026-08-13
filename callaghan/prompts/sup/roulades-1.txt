@@ -1,9 +1,7 @@
 Planche de 4 poses d'un même personnage, côte à côte
 sur une seule rangée.
-
-Scène : la file d'attente.
-Planche 1 sur 3 — joindre la MÊME image de référence à toutes, c'est ce qui les raccorde.
-Image de référence à joindre : reference/<thibaut ou pf>-2.png
+Image de référence à joindre : reference/<le personnage voulu>.png
+Planche 1 sur 2 — joindre la MÊME image de référence à toutes.
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
 qu'il existe déjà.
@@ -26,13 +24,11 @@ vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
 LES POSES, de gauche à droite :
-1. [idle] debout, détendu, les bras le long du corps, léger sourire
-2. [attente] debout, les bras croisés, poids sur une jambe, l'air de patienter depuis un moment
-3. [marche] un pas en avant, tranquille, bras relâchés
-4. [regarde] tourné de trois quarts, la tête pivotée vers le côté, une main en visière au-dessus des yeux
+1. [roulade1] élan : course cassée, buste plongeant vers l'avant, une épaule en avant, bras tendu vers le sol
+2. [roulade2] contact : l'épaule touche, la tête est rentrée contre la poitrine, le dos s'arrondit, jambes encore tendues en arrière
+3. [roulade3] roulé : le corps est en boule, dos au sol, genoux repliés contre le torse, vu de côté — la tête est en bas et les pieds en haut
+4. [roulade4] sortie : un pied se pose, le buste se redresse encore penché, bras qui accompagnent le relevé
 
-
-AVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou d'une course doivent différer sur le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à l'autre. Une planche où toutes les poses ont le même pied en avant est INUTILISABLE — l'animation semble bloquée.
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
 

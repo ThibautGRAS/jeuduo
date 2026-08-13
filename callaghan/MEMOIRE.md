@@ -2235,6 +2235,44 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### L'espacement ne se demande pas, il se DONNE
+
+La consigne « au moins 80 pixels de fond vide entre deux poses » a été
+écrite, puis renforcée, puis mise en tête des contraintes avec un test
+mental et un « dans le doute, écarter plus ». Relevé sur les planches
+livrées ensuite : **12, 18, 23 et 34 pixels**. Jamais 80.
+
+La raison est arithmétique, et elle disculpe le générateur : six
+personnages de 250 px de large sur une planche de 1800 px laissent 300 px
+par case, soit cinquante de marge — qu'un bras tendu mange. Il ne
+désobéissait pas, il n'avait pas la place.
+
+Le maximum est passé de neuf poses à **cinq**. À cinq, chaque case fait
+360 px ; à quatre, 450.
+
+**Quand une consigne échoue quatre fois, vérifier qu'elle est PHYSIQUEMENT
+réalisable avant de la réécrire une cinquième.** Le nombre de planches
+augmente — dix-huit au lieu de onze — et c'est le bon prix : une planche
+inutilisable coûte une génération entière.
+
+Deux corollaires posés en même temps :
+- le découpage est AUTOMATIQUE, en morceaux équilibrés. Les nombres
+  écrits à la main devenaient faux dès qu'on ajoutait une pose, et il a
+  fallu les corriger trois fois. Et « on remplit puis on déborde » donnait
+  5+5+1 : une planche avec un seul personnage, sans voisin pour juger son
+  échelle.
+- le test des doublons n'a plus de plafond sur le NOMBRE de prompts. Il
+  en avait un, à douze, et il interdisait la bonne solution — découper
+  davantage.
+
+#### Décrire un effet ne suffit pas : dire ce qu'on doit VOIR
+
+La pose `splat` était décrite ainsi : « touché en pleine figure : tête
+rejetée en arrière, yeux fermés, bras écartés ». Le générateur a dessiné
+un homme qui sursaute, sans tarte. Je décrivais la RÉACTION sans jamais
+nommer la cause — et une tarte à la crème sur le visage, c'est justement
+ce qu'il faut voir.
+
 #### Une consigne écrite qui lutte contre la DISPOSITION perd toujours
 
 Deux poses tendaient la main vers la droite : `poignee` et `vide`. Côte à

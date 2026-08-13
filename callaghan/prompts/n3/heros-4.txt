@@ -1,6 +1,9 @@
-Planche de 7 poses d'un même personnage, côte à côte
+Planche de 4 poses d'un même personnage, côte à côte
 sur une seule rangée.
-Image de référence à joindre : reference/<le personnage voulu>.png
+
+Scène : la tournée du bar.
+Planche 4 sur 4 — joindre la MÊME image de référence à toutes, c'est ce qui les raccorde.
+Image de référence à joindre : reference/<thibaut ou pf>.png
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
 qu'il existe déjà.
@@ -23,13 +26,10 @@ vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
 LES POSES, de gauche à droite :
-1. [roulade1] élan : course cassée, buste plongeant vers l'avant, une épaule en avant, bras tendu vers le sol
-2. [roulade2] contact : l'épaule touche, la tête est rentrée contre la poitrine, le dos s'arrondit, jambes encore tendues en arrière
-3. [roulade3] roulé : le corps est en boule, dos au sol, genoux repliés contre le torse, vu de côté — la tête est en bas et les pieds en haut
-4. [roulade4] sortie : un pied se pose, le buste se redresse encore penché, bras qui accompagnent le relevé
-5. [roulade_cote1] détente sur le côté, jambes qui poussent, corps à l'horizontale
-6. [roulade_cote2] épaule au sol, corps en boule sur le flanc
-7. [roulade_cote3] relevé sur un genou, l'autre pied à plat, prêt à repartir
+1. [boit] la tête rejetée en arrière, le verre porté aux lèvres et incliné, yeux fermés, coude haut
+2. [vide] le verre vide brandi à bout de bras au-dessus de l'épaule, grand sourire, l'autre poing serré
+3. [jette] en plein lancer : le bras part vers l'arrière puis se détend, le verre encore dans la main, buste tourné, grimace de dégoût
+4. [titube] ivre : les jambes écartées et molles, le buste qui part de côté, un bras battant l'air pour l'équilibre, paupières lourdes
 
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.

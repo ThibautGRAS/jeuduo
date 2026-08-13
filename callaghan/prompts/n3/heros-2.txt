@@ -1,8 +1,8 @@
-Planche de 7 poses d'un même personnage, côte à côte
+Planche de 4 poses d'un même personnage, côte à côte
 sur une seule rangée.
 
 Scène : la tournée du bar.
-Planche 2 sur 2 — joindre la MÊME image de référence aux deux, c'est ce qui les raccorde.
+Planche 2 sur 4 — joindre la MÊME image de référence à toutes, c'est ce qui les raccorde.
 Image de référence à joindre : reference/<thibaut ou pf>.png
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
@@ -26,14 +26,13 @@ vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
 LES POSES, de gauche à droite :
-1. [frein] talons plantés, buste rejeté en arrière, bras écartés, chaussures qui dérapent
-2. [attrape] le bras tendu vers la DROITE, la main qui se referme sur un verre à hauteur de taille, buste légèrement penché. Le verre EST dessiné ; le comptoir NON, ni aucun décor.
-3. [tient] debout, un verre plein tenu contre la poitrine, regard vers l'avant, l'autre main libre
-4. [boit] la tête rejetée en arrière, le verre porté aux lèvres et incliné, yeux fermés, coude haut
-5. [vide] le verre vide brandi à bout de bras au-dessus de l'épaule, grand sourire, l'autre poing serré
-6. [jette] en plein lancer : le bras part vers l'arrière puis se détend, le verre encore dans la main, buste tourné, grimace de dégoût
-7. [titube] ivre : les jambes écartées et molles, le buste qui part de côté, un bras battant l'air pour l'équilibre, paupières lourdes
+1. [marche4] les deux jambes se croisent sous le corps, poids sur la gauche ; bras presque le long du corps
+2. [course1] jambe DROITE lancée loin devant, genou haut, jambe gauche tendue en arrière ; bras gauche en avant, coudes pliés
+3. [course2] suspension : les DEUX pieds décollés, jambes croisées sous le corps, buste penché en avant
+4. [course3] jambe GAUCHE lancée loin devant, genou haut, jambe droite tendue en arrière ; bras droit en avant, coudes pliés
 
+
+AVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou d'une course doivent différer sur le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à l'autre. Une planche où toutes les poses ont le même pied en avant est INUTILISABLE — l'animation semble bloquée.
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
 

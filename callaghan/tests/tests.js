@@ -2164,7 +2164,11 @@ if (D){
       parcourir(d);
       messageDetail = doublons.length ? doublons.join(", ")
                                       : vus.size + " prompts, tous distincts";
-      return doublons.length === 0 && vus.size <= 12;
+      /* Pas de plafond arbitraire sur le NOMBRE : il monte quand on
+         découpe davantage, et découper davantage est justement la
+         correction. Ce qui compte est qu'aucun texte ne soit écrit deux
+         fois — un plafond chiffré aurait interdit la bonne solution. */
+      return doublons.length === 0;
     })());
 
   verifier("aucun prompt ne garde de RAPPEL écrit",
@@ -2303,15 +2307,22 @@ if (D){
         /Un doigt pointé/.test(bloc) && /ÉCARTER PLUS/.test(bloc);
     })());
 
-  verifier("une scène de plus de neuf poses est SCINDÉE",
+  verifier("les planches d'une scène sont ÉQUILIBRÉES",
     (() => {
-      const d = path.join(RACINE, "prompts", "n2");
-      const f = fs.readdirSync(d).filter(n => n.endsWith(".txt"));
-      const un = fs.readFileSync(path.join(d, "heros-1.txt"), "utf8");
-      messageDetail = f.join(", ");
-      /* deux fichiers et non quatre : un seul prompt sert aux deux héros */
-      return f.length === 2 && /Planche 1 sur 2/.test(un) &&
-        /joindre la MÊME image de référence aux deux/.test(un);
+      /* « On remplit puis on déborde » donnait 5+5+1 : une planche avec un
+         seul personnage perdu au milieu du magenta, sans voisin pour juger
+         son échelle. En équilibrant, 4+4+3. */
+      const d = path.join(RACINE, "prompts", "n1");
+      const tailles = [];
+      for (const n of fs.readdirSync(d).sort()){
+        if (!n.startsWith("heros")) continue;
+        const s = fs.readFileSync(path.join(d, n), "utf8");
+        tailles.push((s.match(/^\d+\. \[/gm) || []).length);
+      }
+      messageDetail = tailles.join(" + ");
+      return tailles.length >= 2 &&
+        Math.max(...tailles) - Math.min(...tailles) <= 1 &&
+        /Planche 1 sur/.test(fs.readFileSync(path.join(d, "heros-1.txt"), "utf8"));
     })());
 
   verifier("chaque prompt NOMME la référence à joindre",
@@ -2399,7 +2410,7 @@ if (D){
         /recadré sur le magenta/.test(s);
     })());
 
-  verifier("neuf poses par planche au maximum",
+  verifier("CINQ poses par planche au maximum",
     (() => {
       /* Au-delà, le générateur rétrécit les sujets et les têtes cessent
          d'être égales — le défaut qui ne se rattrape pas au découpage. */
@@ -2419,8 +2430,13 @@ if (D){
           if (c > pire){ pire = c; ou = niv + "/" + n; }
         }
       }
+      /* La consigne « 80 px entre deux poses » a été redemandée trois
+         fois et relevée quatre fois sur des planches livrées : 12, 18, 23
+         et 34 px. Jamais 80. La raison est arithmétique — six sujets de
+         250 px sur 1800 px ne laissent pas la place. On obtient
+         l'espacement en donnant de la PLACE, pas en le redemandant. */
       messageDetail = "le plus gros : " + ou + ", " + pire + " poses";
-      return pire <= 9 && /9 au maximum/.test(s);
+      return pire <= 5 && /MAX_POSES = 5/.test(s);
     })());
 
   verifier("l'avertissement sur les jambes ne va QU'AUX foulées",
@@ -2431,7 +2447,11 @@ if (D){
       const d = path.join(RACINE, "prompts");
       /* un seul prompt de roulades depuis la fusion : le texte est le
          même pour les deux héros, seule l'image jointe change */
-      const roul = fs.readFileSync(path.join(d, "sup", "roulades.txt"), "utf8");
+      /* les roulades sont scindées depuis le passage à cinq poses : on
+         lit les deux morceaux, pour ne plus dépendre du découpage */
+      const ds = path.join(d, "sup");
+      const roul = fs.readdirSync(ds).filter(n => n.startsWith("roulades"))
+        .map(n => fs.readFileSync(path.join(ds, n), "utf8")).join("");
       const bar = promptNiveau("n3");
       return !/AVERTISSEMENT SUR LES CYCLES/.test(roul) &&
         /AVERTISSEMENT SUR LES CYCLES/.test(bar);

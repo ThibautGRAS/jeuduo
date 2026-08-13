@@ -37,6 +37,19 @@ import sys, pathlib, json
 # BAS DU CORPS, pas sur une nuance de bras. Une foulée qui alterne se
 # vérifie sur la position des pieds.
 # ─────────────────────────────────────────────────────────────────────
+# CINQ POSES PAR PLANCHE, ET C'EST UNE MESURE, PAS UNE PRÉFÉRENCE.
+# La consigne « au moins 80 pixels entre deux poses » a été redemandée
+# trois fois, chaque fois plus fermement, et relevée sur les planches
+# livrées : 12, 18, 23 et 34 pixels. Jamais 80.
+#
+# La raison est arithmétique : six personnages de 250 px de large sur une
+# planche de 1800 px laissent 300 px par case, soit 50 px de marge — et un
+# bras tendu les mange. Le générateur ne désobéit pas, il n'a pas la place.
+#
+# À cinq poses chaque case fait 360 px, à quatre 450. On obtient
+# l'espacement en donnant de la PLACE, pas en le redemandant.
+MAX_POSES = 5
+
 MOUVEMENTS = {
     "idle": {
         "titre": "au repos",
@@ -279,12 +292,18 @@ SCENES = {
                "buste. La gêne, pas la colère."),
       ("esquive", "esquive vive : le buste se jette sur le côté, les deux "
                   "bras montent devant le visage, un pied décollé"),
-      ("splat", "touché en pleine figure : tête rejetée en arrière, yeux "
-                "fermés, bras écartés, un pas de recul, épaules remontées"),
+      # LA TARTE ÉTAIT ABSENTE DE MA DESCRIPTION. Je décrivais la
+      # RÉACTION — tête rejetée, bras écartés — sans jamais dire ce qui
+      # l'avait causée. Le générateur a donc dessiné un homme qui
+      # sursaute, sans tarte. Décrire un effet ne suffit pas : il faut
+      # dire ce qu'on doit VOIR.
+      ("splat", "il vient de recevoir une TARTE À LA CRÈME en pleine "
+                "figure : une grosse galette de crème BLANCHE écrasée sur "
+                "le visage, qui gicle en éclaboussures autour de la tête. "
+                "Tête rejetée en arrière, bras écartés, un pas de recul, "
+                "épaules remontées."),
     ],
     # DOUZE poses : deux planches de six. La coupure tombe entre les
-    # attitudes d'attente et les gestes qui font le jeu.
-    "scinder": 6,
   },
   "n2": {
     "titre": "l'enquête de l'appartement",
@@ -329,8 +348,6 @@ SCENES = {
       ("splat", "touché en pleine figure : tête rejetée en arrière, bras "
                 "écartés, corps qui recule d'un pas"),
     ],
-    # deux planches : le maximum est de neuf poses
-    "scinder": 6,
   },
   "n3": {
     "titre": "la tournée du bar",
@@ -388,8 +405,6 @@ SCENES = {
     # SEIZE poses, donc deux planches. La coupure tombe entre le
     # déplacement et le verre : neuf d'un côté, sept de l'autre, et
     # chaque planche reste un ensemble cohérent qu'on peut juger d'un
-    # coup d'œil.
-    "scinder": 9,
   },
   "n4": {
     "titre": "la ruelle",
@@ -442,8 +457,6 @@ SCENES = {
                 "la ligne de tir"),
     ],
     # quatorze poses : deux planches de sept, la coupure entre le tir et
-    # ce qui l'entoure
-    "scinder": 7,
   },
 }
 
@@ -534,7 +547,7 @@ identique à celui de la référence une fois le fond mis de côté.""",
 }
 
 
-def fabriquer(perso, mouvements, mode="texte"):
+def fabriquer(perso, mouvements, mode="texte", part=None, parts=None):
     """`perso` à None = un prompt commun, où seule l'image jointe change."""
     fiches = charger_fiches()
     if perso is not None and perso not in fiches:
@@ -592,11 +605,22 @@ def fabriquer(perso, mouvements, mode="texte"):
     # oblige le générateur à rétrécir chaque sujet, et les têtes cessent
     # d'être égales — le défaut le plus coûteux au découpage. On refuse
     # plutôt que de livrer une planche qu'on sait mauvaise.
-    if len(poses) > 9:
-        sys.exit(f"ABANDON : {len(poses)} poses demandées, 9 au maximum.\n"
-                 f"Au-delà, le générateur rétrécit les sujets et les têtes "
-                 f"cessent d'être égales.\nDemander deux planches, en "
-                 f"joignant la MÊME référence aux deux.")
+    if part and parts and parts > 1:
+        n2 = len(poses)
+        base, reste = divmod(n2, parts)
+        debut = 0
+        for j in range(1, part):
+            debut += base + (1 if j <= reste else 0)
+        fin = debut + base + (1 if part <= reste else 0)
+        poses, details = poses[debut:fin], details[debut:fin]
+        details = [f"{i}. {x.split('. ', 1)[1]}" for i, x in enumerate(details, 1)]
+
+    if len(poses) > MAX_POSES:
+        sys.exit(f"ABANDON : {len(poses)} poses demandées, {MAX_POSES} au "
+                 f"maximum.\nAu-delà, le générateur n'a pas la place de les "
+                 f"espacer : relevé sur quatre planches livrées, 12 à 34 px "
+                 f"au lieu de 80.\nDécouper en plusieurs planches, en "
+                 f"joignant la MÊME référence à toutes.")
 
     # Le nom de la référence est ÉCRIT dans le prompt. Un personnage peut
     # en avoir plusieurs — une par tenue — et sans ce nom on ne sait pas
@@ -604,6 +628,9 @@ def fabriquer(perso, mouvements, mode="texte"):
     qui = perso or "<le personnage voulu>"
     ligne_ref = (f"Image de référence à joindre : reference/{qui}.png\n"
                  if mode == "poses" else "")
+    if part and parts and parts > 1:
+        ligne_ref += (f"Planche {part} sur {parts} — joindre la MÊME image de "
+                      f"référence à toutes.\n")
 
     return f"""Planche de {len(poses)} poses d'un même personnage, côte à côte
 sur une seule rangée.
@@ -807,7 +834,7 @@ def verifier(chemin, attendu=None):
     return 0
 
 
-def fabriquer_scene(niveau, perso=None, part=None):
+def fabriquer_scene(niveau, perso=None, part=None, parts=None):
     """Le prompt d'un niveau. `perso` à None = le prompt commun aux deux
     héros, qui ne diffèrent que par l'image jointe.
 
@@ -828,9 +855,22 @@ def fabriquer_scene(niveau, perso=None, part=None):
         poses = sc["poses"]
         # SCINDÉE : au-delà de neuf poses, deux planches. La même
         # référence est jointe aux deux, c'est ce qui les raccorde.
-        coupe = sc.get("scinder")
-        if coupe and part:
-            poses = poses[:coupe] if part == 1 else poses[coupe:]
+        # DÉCOUPAGE AUTOMATIQUE en morceaux de MAX_POSES. Les nombres
+        # écrits à la main devenaient faux dès qu'on ajoutait une pose, et
+        # il a fallu les corriger trois fois.
+        # RÉPARTITION ÉQUITABLE, pas « on remplit puis on déborde ».
+        # Onze poses en morceaux de cinq donnaient 5+5+1 : une planche
+        # avec un seul personnage perdu au milieu du magenta, sans voisin
+        # pour juger son échelle. En équilibrant : 4+4+3.
+        if part:
+            n = len(poses)
+            k = (n + MAX_POSES - 1) // MAX_POSES  # nombre de planches
+            base, reste = divmod(n, k)
+            debut = 0
+            for j in range(1, part):
+                debut += base + (1 if j <= reste else 0)
+            fin = debut + base + (1 if part <= reste else 0)
+            poses = poses[debut:fin]
         details = [f"{i}. [{nom}] {d}" for i, (nom, d) in enumerate(poses, 1)]
         cycle = any(nom.startswith(("marche", "course")) for nom, _ in poses)
 
@@ -861,13 +901,13 @@ def fabriquer_scene(niveau, perso=None, part=None):
     # Le personnage n'apparaît plus que dans le nom du fichier à joindre :
     # un seul prompt sert donc aux deux héros.
     qui = "<thibaut ou pf>" if perso is None else perso
-    if len(details) > 9:
-        sys.exit(f"ABANDON : {len(details)} poses pour {niveau}/{perso}. "
-                 f"Ajouter « scinder » à la scène.")
+    if len(details) > MAX_POSES:
+        sys.exit(f"ABANDON : {len(details)} poses pour {niveau}, "
+                 f"maximum {MAX_POSES}.")
     surtitre = ""
-    if sc.get("scinder") and part:
-        surtitre = (f"\nPlanche {part} sur 2 — joindre la MÊME image de "
-                    f"référence aux deux, c'est ce qui les raccorde.")
+    if part and parts and parts > 1:
+        surtitre = (f"\nPlanche {part} sur {parts} — joindre la MÊME image de "
+                    f"référence à toutes, c'est ce qui les raccorde.")
     return f"""Planche de {len(details)} poses d'un même personnage, côte à côte
 sur une seule rangée.
 
@@ -881,6 +921,24 @@ LES POSES, de gauche à droite :
 {avert}
 
 {REGLES}"""
+
+
+def ecrire_jeu(dossier, nom, mouvements):
+    """Écrit un jeu de mouvements, découpé autant de fois qu'il le faut.
+
+    Une aide unique plutôt qu'un cas par famille : les méchants et les
+    mouvements de réserve ont chacun buté sur le maximum, séparément, et
+    chacun a demandé sa correction."""
+    n = sum(len(MOUVEMENTS[m]["phases"]) for m in mouvements)
+    parts = (n + MAX_POSES - 1) // MAX_POSES
+    for f in dossier.glob(nom + "*.txt"): f.unlink()
+    if parts <= 1:
+        (dossier / f"{nom}.txt").write_text(
+            fabriquer(None, mouvements, "poses"), encoding="utf-8")
+        return
+    for k in range(1, parts + 1):
+        (dossier / f"{nom}-{k}.txt").write_text(
+            fabriquer(None, mouvements, "poses", k, parts), encoding="utf-8")
 
 
 def tout():
@@ -899,27 +957,31 @@ def tout():
         # UN SEUL PROMPT PAR NIVEAU. Les deux héros partageaient un texte
         # identique à deux lignes près, dont une qui était fausse. Ce qui
         # les distingue est l'IMAGE jointe, pas le texte.
-        if sc.get("scinder"):
-            for part in (1, 2):
-                (d / f"heros-{part}.txt").write_text(
-                    fabriquer_scene(niveau, None, part), encoding="utf-8")
-        else:
+        n = len(sc.get("poses") or []) or sum(
+            len(MOUVEMENTS[m]["phases"]) for m in sc.get("mouvements", []))
+        parts = (n + MAX_POSES - 1) // MAX_POSES
+        for f in d.glob("heros*.txt"): f.unlink()
+        if parts <= 1:
             (d / "heros.txt").write_text(
                 fabriquer_scene(niveau, None), encoding="utf-8")
+        else:
+            for part in range(1, parts + 1):
+                (d / f"heros-{part}.txt").write_text(
+                    fabriquer_scene(niveau, None, part, parts), encoding="utf-8")
     # les méchants n'appartiennent qu'à la ruelle
     d = base / "n4"
     for f in d.glob("mechant_*.txt"): f.unlink()
-    (d / "mechants.txt").write_text(
-        fabriquer(None, ["course", "touche", "chute"], "poses"), encoding="utf-8")
+    # les méchants aussi passent au découpage : huit poses, donc deux
+    # planches de quatre. Même raison que pour les héros.
+    ecrire_jeu(d, "mechants", ["course", "touche", "chute"])
     # les mouvements de réserve : un prompt commun aux deux héros, comme
     # partout ailleurs. Ils n'étaient dupliqués que parce que le rappel
     # écrit les distinguait — et il n'existe plus.
     sup = base / "sup"
     sup.mkdir(parents=True, exist_ok=True)
     for f in sup.glob("*.txt"): f.unlink()
-    (sup / "saut.txt").write_text(fabriquer(None, ["saut"], "poses"), encoding="utf-8")
-    (sup / "roulades.txt").write_text(
-        fabriquer(None, ["roulade", "roulade_cote"], "poses"), encoding="utf-8")
+    ecrire_jeu(sup, "saut", ["saut"])
+    ecrire_jeu(sup, "roulades", ["roulade", "roulade_cote"])
 
     ref = base / "reference"
     ref.mkdir(exist_ok=True)
