@@ -26,10 +26,16 @@ Un personnage peut avoir plusieurs images de référence, numérotées :
 
 | image | tenue | utilisée par |
 |---|---|---|
-| `thibaut.png` | polo vert | n2, n3, n4, sup |
-| `thibaut-2.png` | blouson bomber vert olive | n1 |
-| `pf.png` | t-shirt beige | n2, n3, n4, sup |
+| `thibaut.png` | polo vert, civil | n3, sup |
+| `thibaut-2.png` | blouson bomber, tenue de rue | n1 |
+| `thibaut-3.png` | **policier** : brassard, holster | n2 et n4 |
+| `pf.png` | t-shirt beige, civil | n3, sup |
 | `pf-2.png` | manteau beige, col roulé bleu | n1 |
+| `pf-3.png` | **policier** : manteau, brassard, holster | n2 et n4 |
+
+Les niveaux 2 et 4 partagent la MÊME image : c'est la même soirée
+d'enquête, donc la même tenue. Une seule image pour les deux, donc aucun
+risque qu'ils divergent.
 
 **Chaque prompt écrit le nom de celle qu'il faut joindre**, en haut,
 juste sous le titre de la scène. Sans ce nom, on ne sait pas laquelle

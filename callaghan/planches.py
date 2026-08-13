@@ -213,6 +213,11 @@ SCENES = {
   "n2": {
     "titre": "l'enquête de l'appartement",
     "prefixe": {"thibaut": "enq_th", "pf": "enq_pf"},
+    # LA TENUE DE POLICIER, partagée avec la ruelle. Les deux niveaux se
+    # jouent dans la même soirée d'enquête : brassard, holster, manteau
+    # pour PF, blouson pour Thibaut. Une seule image pour les deux, donc
+    # aucun risque qu'ils divergent.
+    "ref": "-3",
     "poses": [
       ("idle", "debout, en alerte, le regard qui balaie la pièce"),
       ("marche1", "jambe DROITE tendue devant, talon au sol, jambe gauche "
@@ -233,6 +238,7 @@ SCENES = {
   "n4": {
     "titre": "la ruelle",
     "prefixe": {"thibaut": "ruel_th", "pf": "ruel_pf"},
+    "ref": "-3",   # la même tenue de policier qu'au niveau 2
     "poses": [
       ("vise1", "de profil, arme tendue à deux mains vers la droite, buste "
                 "légèrement penché"),
@@ -492,21 +498,41 @@ def verifier(chemin, attendu=None):
                       "silhouette ou lueur coupée par le cadre")
 
     # 3. combien de poses, et sont-elles séparées ?
+    #    ON DÉTECTE LES RANGÉES D'ABORD. Une planche de dix poses arrive
+    #    souvent sur deux rangées de cinq. En cherchant les colonnes sur
+    #    l'image entière, les sujets d'une rangée se superposent à ceux de
+    #    l'autre et tout fusionne : mesuré, 3 blocs détectés au lieu de 10,
+    #    et un écart de tête de 50 % qui n'existait pas.
     obj = ndimage.binary_opening(~fond, np.ones((5, 5)))
-    colonnes = obj.any(axis=0)
-    ruptures = np.diff(colonnes.astype(int))
-    debuts = list(np.nonzero(ruptures == 1)[0] + 1)
-    fins = list(np.nonzero(ruptures == -1)[0] + 1)
-    if colonnes[0]: debuts.insert(0, 0)
-    if colonnes[-1]: fins.append(L)
-    blocs = [(d, f) for d, f in zip(debuts, fins) if f - d > L * 0.01]
+    lignes = obj.any(axis=1)
+    dl = np.diff(lignes.astype(int))
+    rd = list(np.nonzero(dl == 1)[0] + 1); rf = list(np.nonzero(dl == -1)[0] + 1)
+    if lignes[0]: rd.insert(0, 0)
+    if lignes[-1]: rf.append(H)
+    rangees = [(d, f) for d, f in zip(rd, rf) if f - d > H * 0.10]
+    if not rangees: rangees = [(0, H)]
+    if len(rangees) > 1:
+        print(f"  rangées               {len(rangees)}")
+
+    blocs, ecarts = [], []
+    for (ry, rfin) in rangees:
+        bande = obj[ry:rfin]
+        colonnes = bande.any(axis=0)
+        ruptures = np.diff(colonnes.astype(int))
+        debuts = list(np.nonzero(ruptures == 1)[0] + 1)
+        fins = list(np.nonzero(ruptures == -1)[0] + 1)
+        if colonnes[0]: debuts.insert(0, 0)
+        if colonnes[-1]: fins.append(L)
+        b2 = [(d, f) for d, f in zip(debuts, fins) if f - d > L * 0.01]
+        for i in range(len(b2) - 1):
+            ecarts.append(b2[i + 1][0] - b2[i][1])
+        blocs += [(d, f, ry, rfin) for d, f in b2]
     print(f"  poses détectées       {len(blocs)}"
           + (f" (attendu {attendu})" if attendu else ""))
     if attendu and len(blocs) != attendu:
         soucis.append(f"{len(blocs)} poses séparables au lieu de {attendu} : "
                       "deux poses se touchent, ou une pose est fragmentée")
 
-    ecarts = [debuts[i+1] - fins[i] for i in range(len(blocs) - 1)]
     if ecarts:
         print(f"  écart minimal         {min(ecarts)} px (il faut 80)")
         if min(ecarts) < 80:
@@ -514,14 +540,26 @@ def verifier(chemin, attendu=None):
 
     # 4. les têtes font-elles la même taille ?
     hauts, pieds, tetes = [], [], []
-    for d, f in blocs:
-        col = obj[:, d:f]
+    for d, f, ry, rfin in blocs:
+        col = obj[ry:rfin, d:f]
         ys = np.nonzero(col.any(axis=1))[0]
         if not len(ys): continue
         hauts.append(ys.min()); pieds.append(ys.max())
-        haut = col[ys.min():ys.min() + max(1, int((ys.max()-ys.min()) * 0.18))]
-        larg = [row.sum() for row in haut]
-        tetes.append(np.median(larg) if larg else 0)
+        # LA LARGEUR DU CRÂNE, pas la largeur du haut de l'image. Prendre
+        # la médiane des 18 % supérieurs comptait un BRAS LEVÉ comme une
+        # tête : mesuré, 32 % d'écart signalé sur une planche dont les
+        # hauteurs allaient de 440 à 453 px — donc parfaitement à
+        # l'échelle. On mesure le plus long segment CONTINU de chaque
+        # ligne : un bras tendu à côté du crâne forme un segment séparé.
+        haut = col[ys.min():ys.min() + max(1, int((ys.max() - ys.min()) * 0.14))]
+        runs = []
+        for row in haut:
+            best = cur = 0
+            for v in row:
+                cur = cur + 1 if v else 0
+                if cur > best: best = cur
+            if best: runs.append(best)
+        tetes.append(np.median(runs) if runs else 0)
     if len(tetes) > 1:
         ecart = (max(tetes) - min(tetes)) / max(1, max(tetes))
         print(f"  écart de taille de tête {ecart*100:5.1f} % (il faut < 12)")
@@ -537,8 +575,8 @@ def verifier(chemin, attendu=None):
     # 5. POUR UN CYCLE : les jambes alternent-elles ?
     if len(blocs) >= 2:
         avants = []
-        for d, f in blocs:
-            col = obj[:, d:f]
+        for d, f, ry, rfin in blocs:
+            col = obj[ry:rfin, d:f]
             ys = np.nonzero(col.any(axis=1))[0]
             if not len(ys): continue
             hh = ys.max() - ys.min() + 1

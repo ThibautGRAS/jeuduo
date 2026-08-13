@@ -2087,6 +2087,48 @@ if (D){
       return manquants.length === 0;
     })());
 
+  verifier("les quatre niveaux ont chacun leur TENUE",
+    (() => {
+      /* Trois tenues pour deux héros : rue au niveau 1, policier aux
+         niveaux 2 et 4 — même soirée d'enquête, donc même image pour les
+         deux — et civil au bar. Une image par tenue, pas une bascule
+         dans le texte. */
+      const d = path.join(RACINE, "prompts");
+      const ref = n => {
+        const s = fs.readFileSync(path.join(d, n, "thibaut.txt"), "utf8");
+        const m = s.match(/reference\/(\S+\.png)/);
+        return m ? m[1] : "?";
+      };
+      const v = { n1:ref("n1"), n2:ref("n2"), n3:ref("n3"), n4:ref("n4") };
+      messageDetail = Object.entries(v).map(([k, x]) => k + " " + x).join(", ");
+      return v.n2 === v.n4 && v.n1 !== v.n2 && v.n3 !== v.n2 && v.n1 !== v.n3 &&
+        ["thibaut", "pf"].every(pp => [1, 2, 3].every(
+          i => fs.existsSync(path.join(d, "reference",
+            pp + (i === 1 ? "" : "-" + i) + ".png"))));
+    })());
+
+  verifier("le contrôleur voit les planches à DEUX RANGÉES",
+    (() => {
+      /* Une planche de dix poses arrive souvent sur deux rangées de cinq.
+         En cherchant les colonnes sur l'image entière, les sujets d'une
+         rangée se superposent à ceux de l'autre : mesuré, 3 blocs
+         détectés au lieu de 10. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      return /lignes = obj\.any\(axis=1\)/.test(s) &&
+        /for \(ry, rfin\) in rangees/.test(s);
+    })());
+
+  verifier("la largeur de tête se mesure sur le CRÂNE",
+    (() => {
+      /* La médiane des 18 % supérieurs comptait un bras levé comme une
+         tête : 32 % d'écart signalé sur une planche dont les hauteurs
+         allaient de 440 à 453 px, donc parfaitement à l'échelle. On
+         mesure le plus long segment CONTINU de chaque ligne. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      return /un bras tendu à côté du crâne forme un segment séparé/.test(s) &&
+        /cur = cur \+ 1 if v else 0/.test(s);
+    })());
+
   verifier("le contrôleur MESURE la couleur du fond",
     (() => {
       /* Une capture d'écran n'a pas un magenta pur : mesuré à

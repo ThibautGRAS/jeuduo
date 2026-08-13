@@ -2203,6 +2203,29 @@ qu'il faut joindre. Plus de bascule, plus de contradiction possible.
 Corollaire : quand un texte doit dire « sauf que », se demander s'il ne
 manque pas une donnée. Ici il manquait une image.
 
+#### Une heuristique de mesure se vérifie sur un cas où l'on connaît la réponse
+
+Mon contrôleur signalait « les têtes varient de 32 % » sur une planche
+dont les hauteurs allaient de 440 à 453 pixels — donc parfaitement à
+l'échelle. La faute était dans la mesure : je prenais la médiane de
+largeur des 18 % supérieurs de chaque pose, ce qui compte un BRAS LEVÉ
+comme une tête.
+
+La bonne mesure est le plus long segment CONTINU de chaque ligne : un
+bras tendu à côté du crâne forme un segment séparé, plus court. Après
+correction : 10,2 % au lieu de 32 %, sous le seuil.
+
+Ce que ça enseigne sur l'outillage : **un contrôle qui signale un défaut
+qui n'existe pas est pire qu'une absence de contrôle**, parce qu'il
+apprend à ignorer ses alertes. Chaque heuristique doit être essayée sur
+un cas dont on connaît la réponse — ici, des poses dont on a mesuré à la
+main qu'elles étaient à la même échelle.
+
+Même famille, même séance : le contrôleur ne voyait que 3 poses sur 10
+parce qu'il cherchait les colonnes sur l'image ENTIÈRE, alors que la
+planche avait deux rangées de cinq — les sujets d'une rangée se
+superposent à ceux de l'autre. Détecter les rangées d'abord.
+
 #### Un contrôleur doit MESURER ce qu'il contrôle, pas le supposer
 
 Mon contrôleur de planche cherchait un fond `#FF00FF`. Les planches
