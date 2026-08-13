@@ -856,6 +856,34 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "47_jojo_poste");
   }
 
+  /* 48. LA FOULÉE, huit images consécutives côte à côte. Une animation ne
+     se juge pas sur une image fixe : c'est la SUITE qui dit si ça court
+     ou si ça vibre. Un seul contexte, et on déplace le champion entre
+     chaque vignette — créer un contexte imbriqué par vignette rendait
+     huit fois la même pose. */
+  {
+    const { D, canevas } = await preparer(1120, 320);
+    const ctx = canevas.getContext("2d");
+    D.amorcer(); D.Camera.mesurer(1120, 320, 1);
+    D.Jeu.demarrer(3); D.Tournee.introT = 0; D.Tournee.lancer(); D.Tournee.introT = 0;
+    D.Tournee.marcher(1);
+    for (let i = 0; i < 60; i++) D.Jeu.pas(1 / 60);   /* il passe en course */
+    ctx.fillStyle = "#110E1A"; ctx.fillRect(0, 0, 1120, 320);
+    D.Camera.xBar = 0;
+    for (let k = 0; k < 8; k++){
+      const pose = D.Tournee.pose();
+      /* on le pose à la k-ième colonne en jouant sur la position monde */
+      D.Tournee.x = (k * 140 + 70) / D.BarVue.larg();
+      D.BarVue.dessinerHeros();
+      ctx.fillStyle = "#F7B32B"; ctx.font = "600 13px sans-serif";
+      ctx.fillText(pose, k * 140 + 8, 312);
+      ctx.strokeStyle = "rgba(255,255,255,.08)";
+      ctx.beginPath(); ctx.moveTo(k * 140, 0); ctx.lineTo(k * 140, 320); ctx.stroke();
+      for (let i = 0; i < 5; i++) D.Jeu.pas(1 / 60);
+    }
+    ecrire(canevas, "48_foulee");
+  }
+
   /* 27. les poses propres de Depardiahree, à leur taille de jeu, sur
      une même ligne de sol : c'est la seule façon de voir qu'une pose
      plus haute que les autres ne fait pas grandir le personnage. */

@@ -38,6 +38,12 @@ const BAR_DEBORDE = 5;              /* verres qui traînent avant que le bar dé
 const BAR_POMPETTE_VERRES = 3;      /* verres bus coup sur coup... */
 const BAR_POMPETTE_FENETRE = 9;     /* ...en moins de neuf secondes... */
 const BAR_POMPETTE_DUREE = 5;       /* ...et on titube cinq secondes */
+/* Deux poses de course seulement : il faut donc que le RESTE bouge. La
+   cadence, le sursaut et l'inclinaison font le travail que deux images
+   ne peuvent pas faire seules. */
+const BAR_CADENCE_COURSE = 0.56;   /* 2,8 cycles/s, la foulée d'un coureur */
+const BAR_SAUT_COURSE = 0.020;     /* amplitude du sursaut, en hauteur d'écran */
+const BAR_PENCHE_COURSE = 0.055;   /* inclinaison vers l'avant, en radians */
 const BAR_POMPETTE_FREIN = 0.55;    /* la vitesse qu'il reste quand on titube */
 
 /* Les deux champions. Les chiffres viennent de la commande : PF boit
@@ -239,7 +245,18 @@ const Tournee = {
     if (this.bourre > 0) return "titube";
     if (this.freinT > 0) return "frein";
     if (this.marche !== 0){
-      if (this.dureeMarche > 0.6) return (Math.floor(this.foulee * 1.4) % 2) ? "course2" : "course1";
+      /* LA CADENCE, mesurée et corrigée. `foulee` grandit de 10 par
+         seconde. L'ancien facteur 1,4 faisait changer de pose 14 fois par
+         seconde, soit SEPT cycles de course — presque trois fois une
+         vraie foulée. Deux images qui ne diffèrent que de 5 % alternées
+         quatorze fois par seconde ne se lisent pas comme une course :
+         elles se lisent comme une vibration, donc comme du figé. C'est
+         exactement ce qui était signalé.
+
+         0,56 donne 2,8 cycles par seconde, ce qui est la cadence d'un
+         homme qui court. La marche à 0,9 sur quatre poses donne 2,25
+         cycles : elle allait déjà bien, on n'y touche pas. */
+      if (this.dureeMarche > 0.6) return (Math.floor(this.foulee * BAR_CADENCE_COURSE) % 2) ? "course2" : "course1";
       return "marche" + (1 + Math.floor(this.foulee * 0.9) % 4);
     }
     return "idle";

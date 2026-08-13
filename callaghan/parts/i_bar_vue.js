@@ -230,7 +230,23 @@ const BarVue = {
     const sh = H * BAR_TAILLE_HEROS, sl = sh * spr.naturalWidth / spr.naturalHeight;
     const x = this.ex(T.x);
     const y = this.ey(BAR_SOL);
-    const saut = (T.marche !== 0 && T.boitT <= 0) ? Math.abs(Math.sin(T.foulee * 1.4)) * H * 0.008 : 0;
+    /* LE SURSAUT ET L'INCLINAISON portent l'animation que deux poses ne
+       peuvent pas porter seules. L'ancien sursaut faisait 0,008 de
+       hauteur — trois pixels sur un téléphone, invisible — et battait à
+       une fréquence sans rapport avec la pose affichée.
+
+       Il est maintenant accroché à la MÊME phase que la pose, à deux
+       battements par cycle : un par contact de pied. C'est ce qui fait
+       qu'un cycle à deux images se lit comme une course. */
+    const court = T.dureeMarche > 0.6;
+    const phase = T.foulee * BAR_CADENCE_COURSE * Math.PI;
+    const enMouvement = T.marche !== 0 && T.boitT <= 0;
+    const ampli = court ? BAR_SAUT_COURSE : BAR_SAUT_COURSE * 0.45;
+    const saut = enMouvement ? Math.abs(Math.sin(phase)) * H * ampli : 0;
+    /* et il se penche vers l'avant quand il court : sans ça il a l'air de
+       glisser debout */
+    const penche = (enMouvement && court)
+      ? BAR_PENCHE_COURSE * T.dir * (0.75 + 0.25 * Math.sin(phase * 2)) : 0;
     ctx.save();
     /* ombre courte au contact des pieds — même recette qu'au niveau 2 */
     ctx.fillStyle = "rgba(0,0,0,.30)";
@@ -239,6 +255,11 @@ const BarVue = {
       /* pompette : on tangue autour des pieds */
       const roulis = Math.sin(T.temps * 3.1) * 0.10 * Math.min(1, T.bourre);
       ctx.translate(x, y); ctx.rotate(roulis); ctx.translate(-x, -y);
+    }
+    if (penche){
+      /* pivot sur les PIEDS, pas sur le centre : pivoter au centre ferait
+         passer les pieds sous le sol d'un côté et flotter de l'autre */
+      ctx.translate(x, y); ctx.rotate(penche); ctx.translate(-x, -y);
     }
     if (T.dir < 0){ ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0); }
     ctx.drawImage(spr, x - sl / 2, y - sh - saut, sl, sh);

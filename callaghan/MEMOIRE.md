@@ -2171,6 +2171,43 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Une animation trop RAPIDE se lit comme une animation bloquée
+
+Signalé comme « ça reste quasi sur la même pose ». La cause était
+l'inverse : la course alternait ses deux poses quatorze fois par seconde,
+soit sept cycles — presque trois fois une vraie foulée.
+
+Deux images qui ne diffèrent que de 5,2 % (mesuré) alternées à cette
+vitesse ne produisent pas un mouvement : elles produisent un scintillement
+que l'œil moyenne en une image floue et immobile. Le symptôme ressemble à
+un compteur bloqué, on cherche donc du côté de l'incrément — et il va
+très bien.
+
+**Avant de chercher pourquoi une animation ne bouge pas, MESURER sa
+cadence.** Une foulée humaine fait 2,5 à 3 cycles par seconde ; au-delà
+de 4, ça vibre.
+
+Corollaire sur l'outillage : le harnais ne rendait que des images fixes,
+donc ne pouvait pas montrer ce défaut. Il rend désormais huit images
+consécutives côte à côte.
+
+#### Deux poses ne suffisent pas seules : le reste doit bouger
+
+Un cycle de course à deux images est pauvre par construction. Ce qui le
+sauve n'est pas une troisième image mais le mouvement AUTOUR : un sursaut
+vertical et une inclinaison, tous deux accrochés à la MÊME phase que la
+pose.
+
+Deux détails qui font la différence :
+- l'amplitude doit être visible. 0,008 de hauteur d'écran fait trois
+  pixels sur un téléphone : autant ne rien faire. 0,020 se voit.
+- la fréquence doit suivre la pose, à deux battements par cycle — un par
+  contact de pied. Un sursaut à une fréquence indépendante ajoute du
+  bruit au lieu du mouvement.
+
+Et l'inclinaison pivote sur les PIEDS : au centre, les pieds passent sous
+le sol d'un côté et flottent de l'autre.
+
 #### Une animation qui ne se voit pas passe pour une mécanique cassée
 L'équipier tirait vraiment pendant le rechargement — munitions
 consommées, ennemis qui tombaient — mais `poseHeros` ne donnait la pose

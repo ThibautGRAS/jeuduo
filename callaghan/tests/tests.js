@@ -2019,6 +2019,50 @@ if (D){
       return tropTot && D.Tournee.introSortie &&
         D.Tournee.introT <= D.BAR_INTRO_PALIER + 0.01;
     })());
+  verifier("la foulée de course bat à une cadence HUMAINE",
+    (() => {
+      /* Le défaut signalé : « ça reste quasi sur la même pose ». La cause
+         était l'inverse de ce qu'on croit — la course alternait SEPT
+         cycles par seconde, presque trois fois une vraie foulée. Deux
+         images qui ne diffèrent que de 5 % alternées quatorze fois par
+         seconde ne se lisent pas comme une course mais comme une
+         vibration, donc comme du figé. */
+      D.Jeu.demarrer(3); D.Tournee.introT = 0;
+      D.Tournee.lancer(); D.Tournee.introT = 0;
+      D.Camera.mesurer(844, 390, 1);
+      D.Tournee.marcher(1);
+      for (let i = 0; i < 90; i++) D.Jeu.pas(1 / 60);   /* il passe en course */
+      let change = 0, avant = D.Tournee.pose();
+      for (let i = 0; i < 180; i++){                     /* trois secondes */
+        D.Jeu.pas(1 / 60);
+        const p2 = D.Tournee.pose();
+        if (p2 !== avant){ change++; avant = p2; }
+      }
+      const cycles = change / 2 / 3;                     /* deux poses par cycle */
+      messageDetail = cycles.toFixed(1) + " cycles/s";
+      return cycles > 2.0 && cycles < 4.0;
+    })());
+
+  verifier("deux poses de course, donc le RESTE doit bouger",
+    (() => {
+      /* Un cycle à deux images ne suffit pas seul : le sursaut et
+         l'inclinaison portent ce que les images ne portent pas. Le
+         sursaut faisait 0,008 de hauteur — trois pixels, invisible — et
+         battait à une fréquence sans rapport avec la pose affichée. */
+      return /BAR_SAUT_COURSE = 0\.0[2-9]/.test(source) &&
+        /const phase = T\.foulee \* BAR_CADENCE_COURSE \* Math\.PI/.test(source) &&
+        /BAR_PENCHE_COURSE/.test(source);
+    })());
+
+  verifier("l'inclinaison pivote sur les PIEDS",
+    (() => {
+      /* Pivoter au centre ferait passer les pieds sous le sol d'un côté
+         et flotter de l'autre. */
+      const i = source.indexOf("if (penche){");
+      const bloc = source.slice(i, i + 260);
+      return i > 0 && /ctx\.translate\(x, y\); ctx\.rotate\(penche\); ctx\.translate\(-x, -y\)/.test(bloc);
+    })());
+
   verifier("chaque barman a SA ligne de comptoir",
     (() => {
       /* Le plateau n'est pas horizontal : mesuré sur le fond par le plus

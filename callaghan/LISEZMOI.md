@@ -284,6 +284,29 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**La foulée du bar** (v6.93) : la cause était l'inverse de ce qu'on
+croit en la voyant.
+
+L'animation ne restait pas bloquée — elle allait **trop vite**. La course
+alternait ses deux poses **quatorze fois par seconde**, soit sept cycles,
+presque trois fois une vraie foulée. Deux images qui ne diffèrent que de
+5 % alternées à cette vitesse ne se lisent pas comme une course : elles
+se lisent comme une vibration, donc comme du figé.
+
+Cadence ramenée à **2,8 cycles par seconde**, celle d'un homme qui court.
+
+**Et comme il n'y a que deux poses de course, le reste doit bouger.** Le
+sursaut existait déjà mais faisait 0,008 de hauteur — trois pixels sur un
+téléphone, invisible — et battait à une fréquence sans rapport avec la
+pose affichée. Il est passé à 0,020, accroché à la **même phase** que la
+pose, à deux battements par cycle : un par contact de pied. S'y ajoute
+une inclinaison vers l'avant, qui pivote sur les **pieds** — pivoter au
+centre ferait passer les pieds sous le sol d'un côté.
+
+**Une scène d'aperçu rend huit images consécutives côte à côte.** Une
+animation ne se juge pas sur une image fixe : c'est la suite qui dit si
+ça court ou si ça vibre. Le harnais ne savait pas faire ça.
+
 **Un dossier par jeu** (v6.92) : `duo/` et `callaghan/`. La racine ne sert
 plus un jeu mais le **choix** entre les deux — avant, elle servait DUO, ce
 qui faisait croire que le dépôt ÉTAIT DUO et que Callaghan en était un
