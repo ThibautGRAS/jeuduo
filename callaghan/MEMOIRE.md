@@ -3010,6 +3010,13 @@ d'enquête, resté quarante versions sans que personne y revienne.
   niveau 1 tient donc 1,02 seconde sur une image FIXE. Le prompt demande
   `lance1`, `lance2`, `lance3` et un `rire` distinct ; il restera à
   câbler `poseHortense` quand les images arriveront.
+- **La tenue « muscle » de PF a changé de référence.** La nouvelle
+  planche le montre en t-shirt NOIR à visage imprimé ; les sprites du bar
+  et de la ruelle actuellement en jeu sont en t-shirt BEIGE uni. Tant
+  qu'on ne régénère pas les niveaux 3 et sup avec la nouvelle référence,
+  la référence et le jeu ne concordent pas — c'est voulu et transitoire,
+  mais toute planche générée d'ici là sera en noir et ne se raccordera
+  pas aux sprites existants.
 - **La pose `serie` de Jojo** montre une passoire au lieu de la série de
   shots prête. La bonne pose est dans la rangée chorégraphiée de sa
   planche, mais celle-ci a un comptoir et un cadre blanc qui gênent la

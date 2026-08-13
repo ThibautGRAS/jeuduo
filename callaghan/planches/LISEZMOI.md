@@ -35,6 +35,7 @@ Rangées par `archiver.py`, jamais à la main.
 | `a_identifier` | `IMG_5212.webp` | 192 Ko |
 | `a_identifier` | `IMG_5221.webp` | 86 Ko |
 | `commun` | `hortense_reference_ancienne.webp` | 9 Ko |
+| `commun` | `pf_muscle_reference_ancienne.webp` | 26 Ko |
 | `n1` | `heros_pf_attitudes-v2.webp` | 118 Ko |
 | `n1` | `heros_pf_attitudes.webp` | 102 Ko |
 | `n1` | `heros_pf_gestes-v2.webp` | 118 Ko |
@@ -52,7 +53,7 @@ Rangées par `archiver.py`, jamais à la main.
 | `n2` | `heros_pf_policier.webp` | 163 Ko |
 | `n2` | `heros_th_policier.webp` | 147 Ko |
 
-**5.1 Mo au total.**
+**5.2 Mo au total.**
 
 ## 24 planches à identifier
 
