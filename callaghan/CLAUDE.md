@@ -91,6 +91,46 @@ dans `.gitignore` ; ce qui les remplace est la **reproductibilité** : les
 instants de découpe et les transformations sont écrits dans les scripts.
 Thibaut garde les originaux de son côté.
 
+## Ce que Thibaut apporte, et qui vaut le plus
+
+Il travaille depuis un téléphone : pas de terminal, pas de rendu local.
+Ce qu'il peut faire, personne d'autre ne peut le faire — et ce qu'il ne
+peut pas faire, ne pas le lui demander.
+
+**Une capture d'écran vaut mieux qu'une description.** Deux défauts
+majeurs de ce projet n'ont été compris que par une capture : l'affiche du
+bar qui ne s'affichait pas au premier lancement, et le pupitre dessiné
+par-dessus. Aucun test ni aucun rendu ne les montrait.
+
+**Nommer le symptôme, pas la cause.** « Ça reste sur la même pose » a
+mené à la bonne correction. Si la cause avait été supposée — « la cadence
+est trop lente » — on aurait accéléré une animation déjà trois fois trop
+rapide. Le symptôme est une donnée ; la cause est une hypothèse, et c'est
+mon travail.
+
+**Envoyer une planche AVANT qu'elle soit découpée.** Une commande la
+contrôle en dix secondes : fond, bords, séparation, têtes, pieds,
+alternance des jambes. Découper d'abord, c'est perdre le découpage.
+
+**Dire quand un correctif n'a rien changé** — et vérifier d'abord le
+numéro de version en haut à gauche. Deux fois, le défaut signalé était
+déjà corrigé mais servi depuis le cache de Safari.
+
+## Le cycle d'une amélioration
+
+1. Thibaut décrit le symptôme, avec une capture si ça se voit.
+2. Je MESURE avant de corriger. Un chiffre, pas une impression : c'est ce
+   qui a fait la différence sur le comptoir non horizontal, la foulée
+   trois fois trop rapide, et les deux poses identiques.
+3. Je corrige, j'assemble, je lance les tests, je REGARDE le rendu.
+4. J'ajoute un test qui empêche le retour du défaut — et une scène
+   d'aperçu si rien ne le montrait.
+5. Je consigne dans `MEMOIRE.md` ce que ça a appris, avec le chiffre.
+6. Je livre, version incrémentée, en disant quoi aller vérifier.
+
+Si une planche d'images est nécessaire, l'étape 2 devient : donner le
+fichier de `prompts/` à utiliser, puis contrôler la planche reçue.
+
 ## Deux règles en dur
 
 Elles sont détaillées en tête de `MEMOIRE.md`, et ce sont les seules à
