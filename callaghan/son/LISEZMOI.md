@@ -41,7 +41,7 @@ Découpés dans un enregistrement de grognements de chien
 un fichier que le jeu ne charge jamais. Il est ignoré par `.gitignore`.
 Pour refabriquer les cris, le remettre dans `son/` et lancer :
 
-    python3 dtour/cris.py dtour/son
+    python3 callaghan/cris.py callaghan/son
 
 Les instants retenus et la transformation de chacun sont écrits dans
 `cris.py` — le découpage est donc reproductible sans garder le source.
@@ -69,7 +69,7 @@ Elle passe par le même gain que la musique synthétisée, donc
 
 ## Les rechargements viennent d'enregistrements
 
-Fournis, puis préparés par `python3 dtour/recharges.py dtour/son`. Quatre
+Fournis, puis préparés par `python3 callaghan/recharges.py callaghan/son`. Quatre
 choses sont faites, et chacune répare un défaut mesuré :
 
 - **Ils tiennent dans la durée du geste** — 1,5 s au revolver, 2,0 s au
@@ -88,7 +88,7 @@ Les sources ne sont pas versionnées (`.gitignore`).
 
 ## Les détonations
 
-Une **synthèse hors ligne** (`python3 dtour/sons.py dtour/son`), plus
+Une **synthèse hors ligne** (`python3 callaghan/sons.py callaghan/son`), plus
 riche que ce que le WebAudio produit en temps réel — on peut empiler
 autant de couches qu'on veut, le coût est payé une fois. Ce ne sont pas
 des enregistrements. Où trouver du CC0 :

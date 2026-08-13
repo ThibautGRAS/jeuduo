@@ -42,19 +42,19 @@ dessine.
 
 ---
 
-Mémoire technique des **Enquêtes de Callaghan**, le jeu de `dtour/`.
+Mémoire technique des **Enquêtes de Callaghan**, le jeu de `callaghan/`.
 
 **Les cinq documents du projet**, et ce qu'on y cherche :
 
 | fichier | on y va pour |
 |---|---|
-| `dtour/CLAUDE.md` | les commandes et le cycle de travail |
-| `dtour/MEMOIRE.md` | ce qui a mordu, et comment ne pas le refaire |
-| `dtour/LISEZMOI.md` | ce que le jeu fait, version par version |
-| `dtour/PERSONNAGES.md` | qui sont les gens, et où ils apparaissent |
-| `dtour/PROMPTS.md` | comment demander une planche d'images |
+| `callaghan/CLAUDE.md` | les commandes et le cycle de travail |
+| `callaghan/MEMOIRE.md` | ce qui a mordu, et comment ne pas le refaire |
+| `callaghan/LISEZMOI.md` | ce que le jeu fait, version par version |
+| `callaghan/PERSONNAGES.md` | qui sont les gens, et où ils apparaissent |
+| `callaghan/PROMPTS.md` | comment demander une planche d'images |
 
-Plus `dtour/son/LISEZMOI.md` pour les échantillons, `../CLAUDE.md` pour
+Plus `callaghan/son/LISEZMOI.md` pour les échantillons, `../CLAUDE.md` pour
 les règles communes au dépôt, et `../MEMOIRE.md` pour DUO — dont les
 pièges valent souvent ici aussi.
 
@@ -966,7 +966,7 @@ un. Le contrôle est gratuit : il faut décoder les images de toute façon.
 
 À faire avant chaque push touchant aux images, comme le reste :
 
-    python3 dtour/reparer_sprites.py dtour/img --verifier
+    python3 callaghan/reparer_sprites.py callaghan/img --verifier
 
 #### Une coupure de planche doit pouvoir être bornée en hauteur
 
@@ -1045,7 +1045,7 @@ pour les dimensions : aucun test JS ne peut inspecter un canal alpha.
 Le contrôle vit donc en Python, et se lance avant tout push qui touche
 aux images :
 
-    python3 dtour/reparer_sprites.py dtour/img --verifier
+    python3 callaghan/reparer_sprites.py callaghan/img --verifier
 
 Il rend un code non nul s'il reste un fragment ou un trou.
 
@@ -1300,6 +1300,38 @@ la tournée.
 La règle : un élément d'interface se met à jour quand SON CONTENU change,
 pas quand il devient visible. Le coût est nul, et il évite une classe
 entière de « il affiche n'importe quoi une fois sur deux ».
+
+#### Une clé de stockage est un CONTRAT avec le passé
+
+En rangeant le dépôt, le dossier `dtour/` est devenu `callaghan/`. Le
+remplacement automatique aurait emporté `dtour_progres` et
+`dtour_records` — deux clés écrites dans le navigateur des JOUEURS.
+Les renommer aurait effacé leur progression et leurs records **sans
+erreur ni message** : le jeu aurait simplement recommencé à zéro, et
+personne n'aurait su pourquoi.
+
+Ce qui a sauvé la mise : ne pas remplacer en aveugle, et relire ce qui
+restait. `dtour_progres` figurait dans le fichier de doc, ce qui a attiré
+l'œil sur son existence dans le code.
+
+La règle : avant tout renommage global, isoler ce qui est un **nom
+interne** (variable, dossier, fonction — libre) de ce qui est un
+**identifiant durable** — clé de stockage, nom de fichier publié, adresse
+web. Les seconds ne se renomment pas, ou alors avec une migration.
+
+Corollaire : ces clés portent maintenant un commentaire qui dit de ne pas
+y toucher. Un nom qui a l'air incohérent avec le reste attire les
+corrections bien intentionnées.
+
+#### Une adresse publiée ne se casse pas pour du rangement
+
+Le jeu vivait à `/jeuduo/dtour/`. Cette adresse est sur des écrans
+d'accueil et a été envoyée à des gens. Le dossier a été renommé, mais
+`dtour/` reste avec une redirection de dix lignes.
+
+Le coût est nul, le bénéfice est que personne ne tombe sur un 404 sans
+avoir rien demandé. À ne supprimer que le jour où on est sûr que plus
+personne ne l'utilise — c'est-à-dire probablement jamais.
 
 #### Un nom qui apparaît à l'écran ne s'écrit qu'à un seul endroit
 

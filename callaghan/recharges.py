@@ -102,7 +102,7 @@ def ecrire(nom, x, dst):
 
 
 if __name__ == "__main__":
-    dst = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "dtour/son")
+    dst = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "callaghan/son")
     for nom, (f, a, b, dm) in SOURCES.items():
         src = dst / f
         if not src.exists():

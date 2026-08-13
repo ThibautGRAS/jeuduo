@@ -124,7 +124,7 @@ permettent de vérifier si la règle vaut encore dans un autre contexte.
 """
 
 def main():
-    p = pathlib.Path("dtour/MEMOIRE.md")
+    p = pathlib.Path("callaghan/MEMOIRE.md")
     t = p.read_text(encoding="utf-8")
     d = t.index("## 3. Pièges rencontrés")
     f = t.index("## 4. Le harnais")

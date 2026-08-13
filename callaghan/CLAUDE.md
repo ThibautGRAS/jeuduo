@@ -17,7 +17,7 @@ assembleur à partir de morceaux. On n'édite JAMAIS `index.html` à la
 main : la prochaine assemblée écraserait le travail.
 
 ```
-dtour/parts/       les morceaux, dans l'ordre d'assemblage
+callaghan/parts/       les morceaux, dans l'ordre d'assemblage
   a_socle.js       constantes, images, sons, utilitaires, VERSION
   b_jeu.js         la machine à niveaux
   c_rendu.js       le canevas, la caméra, les transitions
@@ -40,20 +40,20 @@ paysage pour les niveaux 1 à 3 et portrait pour le 4.
 ```bash
 # 1. éditer les morceaux, jamais index.html
 # 2. assembler
-python3 dtour/assembler.py
+python3 callaghan/assembler.py
 
 # 3. syntaxe : extraire le <script> puis contrôler
 node --check /tmp/dtour.js
 
 # 4. tests
-node dtour/tests/tests.js          # code non nul si rouge
+node callaghan/tests/tests.js          # code non nul si rouge
 
 # 5. RENDU — règle en dur, voir ../CLAUDE.md
-node dtour/tests/apercu.js <dossier_png> <sortie>
+node callaghan/tests/apercu.js <dossier_png> <sortie>
 #    puis OUVRIR les images produites
 
 # 6. images : contrôle qui ne peut pas vivre dans Node
-python3 dtour/reparer_sprites.py dtour/img --verifier
+python3 callaghan/reparer_sprites.py callaghan/img --verifier
 
 # 7. version dans a_socle.js ET dans index.html, puis push
 ```

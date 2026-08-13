@@ -102,7 +102,7 @@ def extraire(src, dst, nom, depart, duree, hauteur, gain):
 
 
 if __name__ == "__main__":
-    dst = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "dtour/son")
+    dst = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "callaghan/son")
     src = pathlib.Path(sys.argv[2]) if len(sys.argv) > 2 else dst / SOURCE_DEFAUT
     if not src.exists():
         sys.exit(f"ABANDON : source introuvable — {src}\n"

@@ -797,8 +797,12 @@ titre("11. Cohérence de MEMOIRE.md avec le code");
       "code = " + versionCode + ", tableau des versions muet à son sujet");
   }
   let consignes = "";
-  try{ consignes = fs.readFileSync(path.join(__dirname, "..", "CLAUDE.md"), "utf8"); }catch(e){}
-  verifier("CLAUDE.md présent", consignes.length > 500);
+  /* CLAUDE.md est au niveau du DÉPÔT, pas du jeu : il vaut pour DUO et
+     pour Callaghan. Depuis que chacun a son dossier, il faut remonter de
+     deux crans au lieu d'un. Le dupliquer aurait été pire — deux copies
+     d'une méthode divergent en trois semaines. */
+  try{ consignes = fs.readFileSync(path.join(__dirname, "..", "..", "CLAUDE.md"), "utf8"); }catch(e){}
+  verifier("CLAUDE.md du dépôt présent", consignes.length > 500);
   verifier("aucun secret dans les consignes",
     !/github_pat_|apiKey=|[A-Za-z0-9_-]{40,}/.test(consignes));
 }

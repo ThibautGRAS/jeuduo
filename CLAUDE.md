@@ -10,16 +10,27 @@ séparées. La seule chose qu'ils partagent est ce fichier et l'hébergement.
 
 | | **DUO** | **Les Enquêtes de Callaghan** |
 |---|---|---|
-| Dossier | racine (`index.html`) | `dtour/` |
+| Dossier | `duo/` | `callaghan/` |
 | Quoi | duel type Pong en pair-à-pair | quatre niveaux, un fil narratif |
-| Adresse | `thibautgras.github.io/jeuduo/` | `thibautgras.github.io/jeuduo/dtour/` |
+| Adresse | `…/jeuduo/duo/` | `…/jeuduo/callaghan/` |
 | Version | `DUO vX.Y`, dans le lobby | `CALLAGHAN vX.YZ`, en haut à gauche |
-| Ses règles | `MEMOIRE.md` (racine) | `dtour/CLAUDE.md` puis `dtour/MEMOIRE.md` |
-| Son manifeste | `manifest.webmanifest` | `dtour/manifest.webmanifest` |
+| Ses règles | `duo/MEMOIRE.md` | `callaghan/CLAUDE.md` puis `callaghan/MEMOIRE.md` |
+| Son manifeste | `duo/manifest.webmanifest` | `callaghan/manifest.webmanifest` |
+
+**La racine ne sert plus un jeu mais le CHOIX entre les deux.** Avant,
+elle servait DUO, ce qui faisait croire que le dépôt ÉTAIT DUO et que
+Callaghan en était un sous-produit. Elle ne contient plus que
+`CLAUDE.md`, la page de choix, et les deux dossiers.
+
+**`dtour/` reste, et ne contient qu'une redirection.** Le jeu y a vécu
+longtemps ; c'est une adresse posée sur des écrans d'accueil et envoyée à
+des gens. La casser pour une question de rangement serait absurde. Ce
+fichier ne coûte rien — à supprimer seulement le jour où on est sûr que
+plus personne ne l'utilise.
 
 **Ils ne partagent AUCUN fichier.** Vérifié et tenu par un test : aucun
 morceau de Callaghan ne renvoie vers `../`, et la racine ne mentionne
-jamais `dtour`. Chacun a son manifeste et ses icônes. Le jour où l'un
+jamais `callaghan`. Chacun a son manifeste et ses icônes. Le jour où l'un
 emprunterait un fichier à l'autre, on ne pourrait plus toucher au premier
 sans casser le second — et rien ne le signalerait.
 

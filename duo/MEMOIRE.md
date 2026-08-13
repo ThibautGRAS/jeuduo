@@ -3,8 +3,8 @@
 Mémoire technique de **DUO**, le jeu de duel à la racine du dépôt.
 Complète `CLAUDE.md`, qui décrit la méthode commune aux deux jeux.
 
-**Ce fichier ne concerne pas Callaghan.** Le jeu de `dtour/` a sa propre
-mémoire, bien plus fournie : `dtour/MEMOIRE.md`. Ses pièges valent
+**Ce fichier ne concerne pas Callaghan.** Le jeu de `callaghan/` a sa propre
+mémoire, bien plus fournie : `callaghan/MEMOIRE.md`. Ses pièges valent
 souvent ici — même auteur, même cible — mais les architectures n'ont rien
 à voir.
 
@@ -14,7 +14,7 @@ souvent ici — même auteur, même cible — mais les architectures n'ont rien
 
 Ces contraintes vivaient dans `CLAUDE.md` à la racine, du temps où ce
 dépôt n'hébergeait qu'un jeu. Elles sont ici parce qu'elles ne concernent
-QUE DUO — `dtour/` a les siennes, différentes.
+QUE DUO — `callaghan/` a les siennes, différentes.
 
 - **Un seul fichier.** Tout le jeu tient dans `index.html` : HTML, CSS et
   JavaScript. Pas d'outil de compilation, pas de dépendance à installer.

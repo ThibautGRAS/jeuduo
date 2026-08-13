@@ -146,7 +146,7 @@ def verifier(racine):
     pour les dimensions. Il vit donc ici, et se lance avant un push qui
     touche aux images :
 
-        python3 dtour/reparer_sprites.py dtour/img --verifier
+        python3 callaghan/reparer_sprites.py callaghan/img --verifier
     """
     racine = pathlib.Path(racine)
     fautifs = []

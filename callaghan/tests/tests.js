@@ -2862,6 +2862,26 @@ if (D){
     !D.ecranOk(500, 500, 1) && !D.ecranOk(500, 500, 4),
     "la tolérance de 2 % évite de basculer sans arrêt près du carré");
   /* ---- les deux jeux du dépôt restent séparés ---- */
+  verifier("les clés de stockage n'ont PAS suivi le renommage du dossier",
+    (() => {
+      /* Elles sont écrites dans le navigateur des joueurs : les changer
+         effacerait leur progression, sans erreur ni message. Une clé de
+         stockage est un CONTRAT avec le passé, pas un nom de variable. */
+      return /const CLE = "dtour_records"/.test(source) &&
+        /const CLE_PROGRES = "dtour_progres"/.test(source);
+    })());
+
+  verifier("l'ancienne adresse redirige encore",
+    (() => {
+      /* Le jeu vivait dans `dtour/`. Ce raccourci est sur l'écran
+         d'accueil de Thibaut : le casser pour une question de rangement
+         serait absurde. */
+      const p2 = path.join(RACINE, "..", "dtour", "index.html");
+      if (!fs.existsSync(p2)) return false;
+      const r = fs.readFileSync(p2, "utf8");
+      return /http-equiv="refresh"/.test(r) && /\.\.\/callaghan\//.test(r);
+    })());
+
   verifier("Callaghan ne dépend d'AUCUN fichier de la racine",
     (() => {
       /* Le dépôt héberge deux jeux. Le jour où l'un emprunte un fichier à

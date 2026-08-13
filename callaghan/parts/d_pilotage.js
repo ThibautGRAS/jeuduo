@@ -82,6 +82,11 @@ const Ecran = {
    Les deux niveaux sont TOUJOURS jouables. On garde quand même la trace
    du niveau 1 terminé — c'est une information, pas une serrure : elle
    sert à afficher un état sur l'écran d'accueil, jamais à interdire. */
+/* NE PAS RENOMMER. Le dossier s'appelle `callaghan/` depuis que le dépôt
+   range ses deux jeux, mais cette clé est écrite dans le navigateur des
+   joueurs : la changer effacerait leur progression, sans erreur ni
+   message. Une clé de stockage est un CONTRAT avec le passé, pas un nom
+   de variable. Même chose pour `dtour_records` dans a_socle.js. */
 const CLE_PROGRES = "dtour_progres";
 const Progres = {
   lire(){

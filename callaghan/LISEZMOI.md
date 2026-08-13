@@ -15,7 +15,8 @@ On choisit le niveau sur l'écran d'accueil, les deux sont toujours
 ouverts, et on peut mettre en pause à tout moment pour reprendre,
 recommencer, ou revenir au menu.
 
-**Adresse** : https://thibautgras.github.io/jeuduo/dtour/
+**Adresse** : https://thibautgras.github.io/jeuduo/callaghan/
+(l'ancienne, `/callaghan/`, redirige et le restera)
 
 Pierre-François et Thibaut font la queue devant Le D'Tour. Les gens qui
 longent la file leur tendent la main comme s'ils les connaissaient. Il
@@ -283,6 +284,21 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Un dossier par jeu** (v6.92) : `duo/` et `callaghan/`. La racine ne sert
+plus un jeu mais le **choix** entre les deux — avant, elle servait DUO, ce
+qui faisait croire que le dépôt ÉTAIT DUO et que Callaghan en était un
+sous-produit.
+
+**Rien ne casse.** `dtour/` reste en place et ne contient qu'une
+redirection : c'est une adresse posée sur des écrans d'accueil et envoyée
+à des gens, la casser pour une question de rangement serait absurde.
+
+**Et les clés de stockage n'ont PAS suivi le renommage.**
+`dtour_progres` et `dtour_records` sont écrites dans le navigateur des
+joueurs : les renommer aurait effacé leur progression, sans erreur ni
+message. Une clé de stockage est un contrat avec le passé, pas un nom de
+variable. Deux tests le tiennent.
+
 **Callaghan a son manifeste et ses icônes** (v6.91).
 
 En vérifiant que les deux jeux étaient bien séparés, j'ai trouvé un
@@ -299,7 +315,7 @@ trois premiers niveaux se jouent en paysage, la ruelle en portrait. La
 figer casserait l'un des deux. Un test le verrouille.
 
 **Et la séparation est mesurée, pas supposée** : aucun morceau de
-Callaghan ne renvoie vers `../`, la racine ne mentionne jamais `dtour`.
+Callaghan ne renvoie vers `../`, la racine ne mentionne jamais `callaghan`.
 Un test le tient — le jour où l'un emprunterait un fichier à l'autre, on
 ne pourrait plus toucher au premier sans casser le second, et rien ne le
 signalerait.
@@ -307,12 +323,12 @@ signalerait.
 **La documentation du dépôt est rangée** (v6.90).
 
 **Le dépôt contient DEUX jeux** — DUO à la racine, Callaghan dans
-`dtour/` — et `CLAUDE.md` décrivait le premier tout en donnant les
+`callaghan/` — et `CLAUDE.md` décrivait le premier tout en donnant les
 commandes du second. Quelqu'un qui arrivait dessus croyait travailler sur
 un jeu de Pong. Il est devenu la **porte d'entrée du dépôt** : ce qui
 vaut pour les deux, et un tableau qui renvoie chacun à ses documents.
 
-**`dtour/CLAUDE.md` est né** : les commandes de Callaghan n'existaient
+**`callaghan/CLAUDE.md` est né** : les commandes de Callaghan n'existaient
 nulle part de façon consultable. L'architecture des morceaux, le cycle en
 sept étapes, les douze scripts d'outillage et ce qu'ils font, les
 contraintes à ne pas casser.

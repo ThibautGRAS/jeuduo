@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.91";
+const VERSION = "6.92";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -148,6 +148,7 @@ const piocher = t => t[Math.floor(Math.random() * t.length)];
 function chiffres(n){ return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, "\u202F"); }
 
 /* ================= mémoire locale ================= */
+/* NE PAS RENOMMER : écrite chez les joueurs. Voir CLE_PROGRES. */
 const CLE = "dtour_records";
 function lireRecords(){
   try{ return JSON.parse(localStorage.getItem(CLE)) || {}; }catch(e){ return {}; }
