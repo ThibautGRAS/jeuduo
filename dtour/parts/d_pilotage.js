@@ -1139,6 +1139,16 @@ const Boucle = {
           if (this.reste > this.PAS_S * 5) this.reste = 0;
         }
         dessiner();
+        /* FILET DE SÉCURITÉ CONTRE UN VOILE QUI RESTE COLLÉ. La boucle
+           tourne même en pause : on en profite pour réévaluer l'état
+           quand la seule raison de suspendre était un recalage de
+           taille. Sans ce filet, il suffisait qu'aucun événement du
+           navigateur ne survienne après la stabilisation pour que le jeu
+           ne démarre JAMAIS — c'est arrivé en production.
+
+           Un état qui dépend du TEMPS ne doit jamais dépendre d'un
+           événement pour être relu. */
+        if (this.pause && !Pause.active && tailleCalme()) Interface.pensePivot();
         Debug.lire();
       }catch(err){
         this.incidents = (this.incidents || 0) + 1;

@@ -283,6 +283,25 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Correction d'urgence : le jeu ne démarrait plus** (v6.85).
+
+Ma correction du sursaut de rotation posait un voile tant que la taille
+d'écran n'était pas stable — mais **rien ne relisait cet état une fois
+la taille stabilisée**. Le voile n'était levé que par un événement du
+navigateur ; s'il n'en venait plus, il restait posé pour toujours et le
+jeu ne démarrait jamais.
+
+Deux filets, parce qu'un seul aurait pu retomber dans le même piège :
+
+- une **relecture programmée** au moment où le délai expire, déclenchée
+  par le changement de taille lui-même ;
+- une **reprise depuis la boucle**, qui tourne même en pause : à chaque
+  image, si la seule raison de suspendre était un recalage et que la
+  taille est calme, l'état est relu.
+
+La leçon, et elle est générale : **un état qui dépend du TEMPS ne doit
+jamais dépendre d'un événement pour être relu.**
+
 **Plus de sursaut après une rotation** (v6.84) : le navigateur MENT sur
 la taille. iOS rend des dimensions périmées pendant quelques centaines de
 millisecondes après un changement d'orientation, puis la barre d'adresse

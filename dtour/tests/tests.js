@@ -1578,6 +1578,29 @@ if (D){
   for (let i = 0; i < 60 * 8; i++) D.Jeu.pas(1 / 60);
   void scoreGele; void viesGelees;
   D.Pause.reprendre();
+  verifier("un voile de recalage ne peut PAS bloquer le jeu",
+    (() => {
+      /* CE DÉFAUT A CASSÉ LE JEU EN PRODUCTION. Le voile n'était levé
+         que par un événement du navigateur ; si aucun ne survenait après
+         la stabilisation de la taille, il restait posé pour toujours et
+         le jeu ne démarrait jamais.
+
+         Deux filets, et le test exige les deux : une relecture
+         programmée au moment où le délai expire, et une reprise depuis
+         la boucle elle-même — qui tourne même en pause. */
+      const relecture = /setTimeout\([\s\S]{0,160}?Interface\.pensePivot\(\)[\s\S]{0,60}?TAILLE_STABLE \+ 40\)/.test(source);
+      const filet = /if \(this\.pause && !Pause\.active && tailleCalme\(\)\) Interface\.pensePivot\(\)/.test(source);
+      messageDetail = "relecture programmée : " + relecture + ", filet dans la boucle : " + filet;
+      return relecture && filet;
+    })());
+
+  verifier("« pas encore mesuré » compte comme CALME",
+    (() => {
+      /* Répondre « pas stable » avant toute mesure bloquait la boucle
+         dès le premier appel. */
+      return /if \(!tailleVue\.depuis\) return true;/.test(source);
+    })());
+
   verifier("reprendre relance la boucle", !D.Pause.active && !D.Boucle.pause);
 
   D.Jeu.demarrer(2); D.Intro.finir();

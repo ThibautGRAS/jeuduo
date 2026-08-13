@@ -185,6 +185,17 @@ function ajusterCanevas(){
   const L = cv.clientWidth || 640, H = cv.clientHeight || 360;
   if (L !== tailleVue.l || H !== tailleVue.h){
     tailleVue = { l:L, h:H, depuis:Date.now() };
+    /* ON SE RAPPELLE SOI-MÊME quand le délai sera écoulé. Sans ça, plus
+       rien ne réévalue l'état : `pensePivot` n'est appelé que sur un
+       événement du navigateur, et il n'en vient plus une fois la
+       rotation finie. Le voile restait donc posé pour toujours et le jeu
+       ne démarrait pas — un blocage total, en production.
+
+       C'est le prix d'un état qui dépend du TEMPS et non d'un événement :
+       il faut programmer sa propre relecture. */
+    setTimeout(() => {
+      if (typeof Interface !== "undefined" && Interface.pensePivot) Interface.pensePivot();
+    }, TAILLE_STABLE + 40);
   }
   const lp = Math.round(L * dpr), hp = Math.round(H * dpr);
   if (cv.width !== lp || cv.height !== hp){ cv.width = lp; cv.height = hp; }

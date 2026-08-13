@@ -775,7 +775,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.84</div>
+  <div id="version">CALLAGHAN v6.85</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -847,7 +847,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.84";
+const VERSION = "6.85";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -2821,6 +2821,17 @@ function ajusterCanevas(){
   const L = cv.clientWidth || 640, H = cv.clientHeight || 360;
   if (L !== tailleVue.l || H !== tailleVue.h){
     tailleVue = { l:L, h:H, depuis:Date.now() };
+    /* ON SE RAPPELLE SOI-MÊME quand le délai sera écoulé. Sans ça, plus
+       rien ne réévalue l'état : `pensePivot` n'est appelé que sur un
+       événement du navigateur, et il n'en vient plus une fois la
+       rotation finie. Le voile restait donc posé pour toujours et le jeu
+       ne démarrait pas — un blocage total, en production.
+
+       C'est le prix d'un état qui dépend du TEMPS et non d'un événement :
+       il faut programmer sa propre relecture. */
+    setTimeout(() => {
+      if (typeof Interface !== "undefined" && Interface.pensePivot) Interface.pensePivot();
+    }, TAILLE_STABLE + 40);
   }
   const lp = Math.round(L * dpr), hp = Math.round(H * dpr);
   if (cv.width !== lp || cv.height !== hp){ cv.width = lp; cv.height = hp; }
@@ -13346,6 +13357,16 @@ const Boucle = {
           if (this.reste > this.PAS_S * 5) this.reste = 0;
         }
         dessiner();
+        /* FILET DE SÉCURITÉ CONTRE UN VOILE QUI RESTE COLLÉ. La boucle
+           tourne même en pause : on en profite pour réévaluer l'état
+           quand la seule raison de suspendre était un recalage de
+           taille. Sans ce filet, il suffisait qu'aucun événement du
+           navigateur ne survienne après la stabilisation pour que le jeu
+           ne démarre JAMAIS — c'est arrivé en production.
+
+           Un état qui dépend du TEMPS ne doit jamais dépendre d'un
+           événement pour être relu. */
+        if (this.pause && !Pause.active && tailleCalme()) Interface.pensePivot();
         Debug.lire();
       }catch(err){
         this.incidents = (this.incidents || 0) + 1;

@@ -1251,6 +1251,27 @@ Le réflexe : avant de corriger un affichage, chercher TOUS les endroits
 qui le pilotent. `grep` sur le nom de l'élément, pas seulement sur la
 condition qu'on croit fautive.
 
+### Un état qui dépend du TEMPS ne doit pas dépendre d'un ÉVÉNEMENT
+
+La faute la plus grave de ce projet : le jeu ne démarrait plus du tout.
+
+J'avais posé un voile tant que la taille d'écran n'était pas stable
+depuis 260 ms. La condition était juste, mais elle n'était évaluée QUE
+sur un événement du navigateur — `resize`, `orientationchange`. Sur un
+chargement calme, aucun de ces événements ne survient après la
+stabilisation : le voile restait posé indéfiniment.
+
+Deux filets valent mieux qu'un, et pour une raison précise : le premier
+peut retomber dans le même piège.
+- Une relecture PROGRAMMÉE au moment où le délai expire, déclenchée par
+  le changement lui-même.
+- Une reprise depuis la BOUCLE, qui tourne même en pause. C'est le filet
+  qui ne peut pas manquer : tant qu'une image est dessinée, l'état est
+  relu.
+
+Corollaire à retenir avant d'écrire une condition temporelle : « qui va
+la relire, et est-ce garanti ? »
+
 ### Le navigateur MENT sur la taille pendant une rotation
 
 iOS rend des dimensions périmées pendant quelques centaines de
