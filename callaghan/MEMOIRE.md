@@ -2171,6 +2171,42 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Un prompt écrit à la main dérive, un prompt assemblé non
+
+Quatorze prompts de planche vivaient dans PROMPTS.md, chacun avec sa
+propre copie des règles communes. Trois conséquences, toutes constatées
+et toutes coûteuses :
+
+- **les règles divergent.** Un prompt rappelle l'espacement, le suivant
+  l'oublie, celui d'après invente une autre formulation.
+- **le vocabulaire de pose est réinventé** à chaque planche. C'est ainsi
+  qu'une course est née avec la même jambe devant sur toutes ses phases :
+  personne n'avait jamais écrit ce qu'était une phase de foulée.
+- **le physique d'un personnage est ressaisi** et change. Le t-shirt de
+  BruHell a été redessiné entre deux planches pour cette raison.
+
+La correction est la même que pour le code : on n'écrit plus l'artefact,
+on l'ASSEMBLE depuis des morceaux qui n'existent qu'à un exemplaire —
+un catalogue de mouvements, une fiche par personnage, un bloc de règles.
+
+#### Un contrôle « à l'œil, après coup » n'est pas un contrôle
+
+PROMPTS.md listait cinq vérifications à faire de tête sur une planche
+livrée. Elles se faisaient irrégulièrement, et souvent APRÈS le
+découpage — donc trop tard.
+
+Trois des cinq étaient mesurables par un programme, et une quatrième —
+l'alternance des jambes dans un cycle — n'avait même pas été imaginée.
+`planches.py verifier` les fait toutes en une commande, avant découpage,
+et refuse de conclure tant qu'un point cloche.
+
+La preuve que ça valait le coup : lancé sur une planche reconstituée à
+partir des poses existantes, il retrouve seul le défaut de foulée que
+trois séances de réglage n'avaient pas expliqué.
+
+Règle générale : **un contrôle qui dépend de la vigilance humaine finit
+par ne plus se faire.** S'il est mesurable, il doit être une commande.
+
 #### Vérifier que les phases d'un cycle sont VRAIMENT différentes
 
 J'ai corrigé la cadence d'une foulée, mesuré 2,8 cycles par seconde, et

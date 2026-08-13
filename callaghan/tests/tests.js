@@ -2019,6 +2019,53 @@ if (D){
       return tropTot && D.Tournee.introSortie &&
         D.Tournee.introT <= D.BAR_INTRO_PALIER + 0.01;
     })());
+  verifier("le catalogue de mouvements décrit les DEUX jambes",
+    (() => {
+      /* Le vocabulaire de pose était réinventé à chaque planche : c'est
+         pour ça qu'une course a pu naître avec la même jambe devant sur
+         toutes ses phases. Un cycle doit dire, phase par phase, quelle
+         jambe est devant. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      const cycles = (s.match(/"cycle": True/g) || []).length;
+      const droite = (s.match(/jambe DROITE/g) || []).length;
+      const gauche = (s.match(/jambe GAUCHE/g) || []).length;
+      messageDetail = cycles + " cycles, " + droite + " phases droite, " + gauche + " gauche";
+      return cycles >= 2 && droite >= 2 && gauche >= 2 &&
+        /AVERTISSEMENT SUR LES CYCLES/.test(s);
+    })());
+
+  verifier("les règles de planche n'existent qu'à UN endroit",
+    (() => {
+      /* Quatorze prompts écrits à la main, chacun avec sa copie des
+         règles : elles divergeaient. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      return (s.match(/^REGLES = /m) || []).length === 1 &&
+        /FF00FF/.test(s) && /80 pixels/.test(s) && /MÊME ÉCHELLE/.test(s);
+    })());
+
+  verifier("une planche livrée se contrôle par une COMMANDE",
+    (() => {
+      /* Les contrôles se faisaient à l'œil, souvent après découpage. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      const pr = fs.readFileSync(path.join(RACINE, "PROMPTS.md"), "utf8");
+      return /def verifier\(chemin/.test(s) &&
+        /même pied en avant/.test(s) &&
+        /planches\.py verifier/.test(pr);
+    })());
+
+  verifier("chaque personnage a sa fiche, à un seul endroit",
+    (() => {
+      /* Un physique décrit à deux endroits diverge : le t-shirt de
+         BruHell a changé entre deux planches pour cette raison. */
+      const f = JSON.parse(fs.readFileSync(path.join(RACINE, "fiches.json"), "utf8"));
+      const attendus = Object.keys(D.ENNEMIS).concat(["thibaut", "pf"]);
+      const manquants = attendus.filter(k => !f[k] || !f[k].physique);
+      messageDetail = manquants.length ? manquants.join(", ")
+                                       : Object.keys(f).length + " fiches";
+      return manquants.length === 0 &&
+        Object.values(f).every(x => x.physique.length > 80);
+    })());
+
   verifier("le nombre de phases est DÉDUIT, pas écrit en dur",
     (() => {
       /* Le vrai défaut : `course1` et `course2` ont les pieds au MÊME

@@ -284,6 +284,45 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Les planches se génèrent et se contrôlent** (v6.95) : ta question sur
+les allers-retours avait une réponse mesurable.
+
+**Trois causes**, telles que l'historique les montre. Les contrôles se
+faisaient à l'œil et après découpage. Le vocabulaire de pose était
+réinventé à chaque planche — d'où une course dont toutes les phases
+avaient la même jambe devant, personne n'ayant jamais écrit ce qu'était
+une phase de foulée. Et quatorze prompts écrits à la main recopiaient
+chacun les règles communes, qui divergeaient.
+
+**Un prompt s'assemble maintenant**, comme `index.html` s'assemble depuis
+`parts/` :
+
+```bash
+python3 callaghan/planches.py prompt thibaut course marche
+```
+
+Il sort avec la fiche du personnage, les phases décrites une à une, et
+les contraintes techniques — dont il n'existe plus qu'une seule copie.
+**Huit mouvements de base** au catalogue : idle, marche, course, saut,
+accroupi, frein, touche, chute. Chaque cycle décrit **quelle jambe est
+devant** à chaque phase, et le prompt porte un avertissement explicite.
+
+**Et une planche se contrôle avant d'être découpée** :
+
+```bash
+python3 callaghan/planches.py verifier planche.png 6
+```
+
+Fond, quatre bords, nombre de poses séparables, écart entre voisines,
+égalité des têtes, alignement des pieds — et pour un cycle, que les
+jambes alternent vraiment. Essayé sur une planche reconstituée à partir
+des poses existantes : **il retrouve tout seul le défaut que tu avais vu
+à l'œil** et que trois séances de réglage n'avaient pas expliqué.
+
+Les planches spéciales — décors, boutons, icônes, gestes propres à un
+niveau — restent écrites dans `PROMPTS.md`, qui explique désormais la
+séparation entre les deux familles.
+
 **Tu avais raison : c'est toujours la même jambe** (v6.94).
 
 Mesuré pose par pose : **`course1` et `course2` ont les pieds au MÊME

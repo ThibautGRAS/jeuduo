@@ -76,6 +76,8 @@ convertit d'abord `img/**/*.webp` vers un dossier temporaire.
 | `cris.py` | découpe les cris dans un enregistrement |
 | `recharges.py` | prépare les sons de rechargement fournis |
 | `ranger_memoire.py` | range `MEMOIRE.md` par thèmes |
+| `planches.py prompt` | assemble un prompt de planche depuis le catalogue |
+| `planches.py verifier` | contrôle une planche livrée AVANT découpage |
 | `tests/apercu.js` | rend toutes les scènes du jeu, sans navigateur |
 
 Tous écrivent de façon **atomique** — dans un `.tmp` puis remplacent. Ne

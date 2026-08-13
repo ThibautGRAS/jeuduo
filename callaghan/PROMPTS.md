@@ -11,6 +11,67 @@ la main.
 
 ---
 
+## 0. Comment ce document s'utilise
+
+Il y a **deux familles de planches**, et elles ne se demandent pas de la
+même façon.
+
+### A. Les MOUVEMENTS — on ne les écrit plus, on les génère
+
+Courir, marcher, sauter, s'accroupir, encaisser, tomber : ce sont les
+mêmes gestes pour tous les personnages et tous les niveaux. Les écrire à
+la main quatorze fois a produit exactement ce qu'on pouvait craindre —
+des règles recopiées qui divergent, et un vocabulaire de pose réinventé à
+chaque planche. C'est ainsi qu'on s'est retrouvé avec deux poses de
+course ayant la MÊME jambe devant : personne n'avait jamais écrit ce
+qu'était une phase de foulée.
+
+```bash
+python3 callaghan/planches.py mouvements          # ce qui existe
+python3 callaghan/planches.py prompt thibaut course marche
+```
+
+Le prompt sort assemblé : la fiche du personnage, les phases décrites
+une à une, et les contraintes techniques — toujours les mêmes, puisqu'il
+n'y en a plus qu'une copie. Il se colle tel quel dans un générateur
+d'images.
+
+**Ajouter un mouvement** se fait dans `MOUVEMENTS`, en haut de
+`planches.py`. Décrire chaque phase par ce qui la distingue **sur le bas
+du corps** : c'est là que se voit une animation, pas dans les bras.
+
+### B. Les planches SPÉCIALES — elles restent écrites ici
+
+Tout ce qui n'est pas un mouvement de personnage : les décors, les
+boutons d'interface, les icônes d'indices, les portraits de dialogue, et
+les gestes propres à un niveau — servir un verre, lancer un pavé,
+brandir un encensoir. Ceux-là sont uniques, donc ils s'écrivent, et les
+sections 2 à 14 les gardent.
+
+Une planche spéciale doit **rappeler les contraintes techniques**. Le
+plus simple est de générer un prompt de mouvement quelconque et d'en
+recopier le bloc final.
+
+### C. CONTRÔLER LA PLANCHE AVANT DE LA DÉCOUPER
+
+C'est le geste qui économise le plus d'allers-retours, et il n'existait
+pas : les contrôles se faisaient à l'œil, souvent après découpage.
+
+```bash
+python3 callaghan/planches.py verifier planche.png 6
+```
+
+Il vérifie le fond, les quatre bords, le nombre de poses séparables,
+l'écart entre voisines, l'égalité des têtes, l'alignement des pieds — et
+pour un cycle, que **les jambes alternent vraiment**. Il refuse de dire
+« conforme » tant qu'un point cloche, et dit lequel.
+
+Ce dernier contrôle a été écrit après coup, sur une planche livrée : il
+retrouve tout seul le défaut que Thibaut avait repéré à l'œil et que
+trois séances de réglage n'avaient pas expliqué.
+
+---
+
 ## 1. Les règles communes, et pourquoi
 
 **Fond magenta uni `#FF00FF`.** Le détourage repère le fond par sa
