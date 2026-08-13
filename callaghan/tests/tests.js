@@ -26,6 +26,15 @@ const RACINE = path.join(__dirname, "..");
   /* Le prompt d'un niveau, scindé ou non. Depuis qu'un seul prompt sert
      aux DEUX héros — ils ne différaient que par l'image jointe — les
      fichiers s'appellent `heros.txt` ou `heros-1.txt`. */
+  /* UN PROMPT PEUT ÊTRE RÉÉCRIT À LA MAIN. Thibaut a réécrit celui du
+     bar en anglais, et c'est cette version qui a produit le premier cycle
+     de course correct du projet. Un prompt réécrit ne porte plus la marque
+     du générateur, et les tests qui vérifient sa FORME doivent l'exclure —
+     sinon ils exigent que le générateur soit seul autorisé à écrire, ce
+     qui est exactement l'inverse de ce qu'on veut. */
+  const MARQUE_GEN = "CONTRAINTES TECHNIQUES";
+  const estGenere = s => s.indexOf(MARQUE_GEN) >= 0;
+
   const promptNiveau = (niv) => {
     const d = path.join(RACINE, "prompts", niv);
     let s = "";
@@ -2055,6 +2064,7 @@ if (D){
       /* chacun doit être autonome : personnage, poses ET contraintes */
       const complets = f.every(n => {
         const s = fs.readFileSync(path.join(d, n), "utf8");
+        if (!estGenere(s)) return true;   /* réécrit à la main : sa forme lui appartient */
         /* deux façons d'identifier le personnage : une description
            écrite, ou une image qui fait foi. L'une OU l'autre. */
         const qui = /LE PERSONNAGE/.test(s) || /RÉFÉRENCE DE PERSONNAGE/.test(s);
@@ -2254,7 +2264,20 @@ if (D){
          autres. Il est désormais générique : les poses attendues sont
          tirées du CODE, niveau par niveau. */
       const d = path.join(RACINE, "prompts");
+      /* Un niveau peut MÊLER un prompt réécrit et un généré : le bar a
+         `heros-1` en anglais et `heros-2` généré. Concaténer les deux et
+         tester la marque sur le tout donnait « c'est généré », puis un
+         échec sur les poses du fichier réécrit.
+         On saute donc le niveau dès qu'UN de ses fichiers est réécrit :
+         la couverture n'y est plus vérifiable, et le dire vaut mieux que
+         mesurer à moitié. */
       const lire = niv => promptNiveau(niv);
+      const aDuReecrit = niv => {
+        const dn = path.join(RACINE, "prompts", niv);
+        return fs.readdirSync(dn).some(n =>
+          n.endsWith(".txt") &&
+          !estGenere(fs.readFileSync(path.join(dn, n), "utf8")));
+      };
       /* ce que le code charge, par niveau */
       const attendu = {
         n1: D.POSES_HEROS,
@@ -2267,15 +2290,23 @@ if (D){
            niveau qu'il ne regardait pas. */
         n4: [...new Set(D.POSES_RUEL_TH.concat(D.POSES_RUEL_PF))],
       };
-      const trous = [];
+      const trous = [], sautes = [];
       for (const [niv, poses] of Object.entries(attendu)){
         if (!poses || !poses.length) continue;
         const txt = lire(niv);
+        /* Un prompt RÉÉCRIT nomme les poses en clair — « [Idle] »,
+           « [Contact 1 - Near Leg Forward] » — et non par l'identifiant du
+           jeu. La couverture n'y est pas vérifiable, et prétendre le
+           contraire donnerait un faux échec à chaque réécriture. C'est le
+           prix assumé d'un prompt écrit à la main. */
+        if (aDuReecrit(niv)){ sautes.push(niv); continue; }
         for (const po of poses)
           if (txt.indexOf("[" + po + "]") < 0) trous.push(niv + "/" + po);
       }
       messageDetail = trous.length ? "absentes : " + trous.join(", ")
-        : Object.entries(attendu).map(([k, v]) => k + " " + v.length).join(", ");
+        : (sautes.length ? sautes.join(", ") + " réécrit(s) à la main ; " : "")
+          + Object.entries(attendu).filter(([k]) => sautes.indexOf(k) < 0)
+            .map(([k, v]) => k + " " + v.length).join(", ");
       return trous.length === 0;
     })());
 
@@ -2448,8 +2479,8 @@ if (D){
 
          On décrit donc ce qui SE VOIT : quelle jambe masque l'autre. */
       const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
-      const un = fs.readFileSync(
-        path.join(RACINE, "prompts", "n3", "heros-1.txt"), "utf8");
+      /* on lit un prompt GÉNÉRÉ : celui du n3 est réécrit à la main */
+      const un = promptNiveau("n2");
       return /JAMBE PROCHE du spectateur et/.test(un) &&
         /les JAMBES ne doivent pas coïncider/.test(un) &&
         /plus PROCHE du spectateur/.test(s) &&
@@ -2707,7 +2738,7 @@ if (D){
       const ds = path.join(d, "sup");
       const roul = fs.readdirSync(ds).filter(n => n.startsWith("roulades"))
         .map(n => fs.readFileSync(path.join(ds, n), "utf8")).join("");
-      const bar = promptNiveau("n3");
+      const bar = promptNiveau("n2");
       return !/AVERTISSEMENT SUR LES CYCLES/.test(roul) &&
         /AVERTISSEMENT SUR LES CYCLES/.test(bar);
     })());
@@ -2758,7 +2789,14 @@ if (D){
           if (!n.endsWith(".txt")) continue;
           const s = fs.readFileSync(f, "utf8");
           const mr = s.match(/Image de référence à joindre : reference\/(.+\.png)/);
-          if (!mr){ manquants.push(n + " (référence pas nommée)"); continue; }
+          if (!mr){
+            /* Un prompt RÉÉCRIT à la main nomme sa référence comme il veut,
+               ou pas du tout : celui qui l'a écrit sait ce qu'il joint.
+               Exiger la formule du générateur reviendrait à interdire de
+               réécrire — l'inverse de ce qu'on veut. */
+            if (!estGenere(s)) continue;
+            manquants.push(n + " (référence pas nommée)"); continue;
+          }
           /* un gabarit énumère les personnages possibles : on essaie
              tous les noms de référence présents sur le disque plutôt
              qu'une liste recopiée, qui vieillit. */
@@ -2786,7 +2824,8 @@ if (D){
       const d = path.join(RACINE, "prompts");
       /* Le rappel écrit a disparu : il venait de la fiche, qui décrit UNE
          tenue, et contredisait la référence des autres niveaux. */
-      const s = promptNiveau("n3");
+      /* on lit un prompt GÉNÉRÉ : celui du n3 a été réécrit à la main */
+      const s = promptNiveau("n4");
       return /RÉFÉRENCE DE PERSONNAGE/.test(s) &&
         /fait FOI/.test(s) &&
         !/Rappel de contrôle/.test(s) &&

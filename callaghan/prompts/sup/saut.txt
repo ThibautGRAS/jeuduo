@@ -71,6 +71,15 @@ haut de la planche. Le texte blanc laisse un halo qui se mélange au fond.
   ombre portée, aucun décor, aucun élément de mobilier, aucun sol
   dessiné, aucun cadre, aucune bordure.
 - AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro de pose.
+- VUE : profil STRICT, à cent pour cent de profil, tourné vers la DROITE.
+  Pas de trois quarts, pas de face. Un profil franc est la seule vue où
+  l'on voit quelle jambe passe devant l'autre — c'est de là que vient
+  l'alternance. (Reprise de la formulation de Thibaut, qui a produit le
+  premier cycle de course correct du projet.)
+- GRILLE : une grille RÉGULIÈRE, rangées de taille égale, un large écart
+  de fond entre chaque figure, et un trait vertical de magenta plus foncé
+  entre chaque case. Échelle et taille de tête IDENTIQUES sur toutes les
+  figures.
 - DISPOSITION : jusqu'à quatre poses, UNE SEULE RANGÉE. À partir de
   cinq, DEUX RANGÉES de taille égale — par exemple 4 + 4 pour huit poses,
   3 + 2 pour cinq. Une rangée de huit oblige à rétrécir chaque sujet pour

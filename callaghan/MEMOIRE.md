@@ -2235,6 +2235,31 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Ce que l'AUTRE écrit ne se régénère pas
+
+Thibaut a réécrit le prompt du bar en anglais, plus direct : profil strict,
+grille régulière, jambe proche et jambe du fond nommées pose par pose.
+C'est CETTE version qui a produit le premier cycle de course correct du
+projet — quatre phases, jambes alternées, ce qui manquait depuis le début.
+
+Un `planches.py tout` l'aurait effacée en une seconde, sans un mot. C'est
+exactement ce qui était arrivé à une image de référence une heure plus tôt,
+et que j'avais corrigé LÀ sans généraliser : la leçon était écrite, et je
+ne l'avais appliquée qu'au cas qui l'avait produite.
+
+Un prompt réécrit se reconnaît à ce qu'il ne porte plus la marque du
+générateur. Il est conservé, et l'outil le SIGNALE.
+
+Conséquence sur les tests, et elle compte : cinq tests exigeaient la forme
+du générateur — la formule de la référence, les identifiants de pose, la
+couverture. Les laisser tels quels revenait à **interdire de réécrire un
+prompt**, l'inverse de ce qu'on veut. Ils distinguent maintenant un prompt
+généré d'un prompt écrit à la main, et disent ce qu'ils ne peuvent pas
+vérifier sur le second.
+
+**Un garde-fou qui empêche l'autre d'améliorer les choses est un garde-fou
+à revoir.**
+
 #### Un mouvement porté DEUX FOIS tressaute
 
 « Quand il court ça sautille. » Trois causes s'additionnaient, et la

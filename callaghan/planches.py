@@ -237,6 +237,15 @@ haut de la planche. Le texte blanc laisse un halo qui se mélange au fond.
   ombre portée, aucun décor, aucun élément de mobilier, aucun sol
   dessiné, aucun cadre, aucune bordure.
 - AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro de pose.
+- VUE : profil STRICT, à cent pour cent de profil, tourné vers la DROITE.
+  Pas de trois quarts, pas de face. Un profil franc est la seule vue où
+  l'on voit quelle jambe passe devant l'autre — c'est de là que vient
+  l'alternance. (Reprise de la formulation de Thibaut, qui a produit le
+  premier cycle de course correct du projet.)
+- GRILLE : une grille RÉGULIÈRE, rangées de taille égale, un large écart
+  de fond entre chaque figure, et un trait vertical de magenta plus foncé
+  entre chaque case. Échelle et taille de tête IDENTIQUES sur toutes les
+  figures.
 - DISPOSITION : jusqu'à quatre poses, UNE SEULE RANGÉE. À partir de
   cinq, DEUX RANGÉES de taille égale — par exemple 4 + 4 pour huit poses,
   3 + 2 pour cinq. Une rangée de huit oblige à rétrécir chaque sujet pour
@@ -1180,14 +1189,34 @@ def ecrire_jeu(dossier, nom, mouvements):
     chacun a demandé sa correction."""
     n = sum(len(MOUVEMENTS[m]["phases"]) for m in mouvements)
     parts = (n + MAX_POSES - 1) // MAX_POSES
-    for f in dossier.glob(nom + "*.txt"): f.unlink()
+    for f in dossier.glob(nom + "*.txt"):
+        if MARQUE in f.read_text(encoding="utf-8"): f.unlink()
     if parts <= 1:
-        (dossier / f"{nom}.txt").write_text(
-            fabriquer(None, mouvements, "poses"), encoding="utf-8")
+        ecrire_prompt(dossier / f"{nom}.txt", fabriquer(None, mouvements, "poses"))
         return
     for k in range(1, parts + 1):
-        (dossier / f"{nom}-{k}.txt").write_text(
-            fabriquer(None, mouvements, "poses", k, parts), encoding="utf-8")
+        ecrire_prompt(dossier / f"{nom}-{k}.txt",
+                      fabriquer(None, mouvements, "poses", k, parts))
+
+
+# UN PROMPT RÉÉCRIT À LA MAIN NE SE RÉGÉNÈRE PAS. Thibaut a réécrit
+# `n3/heros-1.txt` en anglais, plus direct, et c'est CETTE version qui a
+# produit la planche à quatre phases de course qui manquait depuis le
+# début. Un `planches.py tout` l'aurait effacée en une seconde, sans un
+# mot — exactement ce qui est arrivé à une image de référence une heure
+# plus tôt, et que j'avais corrigé là sans généraliser.
+#
+# On reconnaît un prompt réécrit à ce qu'il ne porte plus la marque du
+# générateur. Il est alors laissé tel quel et signalé.
+MARQUE = "CONTRAINTES TECHNIQUES"
+
+def ecrire_prompt(chemin, texte):
+    """Écrit un prompt, sauf s'il a été réécrit à la main."""
+    if chemin.exists() and MARQUE not in chemin.read_text(encoding="utf-8"):
+        print(f"  (conservé, réécrit à la main : {chemin.name})")
+        return False
+    chemin.write_text(texte, encoding="utf-8")
+    return True
 
 
 def tout():
@@ -1202,7 +1231,8 @@ def tout():
     for niveau, sc in SCENES.items():
         d = base / niveau
         d.mkdir(parents=True, exist_ok=True)
-        for f in d.glob("*.txt"): f.unlink()
+        for f in d.glob("*.txt"):
+            if MARQUE in f.read_text(encoding="utf-8"): f.unlink()
         # UN SEUL PROMPT PAR NIVEAU. Les deux héros partageaient un texte
         # identique à deux lignes près, dont une qui était fausse. Ce qui
         # les distingue est l'IMAGE jointe, pas le texte.
@@ -1217,14 +1247,14 @@ def tout():
         # la MÊME faute que la boucle qui écrasait un paramètre il y a
         # quelques heures — et elle se lit tout aussi mal.
         nomf = "heros" if len(sc["prefixe"]) > 1 else list(sc["prefixe"])[0]
-        for f in d.glob("*.txt"): f.unlink()
+        for f in d.glob("*.txt"):
+            if MARQUE in f.read_text(encoding="utf-8"): f.unlink()
         if parts <= 1:
-            (d / f"{nomf}.txt").write_text(
-                fabriquer_scene(niveau, None), encoding="utf-8")
+            ecrire_prompt(d / f"{nomf}.txt", fabriquer_scene(niveau, None))
         else:
             for part in range(1, parts + 1):
-                (d / f"{nomf}-{part}.txt").write_text(
-                    fabriquer_scene(niveau, None, part, parts), encoding="utf-8")
+                ecrire_prompt(d / f"{nomf}-{part}.txt",
+                          fabriquer_scene(niveau, None, part, parts))
     # les méchants n'appartiennent qu'à la ruelle
     d = base / "n4"
     for f in d.glob("mechant_*.txt"): f.unlink()
