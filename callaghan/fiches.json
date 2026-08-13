@@ -33,5 +33,10 @@
     "physique": "Un homme d'une quarantaine d'années, cheveux noirs épais, moustache et barbe courte grisonnante, veste de costume noire ouverte sur un t-shirt BLANC à grand cœur rose, jean bleu, baskets grises.",
     "costume": "Veste de costume noire ouverte sur un t-shirt BLANC à grand cœur rose, jean bleu, baskets grises.",
     "rappel": "t-shirt blanc à grand cœur rose sous veste noire, moustache et barbe grisonnante"
+  },
+  "hortense": {
+    "physique": "Une femme d'une quarantaine d'années, cheveux CHÂTAINS très BOUCLÉS et volumineux, mi-longs. Veste NOIRE ouverte sur un haut à motif léopard, jean bleu large, baskets blanches, petit sac noir en bandoulière. Silhouette ronde et vive.",
+    "costume": "Veste noire ouverte sur un haut à motif léopard, jean bleu large, baskets blanches, sac noir en bandoulière.",
+    "rappel": "cheveux châtains très bouclés, veste noire, haut léopard, jean large"
   }
 }

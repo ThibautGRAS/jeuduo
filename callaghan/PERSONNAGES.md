@@ -57,6 +57,13 @@ et le code, **le code fait foi** et ce fichier doit être corrigé.
   `bar_hortense_{marche1,marche2,tarte}`.
 - Le fond du bar l'affiche : « Hortense a dit : pas de tarte, pas de
   service. » et « Règle n°1 du D'Tour : ne jamais dire non à Hortense. »
+- **Apparence** : quarantaine, cheveux châtains très bouclés et
+  volumineux, veste noire ouverte sur un haut léopard, jean large,
+  baskets blanches, sac en bandoulière. Silhouette ronde et vive.
+  (Cette ligne manquait : sa fiche décrivait son rôle et jamais son
+  allure, et j'ai fini par l'imaginer en petite dame grise à robe à
+  fleurs pour un prompt. Un personnage dont l'apparence n'est écrite
+  nulle part sera réinventé.)
 - Sprites : `h_*` et `tarte*`, `debris_*` (commun).
 
 ### GABI

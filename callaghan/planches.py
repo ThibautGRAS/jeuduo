@@ -438,6 +438,43 @@ SCENES = {
     # déplacement et le verre : neuf d'un côté, sept de l'autre, et
     # chaque planche reste un ensemble cohérent qu'on peut juger d'un
   },
+  # HORTENSE, et son geste de lancer. Mesuré dans le code : l'état LANCE
+  # dure 0,22 s et l'état RIRE 0,80 s — et les DEUX affichent la même
+  # image, `h_lance`. Le geste central du niveau 1 tient donc 1,02 seconde
+  # sur une image FIXE, alors que c'est lui qu'on regarde.
+  #
+  # Quatre phases pour le lancer, et une pose de rire distincte. Le
+  # découpage automatique n'est pas nécessaire : huit poses tiennent sur
+  # une planche.
+  "hortense": {
+    "titre": "Hortense et son lancer de tarte",
+    "prefixe": {"hortense": "h"},
+    "poses": [
+      ("sournoise", "à l'affût : buste penché en avant, épaules basses, elle "
+                    "regarde vers la DROITE en coin, un sourire mauvais, les "
+                    "mains vides devant elle"),
+      ("arme", "elle ARME le bras : une tarte à la crème posée à plat sur la "
+               "paume droite, bras replié en arrière au-dessus de l'épaule, "
+               "buste tourné vers l'arrière, poids sur la jambe arrière, "
+               "regard fixé vers la droite"),
+      ("lance1", "début du lancer : le bras commence à se détendre vers "
+                 "l'avant, la tarte encore sur la paume, le buste pivote, le "
+                 "poids passe sur la jambe avant"),
+      ("lance2", "le bras est TENDU à l'horizontale vers la DROITE, la main "
+                 "vient d'ouvrir : la tarte n'est plus dans la main. Corps "
+                 "penché en avant dans le mouvement, jambe arrière décollée"),
+      ("lance3", "fin du geste : le bras retombe en travers du corps, buste "
+                 "encore penché, elle regarde le résultat vers la droite"),
+      ("rire", "elle RIT de son coup : tête rejetée en arrière, bouche "
+               "grande ouverte, les deux mains sur le ventre, épaules "
+               "secouées. Aucune tarte dans les mains."),
+      ("courtA", "elle court vers la droite, jambe droite tendue devant, "
+                 "bras opposés, cheveux qui volent"),
+      ("courtB", "elle court vers la droite, jambe GAUCHE tendue devant, "
+                 "bras inversés — la phase opposée de la précédente"),
+    ],
+  },
+
   "n4": {
     "titre": "la ruelle",
     "prefixe": {"thibaut": "ruel_th", "pf": "ruel_pf"},
@@ -1034,13 +1071,21 @@ def tout():
         n = len(sc.get("poses") or []) or sum(
             len(MOUVEMENTS[m]["phases"]) for m in sc.get("mouvements", []))
         parts = (n + MAX_POSES - 1) // MAX_POSES
-        for f in d.glob("heros*.txt"): f.unlink()
+        # le nom du fichier suit la scène : « heros » quand elle sert aux
+        # deux héros, le nom du personnage quand elle n'en concerne qu'un.
+        # Sinon Hortense se retrouvait dans un `heros.txt`.
+        # `nomf` et non `base` : `base` désigne déjà le dossier racine des
+        # prompts. Écraser un nom existant dans une portée plus large est
+        # la MÊME faute que la boucle qui écrasait un paramètre il y a
+        # quelques heures — et elle se lit tout aussi mal.
+        nomf = "heros" if len(sc["prefixe"]) > 1 else list(sc["prefixe"])[0]
+        for f in d.glob("*.txt"): f.unlink()
         if parts <= 1:
-            (d / "heros.txt").write_text(
+            (d / f"{nomf}.txt").write_text(
                 fabriquer_scene(niveau, None), encoding="utf-8")
         else:
             for part in range(1, parts + 1):
-                (d / f"heros-{part}.txt").write_text(
+                (d / f"{nomf}-{part}.txt").write_text(
                     fabriquer_scene(niveau, None, part, parts), encoding="utf-8")
     # les méchants n'appartiennent qu'à la ruelle
     d = base / "n4"
@@ -1059,7 +1104,8 @@ def tout():
 
     ref = base / "reference"
     ref.mkdir(exist_ok=True)
-    for perso in ["thibaut", "pf", "depar", "dsk", "jubi", "abbe", "bruh"]:
+    for perso in ["thibaut", "pf", "hortense",
+                  "depar", "dsk", "jubi", "abbe", "bruh"]:
         try: reference(perso, ref)
         except SystemExit: print(f"  (aucun sprite pour {perso})")
     n = len(list(base.rglob("*.txt")))
@@ -1084,7 +1130,9 @@ def reference(perso, dossier=None):
     for sous, prefixe, poses in (
             ("n3", f"bar_{'th' if perso == 'thibaut' else perso}", ["idle", "marche1", "attrape"]),
             ("n4", f"enn_{perso}", ["run1", "run3", "arret"]),
-            ("n4", f"ruel_{'th' if perso == 'thibaut' else perso}", ["vise1", "vise", "tir"])):
+            ("n4", f"ruel_{'th' if perso == 'thibaut' else perso}", ["vise1", "vise", "tir"]),
+            # Hortense vit dans `commun` : elle traverse les niveaux
+            ("commun", "h", ["debout", "sournoise", "arme"])):
         trouve = [racine / sous / f"{prefixe}_{po}.webp" for po in poses]
         trouve = [f for f in trouve if f.exists()]
         if len(trouve) >= 2:

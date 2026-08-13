@@ -2235,6 +2235,23 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Un personnage dont l'apparence n'est écrite nulle part sera réinventé
+
+`PERSONNAGES.md` décrivait Hortense avec précision : son rôle, par où elle
+entre à chaque niveau, ce que le décor dit d'elle. Jamais son allure.
+
+En rédigeant sa fiche de prompt, je l'ai donc imaginée — petite dame
+grise, robe à fleurs, chaussons. Ses sprites montrent une quarantenaire
+aux cheveux châtains très bouclés, veste noire sur haut léopard et jean
+large. Rien à voir.
+
+Ce qui a rattrapé la faute : avoir REGARDÉ l'image de référence après
+l'avoir fabriquée, au lieu de la livrer sans la voir.
+
+L'apparence est maintenant écrite dans sa fiche, avec la raison. Une
+description qui manque n'est pas un vide neutre : c'est une invitation à
+inventer.
+
 #### Contraindre l'autre plutôt que d'améliorer son propre outil
 
 J'ai fait descendre le nombre de poses par planche de neuf à cinq parce
@@ -2855,6 +2872,11 @@ d'enquête, resté quarante versions sans que personne y revienne.
   quand les fichiers arriveront, il restera à les ajouter à
   `POSES_HEROS` et à distinguer les deux cas dans `poseHeros` — `splat`
   si `h.tarte > 0`, `esquive` si `h.esquive`.
+- **Les phases de lancer d'Hortense.** Mesuré : l'état LANCE dure 0,22 s
+  et RIRE 0,80 s, et les DEUX affichent `h_lance`. Le geste central du
+  niveau 1 tient donc 1,02 seconde sur une image FIXE. Le prompt demande
+  `lance1`, `lance2`, `lance3` et un `rire` distinct ; il restera à
+  câbler `poseHortense` quand les images arriveront.
 - **La pose `serie` de Jojo** montre une passoire au lieu de la série de
   shots prête. La bonne pose est dans la rangée chorégraphiée de sa
   planche, mais celle-ci a un comptoir et un cadre blanc qui gênent la

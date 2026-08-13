@@ -2307,6 +2307,22 @@ if (D){
         /Un doigt pointé/.test(bloc) && /ÉCARTER PLUS/.test(bloc);
     })());
 
+  verifier("le lancer d'Hortense ne tient plus sur UNE image",
+    (() => {
+      /* Mesuré dans le code : l'état LANCE dure 0,22 s et RIRE 0,80 s, et
+         les DEUX affichaient `h_lance`. Le geste central du niveau 1
+         tenait donc 1,02 seconde sur une image fixe — alors que c'est lui
+         qu'on regarde.
+         Le prompt demande quatre phases de lancer et un rire distinct ;
+         il restera à les câbler quand les images arriveront. */
+      const s = fs.readFileSync(
+        path.join(RACINE, "prompts", "hortense", "hortense.txt"), "utf8");
+      const demandees = (s.match(/\[(lance\d|rire)\]/g) || []).length;
+      messageDetail = demandees + " phases de lancer et de rire demandées";
+      return demandees >= 4 &&
+        fs.existsSync(path.join(RACINE, "prompts", "reference", "hortense.png"));
+    })());
+
   verifier("deux poses qui se touchent sont SÉPARÉES, pas perdues",
     (() => {
       /* La limite n'était pas le détourage — retirer un fond magenta est
