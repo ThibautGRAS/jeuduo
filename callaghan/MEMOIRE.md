@@ -2235,6 +2235,34 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Une correction appliquée à moitié laisse le défaut vivant
+
+J'ai retiré le « rappel écrit » des prompts de héros parce qu'il
+contredisait l'image de référence. Une heure plus tard, il était toujours
+dans les cinq prompts de méchants et les quatre de mouvements — je n'avais
+corrigé que là où le défaut s'était manifesté.
+
+Conséquence mesurable : dix-sept fichiers de prompt pour onze planches
+réelles, les doublons n'existant QUE parce que ce rappel les
+différenciait. Une fois retiré partout : onze fichiers.
+
+C'est la même famille que « un contrôle écrit pour UN cas laisse passer
+tous les autres », et c'est la troisième fois de la séance. **Après avoir
+corrigé quelque chose, chercher le même motif ailleurs — par `grep`, pas
+de mémoire.**
+
+#### Un test qui DÉDUIT au lieu de LIRE tombe à chaque renommage
+
+Un test vérifiait que chaque prompt a son image de référence, en
+déduisant le personnage du nom de fichier. Il est tombé quatre fois pour
+la même idée : `thibaut.txt`, puis `thibaut-1.txt`, puis `heros-1.txt`,
+puis `mechants.txt`.
+
+Le prompt ÉCRIT la référence qu'il faut joindre. Lire cette ligne est la
+seule source qui ne mente pas. Un nom de fichier est une description, et
+une description est lossy — c'était la leçon des prompts eux-mêmes, elle
+valait aussi pour leurs noms.
+
 #### Un rappel écrit à côté d'une image finit par la contredire
 
 Les prompts en mode référence portaient deux lignes de « rappel de

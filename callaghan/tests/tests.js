@@ -2088,6 +2088,52 @@ if (D){
     })());
 
 
+  verifier("aucun prompt n'est le DOUBLON d'un autre",
+    (() => {
+      /* Dix-sept fichiers pour onze planches réelles : les cinq méchants
+         partageaient un texte identique à quatre lignes près, et les
+         mouvements de réserve étaient dupliqués par héros. Ce qui les
+         distinguait était le « rappel » écrit — retiré des héros une
+         heure plus tôt et laissé ailleurs. Une correction appliquée à
+         moitié laisse le défaut vivant là où on n'a pas regardé. */
+      const d = path.join(RACINE, "prompts");
+      const vus = new Map();
+      const doublons = [];
+      const parcourir = dossier => {
+        for (const n of fs.readdirSync(dossier)){
+          const f = path.join(dossier, n);
+          if (fs.statSync(f).isDirectory()){ parcourir(f); continue; }
+          if (!n.endsWith(".txt")) continue;
+          const s = fs.readFileSync(f, "utf8");
+          if (vus.has(s)) doublons.push(n + " = " + vus.get(s));
+          else vus.set(s, n);
+        }
+      };
+      parcourir(d);
+      messageDetail = doublons.length ? doublons.join(", ")
+                                      : vus.size + " prompts, tous distincts";
+      return doublons.length === 0 && vus.size <= 12;
+    })());
+
+  verifier("aucun prompt ne garde de RAPPEL écrit",
+    (() => {
+      /* Un rappel à côté d'une image finit par la contredire, et c'est
+         lui qui forçait à dupliquer les prompts. */
+      const d = path.join(RACINE, "prompts");
+      const avec = [];
+      const parcourir = dossier => {
+        for (const n of fs.readdirSync(dossier)){
+          const f = path.join(dossier, n);
+          if (fs.statSync(f).isDirectory()){ parcourir(f); continue; }
+          if (n.endsWith(".txt") &&
+              /Rappel de contrôle/.test(fs.readFileSync(f, "utf8"))) avec.push(n);
+        }
+      };
+      parcourir(d);
+      messageDetail = avec.length ? avec.join(", ") : "aucun";
+      return avec.length === 0;
+    })());
+
   verifier("les planches d'origine sont GARDÉES",
     (() => {
       /* Elles ne l'étaient pas. Trois redécoupages ont eu lieu — barmans,
@@ -2157,8 +2203,11 @@ if (D){
         n2: [...new Set((source.match(/"enq_th_([a-z0-9]+)"/g) || [])
               .map(x => x.replace(/"enq_th_|"/g, "")))],
         n3: D.POSES_BAR,
-        n4: [...new Set((source.match(/"ruel_th_([a-z0-9]+)"/g) || [])
-              .map(x => x.replace(/"ruel_th_|"/g, "")))],
+        /* le n4 déclare ses poses dans des LISTES, pas dans des chaînes
+           « ruel_th_… » : les chercher comme les autres renvoyait zéro,
+           et le test annonçait donc une couverture parfaite sur un
+           niveau qu'il ne regardait pas. */
+        n4: [...new Set(D.POSES_RUEL_TH.concat(D.POSES_RUEL_PF))],
       };
       const trous = [];
       for (const [niv, poses] of Object.entries(attendu)){
@@ -2328,7 +2377,9 @@ if (D){
          « ce n'est pas la même jambe devant » n'a aucun sens et brouille
          la consigne. */
       const d = path.join(RACINE, "prompts");
-      const roul = fs.readFileSync(path.join(d, "sup", "thibaut_roulades.txt"), "utf8");
+      /* un seul prompt de roulades depuis la fusion : le texte est le
+         même pour les deux héros, seule l'image jointe change */
+      const roul = fs.readFileSync(path.join(d, "sup", "roulades.txt"), "utf8");
       const bar = promptNiveau("n3");
       return !/AVERTISSEMENT SUR LES CYCLES/.test(roul) &&
         /AVERTISSEMENT SUR LES CYCLES/.test(bar);
@@ -2360,31 +2411,40 @@ if (D){
 
   verifier("chaque prompt a son IMAGE de référence",
     (() => {
-      /* Une description écrite est relue et réinterprétée à chaque
-         planche : le t-shirt de BruHell a changé sans qu'un mot du texte
-         bouge. L'image montre le personnage tel qu'il est EN JEU. */
+      /* Ce test DÉDUISAIT le personnage du nom de fichier. Il est tombé à
+         chaque renommage — `thibaut.txt`, puis `thibaut-1.txt`, puis
+         `heros-1.txt`, puis `mechants.txt` : quatre reprises pour la même
+         idée. Il lit désormais la LIGNE que le prompt écrit, ce qui est
+         la seule source qui ne mente pas.
+
+         Une description écrite est lossy — c'était la leçon des prompts
+         eux-mêmes. Elle vaut aussi pour un nom de fichier. */
       const d = path.join(RACINE, "prompts");
-      const txt = [];
-      for (const niv of ["n1", "n2", "n3", "n4"]){
-        const dn = path.join(d, niv);
-        if (!fs.existsSync(dn)) continue;
-        for (const n of fs.readdirSync(dn)) if (n.endsWith(".txt")) txt.push(n);
-      }
-      /* UNE référence par personnage, partagée par tous les niveaux :
-         c'est ce qui permet de tout réaligner en changeant une image. */
-      /* Le nom du fichier peut porter un suffixe de planche — `-1`, `-2`
-         quand une scène est scindée. Le PERSONNAGE est ce qui reste une
-         fois ce suffixe retiré. */
-      const manquants = txt.filter(n => {
-        const base = n.replace(/\.txt$/, "").replace(/^mechant_/, "")
-                      .replace(/-\d+$/, "");
-        /* `heros` n'est pas un personnage : c'est le prompt commun aux
-           deux, et le test précédent vérifie déjà ses deux références. */
-        if (base === "heros") return false;
-        return !fs.existsSync(path.join(d, "reference", base + ".png"));
-      });
+      const manquants = [];
+      const parcourir = dossier => {
+        for (const n of fs.readdirSync(dossier)){
+          const f = path.join(dossier, n);
+          if (fs.statSync(f).isDirectory()){
+            if (n !== "reference") parcourir(f);
+            continue;
+          }
+          if (!n.endsWith(".txt")) continue;
+          const s = fs.readFileSync(f, "utf8");
+          const mr = s.match(/Image de référence à joindre : reference\/(.+\.png)/);
+          if (!mr){ manquants.push(n + " (référence pas nommée)"); continue; }
+          const cibles = mr[1].indexOf("<") >= 0
+            ? ["thibaut", "pf", "depar", "dsk", "jubi", "abbe", "bruh"]
+                .map(x => mr[1].replace(/<[^>]+>/, x))
+            : [mr[1]];
+          /* un gabarit est bon dès qu'AU MOINS une cible existe : le
+             prompt des méchants nomme les cinq, celui des héros les deux */
+          if (!cibles.some(c => fs.existsSync(path.join(d, "reference", c))))
+            manquants.push(n + " -> aucune référence");
+        }
+      };
+      parcourir(d);
       messageDetail = manquants.length ? manquants.join(", ")
-        : txt.length + " prompts, tous référencés";
+                                       : "toutes les références nommées existent";
       return manquants.length === 0;
     })());
 

@@ -1,6 +1,6 @@
 Planche de 7 poses d'un même personnage, côte à côte
 sur une seule rangée.
-Image de référence à joindre : reference/thibaut.png
+Image de référence à joindre : reference/<le personnage voulu>.png
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
 qu'il existe déjà.
@@ -22,9 +22,6 @@ tirer de lumière rose ou violette sur la peau, les cheveux, les
 vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
-Rappel de contrôle, à confirmer sur l'image et non à interpréter :
-polo vert, jean bleu, cheveux bruns en bataille, barbe de trois jours
-
 LES POSES, de gauche à droite :
 1. [roulade1] élan : course cassée, buste plongeant vers l'avant, une épaule en avant, bras tendu vers le sol
 2. [roulade2] contact : l'épaule touche, la tête est rentrée contre la poitrine, le dos s'arrondit, jambes encore tendues en arrière
@@ -36,6 +33,17 @@ LES POSES, de gauche à droite :
 
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
+
+LA PLUS IMPORTANTE, ET LA PLUS SOUVENT RATÉE : L'ESPACEMENT.
+Chaque pose doit être séparée de sa voisine par au moins 80 pixels de
+fond VIDE. Un doigt pointé, un bras tendu, un coude, un pied de course,
+un objet tenu : RIEN ne doit entrer dans la colonne d'à côté. Deux poses
+qui se touchent, même par un seul doigt, ne peuvent pas être séparées
+automatiquement, et toute la planche est à refaire.
+Test à faire mentalement : entre deux poses voisines, peut-on tracer un
+trait vertical du haut en bas de l'image sans jamais toucher un
+personnage ? Si non, écarter davantage.
+Dans le doute, ÉCARTER PLUS. Une planche trop aérée se découpe très bien.
 
 - Fond MAGENTA PUR uni #FF00FF sur toute l'image. Aucun dégradé, aucune
   ombre portée, aucun décor, aucun élément de mobilier, aucun sol

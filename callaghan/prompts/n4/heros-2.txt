@@ -1,6 +1,9 @@
-Planche de 4 poses d'un même personnage, côte à côte
+Planche de 7 poses d'un même personnage, côte à côte
 sur une seule rangée.
-Image de référence à joindre : reference/pf.png
+
+Scène : la ruelle.
+Planche 2 sur 2 — joindre la MÊME image de référence aux deux, c'est ce qui les raccorde.
+Image de référence à joindre : reference/<thibaut ou pf>-3.png
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
 qu'il existe déjà.
@@ -22,17 +25,28 @@ tirer de lumière rose ou violette sur la peau, les cheveux, les
 vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
-Rappel de contrôle, à confirmer sur l'image et non à interpréter :
-chauve, lunettes rondes cerclées de noir, t-shirt beige, jean bleu
-
 LES POSES, de gauche à droite :
-1. [saut1] flexion : genoux pliés, buste en avant, bras en arrière, juste avant l'impulsion
-2. [saut2] montée : jambes tendues vers le bas, bras levés, corps étiré
-3. [saut3] sommet : genoux ramenés vers la poitrine
-4. [saut4] réception : genoux fléchis, un pied touche le sol, bras écartés pour l'équilibre
+1. [fumee] après le tir : l'arme retombe lentement, le bras se détend, le regard reste sur la cible
+2. [arme1] recharge, premier temps : l'arme ramenée contre la poitrine, une main qui saisit le chargeur
+3. [arme2] recharge, second temps : la main pousse le chargeur en place, le regard baissé sur l'arme
+4. [baisse] arme baissée le long de la cuisse, corps de trois quarts, il souffle
+5. [accroupi] accroupi derrière un abri, arme ramenée contre la poitrine, tête rentrée dans les épaules
+6. [leve1] début du relevé : un genou encore à terre, une main en appui sur l'abri
+7. [leve2] fin du relevé : presque debout, l'arme qui remonte vers la ligne de tir
 
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
+
+LA PLUS IMPORTANTE, ET LA PLUS SOUVENT RATÉE : L'ESPACEMENT.
+Chaque pose doit être séparée de sa voisine par au moins 80 pixels de
+fond VIDE. Un doigt pointé, un bras tendu, un coude, un pied de course,
+un objet tenu : RIEN ne doit entrer dans la colonne d'à côté. Deux poses
+qui se touchent, même par un seul doigt, ne peuvent pas être séparées
+automatiquement, et toute la planche est à refaire.
+Test à faire mentalement : entre deux poses voisines, peut-on tracer un
+trait vertical du haut en bas de l'image sans jamais toucher un
+personnage ? Si non, écarter davantage.
+Dans le doute, ÉCARTER PLUS. Une planche trop aérée se découpe très bien.
 
 - Fond MAGENTA PUR uni #FF00FF sur toute l'image. Aucun dégradé, aucune
   ombre portée, aucun décor, aucun élément de mobilier, aucun sol

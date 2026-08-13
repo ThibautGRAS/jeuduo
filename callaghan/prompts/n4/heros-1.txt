@@ -1,6 +1,9 @@
-Planche de 4 poses d'un même personnage, côte à côte
+Planche de 7 poses d'un même personnage, côte à côte
 sur une seule rangée.
-Image de référence à joindre : reference/thibaut.png
+
+Scène : la ruelle.
+Planche 1 sur 2 — joindre la MÊME image de référence aux deux, c'est ce qui les raccorde.
+Image de référence à joindre : reference/<thibaut ou pf>-3.png
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
 qu'il existe déjà.
@@ -22,17 +25,28 @@ tirer de lumière rose ou violette sur la peau, les cheveux, les
 vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
-Rappel de contrôle, à confirmer sur l'image et non à interpréter :
-polo vert, jean bleu, cheveux bruns en bataille, barbe de trois jours
-
 LES POSES, de gauche à droite :
-1. [saut1] flexion : genoux pliés, buste en avant, bras en arrière, juste avant l'impulsion
-2. [saut2] montée : jambes tendues vers le bas, bras levés, corps étiré
-3. [saut3] sommet : genoux ramenés vers la poitrine
-4. [saut4] réception : genoux fléchis, un pied touche le sol, bras écartés pour l'équilibre
+1. [debout] debout derrière la barricade, arme le long du corps, regard vers la droite
+2. [vise] de profil vers la DROITE, arme tendue à deux mains, bras alignés, buste légèrement penché en avant, œil dans la ligne de mire
+3. [vise1] même visée, l'arme un peu plus basse, épaules détendues
+4. [vise2] même visée, l'arme un peu plus haute, épaules remontées
+5. [tir] au moment du départ du coup : bras encore tendus, épaule remontée, mâchoire serrée, yeux plissés
+6. [recul1] le recul soulève l'avant-bras, le poignet casse vers le haut, le buste part légèrement en arrière
+7. [recul2] recul maximal : l'arme pointe vers le haut, l'épaule est rejetée, le pied arrière se cale
 
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
+
+LA PLUS IMPORTANTE, ET LA PLUS SOUVENT RATÉE : L'ESPACEMENT.
+Chaque pose doit être séparée de sa voisine par au moins 80 pixels de
+fond VIDE. Un doigt pointé, un bras tendu, un coude, un pied de course,
+un objet tenu : RIEN ne doit entrer dans la colonne d'à côté. Deux poses
+qui se touchent, même par un seul doigt, ne peuvent pas être séparées
+automatiquement, et toute la planche est à refaire.
+Test à faire mentalement : entre deux poses voisines, peut-on tracer un
+trait vertical du haut en bas de l'image sans jamais toucher un
+personnage ? Si non, écarter davantage.
+Dans le doute, ÉCARTER PLUS. Une planche trop aérée se découpe très bien.
 
 - Fond MAGENTA PUR uni #FF00FF sur toute l'image. Aucun dégradé, aucune
   ombre portée, aucun décor, aucun élément de mobilier, aucun sol

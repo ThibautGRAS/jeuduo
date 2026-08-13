@@ -234,6 +234,12 @@ SCENES = {
                   "bras droit tendu vers la droite à hauteur de taille, la "
                   "main refermée comme sur une autre main, buste tourné vers "
                   "la droite, sourire franc, regard vers la droite"),
+      # ATTENTION, COLLISION DE NOM : `vide` désigne ici une main tendue
+      # que personne ne prend, et au niveau 3 un VERRE vide brandi. Deux
+      # choses opposées sous un même mot. Les préfixes de fichier les
+      # séparent — `thibaut_vide` et `bar_th_vide` — mais un humain qui
+      # lit « vide » dans un prompt ne peut pas deviner lequel. D'où ce
+      # rappel, et la description qui commence par ce qu'on voit.
       ("vide", "la main tendue dans le VIDE : même bras droit tendu vers la "
                "droite, main ouverte et paume verticale, mais personne ne "
                "l'a prise — épaules qui retombent, sourcils remontés au "
@@ -332,6 +338,7 @@ SCENES = {
                 "l'avant, l'autre main libre"),
       ("boit", "la tête rejetée en arrière, le verre porté aux lèvres et "
                "incliné, yeux fermés, coude haut"),
+      # même nom qu'au niveau 1, sens opposé : voir la note là-bas
       ("vide", "le verre vide brandi à bout de bras au-dessus de l'épaule, "
                "grand sourire, l'autre poing serré"),
       ("jette", "en plein lancer : le bras part vers l'arrière puis se "
@@ -351,15 +358,47 @@ SCENES = {
     "titre": "la ruelle",
     "prefixe": {"thibaut": "ruel_th", "pf": "ruel_pf"},
     "ref": "-3",   # la même tenue de policier qu'au niveau 2
+    # QUATORZE POSES. Le prompt n'en demandait que cinq : troisième niveau
+    # de suite avec le même défaut, après le n2 (5 sur 11) et le n3
+    # (9 sur 16). Elles sont tirées de POSES_RUEL_TH et POSES_RUEL_PF.
+    #
+    # Les deux héros n'ont PAS exactement les mêmes : Thibaut a `debout`,
+    # `vise1`/`vise2` et `fumee` ; PF a `vise` tout court. Le prompt
+    # demande l'union, et on prend ce dont on a besoin — une pose en trop
+    # sur une planche ne coûte rien, une pose manquante coûte une
+    # régénération.
     "poses": [
-      ("vise1", "de profil, arme tendue à deux mains vers la droite, buste "
-                "légèrement penché"),
-      ("tir", "même position, le bras qui encaisse le recul, épaule remontée"),
-      ("recul1", "le bras part vers le haut sous le recul, buste rejeté"),
+      ("debout", "debout derrière la barricade, arme le long du corps, "
+                 "regard vers la droite"),
+      ("vise", "de profil vers la DROITE, arme tendue à deux mains, bras "
+               "alignés, buste légèrement penché en avant, œil dans la "
+               "ligne de mire"),
+      ("vise1", "même visée, l'arme un peu plus basse, épaules détendues"),
+      ("vise2", "même visée, l'arme un peu plus haute, épaules remontées"),
+      ("tir", "au moment du départ du coup : bras encore tendus, épaule "
+              "remontée, mâchoire serrée, yeux plissés"),
+      ("recul1", "le recul soulève l'avant-bras, le poignet casse vers le "
+                 "haut, le buste part légèrement en arrière"),
+      ("recul2", "recul maximal : l'arme pointe vers le haut, l'épaule est "
+                 "rejetée, le pied arrière se cale"),
+      ("fumee", "après le tir : l'arme retombe lentement, le bras se "
+                "détend, le regard reste sur la cible"),
+      ("arme1", "recharge, premier temps : l'arme ramenée contre la "
+                "poitrine, une main qui saisit le chargeur"),
+      ("arme2", "recharge, second temps : la main pousse le chargeur en "
+                "place, le regard baissé sur l'arme"),
+      ("baisse", "arme baissée le long de la cuisse, corps de trois quarts, "
+                 "il souffle"),
       ("accroupi", "accroupi derrière un abri, arme ramenée contre la "
-                   "poitrine, tête baissée"),
-      ("leve1", "en train de se relever de l'accroupi, une main en appui"),
+                   "poitrine, tête rentrée dans les épaules"),
+      ("leve1", "début du relevé : un genou encore à terre, une main en "
+                "appui sur l'abri"),
+      ("leve2", "fin du relevé : presque debout, l'arme qui remonte vers "
+                "la ligne de tir"),
     ],
+    # quatorze poses : deux planches de sept, la coupure entre le tir et
+    # ce qui l'entoure
+    "scinder": 7,
   },
 }
 
@@ -451,12 +490,13 @@ identique à celui de la référence une fois le fond mis de côté.""",
 
 
 def fabriquer(perso, mouvements, mode="texte"):
+    """`perso` à None = un prompt commun, où seule l'image jointe change."""
     fiches = charger_fiches()
-    if perso not in fiches:
+    if perso is not None and perso not in fiches:
         sys.exit(f"ABANDON : aucune fiche pour « {perso} ».\n"
                  f"Connus : {', '.join(sorted(fiches)) or 'aucun'}\n"
                  f"Les fiches sont dans callaghan/fiches.json.")
-    f = fiches[perso]
+    f = fiches.get(perso, {})
 
     poses, details = [], []
     for m in mouvements:
@@ -494,8 +534,14 @@ def fabriquer(perso, mouvements, mode="texte"):
         # une description qui accompagne une image entre en concurrence
         # avec elle, et le générateur tranche au hasard. On se contente
         # d'un rappel court, formulé comme une confirmation.
-        bloc = (MODES["poses"] + "\n\nRappel de contrôle, à confirmer sur "
-                "l'image et non à interpréter :\n" + f["rappel"])
+        # PAS DE RAPPEL, ici non plus. Il avait été retiré des prompts de
+        # héros une heure plus tôt, et laissé chez les méchants : une
+        # correction appliquée à moitié laisse le défaut vivant là où on
+        # n'a pas regardé.
+        #
+        # Conséquence : les cinq prompts de méchants deviennent identiques,
+        # et un seul suffit — comme pour les héros.
+        bloc = MODES["poses"]
 
     # AU-DELÀ DE NEUF POSES, LA QUALITÉ CHUTE. Une rangée trop longue
     # oblige le générateur à rétrécir chaque sujet, et les têtes cessent
@@ -510,7 +556,8 @@ def fabriquer(perso, mouvements, mode="texte"):
     # Le nom de la référence est ÉCRIT dans le prompt. Un personnage peut
     # en avoir plusieurs — une par tenue — et sans ce nom on ne sait pas
     # laquelle joindre.
-    ligne_ref = (f"Image de référence à joindre : reference/{perso}.png\n"
+    qui = perso or "<le personnage voulu>"
+    ligne_ref = (f"Image de référence à joindre : reference/{qui}.png\n"
                  if mode == "poses" else "")
 
     return f"""Planche de {len(poses)} poses d'un même personnage, côte à côte
@@ -816,9 +863,19 @@ def tout():
                 fabriquer_scene(niveau, None), encoding="utf-8")
     # les méchants n'appartiennent qu'à la ruelle
     d = base / "n4"
-    for m in ("depar", "dsk", "jubi", "abbe", "bruh"):
-        (d / f"mechant_{m}.txt").write_text(
-            fabriquer(m, ["course", "touche", "chute"], "poses"), encoding="utf-8")
+    for f in d.glob("mechant_*.txt"): f.unlink()
+    (d / "mechants.txt").write_text(
+        fabriquer(None, ["course", "touche", "chute"], "poses"), encoding="utf-8")
+    # les mouvements de réserve : un prompt commun aux deux héros, comme
+    # partout ailleurs. Ils n'étaient dupliqués que parce que le rappel
+    # écrit les distinguait — et il n'existe plus.
+    sup = base / "sup"
+    sup.mkdir(parents=True, exist_ok=True)
+    for f in sup.glob("*.txt"): f.unlink()
+    (sup / "saut.txt").write_text(fabriquer(None, ["saut"], "poses"), encoding="utf-8")
+    (sup / "roulades.txt").write_text(
+        fabriquer(None, ["roulade", "roulade_cote"], "poses"), encoding="utf-8")
+
     ref = base / "reference"
     ref.mkdir(exist_ok=True)
     for perso in ["thibaut", "pf", "depar", "dsk", "jubi", "abbe", "bruh"]:
