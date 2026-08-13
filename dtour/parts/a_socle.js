@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.85";
+const VERSION = "6.86";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure

@@ -283,6 +283,26 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Plus de scintillement à l'entrée d'un niveau** (v6.86) : et ta
+proposition était la bonne — c'est bien le voile de chargement qui règle
+ça, à condition de le retirer AU BON MOMENT.
+
+**L'ordre était fautif** : on retirait le voile, PUIS on démarrait le
+niveau. Au moins une image était donc dessinée entre les deux — l'ancien
+écran, ou le nouveau à la mauvaise taille. Désormais on monte le niveau,
+on ajuste le canevas, on laisse **deux** images se dessiner — la première
+pose les tailles, la seconde dessine dedans — et seulement là le voile se
+lève.
+
+**Et le voile est posé à chaque entrée**, même quand les images sont déjà
+en cache. Une transition qui change de forme selon l'état du cache se
+remarque : au premier lancement on voyait un voile, au dixième non.
+
+**Avec son propre filet**, parce que je viens d'apprendre la leçon :
+`requestAnimationFrame` ne se déclenche pas dans un onglet en
+arrière-plan. Un délai de secours lève le voile quoi qu'il arrive. Un
+mécanisme unique ne garantit jamais qu'un voile se lève.
+
 **Correction d'urgence : le jeu ne démarrait plus** (v6.85).
 
 Ma correction du sursaut de rotation posait un voile tant que la taille

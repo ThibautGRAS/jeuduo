@@ -1251,6 +1251,24 @@ Le réflexe : avant de corriger un affichage, chercher TOUS les endroits
 qui le pilotent. `grep` sur le nom de l'élément, pas seulement sur la
 condition qu'on croit fautive.
 
+### Un voile se lève APRÈS que la nouvelle image est prête, pas avant
+
+L'entrée dans un niveau retirait le voile de chargement puis démarrait le
+niveau. Entre les deux, au moins une image était dessinée : l'écran
+précédent, ou le nouveau à une taille pas encore ajustée. C'est le
+scintillement qu'on voyait.
+
+Le bon ordre : monter le niveau, ajuster le canevas, laisser DEUX images
+se dessiner — la première pose les tailles, la seconde dessine dedans —
+puis lever le voile.
+
+Deux corollaires :
+- poser le voile dans TOUS les cas, même quand rien n'est à charger. Une
+  transition qui change de forme selon l'état du cache se remarque.
+- lui donner un FILET. `requestAnimationFrame` ne se déclenche pas dans
+  un onglet en arrière-plan ; sans délai de secours, le voile pourrait
+  rester posé. C'est la même faute que la v6.85, une fois suffit.
+
 ### Un état qui dépend du TEMPS ne doit pas dépendre d'un ÉVÉNEMENT
 
 La faute la plus grave de ce projet : le jeu ne démarrait plus du tout.

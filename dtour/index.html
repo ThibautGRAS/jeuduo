@@ -775,7 +775,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.85</div>
+  <div id="version">CALLAGHAN v6.86</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -847,7 +847,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.85";
+const VERSION = "6.86";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -12496,16 +12496,54 @@ const Interface = {
   /* Lancer un niveau dont les images ne sont pas encore là afficherait
      des trous noirs. On rouvre alors l'écran de chargement — le même —
      et on démarre dès que le dossier est complet. */
+  /* ENTRER DANS UN NIVEAU SANS SCINTILLEMENT.
+
+     L'ordre est tout : on démarrait le niveau APRÈS avoir retiré le voile
+     de chargement, donc une image au moins était dessinée entre les deux
+     — l'ancien écran, ou le nouveau à la mauvaise taille. C'est le
+     « petit scintillement ».
+
+     Désormais : on monte le niveau, on ajuste le canevas, on laisse DEUX
+     images se dessiner, et seulement là on retire le voile. Deux images
+     et non une, parce que la première sert à poser les tailles et la
+     seconde à dessiner dedans.
+
+     Et le voile est posé dans TOUS les cas, même quand les images sont
+     déjà là : c'est ce qui rend l'entrée identique au premier lancement
+     et au dixième. Une transition qui change de forme selon l'état du
+     cache se remarque. */
+  entrerNiveau(niv){
+    Jeu.demarrer(niv);
+    ajusterCanevas();
+    let reste = 2, fait = false;
+    const ouvrir = () => { if (fait) return; fait = true; this.fermerIntro(); };
+    const quandPret = () => {
+      if (fait) return;
+      if (--reste > 0 || !tailleCalme()){
+        globalThis.requestAnimationFrame(quandPret);
+        return;
+      }
+      ouvrir();
+    };
+    globalThis.requestAnimationFrame(quandPret);
+    /* FILET. `requestAnimationFrame` ne se déclenche pas dans un onglet
+       en arrière-plan, et il n'existe pas du tout dans le harnais de
+       test : sans ce délai, le voile de chargement pourrait rester posé
+       pour toujours. C'est exactement la faute de la v6.85, et je ne la
+       refais pas — un mécanisme unique ne suffit jamais à garantir qu'un
+       voile se lève. */
+    setTimeout(ouvrir, 1400);
+  },
+
   lancerNiveau(niv){
     const cle = "n" + niv;
-    if (dossierPret(cle)){ Jeu.demarrer(niv); return; }
     if (E.intro) E.intro.classList.remove("parti");
+    if (dossierPret(cle)){ this.avancement(1); this.entrerNiveau(niv); return; }
     this.avancement(0);
     const debut = Date.now();
     const guetter = () => {
       if (dossierPret(cle)){
-        this.fermerIntro();
-        Jeu.demarrer(niv);
+        this.entrerNiveau(niv);
         return;
       }
       /* la barre avance avec ce qui est réellement arrivé */
@@ -12513,7 +12551,7 @@ const Interface = {
       const faits = l.filter(n => Images.table[n] && Images.table[n].naturalWidth).length;
       this.avancement(l.length ? faits / l.length : 1);
       if (Date.now() - debut > 30000){   /* filet : on ne bloque jamais le joueur */
-        this.fermerIntro(); Jeu.demarrer(niv); return;
+        this.entrerNiveau(niv); return;
       }
       setTimeout(guetter, 120);
     };

@@ -1578,6 +1578,43 @@ if (D){
   for (let i = 0; i < 60 * 8; i++) D.Jeu.pas(1 / 60);
   void scoreGele; void viesGelees;
   D.Pause.reprendre();
+  verifier("le niveau démarre AVANT que le voile de chargement se lève",
+    (() => {
+      /* On retirait le voile puis on démarrait : au moins une image était
+         dessinée entre les deux — l'ancien écran, ou le nouveau à la
+         mauvaise taille. C'est le scintillement à l'entrée d'un niveau. */
+      const i = source.indexOf("entrerNiveau(niv){");
+      const bloc = source.slice(i, i + 900);
+      const ordreOk = bloc.indexOf("Jeu.demarrer(niv)") < bloc.indexOf("fermerIntro()");
+      messageDetail = ordreOk ? "démarrage puis levée" : "levée avant démarrage";
+      return i > 0 && ordreOk &&
+        /ajusterCanevas\(\)/.test(bloc) &&
+        /!tailleCalme\(\)/.test(bloc);
+    })());
+
+  verifier("et le voile de chargement a son propre filet",
+    (() => {
+      /* `requestAnimationFrame` ne se déclenche pas dans un onglet en
+         arrière-plan. Un mécanisme unique ne garantit jamais qu'un voile
+         se lève — c'est la faute de la v6.85. */
+      const i = source.indexOf("entrerNiveau(niv){");
+      const bloc = source.slice(i, i + 1400);
+      return /setTimeout\(ouvrir, 1400\)/.test(bloc) &&
+        /if \(fait\) return; fait = true;/.test(bloc);
+    })());
+
+  verifier("le voile est posé à CHAQUE entrée, même images en cache",
+    (() => {
+      /* Une transition qui change de forme selon l'état du cache se
+         remarque : au premier lancement on voyait un voile, au dixième
+         non. */
+      const i = source.indexOf("lancerNiveau(niv){");
+      const bloc = source.slice(i, i + 400);
+      const iVoile = bloc.indexOf('E.intro.classList.remove("parti")');
+      const iPret = bloc.indexOf("if (dossierPret(cle))");
+      return iVoile > 0 && iPret > iVoile;
+    })());
+
   verifier("un voile de recalage ne peut PAS bloquer le jeu",
     (() => {
       /* CE DÉFAUT A CASSÉ LE JEU EN PRODUCTION. Le voile n'était levé
