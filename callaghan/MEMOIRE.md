@@ -2235,6 +2235,26 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Un rappel écrit à côté d'une image finit par la contredire
+
+Les prompts en mode référence portaient deux lignes de « rappel de
+contrôle » — « polo vert, jean bleu, cheveux bruns ». Elles venaient de
+la fiche du personnage, qui décrit UNE tenue.
+
+Le jour où le niveau 1 a reçu sa propre référence, en tenue de rue, le
+rappel s'est mis à décrire le polo du bar sous une image en blouson. Un
+texte qui contredit son image : exactement le défaut qu'une référence est
+censée supprimer.
+
+Je l'avais pourtant écrit deux jours plus tôt — « ne PAS redécrire le
+personnage à côté de l'image » — et j'avais gardé deux lignes « juste pour
+contrôler ». **Une exception à une règle qu'on vient de poser est presque
+toujours la règle qui revient par la fenêtre.**
+
+Conséquence heureuse : sans ce rappel, le texte devient IDENTIQUE pour les
+deux héros. Un seul prompt par niveau au lieu de deux, et ce qui les
+distingue est l'image jointe — ce qui est la bonne façon de le dire.
+
 #### Une image par variante bat une bascule dans le texte
 
 Le niveau 1 habille les héros autrement que le bar. Première solution :

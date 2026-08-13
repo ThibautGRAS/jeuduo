@@ -15,7 +15,18 @@ là pour le jour où un niveau en aura besoin — une esquive roulée, un saut
 par-dessus un obstacle. Les générer maintenant produirait des images que
 rien n'affiche.
 
-**Une planche = un fichier `.txt` + l'image `reference/<perso>.png`.**
+**Un seul prompt sert aux DEUX héros.** Le texte est identique ; ce qui
+les distingue est l'IMAGE jointe. Le prompt écrit en tête
+`reference/<thibaut ou pf>-2.png` : on remplace par celui qu'on veut.
+
+Avant, il y avait deux fichiers qui différaient de deux lignes — dont une
+qui était FAUSSE. Elle rappelait « polo vert » sous une référence en
+blouson, parce qu'elle venait de la fiche du personnage, qui ne décrit
+qu'une tenue. Un texte qui contredit son image est exactement le défaut
+qu'une référence est censée supprimer : il a disparu.
+
+**Une planche = un fichier `.txt` + une image de `reference/`.**
+On copie tout le texte, on joint l'image, on envoie. Rien à compléter.
 On copie tout le texte, on joint l'image, on envoie. Rien à compléter.
 
 **Ne PAS coller `../PROMPTS.md`** : c'est de la documentation.

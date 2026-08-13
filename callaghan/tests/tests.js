@@ -18,6 +18,22 @@ const path = require("path");
 const vm = require("vm");
 
 const RACINE = path.join(__dirname, "..");
+
+  /* Le prompt d'un niveau, scindé ou non. Une scène qui passe au-dessus
+     de neuf poses se coupe en `thibaut-1.txt` et `thibaut-2.txt`, et
+     trois tests différents ont dû être repris parce qu'ils ouvraient le
+     fichier à plat. Une aide unique évite la quatrième fois. */
+  /* Le prompt d'un niveau, scindé ou non. Depuis qu'un seul prompt sert
+     aux DEUX héros — ils ne différaient que par l'image jointe — les
+     fichiers s'appellent `heros.txt` ou `heros-1.txt`. */
+  const promptNiveau = (niv) => {
+    const d = path.join(RACINE, "prompts", niv);
+    let s = "";
+    for (const n of fs.readdirSync(d))
+      if (n.endsWith(".txt") && n.startsWith("heros"))
+        s += fs.readFileSync(path.join(d, n), "utf8");
+    return s;
+  };
 let echecs = 0, reussis = 0;
 let section = "";
 
@@ -2061,25 +2077,16 @@ if (D){
          qui se marchaient dessus ont été remplacées par une image. */
       /* le niveau 1 est scindé en deux planches depuis qu'il demande dix
          poses : on lit la première */
-      const s = fs.readFileSync(
-        path.join(RACINE, "prompts", "n1", "thibaut-1.txt"), "utf8");
+      /* Depuis qu'un seul prompt sert aux deux héros, il n'y a PLUS de
+         rappel écrit — c'était lui qui contredisait l'image : il décrivait
+         le polo du bar sous une référence en blouson. */
+      const s = promptNiveau("n1");
       return !/ne fait PAS foi sur les VÊTEMENTS/.test(s) &&
         !/LE COSTUME DE CE NIVEAU/.test(s) &&
-        /reference\/thibaut-2\.png/.test(s);
+        !/polo vert|t-shirt beige/.test(s) &&
+        /reference\/<thibaut ou pf>-2\.png/.test(s);
     })());
 
-  /* Le prompt d'un niveau, scindé ou non. Une scène qui passe au-dessus
-     de neuf poses se coupe en `thibaut-1.txt` et `thibaut-2.txt`, et
-     trois tests différents ont dû être repris parce qu'ils ouvraient le
-     fichier à plat. Une aide unique évite la quatrième fois. */
-  const promptNiveau = (niv, perso) => {
-    const d = path.join(RACINE, "prompts", niv);
-    let s = "";
-    for (const n of fs.readdirSync(d))
-      if (n.endsWith(".txt") && n.startsWith(perso))
-        s += fs.readFileSync(path.join(d, n), "utf8");
-    return s;
-  };
 
   verifier("les planches d'origine sont GARDÉES",
     (() => {
@@ -2143,7 +2150,7 @@ if (D){
          autres. Il est désormais générique : les poses attendues sont
          tirées du CODE, niveau par niveau. */
       const d = path.join(RACINE, "prompts");
-      const lire = niv => promptNiveau(niv, "thibaut");
+      const lire = niv => promptNiveau(niv);
       /* ce que le code charge, par niveau */
       const attendu = {
         n1: D.POSES_HEROS,
@@ -2174,8 +2181,7 @@ if (D){
          les poses seront déclarées — c'est voulu, il faudra alors câbler
          `poseHeros`. */
       const declarees = D.POSES_HEROS;
-      const demandees = fs.readFileSync(
-        path.join(RACINE, "prompts", "n1", "thibaut-2.txt"), "utf8");
+      const demandees = promptNiveau("n1");
       const aVenir = ["esquive", "splat"].filter(p2 => declarees.indexOf(p2) < 0);
       messageDetail = aVenir.length
         ? "encore à produire : " + aVenir.join(", ")
@@ -2200,9 +2206,10 @@ if (D){
     (() => {
       const d = path.join(RACINE, "prompts", "n2");
       const f = fs.readdirSync(d).filter(n => n.endsWith(".txt"));
-      const un = fs.readFileSync(path.join(d, "thibaut-1.txt"), "utf8");
+      const un = fs.readFileSync(path.join(d, "heros-1.txt"), "utf8");
       messageDetail = f.join(", ");
-      return f.length === 4 && /Planche 1 sur 2/.test(un) &&
+      /* deux fichiers et non quatre : un seul prompt sert aux deux héros */
+      return f.length === 2 && /Planche 1 sur 2/.test(un) &&
         /joindre la MÊME image de référence aux deux/.test(un);
     })());
 
@@ -2217,10 +2224,18 @@ if (D){
         for (const n of fs.readdirSync(path.join(d, niv))){
           if (!n.endsWith(".txt")) continue;
           const s = fs.readFileSync(path.join(d, niv, n), "utf8");
-          const m = s.match(/Image de référence à joindre : reference\/(\S+\.png)/);
+          /* le nom peut être un GABARIT — `<thibaut ou pf>-3.png` — qui
+             contient une espace : `\S+` ne l'attrapait pas. */
+          const m = s.match(/Image de référence à joindre : reference\/(.+\.png)/);
           if (!m){ manquants.push(niv + "/" + n + " (pas nommée)"); continue; }
-          if (!fs.existsSync(path.join(d, "reference", m[1])))
-            manquants.push(niv + "/" + n + " -> " + m[1]);
+          /* le prompt des héros nomme un GABARIT — <thibaut ou pf> — parce
+             qu'un seul texte sert aux deux. On vérifie alors les deux. */
+          const cibles = m[1].indexOf("<") >= 0
+            ? ["thibaut", "pf"].map(x => m[1].replace(/<[^>]+>/, x))
+            : [m[1]];
+          for (const c of cibles)
+            if (!fs.existsSync(path.join(d, "reference", c)))
+              manquants.push(niv + "/" + n + " -> " + c);
         }
       }
       messageDetail = manquants.length ? manquants.join(", ") : "toutes nommées et présentes";
@@ -2234,10 +2249,12 @@ if (D){
          deux — et civil au bar. Une image par tenue, pas une bascule
          dans le texte. */
       const d = path.join(RACINE, "prompts");
+      /* Le nom est un gabarit : `<thibaut ou pf>-3.png`. Ce qui distingue
+         les niveaux est le SUFFIXE de tenue. */
       const ref = n => {
-          const s = promptNiveau(n, "thibaut");
-        const m = s.match(/reference\/(\S+\.png)/);
-        return m ? m[1] : "?";
+        const s = promptNiveau(n);
+        const m = s.match(/reference\/<[^>]+>(\S*)\.png/);
+        return m ? (m[1] || "(civil)") : "?";
       };
       const v = { n1:ref("n1"), n2:ref("n2"), n3:ref("n3"), n4:ref("n4") };
       messageDetail = Object.entries(v).map(([k, x]) => k + " " + x).join(", ");
@@ -2312,7 +2329,7 @@ if (D){
          la consigne. */
       const d = path.join(RACINE, "prompts");
       const roul = fs.readFileSync(path.join(d, "sup", "thibaut_roulades.txt"), "utf8");
-      const bar = promptNiveau("n3", "thibaut");
+      const bar = promptNiveau("n3");
       return !/AVERTISSEMENT SUR LES CYCLES/.test(roul) &&
         /AVERTISSEMENT SUR LES CYCLES/.test(bar);
     })());
@@ -2325,7 +2342,7 @@ if (D){
          référence sur magenta est donc pratique — c'est le fond attendu
          en sortie — mais elle ne doit pas teinter le personnage. */
       const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
-      const un = promptNiveau("n3", "thibaut");
+      const un = promptNiveau("n3");
       return /SI L'IMAGE DE RÉFÉRENCE EST SUR FOND MAGENTA/.test(un) &&
         /ne teinte RIEN/.test(un) &&
         /134, 58, 116/.test(s) &&
@@ -2359,9 +2376,12 @@ if (D){
          quand une scène est scindée. Le PERSONNAGE est ce qui reste une
          fois ce suffixe retiré. */
       const manquants = txt.filter(n => {
-        const perso = n.replace(/\.txt$/, "").replace(/^mechant_/, "")
-                       .replace(/-\d+$/, "");
-        return !fs.existsSync(path.join(d, "reference", perso + ".png"));
+        const base = n.replace(/\.txt$/, "").replace(/^mechant_/, "")
+                      .replace(/-\d+$/, "");
+        /* `heros` n'est pas un personnage : c'est le prompt commun aux
+           deux, et le test précédent vérifie déjà ses deux références. */
+        if (base === "heros") return false;
+        return !fs.existsSync(path.join(d, "reference", base + ".png"));
       });
       messageDetail = manquants.length ? manquants.join(", ")
         : txt.length + " prompts, tous référencés";
@@ -2373,10 +2393,12 @@ if (D){
       /* Une description complète qui accompagne une image entre en
          concurrence avec elle, et le générateur tranche au hasard. */
       const d = path.join(RACINE, "prompts");
-      const s = promptNiveau("n3", "thibaut");
+      /* Le rappel écrit a disparu : il venait de la fiche, qui décrit UNE
+         tenue, et contredisait la référence des autres niveaux. */
+      const s = promptNiveau("n3");
       return /RÉFÉRENCE DE PERSONNAGE/.test(s) &&
         /fait FOI/.test(s) &&
-        /Rappel de contrôle/.test(s) &&
+        !/Rappel de contrôle/.test(s) &&
         !/quarantaine d'années/.test(s);
     })());
 

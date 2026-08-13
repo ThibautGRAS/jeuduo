@@ -225,13 +225,28 @@ SCENES = {
       # pose que pour l'esquive, la fin de partie et une interpellation.
       # Quatre situations sous une seule image. Le niveau 2, lui, a bien
       # ses deux poses.
+      # LES DEUX GESTES DU NIVEAU, et c'est TOUT son jeu : saluer au bon
+      # moment, ou tendre la main dans le vide. Le code les distingue
+      # depuis toujours — `gesteHeros(h, "poignee")` et `"vide"` — mais
+      # les deux s'affichaient avec « tendue », une pose de STRESS.
+      # Réussir et rater donnaient donc la même image.
+      ("poignee", "serre la main de quelqu'un à sa DROITE, hors cadre : le "
+                  "bras droit tendu vers la droite à hauteur de taille, la "
+                  "main refermée comme sur une autre main, buste tourné vers "
+                  "la droite, sourire franc, regard vers la droite"),
+      ("vide", "la main tendue dans le VIDE : même bras droit tendu vers la "
+               "droite, main ouverte et paume verticale, mais personne ne "
+               "l'a prise — épaules qui retombent, sourcils remontés au "
+               "milieu, bouche pincée, léger recul du buste. La gêne, pas "
+               "la colère."),
       ("esquive", "esquive vive : le buste se jette sur le côté, les deux "
                   "bras montent devant le visage, un pied décollé"),
       ("splat", "touché en pleine figure : tête rejetée en arrière, yeux "
                 "fermés, bras écartés, un pas de recul, épaules remontées"),
     ],
-    # dix poses : sous le maximum de neuf ? non — donc scindée
-    "scinder": 5,
+    # DOUZE poses : deux planches de six. La coupure tombe entre les
+    # attitudes d'attente et les gestes qui font le jeu.
+    "scinder": 6,
   },
   "n2": {
     "titre": "l'enquête de l'appartement",
@@ -700,16 +715,14 @@ def verifier(chemin, attendu=None):
     return 0
 
 
-def fabriquer_scene(niveau, perso, part=None):
-    """Le prompt d'un niveau pour un personnage.
+def fabriquer_scene(niveau, perso=None, part=None):
+    """Le prompt d'un niveau. `perso` à None = le prompt commun aux deux
+    héros, qui ne diffèrent que par l'image jointe.
 
     Un niveau demande soit des poses qui lui sont propres — attendre dans
     une file, fouiller un meuble — soit des mouvements du catalogue. Les
     deux passent par la même fabrique, donc par les mêmes règles."""
     sc = SCENES[niveau]
-    fiches = charger_fiches()
-    f = fiches[perso]
-
     if "mouvements" in sc:
         details, n = [], 0
         for m in sc["mouvements"]:
@@ -729,14 +742,20 @@ def fabriquer_scene(niveau, perso, part=None):
         details = [f"{i}. [{nom}] {d}" for i, (nom, d) in enumerate(poses, 1)]
         cycle = any(nom.startswith(("marche", "course")) for nom, _ in poses)
 
-    cost = (sc.get("costume") or {}).get(perso)
+    cost = (sc.get("costume") or {}).get(perso) if perso else None
     if cost:
         ident = (MODES["poses_costume"]
                  + "\n\nLE COSTUME DE CE NIVEAU, qui remplace celui de la "
                    "référence :\n" + cost)
     else:
-        ident = (MODES["poses"] + "\n\nRappel de contrôle, à confirmer sur "
-                 "l'image et non à interpréter :\n" + f["rappel"])
+        # PAS DE RAPPEL ÉCRIT. Il venait de la fiche du personnage, qui
+        # décrit UNE tenue — celle du bar. Le niveau 1 joint la référence
+        # en tenue de rue : le rappel contredisait donc son image, ce qui
+        # est exactement le défaut qu'une référence est censée supprimer.
+        #
+        # Conséquence heureuse : le texte devient IDENTIQUE pour les deux
+        # héros, et un seul prompt par niveau suffit.
+        ident = MODES["poses"]
 
     avert = ""
     if cycle:
@@ -747,6 +766,9 @@ def fabriquer_scene(niveau, perso, part=None):
                  "INUTILISABLE — l'animation semble bloquée.")
 
     suff = sc.get("ref", "")
+    # Le personnage n'apparaît plus que dans le nom du fichier à joindre :
+    # un seul prompt sert donc aux deux héros.
+    qui = "<thibaut ou pf>" if perso is None else perso
     if len(details) > 9:
         sys.exit(f"ABANDON : {len(details)} poses pour {niveau}/{perso}. "
                  f"Ajouter « scinder » à la scène.")
@@ -758,7 +780,7 @@ def fabriquer_scene(niveau, perso, part=None):
 sur une seule rangée.
 
 Scène : {sc['titre']}.{surtitre}
-Image de référence à joindre : reference/{perso}{suff}.png
+Image de référence à joindre : reference/{qui}{suff}.png
 
 {ident}
 
@@ -782,14 +804,16 @@ def tout():
         d = base / niveau
         d.mkdir(parents=True, exist_ok=True)
         for f in d.glob("*.txt"): f.unlink()
-        for perso in sc["prefixe"]:
-            if sc.get("scinder"):
-                for part in (1, 2):
-                    (d / f"{perso}-{part}.txt").write_text(
-                        fabriquer_scene(niveau, perso, part), encoding="utf-8")
-            else:
-                (d / f"{perso}.txt").write_text(
-                    fabriquer_scene(niveau, perso), encoding="utf-8")
+        # UN SEUL PROMPT PAR NIVEAU. Les deux héros partageaient un texte
+        # identique à deux lignes près, dont une qui était fausse. Ce qui
+        # les distingue est l'IMAGE jointe, pas le texte.
+        if sc.get("scinder"):
+            for part in (1, 2):
+                (d / f"heros-{part}.txt").write_text(
+                    fabriquer_scene(niveau, None, part), encoding="utf-8")
+        else:
+            (d / "heros.txt").write_text(
+                fabriquer_scene(niveau, None), encoding="utf-8")
     # les méchants n'appartiennent qu'à la ruelle
     d = base / "n4"
     for m in ("depar", "dsk", "jubi", "abbe", "bruh"):

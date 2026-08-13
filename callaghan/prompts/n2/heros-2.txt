@@ -1,9 +1,9 @@
 Planche de 5 poses d'un même personnage, côte à côte
 sur une seule rangée.
 
-Scène : la file d'attente.
+Scène : l'enquête de l'appartement.
 Planche 2 sur 2 — joindre la MÊME image de référence aux deux, c'est ce qui les raccorde.
-Image de référence à joindre : reference/pf-2.png
+Image de référence à joindre : reference/<thibaut ou pf>-3.png
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
 qu'il existe déjà.
@@ -25,15 +25,12 @@ tirer de lumière rose ou violette sur la peau, les cheveux, les
 vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
-Rappel de contrôle, à confirmer sur l'image et non à interpréter :
-chauve, lunettes rondes cerclées de noir, t-shirt beige, jean bleu
-
 LES POSES, de gauche à droite :
-1. [stress] crispé : sourcils froncés, une main qui frotte la nuque, poids déporté en arrière
-2. [tendue] tension maximale : poings serrés, mâchoire crispée, buste penché en avant
-3. [victoire] les deux bras levés en V, tête en arrière, grand sourire, un pied décollé du sol
-4. [esquive] esquive vive : le buste se jette sur le côté, les deux bras montent devant le visage, un pied décollé
-5. [splat] touché en pleine figure : tête rejetée en arrière, yeux fermés, bras écartés, un pas de recul, épaules remontées
+1. [ecoute] debout, une main au menton, tête légèrement inclinée, l'autre bras replié sous le coude
+2. [carnet] un carnet ouvert dans une main, un stylo dans l'autre, regard baissé sur la page
+3. [accuse] bras tendu à l'horizontale, index pointé loin devant, buste tourné dans le même sens, mâchoire serrée
+4. [esquive] accroupi en torsion, les deux bras croisés devant le visage pour se protéger, un pied en arrière
+5. [splat] touché en pleine figure : tête rejetée en arrière, bras écartés, corps qui recule d'un pas
 
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
