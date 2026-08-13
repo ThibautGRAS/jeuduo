@@ -1,4 +1,4 @@
-Planche de 4 poses d'un même personnage, côte à côte
+Planche de 3 poses d'un même personnage, côte à côte
 sur une seule rangée.
 
 Scène : la file d'attente.
@@ -26,10 +26,9 @@ vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
 LES POSES, de gauche à droite :
-1. [victoire] les deux bras levés en V, tête en arrière, grand sourire, un pied décollé du sol
-2. [vide] le même bras droit tendu vers la DROITE, mais main OUVERTE paume verticale, doigts détendus : personne ne l'a prise. Aucune autre personne dessinée. Épaules qui retombent, sourcils remontés au milieu, bouche pincée, léger recul du buste. La gêne, pas la colère.
-3. [esquive] esquive vive : le buste se jette sur le côté, les deux bras montent devant le visage, un pied décollé
-4. [splat] il vient de recevoir une TARTE À LA CRÈME en pleine figure : une grosse galette de crème BLANCHE écrasée sur le visage, qui gicle en éclaboussures autour de la tête. Tête rejetée en arrière, bras écartés, un pas de recul, épaules remontées.
+1. [vide] le même bras droit tendu vers la DROITE, mais main OUVERTE paume verticale, doigts détendus : personne ne l'a prise. Aucune autre personne dessinée. Épaules qui retombent, sourcils remontés au milieu, bouche pincée, léger recul du buste. La gêne, pas la colère.
+2. [esquive] esquive vive : le buste se jette sur le côté, les deux bras montent devant le visage, un pied décollé
+3. [splat] il vient de recevoir une TARTE À LA CRÈME en pleine figure : une grosse galette de crème BLANCHE écrasée sur le visage, qui gicle en éclaboussures autour de la tête. Tête rejetée en arrière, bras écartés, un pas de recul, épaules remontées.
 
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.

@@ -237,7 +237,12 @@ SCENES = {
       ("idle", "debout, détendu, les bras le long du corps, léger sourire"),
       ("attente", "debout, les bras croisés, poids sur une jambe, l'air de "
                   "patienter depuis un moment"),
-      ("marche", "un pas en avant, tranquille, bras relâchés"),
+      # `marche` N'EST PAS DEMANDÉE. Elle est déclarée dans POSES_HEROS et
+      # son sprite existe, mais `poseHeros` ne la renvoie JAMAIS : les
+      # héros du niveau 1 font la queue, ils ne se déplacent pas. C'est un
+      # reste d'une conception antérieure.
+      # On ne la régénère donc pas — une pose de moins, c'est une pose de
+      # moins à espacer sur la planche.
       ("regarde", "tourné de trois quarts, la tête pivotée vers le côté, "
                   "une main en visière au-dessus des yeux"),
       # POIGNEE EST DANS LA PREMIÈRE PLANCHE, `vide` dans la seconde, et

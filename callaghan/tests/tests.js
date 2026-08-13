@@ -2307,6 +2307,30 @@ if (D){
         /Un doigt pointé/.test(bloc) && /ÉCARTER PLUS/.test(bloc);
     })());
 
+  verifier("aucune pose déclarée n'est JAMAIS choisie",
+    (() => {
+      /* `marche` figurait dans POSES_HEROS depuis le début et `poseHeros`
+         ne l'a jamais renvoyée : les héros du niveau 1 font la queue. Deux
+         sprites de 27 Ko chargés à chaque partie sans être affichés — et
+         une pose de plus à générer et à espacer sur la planche.
+
+         Une pose déclarée mais jamais choisie coûte trois fois : le
+         téléchargement, la place sur la planche, et l'illusion qu'une
+         mécanique existe. */
+      /* on lit le MORCEAU, pas l'assemblé : `source` est le script extrait
+         de index.html, où la fonction existe bien, mais la borne de fin
+         choisie tombait à côté et rendait un bloc vide — un test qui
+         mesure sur du vide conclut toujours au pire. */
+      const rendu = fs.readFileSync(
+        path.join(RACINE, "parts", "c_rendu.js"), "utf8");
+      const i = rendu.indexOf("function poseHeros(");
+      const bloc = rendu.slice(i, rendu.indexOf("\n}", i));
+      const jamais = D.POSES_HEROS.filter(p2 => bloc.indexOf('"' + p2 + '"') < 0);
+      messageDetail = jamais.length ? "jamais choisies : " + jamais.join(", ")
+                                    : D.POSES_HEROS.length + " poses, toutes atteignables";
+      return jamais.length === 0;
+    })());
+
   verifier("les planches d'une scène sont ÉQUILIBRÉES",
     (() => {
       /* « On remplit puis on déborde » donnait 5+5+1 : une planche avec un

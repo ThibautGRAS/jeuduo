@@ -2235,6 +2235,25 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Une pose déclarée mais jamais choisie coûte TROIS fois
+
+`marche` figurait dans `POSES_HEROS` depuis le début du niveau 1. Mesuré :
+`poseHeros` ne l'a JAMAIS renvoyée — les héros y font la queue, ils ne se
+déplacent pas. C'était un reste d'une conception antérieure.
+
+Le coût, et il est triple :
+- deux sprites de 27 Ko téléchargés à chaque partie sans être affichés ;
+- une pose de plus à générer, et surtout à ESPACER sur la planche — là où
+  la place manquait déjà ;
+- l'illusion qu'une mécanique existe. J'ai décrit cette pose dans le
+  prompt sans jamais vérifier qu'elle servait.
+
+Le réflexe qui manquait : avant de demander une planche, **comparer les
+poses déclarées à celles que la fonction de rendu peut réellement
+renvoyer**. Un test le fait désormais, et il lit le MORCEAU source — ma
+première version extrayait un bloc vide de l'assemblé, et un test qui
+mesure sur du vide conclut toujours au pire.
+
 #### L'espacement ne se demande pas, il se DONNE
 
 La consigne « au moins 80 pixels de fond vide entre deux poses » a été

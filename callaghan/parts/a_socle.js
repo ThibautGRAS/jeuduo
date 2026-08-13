@@ -113,7 +113,14 @@ const SPRITES_PNJ = Array.from({ length:NB_PNJ }, (_, i) => "pnj" + String(i + 1
 const PERSOS_DEBOUT = [];
 const PERSOS_ASSIS = ["pers_teo", "pers_charles"];
 for (const p of PERSOS_DEBOUT) SPRITES_PNJ.push(p);
-const POSES_HEROS = ["idle","attente","marche","regarde","surpris","stress","tendue","victoire"];
+/* `marche` A ÉTÉ RETIRÉE. Elle était déclarée ici depuis le début, mais
+   `poseHeros` ne l'a jamais renvoyée : les héros du niveau 1 font la
+   queue, ils ne se déplacent pas. Deux sprites de 27 Ko étaient donc
+   chargés à chaque partie sans jamais être affichés.
+   Une pose déclarée mais jamais choisie coûte trois fois : le
+   téléchargement, la place sur la planche à générer, et l'illusion
+   qu'une mécanique existe. */
+const POSES_HEROS = ["idle","attente","regarde","surpris","stress","tendue","victoire"];
 /* Les cinq poses d'un PNJ de la file. Le bras qui se tend est DESSINÉ
    maintenant : plus besoin de le peindre à partir des couleurs relevées
    sur le sprite. Les habitués, qui n'ont pas encore de planche, gardent
