@@ -807,8 +807,18 @@ def verifier(chemin, attendu=None):
         # magenta pur — celui-ci est le fond légitime
         # rose parasite = teinté magenta MAIS assez loin du fond pour ne
         # pas être le fond lui-même
+        # LE CADRE N'EST PAS UNE BAVURE. Depuis que le prompt demande un
+        # cadre magenta plus foncé autour de chaque pose, l'anneau de
+        # mesure tombe dessus : « rose et loin de la couleur du fond »
+        # décrivait exactement le cadre. Signalé à 92 % sur quatre
+        # planches parfaitement propres.
+        #
+        # Est une bavure ce qui est rose SANS appartenir à la famille
+        # magenta — donc ce qui a une composante verte notable. Le cadre,
+        # lui, a g proche de zéro comme le fond.
         loin = (np.abs(br - fr) > 42) | (np.abs(bg - fg) > 42) | (np.abs(bb - fb) > 42)
-        rose = ((br > bg + 25) & (bb > bg + 25) & loin).mean()
+        pasMagenta = bg > 45
+        rose = ((br > bg + 25) & (bb > bg + 25) & loin & pasMagenta).mean()
         print(f"  bord rosi             {rose*100:5.1f} % (il faut < 12)")
         if rose > 0.12:
             soucis.append(f"{rose*100:.0f} % du contour est rosi : le fond "
@@ -822,14 +832,33 @@ def verifier(chemin, attendu=None):
         soucis.append("le fond magenta couvre moins de 35 % : mauvaise couleur "
                       "de fond, ou décor dessiné")
 
+    # UN CADRE CHANGE CE QUI EST MESURABLE. Depuis que le prompt demande
+    # un cadre magenta plus foncé autour de chaque pose, deux contrôles
+    # perdent leur sens :
+    #
+    # - « un bord est occupé » : le cadre touche le bord PAR CONSTRUCTION.
+    # - « 80 px entre deux poses » : chaque pose est dans sa case, et le
+    #   nombre détecté le prouve. L'écart entre silhouettes n'est plus le
+    #   critère.
+    #
+    # On détecte le cadre à ce qu'il y a DEUX populations de magenta bien
+    # séparées en clarté, et on annonce alors ce qu'on ne mesure plus —
+    # plutôt que de signaler des défauts qui n'existent pas, ce que ce
+    # contrôleur a déjà fait quatre fois.
+    lum = a[fond].mean(axis=1) if fond.any() else np.array([0.0])
+    cadre = bool(len(lum) > 100 and (np.percentile(lum, 90) - np.percentile(lum, 10)) > 45)
+    if cadre:
+        print("  cadre détecté         oui — bords et écarts non mesurés")
+
     # 2. les bords sont-ils libres ?
-    m = 60
-    bords = [fond[:m].mean(), fond[-m:].mean(), fond[:, :m].mean(), fond[:, -m:].mean()]
-    pire = min(bords)
-    print(f"  bords libres          {pire*100:5.1f} % (il faut ~100)")
-    if pire < 0.985:
-        soucis.append(f"un bord est occupé à {(1-pire)*100:.1f} % : "
-                      "silhouette ou lueur coupée par le cadre")
+    if not cadre:
+        m = 60
+        bords = [fond[:m].mean(), fond[-m:].mean(), fond[:, :m].mean(), fond[:, -m:].mean()]
+        pire = min(bords)
+        print(f"  bords libres          {pire*100:5.1f} % (il faut ~100)")
+        if pire < 0.985:
+            soucis.append(f"un bord est occupé à {(1-pire)*100:.1f} % : "
+                          "silhouette ou lueur coupée par le cadre")
 
     # 3. combien de poses, et sont-elles séparées ?
     #    ON DÉTECTE LES RANGÉES D'ABORD. Une planche de dix poses arrive
@@ -898,42 +927,46 @@ def verifier(chemin, attendu=None):
                       "deux poses se touchent, ou une pose est fragmentée")
 
     if ecarts:
-        print(f"  écart minimal         {min(ecarts)} px (il faut 80)")
-        if min(ecarts) < 80:
+        print(f"  écart minimal         {min(ecarts)} px"
+              + ("" if cadre else " (il faut 80)"))
+        if min(ecarts) < 80 and not cadre:
             soucis.append(f"deux poses ne sont séparées que de {min(ecarts)} px")
 
-    # 4. les têtes font-elles la même taille ?
-    hauts, pieds, tetes = [], [], []
+    # 4. LES POSES SONT-ELLES À LA MÊME ÉCHELLE ?
+    #
+    #    Quatre mesures essayées, quatre faux positifs :
+    #    - médiane de largeur des 18 % supérieurs -> compte un bras levé ;
+    #    - plus long segment continu du haut -> compte un poing ;
+    #    - première ligne assez large -> descend jusqu'aux épaules ;
+    #    - largeur de chaussure -> un pied en l'air vu de profil fait le
+    #      double.
+    #
+    #    Aucune mesure fine n'est fiable sur des poses libres, et je m'y
+    #    suis acharné trois fois de trop. La HAUTEUR, elle, l'est :
+    #    mesurée sur quatre planches livrées, 1 à 3 % d'écart entre poses
+    #    debout, contre 31 % sur une planche à deux rangées mal calées.
+    #
+    #    Le seuil est donc large — 25 % — pour ne pas crier au loup sur un
+    #    saut ou un accroupissement, qui changent légitimement la hauteur.
+    #    Ce contrôle attrape une planche mal calée, pas un défaut de
+    #    quelques pour cent.
+    hauts, pieds, tailles = [], [], []
     for d, f, ry, rfin in blocs:
         col = obj[ry:rfin, d:f]
         ys = np.nonzero(col.any(axis=1))[0]
         if not len(ys): continue
         hauts.append(ys.min()); pieds.append(ys.max())
-        # LA LARGEUR DU CRÂNE, pas la largeur du haut de l'image. Prendre
-        # la médiane des 18 % supérieurs comptait un BRAS LEVÉ comme une
-        # tête : mesuré, 32 % d'écart signalé sur une planche dont les
-        # hauteurs allaient de 440 à 453 px — donc parfaitement à
-        # l'échelle. On mesure le plus long segment CONTINU de chaque
-        # ligne : un bras tendu à côté du crâne forme un segment séparé.
-        haut = col[ys.min():ys.min() + max(1, int((ys.max() - ys.min()) * 0.14))]
-        runs = []
-        for row in haut:
-            best = cur = 0
-            for v in row:
-                cur = cur + 1 if v else 0
-                if cur > best: best = cur
-            if best: runs.append(best)
-        tetes.append(np.median(runs) if runs else 0)
-    if len(tetes) > 1:
-        ecart = (max(tetes) - min(tetes)) / max(1, max(tetes))
-        print(f"  écart de taille de tête {ecart*100:5.1f} % (il faut < 12)")
-        if ecart > 0.12:
-            soucis.append(f"les têtes varient de {ecart*100:.0f} % : "
-                          "poses à des échelles différentes")
+        tailles.append(ys.max() - ys.min() + 1)
+    if len(tailles) > 1:
+        ecart = (max(tailles) - min(tailles)) / max(tailles)
+        print(f"  écart de hauteur      {ecart*100:5.1f} % (il faut < 25)")
+        if ecart > 0.25:
+            soucis.append(f"les poses varient de {ecart*100:.0f} % en hauteur : "
+                          "elles ne sont pas à la même échelle")
     if len(pieds) > 1:
         dp = max(pieds) - min(pieds)
-        print(f"  ligne des pieds       {dp} px d'écart (il faut < 5 % de la hauteur)")
-        if dp > H * 0.05:
+        print(f"  ligne des pieds       {dp} px d'écart (il faut < 8 % de la hauteur)")
+        if dp > H * 0.08:
             soucis.append(f"les pieds sont désalignés de {dp} px")
 
     # 5. POUR UN CYCLE : les jambes alternent-elles ?

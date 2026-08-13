@@ -2331,6 +2331,41 @@ if (D){
         !fs.existsSync(path.join(d, "hortense"));
     })());
 
+  verifier("le contrôleur sait qu'un CADRE change ce qui est mesurable",
+    (() => {
+      /* Le cadre magenta qu'on demande maintenant a fait crier le
+         contrôleur sur QUATRE planches parfaitement propres :
+         92 % de « bord rosi » — l'anneau de mesure tombait sur le cadre ;
+         un « bord occupé » — le cadre touche le bord par construction ;
+         un « écart de 64 px » — chaque pose est dans sa case, et le
+         nombre détecté le prouve.
+
+         Il détecte désormais le cadre à ce qu'il y a DEUX populations de
+         magenta séparées en clarté, et ANNONCE ce qu'il ne mesure plus.
+         Un contrôle qui signale un défaut inexistant apprend à ignorer
+         ses alertes — c'était déjà consigné, et je l'ai refait quatre
+         fois dans la même heure. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      return /UN CADRE CHANGE CE QUI EST MESURABLE/.test(s) &&
+        /if not cadre:/.test(s) &&
+        /pasMagenta = bg > 45/.test(s);
+    })());
+
+  verifier("l'échelle se mesure sur la HAUTEUR, pas sur la tête",
+    (() => {
+      /* Quatre mesures essayées, quatre faux positifs : médiane du haut
+         (compte un bras levé), plus long segment (un poing), première
+         ligne large (les épaules), largeur de chaussure (un pied en l'air
+         vu de profil fait le double).
+
+         La hauteur est fiable : 1 à 3 % entre poses debout sur quatre
+         planches livrées, contre 31 % sur une planche mal calée. Le seuil
+         est large — 25 % — pour ne pas crier au loup sur un saut. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      return /écart de hauteur/.test(s) && /ecart > 0\.25/.test(s) &&
+        !/écart de taille de tête/.test(s);
+    })());
+
   verifier("une référence FOURNIE n'est jamais régénérée",
     (() => {
       /* Les références fabriquées depuis les sprites sont un pis-aller :
@@ -2499,16 +2534,6 @@ if (D){
         /for \(ry, rfin\) in rangees/.test(s);
     })());
 
-  verifier("la largeur de tête se mesure sur le CRÂNE",
-    (() => {
-      /* La médiane des 18 % supérieurs comptait un bras levé comme une
-         tête : 32 % d'écart signalé sur une planche dont les hauteurs
-         allaient de 440 à 453 px, donc parfaitement à l'échelle. On
-         mesure le plus long segment CONTINU de chaque ligne. */
-      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
-      return /un bras tendu à côté du crâne forme un segment séparé/.test(s) &&
-        /cur = cur \+ 1 if v else 0/.test(s);
-    })());
 
   verifier("le contrôleur MESURE la couleur du fond",
     (() => {

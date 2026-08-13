@@ -2235,6 +2235,49 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Changer une consigne oblige à revoir les CONTRÔLES qui la supposaient
+
+J'ai demandé un cadre magenta plus foncé autour de chaque pose. Les
+planches livrées ensuite étaient irréprochables, et mon contrôleur a
+signalé **onze défauts** sur quatre planches — tous inexistants :
+
+- « 92 % de bord rosi » : l'anneau de mesure tombait sur le cadre, qui
+  est bien rose et bien loin de la couleur du fond ;
+- « un bord est occupé » : le cadre touche le bord par construction ;
+- « écart de 64 px » : chaque pose est dans sa case, et le nombre détecté
+  le prouve.
+
+Une consigne nouvelle invalide les contrôles qui reposaient sur l'ancienne
+mise en page. **Après avoir changé ce qu'on demande, relire ce qu'on
+vérifie.**
+
+Le contrôleur détecte désormais le cadre — deux populations de magenta
+séparées en clarté — et ANNONCE ce qu'il ne mesure plus. Dire « je ne
+mesure pas ceci » vaut mieux que mesurer faux.
+
+#### Savoir s'arrêter quand une mesure ne veut pas se laisser prendre
+
+J'ai essayé QUATRE façons de vérifier que les poses sont à la même
+échelle, chacune corrigeant la précédente :
+
+1. médiane de largeur des 18 % supérieurs — compte un bras levé ;
+2. plus long segment continu du haut — compte un poing ;
+3. première ligne assez large — descend jusqu'aux épaules ;
+4. largeur de chaussure — un pied en l'air vu de profil fait le double.
+
+À la quatrième, j'ai arrêté au lieu d'en tenter une cinquième. La HAUTEUR
+est fiable : 1 à 3 % entre poses debout sur quatre planches livrées,
+contre 31 % sur une planche à deux rangées mal calées. Le seuil est large
+— 25 % — pour ne pas crier au loup sur un saut.
+
+C'est un contrôle GROSSIER, et c'est assumé : il attrape une planche mal
+calée, pas un défaut de quelques pour cent. **Un contrôle grossier mais
+juste vaut mieux qu'un contrôle fin qui se trompe** — le second finit par
+être ignoré, et emporte les vrais défauts avec lui.
+
+Corollaire : le test qui gardait l'ancienne mesure a été SUPPRIMÉ. Un test
+qui exige une chose qu'on vient d'abandonner empêche de l'abandonner.
+
 #### Une donnée FOURNIE ne se régénère pas comme une donnée DÉRIVÉE
 
 Les images de référence étaient toutes fabriquées depuis les sprites du
