@@ -34,6 +34,7 @@ Rangées par `archiver.py`, jamais à la main.
 | `a_identifier` | `IMG_5211.webp` | 170 Ko |
 | `a_identifier` | `IMG_5212.webp` | 192 Ko |
 | `a_identifier` | `IMG_5221.webp` | 86 Ko |
+| `commun` | `hortense_reference_ancienne.webp` | 9 Ko |
 | `n1` | `heros_pf_attitudes.webp` | 102 Ko |
 | `n1` | `heros_pf_gestes.webp` | 105 Ko |
 | `n1` | `heros_pf_rue.webp` | 74 Ko |

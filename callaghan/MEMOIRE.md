@@ -2235,6 +2235,28 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Une donnée FOURNIE ne se régénère pas comme une donnée DÉRIVÉE
+
+Les images de référence étaient toutes fabriquées depuis les sprites du
+jeu, et `planches.py tout` les refaisait à chaque appel. C'était juste
+tant qu'elles étaient toutes dérivées.
+
+Dès que Thibaut a fourni une vraie planche de référence — 1400 × 878, six
+fois plus grande et bien plus lisible — la commande l'a écrasée par la
+version dérivée de 363 × 180. En une seconde, sans un mot.
+
+Le tort n'était pas dans la régénération mais dans l'absence de
+distinction : mon outil traitait un fichier FOURNI et un fichier DÉRIVÉ de
+la même façon. Il ne fabrique désormais que ce qui MANQUE.
+
+**Avant d'écrire une commande qui régénère un dossier, se demander si
+quelque chose d'irremplaçable peut s'y trouver.** Une donnée dérivée se
+refait ; une donnée fournie est perdue. Et une commande qui s'appelle
+« tout » invite précisément à ne pas se poser la question.
+
+Corollaire pratique : pour refaire une référence dérivée volontairement,
+supprimer le fichier puis relancer. Le geste devient explicite.
+
 #### Un suffixe NUMÉROTÉ oblige à ouvrir le fichier
 
 Les trois tenues des héros s'appelaient `thibaut.png`, `thibaut-2.png`,

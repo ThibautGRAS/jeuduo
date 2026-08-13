@@ -2331,6 +2331,26 @@ if (D){
         !fs.existsSync(path.join(d, "hortense"));
     })());
 
+  verifier("une référence FOURNIE n'est jamais régénérée",
+    (() => {
+      /* Les références fabriquées depuis les sprites sont un pis-aller :
+         elles montrent le personnage tel qu'il est en jeu, mais en petit
+         et sur trois poses. Dès que Thibaut fournit une vraie planche,
+         elle est meilleure — et `tout` l'écrasait par la version dérivée.
+         C'est arrivé une fois, sur Hortense : 1400x878 remplacée par
+         363x180 en une commande.
+
+         On ne fabrique donc que ce qui MANQUE. Pour refaire une référence
+         dérivée volontairement : supprimer le fichier, puis relancer. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      const h = path.join(RACINE, "prompts", "reference", "hortense.png");
+      const o = fs.existsSync(h) ? fs.statSync(h).size : 0;
+      messageDetail = "hortense.png : " + Math.round(o / 1024) + " Ko";
+      return /if \(ref \/ f"\{perso\}\{tenue\}\.png"\)\.exists\(\):/.test(s) &&
+        /UNE RÉFÉRENCE FOURNIE NE SE RÉGÉNÈRE PAS/.test(s) &&
+        o > 200 * 1024;
+    })());
+
   verifier("le lancer d'Hortense ne tient plus sur UNE image",
     (() => {
       /* Mesuré dans le code : l'état LANCE dure 0,22 s et RIRE 0,80 s, et

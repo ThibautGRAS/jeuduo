@@ -1143,9 +1143,20 @@ def tout():
     # Les héros ont TROIS tenues ; seule celle du bar se fabrique depuis
     # les sprites — les deux autres sont des planches fournies, qu'on ne
     # doit surtout pas écraser.
+    # UNE RÉFÉRENCE FOURNIE NE SE RÉGÉNÈRE PAS. Celles fabriquées depuis
+    # les sprites sont un pis-aller : elles montrent le personnage tel
+    # qu'il est en jeu, mais en petit et sur trois poses. Dès que Thibaut
+    # fournit une vraie planche de référence, elle est MEILLEURE — et
+    # `tout` l'écrasait par la version dérivée, ce qui est arrivé une
+    # fois pour Hortense.
+    #
+    # On ne fabrique donc que ce qui MANQUE. Pour refaire une référence
+    # dérivée volontairement : supprimer le fichier, puis relancer.
     for perso, tenue in (("thibaut", "-muscle"), ("pf", "-muscle"),
                          ("hortense", ""), ("depar", ""), ("dsk", ""),
                          ("jubi", ""), ("abbe", ""), ("bruh", "")):
+        if (ref / f"{perso}{tenue}.png").exists():
+            continue
         try: reference(perso, ref, tenue)
         except SystemExit: print(f"  (aucun sprite pour {perso})")
     n = len(list(base.rglob("*.txt")))
