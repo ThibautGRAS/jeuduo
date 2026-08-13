@@ -40,7 +40,14 @@ def despill(rgb):
 
 def composantes(a, coupures):
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
-    obj = ndimage.binary_opening(~((r > 150) & (b > 150) & (g < 120)), np.ones((5, 5)))
+    # EST DU FOND TOUT CE QUI EST MAGENTA, quelle que soit sa CLARTÉ.
+    # Le seuil `r > 150` gardait comme personnage un cadre magenta foncé
+    # à (140, 0, 140) — or dessiner un cadre autour de chaque pose est ce
+    # qui empêche le générateur de les faire déborder l'une sur l'autre.
+    # La famille magenta se reconnaît à sa forme : rouge et bleu dominent
+    # nettement le vert.
+    magenta = (r > g + 40) & (b > g + 40)
+    obj = ndimage.binary_opening(~magenta, np.ones((5, 5)))
     # Les coupures séparent deux poses qui se touchent. Une coupure peut
     # être LIMITÉE EN HAUTEUR : une colonne coupée sur toute la planche
     # sectionne aussi la pose du dessus. Mesuré : ma coupure des poses au

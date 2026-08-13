@@ -2235,6 +2235,26 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Montrer l'espace plutôt que le demander
+
+Après quatre échecs de la consigne « 80 px entre deux poses », Thibaut a
+proposé de dessiner un cadre magenta plus foncé autour de chaque pose.
+C'est la bonne idée, et pour la raison qu'on avait déjà mesurée :
+l'agencement parle plus fort que le texte. Un cadre ne demande pas
+d'espacer, il MONTRE la case que chaque personnage doit occuper.
+
+Mais elle aurait cassé le détourage. Les deux outils cherchaient un
+magenta CLAIR — `r > 150`, ou une tolérance de 42 autour de la couleur
+mesurée. Un cadre à (140, 0, 140) était donc gardé comme du personnage,
+et chaque sprite serait sorti avec deux barres verticales.
+
+La famille magenta se reconnaît à sa FORME, pas à sa clarté : rouge et
+bleu dominent nettement le vert. Les deux outils utilisent maintenant ce
+critère, et un cadre de n'importe quelle intensité disparaît.
+
+**Une bonne idée de l'autre peut demander de changer l'outil avant de
+pouvoir être appliquée — et c'est souvent le signe qu'elle est bonne.**
+
 #### Une pose déclarée mais jamais choisie coûte TROIS fois
 
 `marche` figurait dans `POSES_HEROS` depuis le début du niveau 1. Mesuré :

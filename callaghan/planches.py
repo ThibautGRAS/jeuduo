@@ -162,6 +162,15 @@ trait vertical du haut en bas de l'image sans jamais toucher un
 personnage ? Si non, écarter davantage.
 Dans le doute, ÉCARTER PLUS. Une planche trop aérée se découpe très bien.
 
+DESSINER UN CADRE AUTOUR DE CHAQUE POSE. Tracer une bande verticale
+d'un MAGENTA PLUS FONCÉ (par exemple #8C008C) de part et d'autre de
+chaque pose, du haut en bas de l'image, comme les cases d'une planche de
+bande dessinée. Chaque personnage doit tenir ENTIÈREMENT dans sa case,
+bras tendus et objets compris, sans jamais toucher une bande.
+Ces bandes ne gênent pas : le découpage les reconnaît comme du fond et
+les retire. Elles servent à VOIR l'espace que chaque pose a le droit
+d'occuper.
+
 AUCUNE POSE N'INTERAGIT AVEC SA VOISINE. Chaque pose est un personnage
 SEUL, qui sera découpé en image indépendante. Si une pose tend la main,
 brandit un objet ou s'adresse à quelqu'un, ce quelqu'un est INVISIBLE et
@@ -687,7 +696,19 @@ def verifier(chemin, attendu=None):
     fr, fg, fb = np.median(coins, axis=0)
     print(f"  fond mesuré           ({fr:.0f}, {fg:.0f}, {fb:.0f})")
     # est du fond ce qui est PROCHE de cette couleur
-    fond = (np.abs(r - fr) < 42) & (np.abs(g - fg) < 42) & (np.abs(b - fb) < 42)
+    # EST DU FOND TOUT CE QUI EST MAGENTA, quelle que soit sa CLARTÉ.
+    # L'ancienne règle comparait à la couleur mesurée avec 42 de
+    # tolérance : un cadre magenta plus foncé — (170,0,170), écart 46 —
+    # était gardé comme du personnage. Or un cadre autour de chaque pose
+    # est justement ce qui aide le générateur à ne pas les faire déborder.
+    #
+    # La famille magenta se reconnaît à sa FORME et non à sa clarté :
+    # rouge et bleu dominent nettement le vert. On garde aussi la
+    # proximité à la couleur mesurée, pour les fonds qui ne seraient pas
+    # magenta du tout.
+    proche = (np.abs(r - fr) < 42) & (np.abs(g - fg) < 42) & (np.abs(b - fb) < 42)
+    famille = (r > g + 40) & (b > g + 40)
+    fond = proche | famille
 
     print(f"{chemin}  {L}x{H}")
     soucis = []

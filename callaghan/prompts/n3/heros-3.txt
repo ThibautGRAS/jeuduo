@@ -47,6 +47,15 @@ trait vertical du haut en bas de l'image sans jamais toucher un
 personnage ? Si non, écarter davantage.
 Dans le doute, ÉCARTER PLUS. Une planche trop aérée se découpe très bien.
 
+DESSINER UN CADRE AUTOUR DE CHAQUE POSE. Tracer une bande verticale
+d'un MAGENTA PLUS FONCÉ (par exemple #8C008C) de part et d'autre de
+chaque pose, du haut en bas de l'image, comme les cases d'une planche de
+bande dessinée. Chaque personnage doit tenir ENTIÈREMENT dans sa case,
+bras tendus et objets compris, sans jamais toucher une bande.
+Ces bandes ne gênent pas : le découpage les reconnaît comme du fond et
+les retire. Elles servent à VOIR l'espace que chaque pose a le droit
+d'occuper.
+
 AUCUNE POSE N'INTERAGIT AVEC SA VOISINE. Chaque pose est un personnage
 SEUL, qui sera découpé en image indépendante. Si une pose tend la main,
 brandit un objet ou s'adresse à quelqu'un, ce quelqu'un est INVISIBLE et

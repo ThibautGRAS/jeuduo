@@ -2307,6 +2307,37 @@ if (D){
         /Un doigt pointé/.test(bloc) && /ÉCARTER PLUS/.test(bloc);
     })());
 
+  verifier("le fond magenta se reconnaît à sa FORME, pas à sa clarté",
+    (() => {
+      /* Un cadre magenta plus foncé autour de chaque pose montre au
+         générateur l'espace que chaque personnage a le droit d'occuper —
+         et l'agencement parle plus fort qu'une consigne écrite, on l'a
+         mesuré quatre fois.
+
+         Mais le seuil `r > 150` gardait ce cadre comme du PERSONNAGE :
+         (140, 0, 140) le rate. Les deux outils — le contrôleur et le
+         découpeur — reconnaissent désormais la famille magenta à sa
+         forme : rouge et bleu dominent nettement le vert. */
+      const a = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      const b = fs.readFileSync(path.join(RACINE, "decouper_planche.py"), "utf8");
+      return /\(r > g \+ 40\) & \(b > g \+ 40\)/.test(a) &&
+        /\(r > g \+ 40\) & \(b > g \+ 40\)/.test(b) &&
+        /* on cherche le seuil dans le CODE, pas dans les commentaires :
+           la note qui explique la correction contient forcément
+           l'ancienne formule, et un test qui lit les commentaires se
+           trompe de cible */
+        !/^[^#\n]*\(r > 150\)/m.test(b);
+    })());
+
+  verifier("le prompt demande un CADRE autour de chaque pose",
+    (() => {
+      const s = fs.readFileSync(
+        path.join(RACINE, "prompts", "n1", "heros-1.txt"), "utf8");
+      return /CADRE AUTOUR DE CHAQUE POSE/.test(s) &&
+        /MAGENTA PLUS FONCÉ/.test(s) &&
+        /le découpage les reconnaît comme du fond/.test(s);
+    })());
+
   verifier("aucune pose déclarée n'est JAMAIS choisie",
     (() => {
       /* `marche` figurait dans POSES_HEROS depuis le début et `poseHeros`
