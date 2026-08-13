@@ -73,7 +73,7 @@ def composantes(a, coupures):
     # qui empêche le générateur de les faire déborder l'une sur l'autre.
     # La famille magenta se reconnaît à sa forme : rouge et bleu dominent
     # nettement le vert.
-    magenta = (r > g + 40) & (b > g + 40)
+    magenta = (r > g + 120) & (b > g + 120)
     obj = ndimage.binary_opening(~magenta, np.ones((5, 5)))
     # Les coupures séparent deux poses qui se touchent. Une coupure peut
     # être LIMITÉE EN HAUTEUR : une colonne coupée sur toute la planche

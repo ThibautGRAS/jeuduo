@@ -573,6 +573,22 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**Le champion passe entre le comptoir et les tabourets** (v7.12).
+Quatre tabourets détourés, dessinés en DERNIER — après les héros et après
+la foule.
+
+**Le détourage a demandé de relever un seuil.** Le tabouret VIOLET a
+r − g = 26 : avec l'ancien seuil de 40, ses reflets clairs passaient pour
+du fond et la planche s'éclatait en cinq morceaux au lieu de quatre. Le
+fond est à r − g = 231, le cadre magenta foncé à 140 : un seuil de 120
+sépare proprement le décor des objets, même violets. Vérifié en
+non-régression sur quatre planches déjà découpées.
+
+**Trois par répétition du décor, pas six.** À six ils formaient un mur
+continu : le champion ne passait plus derrière eux, il disparaissait.
+Espacés irrégulièrement, ils laissent des trouées par lesquelles on le
+suit.
+
 **Francky descend : on ancre sur la ligne qui COUPE** (v7.11). Il
 restait beaucoup trop haut après le masque, et la cause était nette une
 fois mesurée : le sprite était posé sur l'arête AVANT du comptoir mais

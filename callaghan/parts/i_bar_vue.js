@@ -62,6 +62,10 @@ const BarVue = {
        plan, il circule DERRIÈRE eux. Mais après les verres aussi, sans
        jamais les couvrir — ils sont bien plus bas que le comptoir. */
     this.dessinerFoule();
+    /* LES TABOURETS EN DERNIER : après les héros ET après la foule, donc
+       les deux passent derrière. C'était la demande — que le champion
+       circule ENTRE le comptoir et les tabourets. */
+    this.dessinerTabourets();
     if (T.tarte) this.dessinerTarte();
 
     /* Le coup de feu réchauffe la salle. */
@@ -254,6 +258,24 @@ const BarVue = {
         const sx = (gx - x0) / lUne * img.naturalWidth;
         const sl = larg / lUne * img.naturalWidth;
         ctx.drawImage(img, sx, sy, sl, sh, gx, yEcran, larg, H - yEcran);
+      }
+    }
+  },
+
+  dessinerTabourets(){
+    const H = Camera.H, L = Camera.L;
+    const lUne = this.larg() / BAR_COPIES;
+    for (let k = 0; k < BAR_COPIES; k++){
+      const x0 = this.origine() + k * lUne;
+      if (x0 > L + 200 || x0 + lUne < -200) continue;
+      for (const t2 of BAR_TABOURETS){
+        const spr = Images.table["bar_tabouret_" + t2.teinte];
+        if (!spr || !spr.naturalWidth) continue;
+        const sh = H * BAR_TAB_TAILLE;
+        const sl = sh * spr.naturalWidth / spr.naturalHeight;
+        const cx = x0 + t2.x * lUne;
+        if (cx < -sl || cx > L + sl) continue;
+        ctx.drawImage(spr, cx - sl / 2, H * BAR_TAB_PIEDS - sh, sl, sh);
       }
     }
   },

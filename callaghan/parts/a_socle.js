@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.11";
+const VERSION = "7.12";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1041,6 +1041,11 @@ const IMAGES_NIVEAU3 = [
   "bar_jojo_idle", "bar_jojo_choisit", "bar_jojo_dose", "bar_jojo_verse",
   "bar_jojo_superpose", "bar_jojo_serie", "bar_jojo_decore", "bar_jojo_essuie",
   "bar_cocktail", "bar_jager", "bar_eau",
+  /* Les tabourets du PREMIER PLAN : ceux du décor sont peints dans le
+     fond, ceux-ci sont dessinés après les héros pour qu'on passe
+     derrière eux. */
+  "bar_tabouret_vert", "bar_tabouret_violet",
+  "bar_tabouret_bleu", "bar_tabouret_orange",
   /* les habitués animés, et le passage d'Hortense */
   "bar_marini_idle", "bar_marini_marche1", "bar_marini_marche2",
   "bar_marini_attrape", "bar_marini_boit", "bar_marini_vide",

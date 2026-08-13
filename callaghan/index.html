@@ -783,7 +783,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v7.11</div>
+  <div id="version">CALLAGHAN v7.12</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -855,7 +855,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.11";
+const VERSION = "7.12";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1878,6 +1878,11 @@ const IMAGES_NIVEAU3 = [
   "bar_jojo_idle", "bar_jojo_choisit", "bar_jojo_dose", "bar_jojo_verse",
   "bar_jojo_superpose", "bar_jojo_serie", "bar_jojo_decore", "bar_jojo_essuie",
   "bar_cocktail", "bar_jager", "bar_eau",
+  /* Les tabourets du PREMIER PLAN : ceux du décor sont peints dans le
+     fond, ceux-ci sont dessinés après les héros pour qu'on passe
+     derrière eux. */
+  "bar_tabouret_vert", "bar_tabouret_violet",
+  "bar_tabouret_bleu", "bar_tabouret_orange",
   /* les habitués animés, et le passage d'Hortense */
   "bar_marini_idle", "bar_marini_marche1", "bar_marini_marche2",
   "bar_marini_attrape", "bar_marini_boit", "bar_marini_vide",
@@ -8223,7 +8228,29 @@ const BAR_COMPTOIR = 0.555;
    comptoir, mesurée à 0,540 sous Francky et 0,612 sous Jojo. À 0,528 on
    redessine tout le meuble sans jamais laisser réapparaître un bout de
    plateau au-dessus. */
-const BAR_MASQUE = 0.528;         /* le plateau du comptoir, mesuré sur le fond (bois clair : 0.55-0.57) */
+const BAR_MASQUE = 0.528;
+
+/* ---------- les tabourets du PREMIER PLAN ----------
+   Ceux du décor sont peints dans `fond_bar.webp` : impossible de passer
+   devant eux. Ceux-ci sont des sprites, dessinés APRÈS les héros et après
+   la foule — le champion circule donc ENTRE le comptoir et eux, ce qui
+   donne enfin de la profondeur au plan.
+
+   Ils sont placés dans le MONDE et non sur l'écran, comme les grappes :
+   sinon ils glisseraient avec la caméra et trahiraient le décalage. */
+/* TROIS PAR RÉPÉTITION, PAS SIX. À six ils formaient un mur continu : le
+   champion ne passait plus DERRIÈRE eux, il disparaissait. Espacés
+   irrégulièrement, ils laissent des trouées par lesquelles on le suit. */
+const BAR_TABOURETS = [
+  { x:0.09, teinte:"vert"   },
+  { x:0.47, teinte:"bleu"   },
+  { x:0.78, teinte:"orange" },
+];
+/* Leur ligne de sol est PLUS BASSE que celle des héros : c'est ce qui les
+   place devant. Et leur taille est celle des tabourets peints, relevée
+   sur le fond — 0,245 de la hauteur d'image. */
+const BAR_TAB_PIEDS = 1.02;
+const BAR_TAB_TAILLE = 0.27;         /* le plateau du comptoir, mesuré sur le fond (bois clair : 0.55-0.57) */
 const BAR_TAILLE_HEROS = 0.52;      /* hauteur du héros, en fraction de l'écran */
 const BAR_TAILLE_BARMAN = 0.34;     /* hauteur du buste des barmans (tête -> ceinture) */
 const BAR_PORTEE = 0.030;           /* portée de prise d'un verre, en fraction du monde */
@@ -9123,6 +9150,10 @@ const BarVue = {
        plan, il circule DERRIÈRE eux. Mais après les verres aussi, sans
        jamais les couvrir — ils sont bien plus bas que le comptoir. */
     this.dessinerFoule();
+    /* LES TABOURETS EN DERNIER : après les héros ET après la foule, donc
+       les deux passent derrière. C'était la demande — que le champion
+       circule ENTRE le comptoir et les tabourets. */
+    this.dessinerTabourets();
     if (T.tarte) this.dessinerTarte();
 
     /* Le coup de feu réchauffe la salle. */
@@ -9315,6 +9346,24 @@ const BarVue = {
         const sx = (gx - x0) / lUne * img.naturalWidth;
         const sl = larg / lUne * img.naturalWidth;
         ctx.drawImage(img, sx, sy, sl, sh, gx, yEcran, larg, H - yEcran);
+      }
+    }
+  },
+
+  dessinerTabourets(){
+    const H = Camera.H, L = Camera.L;
+    const lUne = this.larg() / BAR_COPIES;
+    for (let k = 0; k < BAR_COPIES; k++){
+      const x0 = this.origine() + k * lUne;
+      if (x0 > L + 200 || x0 + lUne < -200) continue;
+      for (const t2 of BAR_TABOURETS){
+        const spr = Images.table["bar_tabouret_" + t2.teinte];
+        if (!spr || !spr.naturalWidth) continue;
+        const sh = H * BAR_TAB_TAILLE;
+        const sl = sh * spr.naturalWidth / spr.naturalHeight;
+        const cx = x0 + t2.x * lUne;
+        if (cx < -sl || cx > L + sl) continue;
+        ctx.drawImage(spr, cx - sl / 2, H * BAR_TAB_PIEDS - sh, sl, sh);
       }
     }
   },
@@ -13960,7 +14009,7 @@ globalThis.DTOUR = {
   attenuation, PORTEE_MIN, PORTEE_PLEINE, PROJ_HAUTEUR, ANNONCE_CARTE_MIN, GROGNE_DELAI,
   CANONS, POSES_RUEL_TH, POSES_RUEL_PF,
   HEURES, PART_TYPES, PART_MAX, FLAQUES, MOT_DUREE,
-  BARMANS, BAR_COMPTOIR, BAR_MASQUE, BAR_INTRO_PALIER, INTRO_PALIER, POSES_HEROS,
+  BARMANS, BAR_COMPTOIR, BAR_MASQUE, BAR_TABOURETS, BAR_INTRO_PALIER, INTRO_PALIER, POSES_HEROS,
   SENS_NATIF, SENS_VOULU, PIQUES,
   Transition, nomNiveau, sensNiveau, NOMS_NIVEAUX,
   ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, IA_REUSSITE, IA_CADENCE, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, RUELLE_DEGAT_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,

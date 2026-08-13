@@ -825,12 +825,18 @@ def verifier(chemin, attendu=None):
     # était gardé comme du personnage. Or un cadre autour de chaque pose
     # est justement ce qui aide le générateur à ne pas les faire déborder.
     #
-    # La famille magenta se reconnaît à sa FORME et non à sa clarté :
+    # SEUIL À 120, PAS À 40. Un tabouret VIOLET a r-g = 26 et b-g = 30 :
+    # à 40 il passait déjà tout près, et ses reflets clairs dépassaient —
+    # la planche s'est éclatée en cinq morceaux au lieu de quatre.
+    # Le fond, lui, est à r-g = 231. Le cadre magenta foncé qu'on demande
+    # dans les prompts, mesuré à (140, 0, 140), est à 140. Un seuil de 120
+    # sépare donc proprement le décor des objets, même violets.
+    famille = (r > g + 120) & (b > g + 120)
     # rouge et bleu dominent nettement le vert. On garde aussi la
     # proximité à la couleur mesurée, pour les fonds qui ne seraient pas
     # magenta du tout.
     proche = (np.abs(r - fr) < 42) & (np.abs(g - fg) < 42) & (np.abs(b - fb) < 42)
-    famille = (r > g + 40) & (b > g + 40)
+    famille = (r > g + 120) & (b > g + 120)
     fond = proche | famille
 
     print(f"{chemin}  {L}x{H}")

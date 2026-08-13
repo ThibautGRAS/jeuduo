@@ -17,7 +17,29 @@ const BAR_COMPTOIR = 0.555;
    comptoir, mesurée à 0,540 sous Francky et 0,612 sous Jojo. À 0,528 on
    redessine tout le meuble sans jamais laisser réapparaître un bout de
    plateau au-dessus. */
-const BAR_MASQUE = 0.528;         /* le plateau du comptoir, mesuré sur le fond (bois clair : 0.55-0.57) */
+const BAR_MASQUE = 0.528;
+
+/* ---------- les tabourets du PREMIER PLAN ----------
+   Ceux du décor sont peints dans `fond_bar.webp` : impossible de passer
+   devant eux. Ceux-ci sont des sprites, dessinés APRÈS les héros et après
+   la foule — le champion circule donc ENTRE le comptoir et eux, ce qui
+   donne enfin de la profondeur au plan.
+
+   Ils sont placés dans le MONDE et non sur l'écran, comme les grappes :
+   sinon ils glisseraient avec la caméra et trahiraient le décalage. */
+/* TROIS PAR RÉPÉTITION, PAS SIX. À six ils formaient un mur continu : le
+   champion ne passait plus DERRIÈRE eux, il disparaissait. Espacés
+   irrégulièrement, ils laissent des trouées par lesquelles on le suit. */
+const BAR_TABOURETS = [
+  { x:0.09, teinte:"vert"   },
+  { x:0.47, teinte:"bleu"   },
+  { x:0.78, teinte:"orange" },
+];
+/* Leur ligne de sol est PLUS BASSE que celle des héros : c'est ce qui les
+   place devant. Et leur taille est celle des tabourets peints, relevée
+   sur le fond — 0,245 de la hauteur d'image. */
+const BAR_TAB_PIEDS = 1.02;
+const BAR_TAB_TAILLE = 0.27;         /* le plateau du comptoir, mesuré sur le fond (bois clair : 0.55-0.57) */
 const BAR_TAILLE_HEROS = 0.52;      /* hauteur du héros, en fraction de l'écran */
 const BAR_TAILLE_BARMAN = 0.34;     /* hauteur du buste des barmans (tête -> ceinture) */
 const BAR_PORTEE = 0.030;           /* portée de prise d'un verre, en fraction du monde */

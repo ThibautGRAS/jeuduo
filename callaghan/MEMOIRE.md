@@ -2235,6 +2235,26 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Un seuil de couleur se règle sur le CAS LE PLUS PROCHE du fond
+
+Le fond magenta se reconnaissait à `r > g + 40 && b > g + 120`… non : à
+`+ 40`. Ça marchait sur tous les personnages, parce qu'aucun n'était
+magenta. Un tabouret VIOLET est arrivé : r − g = 26, et ses reflets
+clairs dépassaient 40. La planche s'est éclatée en cinq morceaux au lieu
+de quatre.
+
+Le bon seuil se lit sur les extrêmes qu'on veut séparer : le fond est à
+231, le cadre magenta foncé qu'on demande dans les prompts à 140, l'objet
+le plus « magenta » à 30. Un seuil de 120 les sépare tous les trois.
+
+**Un seuil réglé sur les cas faciles tient jusqu'au premier cas
+difficile.** Et le cas difficile arrive toujours — ici, le jour où on
+dessine un objet de la couleur du fond.
+
+Corollaire de méthode : après avoir changé un seuil partagé, le
+REVÉRIFIER sur les données déjà traitées. Quatre planches découpées plus
+tôt ont été repassées au contrôleur avant de livrer.
+
 #### Faire couper par le DÉCOR plutôt que régler un raccord
 
 Le bas du corps des barmans était calé par un facteur unique : 98 % de la
@@ -3266,13 +3286,6 @@ d'enquête, resté quarante versions sans que personne y revienne.
   la référence et le jeu ne concordent pas — c'est voulu et transitoire,
   mais toute planche générée d'ici là sera en noir et ne se raccordera
   pas aux sprites existants.
-- **Les tabourets au PREMIER PLAN.** Thibaut veut que le champion passe
-  ENTRE le comptoir et les tabourets. Impossible en l'état : les deux sont
-  peints dans `fond_bar.webp`, une seule image. J'ai essayé d'extraire un
-  tabouret — l'assise sort proprement, les pieds fins se confondent avec
-  le sol sombre et disparaissent. Le prompt est écrit dans `PROMPTS.md` ;
-  il restera à dessiner les sprites après les héros, sur une ligne de sol
-  plus basse.
 - **La pose `serie` de Jojo** montre une passoire au lieu de la série de
   shots prête. La bonne pose est dans la rangée chorégraphiée de sa
   planche, mais celle-ci a un comptoir et un cadre blanc qui gênent la

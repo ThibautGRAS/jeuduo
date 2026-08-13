@@ -2627,10 +2627,19 @@ if (D){
          (140, 0, 140) le rate. Les deux outils — le contrôleur et le
          découpeur — reconnaissent désormais la famille magenta à sa
          forme : rouge et bleu dominent nettement le vert. */
+      /* SEUIL À 120, PAS À 40. Un tabouret VIOLET a r-g = 26 : à 40 ses
+         reflets clairs dépassaient et la planche s'éclatait en cinq
+         morceaux au lieu de quatre. Le fond est à r-g = 231, le cadre
+         magenta foncé à 140 : un seuil de 120 sépare le décor des objets,
+         même violets.
+         Les deux outils doivent porter LE MÊME seuil, sinon le contrôleur
+         valide une planche que le découpeur abîmera. */
       const a = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
       const b = fs.readFileSync(path.join(RACINE, "decouper_planche.py"), "utf8");
-      return /\(r > g \+ 40\) & \(b > g \+ 40\)/.test(a) &&
-        /\(r > g \+ 40\) & \(b > g \+ 40\)/.test(b) &&
+      const sa = (a.match(/\(r > g \+ (\d+)\) & \(b > g \+ \1\)/) || [])[1];
+      const sb = (b.match(/\(r > g \+ (\d+)\) & \(b > g \+ \1\)/) || [])[1];
+      messageDetail = "seuils " + sa + " et " + sb;
+      return sa && sa === sb && parseInt(sa, 10) >= 100 &&
         /* on cherche le seuil dans le CODE, pas dans les commentaires :
            la note qui explique la correction contient forcément
            l'ancienne formule, et un test qui lit les commentaires se
@@ -5523,6 +5532,23 @@ if (D){
       const T = unBar();
       const ids = T.foule.map(m => m.ref.id);
       return new Set(ids).size === ids.length;
+    })());
+
+  verifier("les tabourets passent DEVANT les héros et la foule",
+    (() => {
+      /* Ceux du décor sont peints dans `fond_bar.webp` : impossible de
+         passer devant eux. Ceux-ci sont des sprites dessinés en DERNIER,
+         donc le champion circule entre le comptoir et eux.
+         J'ai d'abord essayé de les extraire du fond : l'assise sortait
+         proprement, les pieds fins se confondaient avec le sol sombre et
+         disparaissaient. */
+      const h = source.indexOf("this.dessinerHeros()");
+      const f = source.indexOf("this.dessinerFoule()");
+      const s = source.indexOf("this.dessinerTabourets()");
+      const present = ["vert", "violet", "bleu", "orange"].every(c =>
+        fs.existsSync(path.join(RACINE, "img", "n3", "bar_tabouret_" + c + ".webp")));
+      messageDetail = D.BAR_TABOURETS.length + " par répétition du décor";
+      return present && s > h && s > f && D.BAR_TABOURETS.length <= 4;
     })());
 
   verifier("chaque barman a SON arête arrière de comptoir",
