@@ -1,0 +1,80 @@
+Planche de 5 poses d'un même personnage, côte à côte
+sur une seule rangée.
+
+Scène : la file d'attente.
+Planche 2 sur 2 — joindre la MÊME image de référence aux deux, c'est ce qui les raccorde.
+Image de référence à joindre : reference/thibaut-2.png
+
+RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
+qu'il existe déjà.
+
+Elle fait FOI sur tout ce qui le définit : visage, coupe de cheveux,
+pilosité, corpulence, vêtements, couleurs, chaussures, accessoires, et
+le style de dessin lui-même — trait, palette, éclairage.
+
+Reproduire ces éléments à l'identique. Ne rien réinventer, ne rien
+moderniser, ne rien « améliorer ». Une planche qui change la couleur d'un
+vêtement ou la coupe d'une barbe est inutilisable : elle ne se raccorde
+pas aux images déjà en jeu.
+
+SEULES les poses décrites ci-dessous changent.
+
+SI L'IMAGE DE RÉFÉRENCE EST SUR FOND MAGENTA : ce fond est un fond de
+travail, rien d'autre. Il ne fait PAS partie du personnage. Ne pas en
+tirer de lumière rose ou violette sur la peau, les cheveux, les
+vêtements ou les contours. L'éclairage du personnage doit rester neutre,
+identique à celui de la référence une fois le fond mis de côté.
+
+Rappel de contrôle, à confirmer sur l'image et non à interpréter :
+polo vert, jean bleu, cheveux bruns en bataille, barbe de trois jours
+
+LES POSES, de gauche à droite :
+1. [stress] crispé : sourcils froncés, une main qui frotte la nuque, poids déporté en arrière
+2. [tendue] tension maximale : poings serrés, mâchoire crispée, buste penché en avant
+3. [victoire] les deux bras levés en V, tête en arrière, grand sourire, un pied décollé du sol
+4. [esquive] esquive vive : le buste se jette sur le côté, les deux bras montent devant le visage, un pied décollé
+5. [splat] touché en pleine figure : tête rejetée en arrière, yeux fermés, bras écartés, un pas de recul, épaules remontées
+
+
+CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
+
+LA PLUS IMPORTANTE, ET LA PLUS SOUVENT RATÉE : L'ESPACEMENT.
+Chaque pose doit être séparée de sa voisine par au moins 80 pixels de
+fond VIDE. Un doigt pointé, un bras tendu, un coude, un pied de course,
+un objet tenu : RIEN ne doit entrer dans la colonne d'à côté. Deux poses
+qui se touchent, même par un seul doigt, ne peuvent pas être séparées
+automatiquement, et toute la planche est à refaire.
+Test à faire mentalement : entre deux poses voisines, peut-on tracer un
+trait vertical du haut en bas de l'image sans jamais toucher un
+personnage ? Si non, écarter davantage.
+Dans le doute, ÉCARTER PLUS. Une planche trop aérée se découpe très bien.
+
+- Fond MAGENTA PUR uni #FF00FF sur toute l'image. Aucun dégradé, aucune
+  ombre portée, aucun décor, aucun élément de mobilier, aucun sol
+  dessiné, aucun cadre, aucune bordure.
+- AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro de pose.
+- Toutes les poses sur UNE SEULE RANGÉE horizontale, alignées.
+- Au moins 80 pixels de fond magenta VIDE entre deux poses voisines.
+  Aucune partie d'un personnage — bras tendu, jambe de course, objet
+  tenu — ne doit entrer dans la colonne de sa voisine. On doit pouvoir
+  tracer un trait vertical entièrement magenta entre deux poses.
+- Au moins 60 pixels de magenta vide sur les QUATRE bords de l'image.
+  Une lueur ou un vêtement coupé par le bord ne peut pas être détouré
+  proprement.
+- MÊME ÉCHELLE pour toutes les poses : la tête doit avoir exactement la
+  même taille d'une pose à l'autre. C'est le défaut le plus fréquent.
+- Les PIEDS de toutes les poses reposent sur la même ligne horizontale
+  imaginaire, sauf pour les phases où le personnage est explicitement en
+  l'air.
+- Aucune lueur, aucun halo, aucun effet lumineux qui déborde de la
+  silhouette. Mesuré sur une planche livrée : une bande rose de 15 à
+  30 px de couleur (134, 58, 116) tout autour du sujet — du magenta
+  délavé, que rien ne sait retirer puisqu'on ignore la couleur qui était
+  dessous. Le bord doit être FRANC.
+- Le fond magenta ne teinte RIEN. Aucun reflet rose ou violet sur la
+  peau, les cheveux, les vêtements ou les contours : l'éclairage du
+  personnage est neutre.
+- Style : bande dessinée aux couleurs franches, contours nets, éclairage
+  neutre et identique pour toutes les poses.
+- Personnage vu de TROIS QUARTS, tourné vers la DROITE, corps entier,
+  de la tête aux pieds.

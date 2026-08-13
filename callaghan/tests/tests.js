@@ -2059,8 +2059,10 @@ if (D){
          plus besoin de décrire le costume par écrit ni de dire à la
          référence de ne pas faire foi sur les vêtements. Deux consignes
          qui se marchaient dessus ont été remplacées par une image. */
+      /* le niveau 1 est scindé en deux planches depuis qu'il demande dix
+         poses : on lit la première */
       const s = fs.readFileSync(
-        path.join(RACINE, "prompts", "n1", "thibaut.txt"), "utf8");
+        path.join(RACINE, "prompts", "n1", "thibaut-1.txt"), "utf8");
       return !/ne fait PAS foi sur les VÊTEMENTS/.test(s) &&
         !/LE COSTUME DE CE NIVEAU/.test(s) &&
         /reference\/thibaut-2\.png/.test(s);
@@ -2088,6 +2090,24 @@ if (D){
       messageDetail = manquants.length ? "absentes : " + manquants.join(", ")
                                        : attendus.length + " poses couvertes";
       return attendus.length >= 10 && manquants.length === 0;
+    })());
+
+  verifier("au niveau 1, prendre une tarte et l'esquiver se ressemblent trop",
+    (() => {
+      /* Le niveau lance des tartes mais `poseHeros` renvoie « surpris »
+         dans quatre situations : touché, esquive, fin de partie,
+         interpellation. Les sprites manquent ; le prompt les demande, et
+         ce test garde la trace du travail restant. Il tombera le jour où
+         les poses seront déclarées — c'est voulu, il faudra alors câbler
+         `poseHeros`. */
+      const declarees = D.POSES_HEROS;
+      const demandees = fs.readFileSync(
+        path.join(RACINE, "prompts", "n1", "thibaut-2.txt"), "utf8");
+      const aVenir = ["esquive", "splat"].filter(p2 => declarees.indexOf(p2) < 0);
+      messageDetail = aVenir.length
+        ? "encore à produire : " + aVenir.join(", ")
+        : "produites — câbler poseHeros";
+      return ["esquive", "splat"].every(p2 => demandees.indexOf("[" + p2 + "]") >= 0);
     })());
 
   verifier("l'espacement est la PREMIÈRE consigne technique",

@@ -219,7 +219,19 @@ SCENES = {
                  "penché en avant"),
       ("victoire", "les deux bras levés en V, tête en arrière, grand sourire, "
                    "un pied décollé du sol"),
+      # ESQUIVE ET SPLAT MANQUAIENT. Le niveau 1 lance des tartes — le mot
+      # y apparaît quarante-cinq fois — mais aucun sprite ne disait ce qui
+      # arrive quand elle touche : le code affichait « surpris », la même
+      # pose que pour l'esquive, la fin de partie et une interpellation.
+      # Quatre situations sous une seule image. Le niveau 2, lui, a bien
+      # ses deux poses.
+      ("esquive", "esquive vive : le buste se jette sur le côté, les deux "
+                  "bras montent devant le visage, un pied décollé"),
+      ("splat", "touché en pleine figure : tête rejetée en arrière, yeux "
+                "fermés, bras écartés, un pas de recul, épaules remontées"),
     ],
+    # dix poses : sous le maximum de neuf ? non — donc scindée
+    "scinder": 5,
   },
   "n2": {
     "titre": "l'enquête de l'appartement",

@@ -2548,6 +2548,14 @@ d'enquête, resté quarante versions sans que personne y revienne.
   que soit la cadence. Le code est prêt — il compte les phases dans
   `POSES_BAR` — et le prompt est écrit dans `PROMPTS.md`. Il ne manque
   que les images.
+- **`esquive` et `splat` au niveau 1.** Le niveau lance des tartes — le
+  mot y apparaît quarante-cinq fois — mais aucun sprite ne dit ce qui
+  arrive quand elle touche : `poseHeros` renvoie « surpris », la MÊME
+  pose que pour l'esquive, la fin de partie et une interpellation. Quatre
+  situations sous une seule image. Le prompt les demande désormais ;
+  quand les fichiers arriveront, il restera à les ajouter à
+  `POSES_HEROS` et à distinguer les deux cas dans `poseHeros` — `splat`
+  si `h.tarte > 0`, `esquive` si `h.esquive`.
 - **La pose `serie` de Jojo** montre une passoire au lieu de la série de
   shots prête. La bonne pose est dans la rangée chorégraphiée de sa
   planche, mais celle-ci a un comptoir et un cadre blanc qui gênent la
