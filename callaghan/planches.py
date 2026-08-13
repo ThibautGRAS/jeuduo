@@ -227,6 +227,26 @@ SCENES = {
       ("marche", "un pas en avant, tranquille, bras relâchés"),
       ("regarde", "tourné de trois quarts, la tête pivotée vers le côté, "
                   "une main en visière au-dessus des yeux"),
+      # POIGNEE EST DANS LA PREMIÈRE PLANCHE, `vide` dans la seconde, et
+      # c'est DÉLIBÉRÉ. Côte à côte, les deux tendent la main dans la même
+      # direction et le générateur les apparie : il a dessiné deux fois de
+      # suite les deux personnages se serrant la main, à six puis
+      # vingt-deux pixels d'écart, la seconde retournée vers la gauche.
+      # Deux formulations différentes n'y ont rien changé.
+      #
+      # Une consigne écrite qui lutte contre la DISPOSITION perd toujours.
+      # Séparer les deux poses règle le problème sans rien demander au
+      # générateur.
+      # LE PARTENAIRE EST INVISIBLE, et il faut le DIRE. Écrit « serre la
+      # main de quelqu'un hors cadre », le générateur a compris que ce
+      # quelqu'un était la POSE VOISINE : il a dessiné les deux se serrant
+      # la main, à six pixels l'une de l'autre, et retourné la seconde
+      # vers la gauche. Deux poses inutilisables, et c'était ma formule.
+      ("poignee", "le bras droit tendu vers la DROITE à hauteur de taille, "
+                  "la main refermée en poignée de main, comme s'il serrait "
+                  "une main qu'on NE VOIT PAS. Aucune autre personne, aucun "
+                  "autre bras, aucune autre main dessinés. Sourire franc, "
+                  "regard vers la droite"),
       ("surpris", "sursaut : yeux écarquillés, sourcils hauts, épaules "
                   "remontées, mains ouvertes à hauteur de poitrine"),
       ("stress", "crispé : sourcils froncés, une main qui frotte la nuque, "
@@ -246,16 +266,6 @@ SCENES = {
       # depuis toujours — `gesteHeros(h, "poignee")` et `"vide"` — mais
       # les deux s'affichaient avec « tendue », une pose de STRESS.
       # Réussir et rater donnaient donc la même image.
-      # LE PARTENAIRE EST INVISIBLE, et il faut le DIRE. Écrit « serre la
-      # main de quelqu'un hors cadre », le générateur a compris que ce
-      # quelqu'un était la POSE VOISINE : il a dessiné les deux se serrant
-      # la main, à six pixels l'une de l'autre, et retourné la seconde
-      # vers la gauche. Deux poses inutilisables, et c'était ma formule.
-      ("poignee", "le bras droit tendu vers la DROITE à hauteur de taille, "
-                  "la main refermée en poignée de main, comme s'il serrait "
-                  "une main qu'on NE VOIT PAS. Aucune autre personne, aucun "
-                  "autre bras, aucune autre main dessinés. Sourire franc, "
-                  "regard vers la droite"),
       # ATTENTION, COLLISION DE NOM : `vide` désigne ici une main tendue
       # que personne ne prend, et au niveau 3 un VERRE vide brandi. Deux
       # choses opposées sous un même mot. Les préfixes de fichier les

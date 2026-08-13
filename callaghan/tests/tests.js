@@ -2088,6 +2088,28 @@ if (D){
     })());
 
 
+  verifier("deux poses qui se tendent la main ne sont JAMAIS voisines",
+    (() => {
+      /* `poignee` et `vide` tendent toutes deux la main vers la droite.
+         Côte à côte, le générateur les apparie : il a dessiné deux fois
+         de suite les deux personnages se serrant la main — à six puis
+         vingt-deux pixels — la seconde retournée vers la gauche. DEUX
+         formulations différentes n'y ont rien changé.
+
+         Une consigne écrite qui lutte contre la disposition perd
+         toujours. Elles sont désormais dans deux planches distinctes. */
+      const d = path.join(RACINE, "prompts", "n1");
+      const ou = {};
+      for (const n of fs.readdirSync(d)){
+        if (!n.endsWith(".txt")) continue;
+        const s = fs.readFileSync(path.join(d, n), "utf8");
+        for (const pose of ["poignee", "vide"])
+          if (s.indexOf("[" + pose + "]") >= 0) ou[pose] = n;
+      }
+      messageDetail = "poignee dans " + ou.poignee + ", vide dans " + ou.vide;
+      return ou.poignee && ou.vide && ou.poignee !== ou.vide;
+    })());
+
   verifier("aucune pose n'invite à dessiner un TIERS ou un DÉCOR",
     (() => {
       /* « serre la main de quelqu'un hors cadre » a été lu comme « la pose

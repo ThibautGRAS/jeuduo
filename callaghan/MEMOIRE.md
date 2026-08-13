@@ -2235,6 +2235,25 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Une consigne écrite qui lutte contre la DISPOSITION perd toujours
+
+Deux poses tendaient la main vers la droite : `poignee` et `vide`. Côte à
+côte sur une planche, le générateur les a appariées — il a dessiné les
+deux personnages se serrant la main, la seconde retournée vers la gauche
+pour qu'ils se fassent face.
+
+J'ai reformulé : « comme s'il serrait une main qu'on NE VOIT PAS. Aucune
+autre personne, aucun autre bras, aucune autre main dessinés. » La
+planche suivante avait le même défaut, à vingt-deux pixels au lieu de six.
+
+Ce qui a marché n'était pas un troisième essai de formulation : c'était de
+SÉPARER les deux poses dans deux planches. La proximité disait « ces deux
+personnages se répondent » plus fort que le texte ne disait le contraire.
+
+**Quand une consigne échoue deux fois de suite, changer de levier plutôt
+que de mots.** L'agencement est un langage, et il parle plus fort que les
+phrases.
+
 #### « Hors cadre » ne suffit pas : il faut dire INVISIBLE
 
 J'ai décrit une poignée de main comme « serre la main de quelqu'un à sa

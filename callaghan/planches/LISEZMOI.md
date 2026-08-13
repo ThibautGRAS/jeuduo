@@ -35,13 +35,15 @@ Rangées par `archiver.py`, jamais à la main.
 | `a_identifier` | `IMG_5212.webp` | 192 Ko |
 | `a_identifier` | `IMG_5221.webp` | 86 Ko |
 | `n1` | `heros_pf_rue.webp` | 74 Ko |
+| `n1` | `heros_th_attitudes-v2.webp` | 90 Ko |
 | `n1` | `heros_th_attitudes.webp` | 80 Ko |
+| `n1` | `heros_th_gestes-v2.webp` | 92 Ko |
 | `n1` | `heros_th_gestes.webp` | 90 Ko |
 | `n1` | `heros_th_rue.webp` | 71 Ko |
 | `n2` | `heros_pf_policier.webp` | 163 Ko |
 | `n2` | `heros_th_policier.webp` | 147 Ko |
 
-**4.1 Mo au total.**
+**4.3 Mo au total.**
 
 ## 24 planches à identifier
 
