@@ -5539,10 +5539,17 @@ if (D){
       const lignes = D.BARMANS.map(b => b.arriere);
       messageDetail = sans.length ? "sans arête : " + sans.map(b => b.id).join(", ")
                                   : "arêtes " + lignes.join(", ");
+      /* ET ON L'ANCRE SUR LA LIGNE QUI LE COUPE. Il était posé sur
+         l'arête AVANT et masqué par l'arête ARRIÈRE : l'écart entre les
+         deux vaut 0,037 chez Francky et 0,154 chez Jojo, quatre fois
+         plus. Francky montrait donc bien plus de corps au-dessus du bar,
+         quel que soit le facteur ajusté. Ancré sur l'arête arrière, la
+         part visible est la même pour les deux par construction. */
       return sans.length === 0 &&
         lignes.every(y => y > 0.3 && y < 0.55) &&
         new Set(lignes).size === lignes.length &&
-        /dessinerMasqueComptoir/.test(source);
+        /dessinerMasqueComptoir/.test(source) &&
+        /b\.ref\.arriere \|\| b\.ref\.comptoir/.test(source);
     })());
 
   verifier("le masque du comptoir passe APRÈS les barmans",

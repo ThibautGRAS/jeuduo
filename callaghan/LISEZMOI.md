@@ -573,6 +573,17 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**Francky descend : on ancre sur la ligne qui COUPE** (v7.11). Il
+restait beaucoup trop haut après le masque, et la cause était nette une
+fois mesurée : le sprite était posé sur l'arête AVANT du comptoir mais
+coupé par l'arête ARRIÈRE. L'écart entre les deux vaut **0,037 chez
+Francky et 0,154 chez Jojo** — quatre fois plus. Francky montrait donc
+bien plus de corps, quel que soit le facteur qu'on ajuste.
+
+Ancré sur l'arête arrière, la part visible devient la même pour les deux
+**par construction** : un seul facteur à régler, 0,62, et il vaut pour
+tout barman qu'on ajouterait.
+
 **Le comptoir coupe les barmans, au lieu d'un réglage** (v7.10).
 L'idée est de Thibaut, et elle règle le problème à la racine.
 

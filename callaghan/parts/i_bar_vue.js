@@ -192,7 +192,15 @@ const BarVue = {
       const x = this.ex(b.ref.x);
       /* SA ligne de comptoir, pas la moyenne : le plateau descend de
          0,538 à 0,610 entre les deux postes. */
-      const plateau = b.ref.comptoir || BAR_COMPTOIR;
+      /* ON L'ANCRE SUR LA LIGNE QUI LE COUPE, pas sur une autre.
+         Il était posé sur l'arête AVANT du comptoir et masqué par
+         l'arête ARRIÈRE — or l'écart entre les deux vaut 0,037 chez
+         Francky et 0,154 chez Jojo, quatre fois plus. Francky montrait
+         donc bien plus de corps au-dessus du bar, quel que soit le
+         facteur qu'on ajuste.
+         Ancré sur l'arête arrière, la PART VISIBLE devient la même pour
+         les deux : c'est elle qu'on règle, une seule fois. */
+      const plateau = b.ref.arriere || b.ref.comptoir || BAR_COMPTOIR;
       /* LE BARMAN DESCEND SOUS LE COMPTOIR, et le comptoir le masque.
          Avant, son bas était posé à 98 % au-dessus de sa ligne — un seul
          facteur pour les deux, alors que leurs sprites n'ont pas le même
@@ -201,7 +209,9 @@ const BarVue = {
          En le faisant descendre franchement et en redessinant le comptoir
          PAR-DESSUS, le raccord devient exact quel que soit le sprite —
          c'est le décor qui coupe, plus un réglage. */
-      ctx.drawImage(spr, x - sl / 2, this.ey(plateau) - sh * 0.86, sl, sh);
+      /* 0,62 : la part du sprite qui reste VISIBLE au-dessus du comptoir —
+         tête, torse, bras. Le reste passe derrière le meuble. */
+      ctx.drawImage(spr, x - sl / 2, this.ey(plateau) - sh * 0.62, sl, sh);
       if (b.etat === "prepare"){
         /* petit indicateur au-dessus : quelque chose arrive */
         const p = borne(b.t / b.duree, 0, 1);
