@@ -48,7 +48,14 @@ import sys, pathlib, json
 #
 # À cinq poses chaque case fait 360 px, à quatre 450. On obtient
 # l'espacement en donnant de la PLACE, pas en le redemandant.
-MAX_POSES = 5
+# Remonté de 5 à 6 depuis que le prompt demande un CADRE autour de chaque
+# pose : le générateur ne doit plus deviner l'espacement, il le voit. À
+# six, chaque case fait 300 px sur une planche de 1800 — c'est peu, et
+# c'est justement le cadre qui doit compenser.
+#
+# C'EST UN PARI, à vérifier sur la prochaine planche livrée : si l'écart
+# retombe sous 80 px, redescendre à 5 et ne plus y toucher.
+MAX_POSES = 6
 
 MOUVEMENTS = {
     "idle": {

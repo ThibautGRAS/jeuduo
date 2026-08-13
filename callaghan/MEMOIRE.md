@@ -2235,6 +2235,22 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Un test qui RECOPIE une constante devient faux à chaque réglage
+
+Le maximum de poses par planche a bougé trois fois : neuf, puis cinq,
+puis six. À chaque fois le test qui le vérifiait est tombé, parce qu'il
+contenait le chiffre en dur. Trois reprises pour une idée qui n'avait pas
+changé.
+
+Il lit désormais `MAX_POSES` dans le script. Le test vérifie la RÈGLE —
+« aucune planche ne dépasse le maximum déclaré » — et non la valeur du
+jour.
+
+Le symptôme à reconnaître : un test qu'on reprend en même temps que le
+code qu'il surveille, sans que son intention ait changé. C'est qu'il
+duplique une donnée au lieu de la lire. Et le vrai danger n'est pas la
+reprise : c'est qu'on finit par croire que c'est le test qui a tort.
+
 #### Montrer l'espace plutôt que le demander
 
 Après quatre échecs de la consigne « 80 px entre deux poses », Thibaut a

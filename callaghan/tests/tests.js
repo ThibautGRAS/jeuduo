@@ -2465,7 +2465,7 @@ if (D){
         /recadré sur le magenta/.test(s);
     })());
 
-  verifier("CINQ poses par planche au maximum",
+  verifier("aucune planche ne dépasse le maximum déclaré",
     (() => {
       /* Au-delà, le générateur rétrécit les sujets et les têtes cessent
          d'être égales — le défaut qui ne se rattrape pas au découpage. */
@@ -2490,8 +2490,14 @@ if (D){
          et 34 px. Jamais 80. La raison est arithmétique — six sujets de
          250 px sur 1800 px ne laissent pas la place. On obtient
          l'espacement en donnant de la PLACE, pas en le redemandant. */
-      messageDetail = "le plus gros : " + ou + ", " + pire + " poses";
-      return pire <= 5 && /MAX_POSES = 5/.test(s);
+      /* Le test lit le maximum DANS le script au lieu de le recopier :
+         il a été repris à chaque réglage — 9, puis 5, puis 6. Un test qui
+         duplique une constante devient faux dès qu'on l'ajuste, et on
+         finit par croire que c'est le test qui a tort. */
+      const m2 = s.match(/^MAX_POSES = (\d+)/m);
+      const maxi = m2 ? parseInt(m2[1], 10) : 0;
+      messageDetail = "maximum " + maxi + ", le plus gros : " + ou + " avec " + pire;
+      return maxi > 0 && pire <= maxi;
     })());
 
   verifier("l'avertissement sur les jambes ne va QU'AUX foulées",
