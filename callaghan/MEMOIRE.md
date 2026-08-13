@@ -2235,6 +2235,30 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Remplacer une planche périme tout ce qui a été mesuré SUR elle
+
+J'ai installé les nouveaux sprites de PF, vérifié les échelles, contrôlé le
+rendu — et laissé la table des bouches de canon telle quelle. Elle avait
+été mesurée sur la planche PRÉCÉDENTE. Résultat : la flamme de bouche
+partait à côté du fusil, et pour la pose de visée elle flottait dans le
+vide au-dessus de l'arme. Écart jusqu'à 15 % de la largeur, une
+cinquantaine de pixels à l'écran.
+
+Rien ne le signalait. Les tests étaient verts — ils vérifiaient que la
+table EXISTE et couvre les poses, pas que ses valeurs correspondent aux
+images.
+
+**Après avoir remplacé un jeu de sprites, chercher tout ce qui a été
+mesuré dessus.** Positions de canon, lignes de sol, points d'accroche : ce
+sont des données DÉRIVÉES d'images qui n'existent plus.
+
+Et sur la mesure elle-même : mes premières valeurs tombaient sur les
+CHAUSSURES, brunes et sombres comme le fusil — des y à 0,77, soit au
+niveau des pieds. Le critère qui les sépare n'est pas la couleur mais
+l'ALLONGEMENT : un canon est une barre, une chaussure est un pâté. Encore
+une fois, décrire ce qui distingue VISUELLEMENT plutôt que ce qu'on croit
+chercher.
+
 #### Mesurer UN cas et généraliser
 
 J'ai ouvert `ruel_pf_vise.webp` pour vérifier la tenue du niveau 4 : polo

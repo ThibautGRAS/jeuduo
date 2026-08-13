@@ -4809,6 +4809,25 @@ if (D){
     /Ruelle\.flashes\.find\(f => f\.heros === i\)/.test(source),
     "celle de PF partait à l'autre bout de l'écran une fois retourné");
 
+  verifier("la table des canons couvre TOUTES les poses déclarées",
+    (() => {
+      /* Une pose sans entrée fait partir la flamme à l'origine du sprite.
+         Et une entrée PÉRIMÉE est pire : la flamme tombe à côté sans que
+         rien ne le signale. Les valeurs de PF datant de l'ancienne planche
+         mettaient sa flamme dans le vide au-dessus du fusil — jusqu'à
+         15 % de la largeur d'écart, une cinquantaine de pixels. */
+      const manquants = [];
+      for (const [pref, cle, poses] of [
+        ["ruel_th", "th", D.POSES_RUEL_TH],
+        ["ruel_pf", "pf", D.POSES_RUEL_PF]]){
+        for (const po of poses)
+          if (!D.CANONS[cle] || !D.CANONS[cle][po]) manquants.push(pref + "_" + po);
+      }
+      messageDetail = manquants.length ? "sans canon : " + manquants.join(", ")
+        : (D.POSES_RUEL_TH.length + D.POSES_RUEL_PF.length) + " poses couvertes";
+      return manquants.length === 0;
+    })());
+
   verifier("la bouche du canon est mesurée POSE PAR POSE",
     (() => {
       /* Une position fixe collait tant que le héros visait ; dès qu'il

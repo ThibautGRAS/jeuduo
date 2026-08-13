@@ -573,6 +573,21 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**La flamme de PF part enfin du bout du fusil** (v7.08). Les onze
+positions de bouche de canon sont REMESURÉES sur les nouveaux sprites :
+les anciennes valeurs venaient de la planche précédente, et pour la pose
+de visée la flamme tombait carrément dans le vide au-dessus de l'arme.
+Écart relevé jusqu'à 15 % de la largeur, une cinquantaine de pixels.
+
+Installer une planche ne suffit pas : **tout ce qui a été mesuré SUR
+l'ancienne devient faux**, sans que rien ne le signale. Un test vérifie
+maintenant que chaque pose déclarée a son entrée dans la table.
+
+Et une leçon sur la mesure elle-même : mes premières valeurs tombaient sur
+les **chaussures**, brunes et sombres comme le fusil — des y à 0,77, soit
+au niveau des pieds. Le critère qui les sépare est l'ALLONGEMENT : un
+canon est une barre, une chaussure est un pâté.
+
 **PF passe en tenue de policier dans la ruelle** (v7.07). Onze sprites
 d'une planche à deux rangées, et les deux héros sont enfin à la même
 échelle — 393 px contre 396.
