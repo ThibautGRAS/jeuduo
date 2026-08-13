@@ -158,10 +158,34 @@ const Effets = {
    seule fois. */
 let ctx = null, cv = null;
 
+/* LA TAILLE MET DU TEMPS À SE FIXER APRÈS UNE ROTATION. iOS rend
+   pendant quelques centaines de millisecondes des dimensions périmées,
+   puis la barre d'adresse se replie et la hauteur change encore. On
+   dessinait donc une ou deux images à la mauvaise taille : c'est le
+   « redimensionnement » qu'on voyait en arrivant sur un écran.
+
+   La parade n'est pas de mesurer mieux — c'est impossible, le navigateur
+   ment — mais de savoir QUAND la mesure s'est calmée. Tant qu'elle
+   bouge, l'écran de pivot reste posé dessus et masque les images
+   intermédiaires. */
+let tailleVue = { l:0, h:0, depuis:0 };
+const TAILLE_STABLE = 260;   /* ms sans changement avant de faire confiance */
+
+function tailleCalme(){
+  /* Aucune mesure encore faite = rien ne bouge : c'est le cas du harnais
+     de test et de tout appel avant le premier ajustement. Répondre
+     « pas calme » y bloquait la boucle pour toujours. */
+  if (!tailleVue.depuis) return true;
+  return (Date.now() - tailleVue.depuis) >= TAILLE_STABLE;
+}
+
 function ajusterCanevas(){
   if (!cv) return;
   const dpr = Math.min(2, globalThis.devicePixelRatio || 1);
   const L = cv.clientWidth || 640, H = cv.clientHeight || 360;
+  if (L !== tailleVue.l || H !== tailleVue.h){
+    tailleVue = { l:L, h:H, depuis:Date.now() };
+  }
   const lp = Math.round(L * dpr), hp = Math.round(H * dpr);
   if (cv.width !== lp || cv.height !== hp){ cv.width = lp; cv.height = hp; }
   /* On mesure le bandeau plutôt que de le supposer : sa hauteur dépend

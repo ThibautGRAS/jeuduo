@@ -24,6 +24,103 @@ jeu, et `../MEMOIRE.md`, dont les pièges valent ici aussi.
 
 ---
 
+## 0. Retour d'expérience — ce qui revient
+
+Cent soixante-neuf pièges sont consignés plus bas, un par défaut
+rencontré. Vus séparément ils sont anecdotiques ; regroupés, ils
+dessinent **sept familles** qui expliquent la quasi-totalité des
+allers-retours de ce projet. Cette section existe pour qu'on lise les
+familles avant de refaire l'erreur, plutôt que de retrouver la leçon
+après coup.
+
+### Les sept familles d'erreurs, par coût décroissant
+
+**1. Deviner une grandeur au lieu de la mesurer.** La plus chère, et de
+loin. Position de la bouche du canon, ligne du comptoir, hauteur de tête
+d'un barman, place du pavé dans la main, luminance d'un décor. À chaque
+fois la valeur était *plausible* — c'est ce qui la rend dangereuse. Un
+comptoir à 0,555 au lieu de 0,538 et 0,610 laisse un personnage flotter
+pendant trois séances sans qu'on soupçonne le décor.
+*Réflexe* : toute constante prise sur une image se mesure, et se
+**remesure** à chaque nouvelle planche.
+
+**2. Vérifier l'intention au lieu de l'artefact livré.** Le Vorbis dépasse
+la crête qu'on lui donne — de 1,16 à 1,72 fois selon le contenu. Les
+tests verts laissent passer un bouton coupé. Le fichier écrit peut être
+tronqué. *Réflexe* : mesurer ce qui sort, pas ce qu'on a demandé. Boucler
+si nécessaire : encoder, décoder, mesurer, recommencer.
+
+**3. Une constante unique pour deux situations différentes.** Le comptoir
+n'est pas horizontal. La bouche du canon bouge à chaque pose. Les deux
+bombardiers ne peuvent pas se poster à la même profondeur. *Réflexe* :
+« est-ce que cette valeur sert à deux endroits qui diffèrent ? » Si oui,
+deux valeurs — et une table plutôt qu'un `if`.
+
+**4. Un front là où il fallait un état.** L'ouverture du choix du
+champion, déclenchée à l'instant où le chrono passe à zéro : posé à zéro
+autrement, l'événement n'a jamais lieu. *Réflexe* : écrire la condition
+comme une propriété vraie en permanence (« pas d'affiche en cours et pas
+encore lancé »), pas comme une transition.
+
+**5. Corriger un seul des endroits qui pilotent une chose.** Le pupitre du
+niveau 3 était allumé par deux fonctions ; corriger la première ne
+changeait rien, la seconde passait après. *Réflexe* : `grep` sur le nom
+de l'élément avant de corriger, pas sur la condition qu'on croit fautive.
+
+**6. Compenser au lieu de bloquer.** Retarder le premier délai
+d'apparition ne suspend pas la file : la boucle continue. Arrêter un
+ennemi ne suffit pas, il faut **borner** sa position. *Réflexe* : un état
+qui suspend se teste dans la condition de la boucle.
+
+**7. Interrompre un travail qui écrit.** Deux sprites corrompus, deux
+fois, par un `timeout` sur un script d'écriture — la seconde fois le
+lendemain d'avoir noté qu'il ne fallait pas l'interrompre. *Réflexe* :
+la consigne ne suffit pas, il faut rendre la faute impossible. Écriture
+dans un `.tmp` puis remplacement.
+
+### Ce qui marche, et qu'il faut garder
+
+**Le contrôle visuel avant push.** C'est la pratique qui a rapporté le
+plus. Elle a attrapé un Francky en double, un géant sans escorte, une
+bulle sortie de l'écran trois fois, un pupitre par-dessus une affiche,
+un halo autour d'un duo. Aucun de ces défauts n'a jamais fait rougir un
+test.
+
+**L'abandon sur compte dans les remplacements.** Un script d'édition qui
+exige un nombre exact d'occurrences et s'arrête sinon. Il a évité une
+double édition, un remplacement dans le mauvais tableau, et plusieurs
+corrections appliquées à un texte déjà corrigé. Le coût est nul, le
+bénéfice est de ne jamais écrire à moitié.
+
+**Le repli systématique.** Chaque son échantillonné garde sa synthèse.
+Chaque pose manquante retombe sur une pose de base. Le jeu ne devient
+jamais muet ni vide, et la plomberie se livre avant les fichiers — ce
+qui permet de la vérifier séparément.
+
+**Un seul système par famille d'effets.** Les quatre familles de
+particules partagent un pas et un rendu : ajouter un effet coûte une
+ligne de gabarit. Le réflexe inverse — une boucle par effet — aurait
+donné quatre fois le même code et quatre occasions d'oublier la remise à
+zéro.
+
+**Les tests qui récitent l'inachevé.** `ENNEMIS_INCOMPLETS`,
+`POSES_BASE_MANQUANTES` : une table vide mais présente, qu'un test
+énumère. Un personnage à moitié fini ne peut pas être oublié à moitié
+fini.
+
+### Deux erreurs de méthode, pas de code
+
+**Affirmer sans vérifier.** J'ai dit à Thibaut que l'intro du niveau 4
+attendait le clic. Elle ne l'attendait pas. Vérifier aurait coûté trente
+secondes ; l'affirmation a coûté une séance et de la confiance.
+
+**Pousser sans relancer après un rebase.** Un commit distant est arrivé
+pendant mon travail, j'ai rebasé et poussé sans relancer les tests. Un
+test était rouge. Le rebase change le code : il exige un nouveau
+contrôle, exactement comme une édition.
+
+---
+
 ## 1. Architecture
 
 ### Un fichier livré, neuf morceaux édités
@@ -1153,6 +1250,29 @@ la correction n'a servi à rien.
 Le réflexe : avant de corriger un affichage, chercher TOUS les endroits
 qui le pilotent. `grep` sur le nom de l'élément, pas seulement sur la
 condition qu'on croit fautive.
+
+### Le navigateur MENT sur la taille pendant une rotation
+
+iOS rend des dimensions périmées pendant quelques centaines de
+millisecondes après un changement d'orientation, puis la barre d'adresse
+se replie et la hauteur change encore — sans émettre de `resize` sur la
+fenêtre. On dessinait donc une ou deux images à la mauvaise échelle :
+c'est le « redimensionnement » visible en arrivant sur un écran.
+
+Trois parades, ensemble :
+- PLUSIEURS relevés après une rotation (0, 120, 300, 600, 900 ms) : un
+  seul à 220 ms tombait parfois sur une valeur encore fausse, et elle
+  restait jusqu'au prochain geste du joueur ;
+- écouter `visualViewport`, seul à signaler le repli de la barre ;
+- et surtout NE PAS DESSINER tant que la mesure bouge. On ne peut pas
+  mesurer mieux — le navigateur ment — mais on peut savoir quand il
+  s'est calmé : deux cent soixante millisecondes sans changement. Le
+  voile de pivot reste posé pendant ce temps, muet, et masque les images
+  intermédiaires.
+
+Le piège dans le piège : « pas encore mesuré » doit compter comme
+CALME. Répondre « pas stable » quand aucune mesure n'a eu lieu bloquait
+la boucle pour toujours dans le harnais de test.
 
 ### Une planche lumineuse sur noir : l'extinction va sur la COULEUR
 

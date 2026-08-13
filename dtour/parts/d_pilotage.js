@@ -657,9 +657,17 @@ const Interface = {
     const enJeu = Jeu.phase === "jeu" || Jeu.phase === "fin";
     const niv = enJeu ? Jeu.niveau : 0;
     const veutPortrait = orientationVoulue(niv) === "portrait";
-    const bloque = !ecranOk(L, H, niv);
+    /* On garde le voile tant que la taille n'a pas fini de bouger : les
+       images dessinées entre-temps le seraient à la mauvaise échelle, et
+       c'est exactement le sursaut qu'on voyait en arrivant sur un écran
+       après avoir tourné le téléphone. */
+    const bloque = !ecranOk(L, H, niv) || !tailleCalme();
     if (E.pivot) E.pivot.classList.toggle("on", bloque);
-    if (bloque && E.pivotTitre && E.pivotTexte){
+    /* Pendant le seul recalage, le voile reste mais SANS texte : il n'y
+       a rien à demander au joueur, on attend le navigateur. */
+    const seulementRecalage = ecranOk(L, H, niv) && !tailleCalme();
+    if (E.pivot) E.pivot.classList.toggle("muet", seulementRecalage);
+    if (bloque && !seulementRecalage && E.pivotTitre && E.pivotTexte){
       const doigt = globalThis.matchMedia && globalThis.matchMedia("(pointer:coarse)").matches;
       E.pivotTitre.textContent = doigt ? "Tourne ton téléphone"
         : veutPortrait ? "Rétrécis la fenêtre" : "Élargis la fenêtre";
@@ -963,7 +971,21 @@ const Entrees = {
     if (E.outilsBtn) E.outilsBtn.addEventListener("click", () => Debug.basculer());
 
     globalThis.addEventListener("resize", () => { ajusterCanevas(); Interface.pensePivot(); });
-    globalThis.addEventListener("orientationchange", () => setTimeout(() => { ajusterCanevas(); Interface.pensePivot(); }, 220));
+    globalThis.addEventListener("orientationchange", () => {
+      /* PLUSIEURS RELEVÉS : un seul à 220 ms tombait parfois sur une
+         valeur encore périmée, et la mauvaise taille restait jusqu'au
+         prochain redimensionnement — c'est-à-dire jusqu'à ce que le
+         joueur touche l'écran. */
+      for (const d of [0, 120, 300, 600, 900])
+        setTimeout(() => { ajusterCanevas(); Interface.pensePivot(); }, d);
+    });
+    /* La barre d'adresse d'iOS se replie au premier geste et change la
+       hauteur sans émettre de `resize` sur la fenêtre. */
+    if (globalThis.visualViewport){
+      globalThis.visualViewport.addEventListener("resize", () => {
+        ajusterCanevas(); Interface.pensePivot();
+      });
+    }
     document.addEventListener("visibilitychange", () => { if (document.hidden) Boucle.pause = true; else Boucle.reprendre(); });
     /* iOS n'ouvre le son qu'après un geste : on l'attrape au premier contact */
     globalThis.addEventListener("pointerdown", () => Sons.reveiller(), { once:true });

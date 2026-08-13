@@ -501,6 +501,9 @@ kbd{
   background:var(--fond);
 }
 #pivot.on{display:flex}
+/* Pendant un simple recalage, le voile reste mais son contenu
+   disparaît : il n'y a rien à demander au joueur. */
+#pivot.muet > *{opacity:0}
 #pivot .tourne{
   width:74px;height:46px;border:3px solid var(--craie);border-radius:9px;
   animation:bascule 2.4s ease-in-out infinite;
@@ -772,7 +775,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.83</div>
+  <div id="version">CALLAGHAN v6.84</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -844,7 +847,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.83";
+const VERSION = "6.84";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -2791,10 +2794,34 @@ const Effets = {
    seule fois. */
 let ctx = null, cv = null;
 
+/* LA TAILLE MET DU TEMPS À SE FIXER APRÈS UNE ROTATION. iOS rend
+   pendant quelques centaines de millisecondes des dimensions périmées,
+   puis la barre d'adresse se replie et la hauteur change encore. On
+   dessinait donc une ou deux images à la mauvaise taille : c'est le
+   « redimensionnement » qu'on voyait en arrivant sur un écran.
+
+   La parade n'est pas de mesurer mieux — c'est impossible, le navigateur
+   ment — mais de savoir QUAND la mesure s'est calmée. Tant qu'elle
+   bouge, l'écran de pivot reste posé dessus et masque les images
+   intermédiaires. */
+let tailleVue = { l:0, h:0, depuis:0 };
+const TAILLE_STABLE = 260;   /* ms sans changement avant de faire confiance */
+
+function tailleCalme(){
+  /* Aucune mesure encore faite = rien ne bouge : c'est le cas du harnais
+     de test et de tout appel avant le premier ajustement. Répondre
+     « pas calme » y bloquait la boucle pour toujours. */
+  if (!tailleVue.depuis) return true;
+  return (Date.now() - tailleVue.depuis) >= TAILLE_STABLE;
+}
+
 function ajusterCanevas(){
   if (!cv) return;
   const dpr = Math.min(2, globalThis.devicePixelRatio || 1);
   const L = cv.clientWidth || 640, H = cv.clientHeight || 360;
+  if (L !== tailleVue.l || H !== tailleVue.h){
+    tailleVue = { l:L, h:H, depuis:Date.now() };
+  }
   const lp = Math.round(L * dpr), hp = Math.round(H * dpr);
   if (cv.width !== lp || cv.height !== hp){ cv.width = lp; cv.height = hp; }
   /* On mesure le bandeau plutôt que de le supposer : sa hauteur dépend
@@ -12837,9 +12864,17 @@ const Interface = {
     const enJeu = Jeu.phase === "jeu" || Jeu.phase === "fin";
     const niv = enJeu ? Jeu.niveau : 0;
     const veutPortrait = orientationVoulue(niv) === "portrait";
-    const bloque = !ecranOk(L, H, niv);
+    /* On garde le voile tant que la taille n'a pas fini de bouger : les
+       images dessinées entre-temps le seraient à la mauvaise échelle, et
+       c'est exactement le sursaut qu'on voyait en arrivant sur un écran
+       après avoir tourné le téléphone. */
+    const bloque = !ecranOk(L, H, niv) || !tailleCalme();
     if (E.pivot) E.pivot.classList.toggle("on", bloque);
-    if (bloque && E.pivotTitre && E.pivotTexte){
+    /* Pendant le seul recalage, le voile reste mais SANS texte : il n'y
+       a rien à demander au joueur, on attend le navigateur. */
+    const seulementRecalage = ecranOk(L, H, niv) && !tailleCalme();
+    if (E.pivot) E.pivot.classList.toggle("muet", seulementRecalage);
+    if (bloque && !seulementRecalage && E.pivotTitre && E.pivotTexte){
       const doigt = globalThis.matchMedia && globalThis.matchMedia("(pointer:coarse)").matches;
       E.pivotTitre.textContent = doigt ? "Tourne ton téléphone"
         : veutPortrait ? "Rétrécis la fenêtre" : "Élargis la fenêtre";
@@ -13143,7 +13178,21 @@ const Entrees = {
     if (E.outilsBtn) E.outilsBtn.addEventListener("click", () => Debug.basculer());
 
     globalThis.addEventListener("resize", () => { ajusterCanevas(); Interface.pensePivot(); });
-    globalThis.addEventListener("orientationchange", () => setTimeout(() => { ajusterCanevas(); Interface.pensePivot(); }, 220));
+    globalThis.addEventListener("orientationchange", () => {
+      /* PLUSIEURS RELEVÉS : un seul à 220 ms tombait parfois sur une
+         valeur encore périmée, et la mauvaise taille restait jusqu'au
+         prochain redimensionnement — c'est-à-dire jusqu'à ce que le
+         joueur touche l'écran. */
+      for (const d of [0, 120, 300, 600, 900])
+        setTimeout(() => { ajusterCanevas(); Interface.pensePivot(); }, d);
+    });
+    /* La barre d'adresse d'iOS se replie au premier geste et change la
+       hauteur sans émettre de `resize` sur la fenêtre. */
+    if (globalThis.visualViewport){
+      globalThis.visualViewport.addEventListener("resize", () => {
+        ajusterCanevas(); Interface.pensePivot();
+      });
+    }
     document.addEventListener("visibilitychange", () => { if (document.hidden) Boucle.pause = true; else Boucle.reprendre(); });
     /* iOS n'ouvre le son qu'après un geste : on l'attrape au premier contact */
     globalThis.addEventListener("pointerdown", () => Sons.reveiller(), { once:true });

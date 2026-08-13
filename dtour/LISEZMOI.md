@@ -283,6 +283,26 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Plus de sursaut après une rotation** (v6.84) : le navigateur MENT sur
+la taille. iOS rend des dimensions périmées pendant quelques centaines de
+millisecondes après un changement d'orientation, puis la barre d'adresse
+se replie et la hauteur change encore — sans émettre de `resize` sur la
+fenêtre. Une ou deux images étaient donc dessinées à la mauvaise échelle.
+
+On ne peut pas mesurer mieux, mais on peut savoir **quand la mesure s'est
+calmée** : deux cent soixante millisecondes sans changement. Le voile
+reste posé pendant ce temps — muet, sans texte, puisqu'il n'y a rien à
+demander au joueur — et masque les images intermédiaires. S'y ajoutent
+cinq relevés échelonnés après la rotation et l'écoute de
+`visualViewport`, seul à signaler le repli de la barre.
+
+**La mémoire du projet a sa synthèse.** Cent soixante-neuf pièges y
+étaient consignés un par un ; ils sont maintenant regroupés en **sept
+familles d'erreurs** classées par coût, et une liste de ce qui marche et
+qu'il faut garder. Y compris deux erreurs de méthode plutôt que de code —
+affirmer sans vérifier, et pousser sans relancer les tests après un
+rebase.
+
 **Plus de démarcation sur l'affiche** (v6.83) : le rectangle se devinait
 autour du duo, et il a fallu trois essais pour comprendre pourquoi.
 
