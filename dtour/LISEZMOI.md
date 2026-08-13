@@ -283,6 +283,27 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Callaghan a son manifeste et ses icônes** (v6.91).
+
+En vérifiant que les deux jeux étaient bien séparés, j'ai trouvé un
+manque plutôt qu'un couplage : Callaghan déclarait son titre
+d'application — « CALLAGHAN » — mais **n'avait ni manifeste ni icône**.
+Ajouté à l'écran d'accueil d'un iPhone, il sortait sans image. Le
+manifeste de la racine appartient à DUO et ne le concerne pas.
+
+Les icônes sont découpées dans son propre visuel : les deux visages du
+duo, cadrés serré pour rester lisibles en petit.
+
+**Pas d'orientation figée dans le manifeste**, et c'est délibéré : les
+trois premiers niveaux se jouent en paysage, la ruelle en portrait. La
+figer casserait l'un des deux. Un test le verrouille.
+
+**Et la séparation est mesurée, pas supposée** : aucun morceau de
+Callaghan ne renvoie vers `../`, la racine ne mentionne jamais `dtour`.
+Un test le tient — le jour où l'un emprunterait un fichier à l'autre, on
+ne pourrait plus toucher au premier sans casser le second, et rien ne le
+signalerait.
+
 **La documentation du dépôt est rangée** (v6.90).
 
 **Le dépôt contient DEUX jeux** — DUO à la racine, Callaghan dans

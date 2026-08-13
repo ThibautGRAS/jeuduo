@@ -6,6 +6,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CALLAGHAN">
+<!-- Callaghan déclarait son titre d'application mais n'avait NI manifeste
+     NI icône : ajouté à l'écran d'accueil, il sortait sans image. Le
+     manifeste de la racine appartient à DUO — deux jeux dans un dépôt,
+     deux manifestes.
+     Pas d'`orientation` figée : le jeu en change selon le niveau, les
+     trois premiers en paysage et la ruelle en portrait. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="icone-180.png">
 <meta name="theme-color" content="#080D18">
 <meta name="description" content="Les enquêtes de Callaghan — trois niveaux : la file du D'Tour, l'enquête de la pizza, la tournée du bar.">
 <title>Les enquêtes de Callaghan</title>
@@ -775,7 +783,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.90</div>
+  <div id="version">CALLAGHAN v6.91</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -847,7 +855,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.90";
+const VERSION = "6.91";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure

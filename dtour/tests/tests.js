@@ -2861,6 +2861,47 @@ if (D){
   verifier("un écran carré ne convient à personne",
     !D.ecranOk(500, 500, 1) && !D.ecranOk(500, 500, 4),
     "la tolérance de 2 % évite de basculer sans arrêt près du carré");
+  /* ---- les deux jeux du dépôt restent séparés ---- */
+  verifier("Callaghan ne dépend d'AUCUN fichier de la racine",
+    (() => {
+      /* Le dépôt héberge deux jeux. Le jour où l'un emprunte un fichier à
+         l'autre, on ne peut plus toucher à celui-ci sans casser
+         celui-là — et rien ne le signalerait. */
+      const fuites = [];
+      for (const f of fs.readdirSync(path.join(RACINE, "parts")))
+        if (/\.\.\//.test(fs.readFileSync(path.join(RACINE, "parts", f), "utf8")))
+          fuites.push("parts/" + f);
+      if (/(src|href)="\.\.\//.test(html)) fuites.push("index.html");
+      messageDetail = fuites.length ? fuites.join(", ") : "aucun renvoi vers ../";
+      return fuites.length === 0;
+    })());
+
+  verifier("Callaghan a SON manifeste et SES icônes",
+    (() => {
+      /* Il déclarait son titre d'application mais n'avait ni manifeste ni
+         icône : ajouté à l'écran d'accueil, il sortait sans image. Celui
+         de la racine appartient à DUO. */
+      const m = path.join(RACINE, "manifest.webmanifest");
+      if (!fs.existsSync(m)) return false;
+      const j = JSON.parse(fs.readFileSync(m, "utf8"));
+      const icones = (j.icons || []).map(i => i.src);
+      const surDisque = icones.every(n => fs.existsSync(path.join(RACINE, n)));
+      messageDetail = j.short_name + ", " + icones.length + " icônes";
+      return /Callaghan/.test(j.name) && surDisque &&
+        fs.existsSync(path.join(RACINE, "icone-180.png")) &&
+        /rel="manifest" href="manifest.webmanifest"/.test(html);
+    })());
+
+  verifier("le manifeste NE FIGE PAS l'orientation",
+    (() => {
+      /* Les trois premiers niveaux se jouent en paysage, la ruelle en
+         portrait. Une orientation figée dans le manifeste casserait l'un
+         des deux. */
+      const j = JSON.parse(fs.readFileSync(
+        path.join(RACINE, "manifest.webmanifest"), "utf8"));
+      return !("orientation" in j);
+    })());
+
   verifier("la mémoire du projet reste consultable",
     (() => {
       /* Un document de relecture ne vaut que s'il est RANGÉ : cent

@@ -15,6 +15,13 @@ séparées. La seule chose qu'ils partagent est ce fichier et l'hébergement.
 | Adresse | `thibautgras.github.io/jeuduo/` | `thibautgras.github.io/jeuduo/dtour/` |
 | Version | `DUO vX.Y`, dans le lobby | `CALLAGHAN vX.YZ`, en haut à gauche |
 | Ses règles | `MEMOIRE.md` (racine) | `dtour/CLAUDE.md` puis `dtour/MEMOIRE.md` |
+| Son manifeste | `manifest.webmanifest` | `dtour/manifest.webmanifest` |
+
+**Ils ne partagent AUCUN fichier.** Vérifié et tenu par un test : aucun
+morceau de Callaghan ne renvoie vers `../`, et la racine ne mentionne
+jamais `dtour`. Chacun a son manifeste et ses icônes. Le jour où l'un
+emprunterait un fichier à l'autre, on ne pourrait plus toucher au premier
+sans casser le second — et rien ne le signalerait.
 
 **Avant de toucher à l'un des deux**, lire le `MEMOIRE.md` correspondant.
 Les pièges de DUO valent souvent pour Callaghan et réciproquement — même
