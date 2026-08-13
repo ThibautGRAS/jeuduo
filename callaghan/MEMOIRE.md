@@ -2235,6 +2235,31 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### « Hors cadre » ne suffit pas : il faut dire INVISIBLE
+
+J'ai décrit une poignée de main comme « serre la main de quelqu'un à sa
+DROITE, hors cadre ». Le générateur a compris que ce quelqu'un était la
+POSE VOISINE : il a dessiné les deux personnages se serrant la main, à six
+pixels l'un de l'autre, et retourné le second vers la gauche pour qu'ils
+se fassent face.
+
+Deux poses inutilisables, et la formule était la mienne. « Hors cadre »
+désigne un ailleurs ; sur une planche, l'ailleurs le plus proche est la
+case d'à côté.
+
+Trois consignes en sont sorties, toutes générales :
+- **aucune pose n'interagit avec sa voisine.** Le partenaire est
+  INVISIBLE et n'est pas dessiné. Deux poses qui se répondent forment une
+  illustration, et une illustration ne se découpe pas.
+- **toutes les poses regardent du même côté.** Le jeu retourne les images
+  lui-même ; une pose retournée dans la planche est perdue.
+- **aucune ombre portée**, aucun titre, aucune légende. Le jeu dessine
+  l'ombre, et celle de la planche s'y ajouterait.
+
+Ce que ça enseigne au-delà : quand une planche revient fautive, **relire
+sa propre formulation avant d'accuser le générateur.** Une consigne qui
+peut se lire de deux façons se lira de la mauvaise.
+
 #### Une correction appliquée à moitié laisse le défaut vivant
 
 J'ai retiré le « rappel écrit » des prompts de héros parce qu'il

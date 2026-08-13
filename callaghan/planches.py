@@ -149,6 +149,22 @@ trait vertical du haut en bas de l'image sans jamais toucher un
 personnage ? Si non, écarter davantage.
 Dans le doute, ÉCARTER PLUS. Une planche trop aérée se découpe très bien.
 
+AUCUNE POSE N'INTERAGIT AVEC SA VOISINE. Chaque pose est un personnage
+SEUL, qui sera découpé en image indépendante. Si une pose tend la main,
+brandit un objet ou s'adresse à quelqu'un, ce quelqu'un est INVISIBLE et
+n'est pas dessiné — surtout pas la pose d'à côté. Deux poses qui se
+répondent forment une illustration, et une illustration ne se découpe pas.
+
+TOUTES LES POSES REGARDENT DU MÊME CÔTÉ : vers la DROITE. Aucune pose
+retournée vers la gauche, aucune pose de face si les autres sont de trois
+quarts. Le jeu retourne les images lui-même quand il en a besoin.
+
+AUCUNE OMBRE PORTÉE AU SOL, aucune ellipse sombre sous les pieds : le jeu
+dessine l'ombre lui-même, et celle de la planche viendrait s'y ajouter.
+
+AUCUN TITRE, AUCUNE LÉGENDE, AUCUN NUMÉRO. Ni au-dessus des poses, ni en
+haut de la planche. Le texte blanc laisse un halo qui se mélange au fond.
+
 - Fond MAGENTA PUR uni #FF00FF sur toute l'image. Aucun dégradé, aucune
   ombre portée, aucun décor, aucun élément de mobilier, aucun sol
   dessiné, aucun cadre, aucune bordure.
@@ -230,21 +246,27 @@ SCENES = {
       # depuis toujours — `gesteHeros(h, "poignee")` et `"vide"` — mais
       # les deux s'affichaient avec « tendue », une pose de STRESS.
       # Réussir et rater donnaient donc la même image.
-      ("poignee", "serre la main de quelqu'un à sa DROITE, hors cadre : le "
-                  "bras droit tendu vers la droite à hauteur de taille, la "
-                  "main refermée comme sur une autre main, buste tourné vers "
-                  "la droite, sourire franc, regard vers la droite"),
+      # LE PARTENAIRE EST INVISIBLE, et il faut le DIRE. Écrit « serre la
+      # main de quelqu'un hors cadre », le générateur a compris que ce
+      # quelqu'un était la POSE VOISINE : il a dessiné les deux se serrant
+      # la main, à six pixels l'une de l'autre, et retourné la seconde
+      # vers la gauche. Deux poses inutilisables, et c'était ma formule.
+      ("poignee", "le bras droit tendu vers la DROITE à hauteur de taille, "
+                  "la main refermée en poignée de main, comme s'il serrait "
+                  "une main qu'on NE VOIT PAS. Aucune autre personne, aucun "
+                  "autre bras, aucune autre main dessinés. Sourire franc, "
+                  "regard vers la droite"),
       # ATTENTION, COLLISION DE NOM : `vide` désigne ici une main tendue
       # que personne ne prend, et au niveau 3 un VERRE vide brandi. Deux
       # choses opposées sous un même mot. Les préfixes de fichier les
       # séparent — `thibaut_vide` et `bar_th_vide` — mais un humain qui
       # lit « vide » dans un prompt ne peut pas deviner lequel. D'où ce
       # rappel, et la description qui commence par ce qu'on voit.
-      ("vide", "la main tendue dans le VIDE : même bras droit tendu vers la "
-               "droite, main ouverte et paume verticale, mais personne ne "
-               "l'a prise — épaules qui retombent, sourcils remontés au "
-               "milieu, bouche pincée, léger recul du buste. La gêne, pas "
-               "la colère."),
+      ("vide", "le même bras droit tendu vers la DROITE, mais main OUVERTE "
+               "paume verticale, doigts détendus : personne ne l'a prise. "
+               "Aucune autre personne dessinée. Épaules qui retombent, "
+               "sourcils remontés au milieu, bouche pincée, léger recul du "
+               "buste. La gêne, pas la colère."),
       ("esquive", "esquive vive : le buste se jette sur le côté, les deux "
                   "bras montent devant le visage, un pied décollé"),
       ("splat", "touché en pleine figure : tête rejetée en arrière, yeux "

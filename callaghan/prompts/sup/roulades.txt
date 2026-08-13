@@ -45,6 +45,22 @@ trait vertical du haut en bas de l'image sans jamais toucher un
 personnage ? Si non, écarter davantage.
 Dans le doute, ÉCARTER PLUS. Une planche trop aérée se découpe très bien.
 
+AUCUNE POSE N'INTERAGIT AVEC SA VOISINE. Chaque pose est un personnage
+SEUL, qui sera découpé en image indépendante. Si une pose tend la main,
+brandit un objet ou s'adresse à quelqu'un, ce quelqu'un est INVISIBLE et
+n'est pas dessiné — surtout pas la pose d'à côté. Deux poses qui se
+répondent forment une illustration, et une illustration ne se découpe pas.
+
+TOUTES LES POSES REGARDENT DU MÊME CÔTÉ : vers la DROITE. Aucune pose
+retournée vers la gauche, aucune pose de face si les autres sont de trois
+quarts. Le jeu retourne les images lui-même quand il en a besoin.
+
+AUCUNE OMBRE PORTÉE AU SOL, aucune ellipse sombre sous les pieds : le jeu
+dessine l'ombre lui-même, et celle de la planche viendrait s'y ajouter.
+
+AUCUN TITRE, AUCUNE LÉGENDE, AUCUN NUMÉRO. Ni au-dessus des poses, ni en
+haut de la planche. Le texte blanc laisse un halo qui se mélange au fond.
+
 - Fond MAGENTA PUR uni #FF00FF sur toute l'image. Aucun dégradé, aucune
   ombre portée, aucun décor, aucun élément de mobilier, aucun sol
   dessiné, aucun cadre, aucune bordure.
