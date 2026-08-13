@@ -5525,6 +5525,38 @@ if (D){
       return new Set(ids).size === ids.length;
     })());
 
+  verifier("chaque barman a SON arête arrière de comptoir",
+    (() => {
+      /* Le bas du corps des barmans était calé par un seul facteur — 98 %
+         de la hauteur du sprite au-dessus de leur ligne — alors que leurs
+         sprites n'ont pas le même cadrage : Francky flottait au-dessus du
+         plateau, Jojo s'enfonçait dedans.
+         Le décor les coupe désormais : on redessine le comptoir PAR-DESSUS
+         eux. Et pas avec une barre unique — l'arête ARRIÈRE, celle qui
+         masque quelqu'un placé derrière, est à 0,501 sous Francky et
+         0,456 sous Jojo, parce que le comptoir fuit en perspective. */
+      const sans = D.BARMANS.filter(b => typeof b.arriere !== "number");
+      const lignes = D.BARMANS.map(b => b.arriere);
+      messageDetail = sans.length ? "sans arête : " + sans.map(b => b.id).join(", ")
+                                  : "arêtes " + lignes.join(", ");
+      return sans.length === 0 &&
+        lignes.every(y => y > 0.3 && y < 0.55) &&
+        new Set(lignes).size === lignes.length &&
+        /dessinerMasqueComptoir/.test(source);
+    })());
+
+  verifier("le masque du comptoir passe APRÈS les barmans",
+    (() => {
+      /* Dessiné avant, il ne masquerait rien. L'ordre est le fond, les
+         barmans, le masque, puis les verres et les héros — qui doivent
+         rester DEVANT le comptoir. */
+      const i = source.indexOf("this.dessinerBarmans()");
+      const j = source.indexOf("this.dessinerMasqueComptoir()");
+      const k = source.indexOf("this.dessinerVerres()");
+      const h = source.indexOf("this.dessinerHeros()");
+      return i > 0 && j > i && k > j && h > j;
+    })());
+
   verifier("jamais DEUX FOIS le même visage à l'écran",
     (() => {
       /* Le client de passage piochait dans BAR_CLIENTS sans regarder qui

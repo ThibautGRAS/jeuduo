@@ -46,6 +46,13 @@ const BarVue = {
 
     this.dessinerNeon();
     this.dessinerBarmans();
+    /* LE COMPTOIR REPASSE PAR-DESSUS LES BARMANS. C'est la même image de
+       fond, aux mêmes coordonnées : aucun raccord à faire, aucun bord
+       visible. Tout ce qui est sous la barre `BAR_MASQUE` est redessiné,
+       donc le bas du corps des barmans disparaît derrière le meuble.
+       La barre est au-dessus du point le PLUS HAUT de l'arête — 0,538
+       sous Francky — sinon on verrait réapparaître un bout de plateau. */
+    this.dessinerMasqueComptoir();
     this.dessinerHalos();
     this.dessinerVerres();
     if (T.invite) this.dessinerInvite();
@@ -186,13 +193,57 @@ const BarVue = {
       /* SA ligne de comptoir, pas la moyenne : le plateau descend de
          0,538 à 0,610 entre les deux postes. */
       const plateau = b.ref.comptoir || BAR_COMPTOIR;
-      ctx.drawImage(spr, x - sl / 2, this.ey(plateau) - sh * 0.98, sl, sh);
+      /* LE BARMAN DESCEND SOUS LE COMPTOIR, et le comptoir le masque.
+         Avant, son bas était posé à 98 % au-dessus de sa ligne — un seul
+         facteur pour les deux, alors que leurs sprites n'ont pas le même
+         cadrage : Francky flottait au-dessus du plateau, Jojo s'enfonçait
+         dedans.
+         En le faisant descendre franchement et en redessinant le comptoir
+         PAR-DESSUS, le raccord devient exact quel que soit le sprite —
+         c'est le décor qui coupe, plus un réglage. */
+      ctx.drawImage(spr, x - sl / 2, this.ey(plateau) - sh * 0.86, sl, sh);
       if (b.etat === "prepare"){
         /* petit indicateur au-dessus : quelque chose arrive */
         const p = borne(b.t / b.duree, 0, 1);
         const y = this.ey(BAR_COMPTOIR) - sh * 1.06;
         ctx.beginPath(); ctx.arc(x, y, H * 0.016, -Math.PI / 2, -Math.PI / 2 + p * 6.283);
         ctx.strokeStyle = "#F7B32B"; ctx.lineWidth = Math.max(2, H * 0.008); ctx.stroke();
+      }
+    }
+  },
+
+  /* --------- le comptoir redessiné par-dessus les barmans --------- */
+  dessinerMasqueComptoir(){
+    const img = Images.table["fond_bar"];
+    if (!img || !img.naturalWidth) return;
+    /* `ctx` est GLOBAL dans ce module, pas un champ de Camera. Je l'ai
+       déstructuré depuis Camera et obtenu `undefined` — sans erreur au
+       chargement, seulement au premier dessin. */
+    const H = Camera.H, L = Camera.L;
+    /* UN MASQUE PAR BARMAN, sur SA colonne et à SA ligne. L'arête arrière
+       du plateau n'est pas la même aux deux postes — 0,501 et 0,456 —
+       parce que le comptoir fuit en perspective. Une barre horizontale
+       unique coupait l'un trop haut et l'autre trop bas.
+       On ne redessine qu'une bande VERTICALE autour de chaque barman :
+       ailleurs, rien à masquer, et moins on repeint mieux c'est. */
+    const lUne = this.larg() / BAR_COPIES;
+    for (const b of Tournee.barmans){
+      const yF = b.ref.arriere || BAR_MASQUE;
+      const yEcran = this.ey(yF);
+      if (yEcran >= H) continue;
+      const sy = img.naturalHeight * yF;
+      const sh = img.naturalHeight - sy;
+      const larg = H * BAR_TAILLE_BARMAN * 1.2;
+      for (let k = 0; k < BAR_COPIES; k++){
+        const x0 = this.origine() + k * lUne;
+        if (x0 > L || x0 + lUne < 0) continue;
+        const cx = x0 + b.ref.x * lUne;
+        const gx = cx - larg / 2;
+        if (gx > L || gx + larg < 0) continue;
+        /* la portion de SOURCE qui correspond à cette bande */
+        const sx = (gx - x0) / lUne * img.naturalWidth;
+        const sl = larg / lUne * img.naturalWidth;
+        ctx.drawImage(img, sx, sy, sl, sh, gx, yEcran, larg, H - yEcran);
       }
     }
   },

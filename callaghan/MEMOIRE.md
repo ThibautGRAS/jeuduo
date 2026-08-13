@@ -2235,6 +2235,30 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Faire couper par le DÉCOR plutôt que régler un raccord
+
+Le bas du corps des barmans était calé par un facteur unique : 98 % de la
+hauteur du sprite au-dessus de leur ligne de comptoir. Or leurs sprites
+n'ont pas le même cadrage — Francky flottait au-dessus du plateau, Jojo
+s'enfonçait dedans. Un seul nombre pour deux besoins : on peut l'ajuster
+indéfiniment, il sera toujours faux pour l'un des deux.
+
+La solution est de Thibaut : faire DESCENDRE les barmans sous le comptoir
+et redessiner le comptoir par-dessus. C'est la même image de fond aux
+mêmes coordonnées — aucun raccord à faire, aucun bord visible, et le
+résultat est exact quel que soit le cadrage du sprite. Le réglage
+disparaît au lieu d'être affiné.
+
+**Quand un raccord demande un réglage par cas, chercher à le faire
+produire par le décor.** Un masque tiré de l'image elle-même ne peut pas
+se désaligner.
+
+Piège dans la mise en œuvre : l'arête ARRIÈRE du plateau — celle qui
+masque quelqu'un placé DERRIÈRE — n'est pas l'arête avant, et elle n'est
+pas la même aux deux postes : 0,501 et 0,456 contre 0,540 et 0,612. Le
+comptoir fuit en perspective. Une barre horizontale unique reproduisait le
+défaut d'origine, à l'envers.
+
 #### Remplacer une planche périme tout ce qui a été mesuré SUR elle
 
 J'ai installé les nouveaux sprites de PF, vérifié les échelles, contrôlé le

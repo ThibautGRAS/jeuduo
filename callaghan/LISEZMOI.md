@@ -573,6 +573,27 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**Le comptoir coupe les barmans, au lieu d'un réglage** (v7.10).
+L'idée est de Thibaut, et elle règle le problème à la racine.
+
+Leur bas de corps était calé par un seul facteur — 98 % de la hauteur du
+sprite au-dessus de leur ligne — alors que leurs sprites n'ont pas le même
+cadrage : **Francky flottait au-dessus du plateau, Jojo s'enfonçait
+dedans.** On peut ajuster indéfiniment, il y aura toujours deux valeurs
+pour un seul réglage.
+
+Maintenant ils DESCENDENT sous le comptoir, et le comptoir est redessiné
+par-dessus eux. C'est la même image de fond aux mêmes coordonnées : aucun
+raccord, aucun bord visible, et le résultat est exact quel que soit le
+cadrage du sprite.
+
+**Pas avec une barre unique**, et c'est ce qui a demandé le plus de soin :
+l'arête ARRIÈRE du plateau — celle qui masque quelqu'un placé derrière —
+est à **0,501 sous Francky et 0,456 sous Jojo**, parce que le comptoir
+fuit en perspective. Une barre horizontale coupait l'un trop haut et
+l'autre trop bas : exactement le défaut d'avant, à l'envers. Chaque barman
+a donc son masque, sur sa colonne et à sa ligne.
+
 **La foule du bar montre enfin de VRAIS gens** (v7.09). Leurs pieds
 étaient à 1,52 — très loin sous l'écran — donc on ne voyait que les épaules
 et la tête. À 1,06, les pieds dépassent à peine du cadre.
