@@ -283,6 +283,29 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Les écrans d'attente annoncent le niveau** (v6.88) : « CHARGEMENT » ne
+disait rien, et l'écran de rotation parlait de « la file du D'Tour » quel
+que soit le niveau demandé — faux depuis qu'il y en a quatre, et
+déroutant quand on venait de lancer la ruelle.
+
+Les quatre noms étaient écrits en dur dans les tuiles du menu et nulle
+part ailleurs. Ils sont maintenant à **un seul endroit**, avec pour
+chacun la raison de son orientation. Un écran d'attente qui nomme ce
+qu'on attend cesse d'être une attente : il devient une annonce.
+
+| niveau | panneau |
+|---|---|
+| 1 | LA FILE DU D'TOUR — il faut voir la file entière |
+| 2 | L'ENQUÊTE DE LA PIZZA — l'appartement se lit en entier |
+| 3 | LA TOURNÉE DU D'TOUR — le comptoir est long |
+| 4 | LA RUELLE — sa profondeur a besoin de hauteur |
+
+**Un défaut trouvé en vérifiant** : le niveau 4 affichait le texte du
+niveau 3. Il se joue en portrait, donc il ne bloque jamais l'écran, et le
+panneau gardait le texte du dernier niveau qui l'avait bloqué. **Un
+panneau caché doit dire vrai** — il peut réapparaître à la rotation
+suivante.
+
 **UNE RÈGLE POUR TOUS LES SCINTILLEMENTS** (v6.87) — et tu avais raison
 de me le demander : je les corrigeais un par un, ce qui garantissait d'en
 laisser passer.

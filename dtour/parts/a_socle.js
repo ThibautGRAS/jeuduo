@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.87";
+const VERSION = "6.88";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -887,6 +887,23 @@ const PREFIXES_BAR = ["bar_th", "bar_pf"];
 const POSES_ENNEMI = ["run1", "run2", "run3", "run4", "run5", "run6",
                       "hit_torse", "hit_epaule", "hit_jambe", "hit_tete",
                       "chute1", "chute2", "sol"];
+/* LES NOMS DES NIVEAUX, à un seul endroit. Ils étaient écrits en dur
+   dans les tuiles du menu, et nulle part ailleurs : l'écran de
+   chargement affichait « CHARGEMENT » et l'écran de rotation parlait de
+   « la file du D'Tour » quel que soit le niveau — faux depuis qu'il y
+   en a quatre.
+
+   Un écran d'attente qui porte le nom de ce qu'on attend cesse d'être
+   une attente : il devient une annonce. */
+const NOMS_NIVEAUX = {
+  1: { nom:"LA FILE DU D'TOUR",     sens:"il faut voir la file entière" },
+  2: { nom:"L'ENQUÊTE DE LA PIZZA", sens:"l'appartement se lit en entier" },
+  3: { nom:"LA TOURNÉE DU D'TOUR",  sens:"le comptoir est long" },
+  4: { nom:"LA RUELLE",             sens:"sa profondeur a besoin de hauteur" },
+};
+function nomNiveau(n){ return (NOMS_NIVEAUX[n] || {}).nom || "LES ENQUÊTES DE CALLAGHAN"; }
+function sensNiveau(n){ return (NOMS_NIVEAUX[n] || {}).sens || ""; }
+
 const ENNEMIS_RUELLE = ["depar", "dsk", "jubi", "abbe", "bruh"];
 /* Chacun a en plus les poses de SA mécanique. Elles ne sont pas
    communes : Depardiahree trébuche et lance une bouteille, DSKKK

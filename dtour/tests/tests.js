@@ -2849,9 +2849,49 @@ if (D){
   verifier("un écran carré ne convient à personne",
     !D.ecranOk(500, 500, 1) && !D.ecranOk(500, 500, 4),
     "la tolérance de 2 % évite de basculer sans arrêt près du carré");
-  verifier("le panneau de pivot dit dans quel sens tourner",
-    /veutPortrait \? "Rétrécis la fenêtre" : "Élargis la fenêtre"/.test(source) &&
-    /La ruelle se joue debout/.test(source));
+  verifier("le panneau de pivot porte le NOM DU NIVEAU",
+    (() => {
+      /* Il parlait de « la file du D'Tour » quel que soit le niveau
+         demandé — faux depuis qu'il y en a quatre, et déroutant quand on
+         venait de lancer la ruelle. Un écran d'attente qui nomme ce
+         qu'on attend cesse d'être une attente. */
+      const noms = [1, 2, 3, 4].map(n => D.nomNiveau(n));
+      messageDetail = noms.join(" | ");
+      return new Set(noms).size === 4 &&
+        /E\.pivotTitre\.textContent = nomN/.test(source) &&
+        !/La ruelle se joue debout/.test(source) &&
+        [1, 2, 3, 4].every(n => D.sensNiveau(n).length > 8);
+    })());
+
+  verifier("le panneau de pivot dit toujours dans quel sens tourner",
+    /Tourne ton téléphone : /.test(source) &&
+    /Une fenêtre plus haute que large/.test(source) &&
+    /Une fenêtre plus large que haute/.test(source));
+
+  verifier("le panneau dit vrai MÊME quand il est caché",
+    (() => {
+      /* La ruelle se joue en portrait : elle ne bloque donc jamais
+         l'écran, et le panneau gardait le texte du dernier niveau qui
+         l'avait bloqué — la tournée. Un panneau caché doit dire vrai, il
+         peut réapparaître à la rotation suivante. */
+      const pt = domBac.getElementById("pivotTitre");
+      const vus = [];
+      for (const n of [1, 2, 3, 4]){
+        D.Jeu.niveau = n; D.Jeu.phase = "jeu";
+        D.Interface.pensePivot();
+        vus.push(pt.textContent);
+      }
+      messageDetail = vus.join(" | ");
+      return new Set(vus).size === 4 &&
+        vus[3] === D.nomNiveau(4);
+    })());
+
+  verifier("l'écran de chargement annonce le niveau qu'on attend",
+    (() => {
+      /* « CHARGEMENT » ne dit rien. */
+      return /E\.introBas\.textContent = nomNiveau\(niv\)/.test(source) &&
+        /id="introBas"/.test(html);
+    })());
   verifier("au chargement, le jeu ne réclame pas deux sens de suite",
     /const enJeu = Jeu\.phase === "jeu" \|\| Jeu\.phase === "fin"/.test(source),
     "avant, il demandait le paysage puis le portrait");

@@ -1274,6 +1274,26 @@ Le réflexe : avant de corriger un affichage, chercher TOUS les endroits
 qui le pilotent. `grep` sur le nom de l'élément, pas seulement sur la
 condition qu'on croit fautive.
 
+### Un panneau caché doit dire vrai
+
+L'écran de rotation n'était mis à jour que lorsqu'il devenait visible.
+La ruelle se joue en portrait : elle ne bloque donc jamais l'écran, et le
+panneau conservait le texte du dernier niveau qui l'avait bloqué. Il
+suffisait de tourner le téléphone pendant la ruelle pour lire le texte de
+la tournée.
+
+La règle : un élément d'interface se met à jour quand SON CONTENU change,
+pas quand il devient visible. Le coût est nul, et il évite une classe
+entière de « il affiche n'importe quoi une fois sur deux ».
+
+### Un nom qui apparaît à l'écran ne s'écrit qu'à un seul endroit
+
+Les quatre noms de niveaux étaient dans les tuiles du menu — et nulle
+part ailleurs. L'écran de chargement disait « CHARGEMENT », celui de
+rotation parlait du niveau 1 quel que soit le niveau demandé. Chacun
+avait été écrit à l'époque où il n'y avait qu'un niveau, et personne
+n'était revenu.
+
 ### Un voile se lève APRÈS que la nouvelle image est prête, pas avant
 
 L'entrée dans un niveau retirait le voile de chargement puis démarrait le

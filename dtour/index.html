@@ -775,7 +775,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.87</div>
+  <div id="version">CALLAGHAN v6.88</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -822,7 +822,7 @@ kbd{
   <div id="intro">
     <div class="marque"><span>LES ENQUÊTES DE</span><em>CALLAGHAN</em></div>
     <div class="jauge"><span id="jauge"></span></div>
-    <div class="bas">CHARGEMENT</div>
+    <div class="bas" id="introBas">CHARGEMENT</div>
   </div>
 </div>
 
@@ -847,7 +847,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.87";
+const VERSION = "6.88";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1716,6 +1716,23 @@ const PREFIXES_BAR = ["bar_th", "bar_pf"];
 const POSES_ENNEMI = ["run1", "run2", "run3", "run4", "run5", "run6",
                       "hit_torse", "hit_epaule", "hit_jambe", "hit_tete",
                       "chute1", "chute2", "sol"];
+/* LES NOMS DES NIVEAUX, à un seul endroit. Ils étaient écrits en dur
+   dans les tuiles du menu, et nulle part ailleurs : l'écran de
+   chargement affichait « CHARGEMENT » et l'écran de rotation parlait de
+   « la file du D'Tour » quel que soit le niveau — faux depuis qu'il y
+   en a quatre.
+
+   Un écran d'attente qui porte le nom de ce qu'on attend cesse d'être
+   une attente : il devient une annonce. */
+const NOMS_NIVEAUX = {
+  1: { nom:"LA FILE DU D'TOUR",     sens:"il faut voir la file entière" },
+  2: { nom:"L'ENQUÊTE DE LA PIZZA", sens:"l'appartement se lit en entier" },
+  3: { nom:"LA TOURNÉE DU D'TOUR",  sens:"le comptoir est long" },
+  4: { nom:"LA RUELLE",             sens:"sa profondeur a besoin de hauteur" },
+};
+function nomNiveau(n){ return (NOMS_NIVEAUX[n] || {}).nom || "LES ENQUÊTES DE CALLAGHAN"; }
+function sensNiveau(n){ return (NOMS_NIVEAUX[n] || {}).sens || ""; }
+
 const ENNEMIS_RUELLE = ["depar", "dsk", "jubi", "abbe", "bruh"];
 /* Chacun a en plus les poses de SA mécanique. Elles ne sont pas
    communes : Depardiahree trébuche et lance une bouteille, DSKKK
@@ -12293,7 +12310,7 @@ const E = {};
 function accrocher(){
   for (const id of ["cv","intro","jauge","titre","logo","btnJouer","hud","vScore","vCombo","cCombo","miniT","miniP","tRecord",
                     "vFile","vies","pupitre","cmdT","cmdP","cmdE","visageT","visageP","nomG","nomD","legG","legD","legPtG","legPtD","cibleG","cibleD","fin","fScore","fCombo","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eScore","eCoupable","eChute","eRecit","niveaux","marque","vign1","vign2","titreFond","titreVoile","titreHaut","titreEnseigne","titreSst","pause","pauseNiv","pauseBtn","coins","pReprendre","pRecommencer","pMenu","pupitre2","c2G","c2D","c2A","c2ATxt","c2Int","c2C","c2CImg","c2Dos","c2DosN","c2Acc","c2AccN","introNiv","introTxt","niv2","eFausses","eTarte","vign3","niv3","vign4","niv4","pupitre3","c3G","c3D","c3B","c3J","c3E","releveRuelle","releveTues","rScore","rHordes","rTetes","rGardes","rEncaissees","rAnnules","rContacts","releveBar","bScore","bCombo","bCocktails","bJagers","bEaux","bErreurs","bChipes","finTitre","releve","releveEnq","eTemps","eIndices","eFouilles","eCoupable","eChute",
-                    "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk",
+                    "fSaluts","fFile","fEsquives","fRecues","fRecord","btnRejouer","pivot","pivotOk","introBas",
                     "cmdE","outilsBtn","debug",
                     "dVitesse","dVitesseV","dReaction","dReactionV","dLecture","version","pleinBtn","pivotTitre","pivotTexte","niveaux"]){
     E[id] = document.getElementById(id);
@@ -12608,6 +12625,9 @@ const Interface = {
 
   lancerNiveau(niv){
     const cle = "n" + niv;
+    /* L'écran d'attente annonce CE QU'ON ATTEND. « CHARGEMENT » ne dit
+       rien ; le nom du niveau fait de l'attente une entrée en matière. */
+    if (E.introBas) E.introBas.textContent = nomNiveau(niv);
     if (E.intro) E.intro.classList.remove("parti");
     if (dossierPret(cle)){ this.avancement(1); this.entrerNiveau(niv); return; }
     this.avancement(0);
@@ -12994,15 +13014,25 @@ const Interface = {
        a rien à demander au joueur, on attend le navigateur. */
     const seulementRecalage = ecranOk(L, H, niv) && !tailleCalme();
     if (E.pivot) E.pivot.classList.toggle("muet", seulementRecalage);
-    if (bloque && !seulementRecalage && E.pivotTitre && E.pivotTexte){
+    /* Le texte est écrit MÊME quand l'écran n'est pas bloqué. Sinon il
+       garde celui du dernier niveau qui l'a bloqué : la ruelle, qui se
+       joue en portrait et ne bloque donc jamais, affichait le texte de la
+       tournée. Un panneau caché doit quand même dire vrai — il peut
+       réapparaître à la rotation suivante. */
+    if (!seulementRecalage && E.pivotTitre && E.pivotTexte){
       const doigt = globalThis.matchMedia && globalThis.matchMedia("(pointer:coarse)").matches;
-      E.pivotTitre.textContent = doigt ? "Tourne ton téléphone"
-        : veutPortrait ? "Rétrécis la fenêtre" : "Élargis la fenêtre";
-      E.pivotTexte.textContent = veutPortrait
-        ? (doigt ? "La ruelle se joue debout : sa profondeur a besoin de hauteur."
-                 : "La ruelle se joue dans une fenêtre plus haute que large.")
-        : (doigt ? "La file du D'Tour se joue en paysage : il faut voir la file entière."
-                 : "La file du D'Tour se joue dans une fenêtre plus large que haute.");
+      /* LE NOM DU NIVEAU, pas celui du premier. Le texte parlait de « la
+         file du D'Tour » quel que soit le niveau demandé — faux depuis
+         qu'il y en a quatre, et déroutant quand on venait de lancer la
+         ruelle. */
+      const nomN = niv ? nomNiveau(niv) : "LES ENQUÊTES DE CALLAGHAN";
+      const sensN = niv ? sensNiveau(niv) : "les niveaux se choisissent côte à côte";
+      E.pivotTitre.textContent = nomN;
+      E.pivotTexte.textContent = doigt
+        ? (veutPortrait ? "Tourne ton téléphone : " + sensN + "."
+                        : "Tourne ton téléphone : " + sensN + ".")
+        : (veutPortrait ? "Une fenêtre plus haute que large : " + sensN + "."
+                        : "Une fenêtre plus large que haute : " + sensN + ".");
     }
     /* Deux raisons possibles de suspendre : l'écran debout et la pause
        demandée. On ne relance que si aucune des deux ne tient. */
@@ -13538,7 +13568,7 @@ globalThis.DTOUR = {
   CANONS, POSES_RUEL_TH, POSES_RUEL_PF,
   HEURES, PART_TYPES, PART_MAX, FLAQUES, MOT_DUREE,
   BARMANS, BAR_COMPTOIR, BAR_INTRO_PALIER, INTRO_PALIER,
-  Transition,
+  Transition, nomNiveau, sensNiveau, NOMS_NIVEAUX,
   ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, IA_REUSSITE, IA_CADENCE, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, RUELLE_DEGAT_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
   Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
