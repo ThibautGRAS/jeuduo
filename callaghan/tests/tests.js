@@ -2019,6 +2019,37 @@ if (D){
       return tropTot && D.Tournee.introSortie &&
         D.Tournee.introT <= D.BAR_INTRO_PALIER + 0.01;
     })());
+  verifier("le nombre de phases est DÉDUIT, pas écrit en dur",
+    (() => {
+      /* Le vrai défaut : `course1` et `course2` ont les pieds au MÊME
+         endroit, et aucune pose n'a la jambe opposée en avant. Aucune
+         cadence ne peut créer une alternance qui n'existe pas dans les
+         images. Le compte est donc lu dans POSES_BAR : déposer `course3`
+         et `course4` fait passer le cycle de deux à quatre temps sans
+         toucher au code.
+
+         Il se lit dans les DONNÉES et non dans les images chargées : les
+         images arrivent en vagues, la foulée aurait dépendu du réseau. */
+      return /function phasesDisponibles\(mouvement\)/.test(source) &&
+        /POSES_BAR\.indexOf\(mouvement \+ \(n \+ 1\)\)/.test(source) &&
+        !/Images\.table\[c\.prefixe \+ "_" \+ mouvement/.test(source);
+    })());
+
+  verifier("le manque est CONSIGNÉ, il ne se perdra pas",
+    (() => {
+      /* Une pose manquante qu'on n'écrit nulle part se redécouvre dans un
+         an, par le même chemin. */
+      const pr = fs.readFileSync(path.join(RACINE, "PROMPTS.md"), "utf8");
+      /* Trois traces, et chacune sert à quelqu'un de différent : le prompt
+         pour fabriquer les images, le commentaire du code pour celui qui
+         lit `pose()`, et la liste des manques pour celui qui reprend le
+         projet. */
+      const memoire = fs.readFileSync(path.join(RACINE, "MEMOIRE.md"), "utf8");
+      return /course3/.test(pr) && /AUTRE jambe/.test(pr) &&
+        /course3` et `course4` MANQUENT/.test(source) &&
+        /foulée|jambe/.test(memoire.slice(memoire.indexOf("## 5.")));
+    })(), "prompt, commentaire et liste des manques");
+
   verifier("la foulée de course bat à une cadence HUMAINE",
     (() => {
       /* Le défaut signalé : « ça reste quasi sur la même pose ». La cause

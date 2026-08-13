@@ -783,7 +783,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.93</div>
+  <div id="version">CALLAGHAN v6.94</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -855,7 +855,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.93";
+const VERSION = "6.94";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1713,6 +1713,12 @@ const IMAGES_NIVEAU2 = [
 /* Quatorze poses depuis la v6.23 : la marche a quatre temps au lieu de
    deux, la course en a deux, et la descente se joue en quatre gestes —
    il attrape, il tient, il boit, il repose le verre vide. */
+/* `course3` et `course4` MANQUENT : ce sont les deux phases avec l'AUTRE
+   jambe devant. Mesuré sur les planches actuelles, `course1` et
+   `course2` ont les pieds au même endroit, et aucune des quatorze poses
+   n'a la jambe opposée en avant — la foulée ne peut donc pas alterner,
+   quelle que soit la cadence. Le compte de phases est déduit des images
+   présentes : déposer les deux fichiers suffit. Prompt dans PROMPTS.md. */
 const POSES_BAR = ["idle", "marche1", "marche2", "marche3", "marche4",
                    "course1", "course2", "frein",
                    "attrape", "tient", "boit", "vide", "jette", "titube"];
@@ -8187,6 +8193,25 @@ const BAR_POMPETTE_DUREE = 5;       /* ...et on titube cinq secondes */
 /* Deux poses de course seulement : il faut donc que le RESTE bouge. La
    cadence, le sursaut et l'inclinaison font le travail que deux images
    ne peuvent pas faire seules. */
+/* Combien de phases un mouvement compte. On les cherche dans POSES_BAR,
+   la liste DÉCLARÉE — pas dans les images chargées.
+
+   Première version fautive : elle comptait `Images.table`. C'est faux
+   deux fois. Dans la suite de tests il n'y a aucune image, donc la
+   foulée retombait à une seule phase et le test de cadence mesurait
+   zéro. Et en jeu les images arrivent en VAGUES : la foulée aurait eu
+   une phase au démarrage et deux ensuite, ce qui est précisément le genre
+   de comportement qui dépend de la vitesse du réseau.
+
+   La logique de jeu se lit dans les DONNÉES. Ajouter une phase demande
+   donc deux gestes — le nom dans POSES_BAR et le fichier — au lieu d'un,
+   et c'est le bon prix. */
+function phasesDisponibles(mouvement){
+  let n = 0;
+  while (n < 12 && POSES_BAR.indexOf(mouvement + (n + 1)) >= 0) n++;
+  return Math.max(1, n);
+}
+
 const BAR_CADENCE_COURSE = 0.56;   /* 2,8 cycles/s, la foulée d'un coureur */
 const BAR_SAUT_COURSE = 0.020;     /* amplitude du sursaut, en hauteur d'écran */
 const BAR_PENCHE_COURSE = 0.055;   /* inclinaison vers l'avant, en radians */
@@ -8402,8 +8427,22 @@ const Tournee = {
          0,56 donne 2,8 cycles par seconde, ce qui est la cadence d'un
          homme qui court. La marche à 0,9 sur quatre poses donne 2,25
          cycles : elle allait déjà bien, on n'y touche pas. */
-      if (this.dureeMarche > 0.6) return (Math.floor(this.foulee * BAR_CADENCE_COURSE) % 2) ? "course2" : "course1";
-      return "marche" + (1 + Math.floor(this.foulee * 0.9) % 4);
+      /* LE NOMBRE DE PHASES EST DÉDUIT des images présentes, pas écrit en
+         dur. Le jour où `course3` et `course4` arrivent — les deux phases
+         avec l'AUTRE jambe devant, qui manquent — la foulée devient un
+         cycle à quatre temps sans qu'on touche à une ligne. C'est la
+         seule vraie correction ; tout le reste n'est que du maquillage
+         autour de deux images.
+
+         Mesuré sur les planches actuelles : `course1` et `course2` ont
+         les pieds au MÊME endroit (172 pixels tous les deux), et aucune
+         des quatorze poses de Thibaut n'a la jambe opposée en avant. */
+      if (this.dureeMarche > 0.6){
+        const n = phasesDisponibles("course");
+        return "course" + (1 + Math.floor(this.foulee * BAR_CADENCE_COURSE * n / 2) % n);
+      }
+      const nm = phasesDisponibles("marche");
+      return "marche" + (1 + Math.floor(this.foulee * 0.9 * nm / 4) % nm);
     }
     return "idle";
   },

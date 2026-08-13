@@ -284,6 +284,28 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Tu avais raison : c'est toujours la même jambe** (v6.94).
+
+Mesuré pose par pose : **`course1` et `course2` ont les pieds au MÊME
+endroit** — 172 pixels tous les deux. Et sur les quatorze poses de chaque
+champion, **aucune n'a la jambe opposée en avant** : le décalage
+pied-corps est positif partout, de 11 pour la marche à 44 pour la course.
+
+Ce ne sont donc pas deux phases de foulée, c'est deux fois la même. Aucun
+réglage de cadence ne peut créer une alternance qui n'existe pas dans les
+images — ma correction de la veille était nécessaire mais ne pouvait pas
+suffire.
+
+**Ce qui est fait** : le code compte les phases dans `POSES_BAR` au lieu
+de les écrire en dur. Déposer `course3` et `course4` fait passer la foulée
+de deux à quatre temps **sans toucher une ligne** — vérifié en simulation,
+2,92 cycles par seconde et la suite course1→2→3→4 qui tourne.
+
+**Ce qui manque** : les deux images. Le prompt est écrit dans
+`PROMPTS.md`, avec le cadrage impératif et l'avertissement qui compte —
+il ne faut pas retourner l'image, un personnage retourné regarderait à
+gauche.
+
 **La foulée du bar** (v6.93) : la cause était l'inverse de ce qu'on
 croit en la voyant.
 

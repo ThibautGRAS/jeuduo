@@ -2171,6 +2171,36 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Vérifier que les phases d'un cycle sont VRAIMENT différentes
+
+J'ai corrigé la cadence d'une foulée, mesuré 2,8 cycles par seconde, et
+livré. Thibaut a répondu : « mais c'est toujours la même jambe qui
+avance ? »
+
+Il avait raison. Mesuré ensuite, pose par pose : `course1` et `course2`
+ont les pieds au MÊME endroit — 172 pixels tous les deux — et aucune des
+quatorze poses du personnage n'a la jambe opposée en avant. Ce ne sont pas
+deux phases, c'est deux fois la même. Aucune cadence ne peut créer une
+alternance absente des images.
+
+Le signe que j'avais sous les yeux et que je n'ai pas lu : la différence
+entre les deux images était de **5,2 %**. J'ai noté le chiffre, je l'ai
+utilisé pour expliquer pourquoi une alternance rapide se lit comme du
+figé — et je n'ai pas posé la question évidente : cinq pour cent, est-ce
+assez pour deux phases de course ? Non. Deux phases opposées changent
+tout le bas du corps.
+
+**Un chiffre mesuré ne sert à rien s'on ne lui pose pas la bonne
+question.** Avant de régler la cadence d'un cycle, vérifier que ses phases
+diffèrent — et pour une foulée, cela se vérifie sur la position des PIEDS,
+pas sur une différence globale de pixels.
+
+Corollaire posé en même temps : le nombre de phases se compte dans les
+DONNÉES déclarées, jamais dans les images chargées. Ma première version
+comptait `Images.table` — faux deux fois : la suite de tests n'a aucune
+image, et en jeu les images arrivent en vagues, donc la foulée aurait
+dépendu de la vitesse du réseau.
+
 #### Une animation trop RAPIDE se lit comme une animation bloquée
 
 Signalé comme « ça reste quasi sur la même pose ». La cause était
@@ -2345,6 +2375,12 @@ d'enquête, resté quarante versions sans que personne y revienne.
 - **Le menu de sélection des personnages** du niveau 3 : Thibaut le
   trouve peu lisible et « cheap ». Demandé plusieurs fois, jamais
   commencé. C'est le seul point de sa liste qui reste entier.
+- **Les deux phases de foulée `course3` et `course4`** : mesuré,
+  `course1` et `course2` ont les pieds au MÊME endroit et aucune pose n'a
+  la jambe opposée en avant. La foulée ne peut donc pas alterner, quelle
+  que soit la cadence. Le code est prêt — il compte les phases dans
+  `POSES_BAR` — et le prompt est écrit dans `PROMPTS.md`. Il ne manque
+  que les images.
 - **La pose `serie` de Jojo** montre une passoire au lieu de la série de
   shots prête. La bonne pose est dans la rangée chorégraphiée de sa
   planche, mais celle-ci a un comptoir et un cadre blanc qui gênent la

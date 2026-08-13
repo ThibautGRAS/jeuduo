@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.93";
+const VERSION = "6.94";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -876,6 +876,12 @@ const IMAGES_NIVEAU2 = [
 /* Quatorze poses depuis la v6.23 : la marche a quatre temps au lieu de
    deux, la course en a deux, et la descente se joue en quatre gestes —
    il attrape, il tient, il boit, il repose le verre vide. */
+/* `course3` et `course4` MANQUENT : ce sont les deux phases avec l'AUTRE
+   jambe devant. Mesuré sur les planches actuelles, `course1` et
+   `course2` ont les pieds au même endroit, et aucune des quatorze poses
+   n'a la jambe opposée en avant — la foulée ne peut donc pas alterner,
+   quelle que soit la cadence. Le compte de phases est déduit des images
+   présentes : déposer les deux fichiers suffit. Prompt dans PROMPTS.md. */
 const POSES_BAR = ["idle", "marche1", "marche2", "marche3", "marche4",
                    "course1", "course2", "frein",
                    "attrape", "tient", "boit", "vide", "jette", "titube"];

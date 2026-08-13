@@ -464,3 +464,51 @@ normalisée en canevas 320 avec un disque de 304 centré, pour les huit.
 **Le n° 4 doit vraiment avoir le centre vide** : le jeu le découpe en
 secteur pour montrer l'avancement du rechargement, et le pose à `1.38`
 fois le rayon du bouton pour qu'il l'encercle au lieu de le couvrir.
+
+---
+
+## Les deux phases de foulée qui manquent (niveau 3)
+
+**Pourquoi.** Mesuré sur les planches actuelles : `course1` et `course2`
+ont les pieds au MÊME endroit (172 px tous les deux), et aucune des
+quatorze poses de chaque champion n'a la jambe opposée en avant. La
+foulée ne peut donc pas alterner, quelle que soit la cadence — c'est de
+l'art qui manque, pas du réglage.
+
+**Ce qu'il faut** : deux poses par champion, `course3` et `course4`, qui
+sont les phases où l'**AUTRE jambe** est devant. Le code compte les
+phases dans `POSES_BAR` : ajouter les deux noms et les deux fichiers
+suffit, le cycle passe de deux à quatre temps tout seul (vérifié en
+simulation : 2,92 cycles/s).
+
+**Cadrage impératif** — le même que les poses existantes, sinon le
+personnage saute d'une image à l'autre :
+
+- fond magenta pur (255, 0, 255), personnage entier
+- vu de trois quarts, tourné vers la DROITE, comme `course1`
+- même taille de tête et même hauteur totale que `course1`
+- pieds au même niveau bas du cadre
+- polo vert et jean bleu pour Thibaut, t-shirt clair et jean pour PF
+
+**Le prompt.**
+
+> Planche de deux poses de course, côte à côte, fond magenta pur uni
+> (#FF00FF), style bande dessinée aux couleurs franches, même trait et
+> même échelle que les autres poses du personnage.
+>
+> Un homme [POLO VERT ET JEAN BLEU, cheveux bruns en bataille, courte
+> barbe / T-SHIRT BEIGE ET JEAN, chauve, lunettes rondes, barbe courte],
+> vu de trois quarts, courant vers la droite, bras pliés en mouvement.
+>
+> Pose 1 : la jambe GAUCHE est tendue loin devant, le pied gauche à
+> l'appui, la jambe droite repliée en arrière. Le bras droit part en
+> avant, le gauche en arrière.
+>
+> Pose 2 : moment de suspension inverse — la jambe gauche revient sous le
+> corps, la droite s'élance vers l'avant sans encore toucher le sol. Les
+> deux pieds décollés.
+>
+> Important : ces deux poses doivent être le MIROIR de foulée des poses
+> existantes — c'est-à-dire l'autre jambe devant — tout en gardant le
+> personnage tourné vers la DROITE. Ne pas retourner l'image : un
+> personnage retourné regarderait à gauche.
