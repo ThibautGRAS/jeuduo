@@ -783,7 +783,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v6.99</div>
+  <div id="version">CALLAGHAN v7.00</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -855,7 +855,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.99";
+const VERSION = "7.00";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1652,8 +1652,13 @@ const EFFETS = ["fx_poignee","fx_combo","fx_goutte","fx_question"];
 /* Hortense et sa tarte au citron meringuée : deux jeux d'images bien
    séparés. La tarte n'appartient JAMAIS au sprite d'Hortense — elle
    n'existe qu'à partir du lancer, comme un projectile à part entière. */
+/* `h_lance1/2/3` et `h_rire` sont NOUVEAUX. L'état LANCE durait 0,22 s et
+   RIRE 0,80 s en affichant tous deux `h_lance` : le geste central du
+   niveau 1 tenait 1,02 seconde sur une image fixe. `h_lance` reste
+   déclaré — il sert encore au passage du bar. */
 const SPRITES_HORTENSE = ["h_debout","h_marche","h_sournoise","h_arme","h_lance",
-                          "h_courtA","h_courtB","h_pointe","h_parasol","h_chaise"];
+                          "h_lance1","h_lance2","h_lance3","h_rire",
+                          "h_courtA","h_courtB","h_pointe","h_chaise","h_parasol"];
 const SPRITES_TARTE = ["tarte0","tarte1","tarte2","tarte3","tarte_boom","tarte_ecrasee",
                        "debris_meringue","debris_citron","debris_part"];
 
@@ -3640,8 +3645,17 @@ const Hortense = {
       case ETAT_H.ENTREE: return this.phase % 2 < 1 ? "h_courtA" : "h_courtB";
       case ETAT_H.GUET: return "h_sournoise";
       case ETAT_H.PREPARE: return "h_arme";
-      case ETAT_H.LANCE: return "h_lance";
-      case ETAT_H.RIRE: return "h_lance";
+      /* LE LANCER EST UN GESTE EN TROIS TEMPS. Il affichait `h_lance`
+         pendant 0,22 s, et le RIRE la même image pendant 0,80 s : une
+         seconde entière sur un dessin fixe, pour le geste qu'on regarde
+         le plus dans ce niveau.
+         Les trois phases se répartissent sur la durée de l'état, et le
+         rire a désormais sa propre image. */
+      case ETAT_H.LANCE: {
+        const p = borne(this.chrono / DUREE_LANCE, 0, 0.999);
+        return "h_lance" + (1 + Math.floor(p * 3));
+      }
+      case ETAT_H.RIRE: return "h_rire";
       case ETAT_H.SORTIE: return "h_courtB";
       default: return "h_debout";
     }

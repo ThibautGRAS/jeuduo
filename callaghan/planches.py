@@ -66,6 +66,14 @@ import sys, pathlib, json
 #
 # Huit est le point où l'écart de tête restait sous le seuil sur les
 # planches livrées. À vérifier si on monte plus haut.
+# HUIT poses, sur DEUX RANGÉES de quatre. Ce qui limitait n'était pas le
+# nombre mais la LARGEUR : huit sujets sur une seule rangée obligent le
+# générateur à les rétrécir, et les têtes cessent d'être égales. Sur deux
+# rangées, chaque sujet retrouve sa place — la planche d'Hortense le
+# montre, huit poses avec 13 % d'écart de hauteur seulement.
+#
+# Le prompt demande donc explicitement deux rangées à partir de cinq
+# poses. Sans cette consigne, le générateur alignait tout.
 MAX_POSES = 8
 
 MOUVEMENTS = {
@@ -209,7 +217,14 @@ haut de la planche. Le texte blanc laisse un halo qui se mélange au fond.
   ombre portée, aucun décor, aucun élément de mobilier, aucun sol
   dessiné, aucun cadre, aucune bordure.
 - AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro de pose.
-- Toutes les poses sur UNE SEULE RANGÉE horizontale, alignées.
+- DISPOSITION : jusqu'à quatre poses, UNE SEULE RANGÉE. À partir de
+  cinq, DEUX RANGÉES de taille égale — par exemple 4 + 4 pour huit poses,
+  3 + 2 pour cinq. Une rangée de huit oblige à rétrécir chaque sujet pour
+  tout faire tenir, et les têtes cessent d'être de la même taille : c'est
+  le défaut le plus coûteux, il ne se rattrape pas au découpage.
+  Les deux rangées doivent avoir la MÊME échelle : un personnage de la
+  rangée du bas fait exactement la même taille qu'un de la rangée du
+  haut.
 - Au moins 80 pixels de fond magenta VIDE entre deux poses voisines.
   Aucune partie d'un personnage — bras tendu, jambe de course, objet
   tenu — ne doit entrer dans la colonne de sa voisine. On doit pouvoir
@@ -887,6 +902,29 @@ def verifier(chemin, attendu=None):
         if colonnes[0]: debuts.insert(0, 0)
         if colonnes[-1]: fins.append(L)
         b2 = [(d, f) for d, f in zip(debuts, fins) if f - d > L * 0.01]
+
+        # UN FRAGMENT DÉTACHÉ N'EST PAS UNE POSE. La planche d'Hortense a
+        # une tarte en VOL, séparée de sa main : un bloc de 60x33 px pris
+        # pour un neuvième personnage. Le seuil de 1 % de la largeur ne
+        # suffit pas — il faut comparer à la HAUTEUR des vrais sujets.
+        #
+        # Est un fragment ce qui fait moins de la moitié de la hauteur
+        # médiane. On le RATTACHE au bloc voisin le plus proche plutôt que
+        # de le jeter : la tarte fait partie de la pose de lancer.
+        if len(b2) >= 3:
+            hs = []
+            for d, f in b2:
+                ys = np.nonzero(bande[:, d:f].any(axis=1))[0]
+                hs.append(ys.max() - ys.min() + 1 if len(ys) else 0)
+            hmed = sorted(hs)[len(hs) // 2]
+            vrais = [(d, f) for (d, f), h in zip(b2, hs) if h >= hmed * 0.5]
+            frags = [(d, f) for (d, f), h in zip(b2, hs) if h < hmed * 0.5]
+            for fd, ff in frags:
+                if not vrais: break
+                i = min(range(len(vrais)),
+                        key=lambda k: min(abs(vrais[k][0] - ff), abs(fd - vrais[k][1])))
+                vrais[i] = (min(vrais[i][0], fd), max(vrais[i][1], ff))
+            if vrais: b2 = sorted(vrais)
 
         # DEUX POSES QUI SE TOUCHENT PAR UN DOIGT NE SONT PAS PERDUES.
         # Un bloc anormalement large contient plusieurs personnages : on

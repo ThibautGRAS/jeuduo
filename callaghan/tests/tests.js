@@ -2419,6 +2419,48 @@ if (D){
         o > 200 * 1024;
     })());
 
+  verifier("le lancer d'Hortense enchaîne ses TROIS phases",
+    (() => {
+      /* Il affichait `h_lance` pendant 0,22 s et le rire la MÊME image
+         pendant 0,80 s : une seconde entière sur un dessin fixe, pour le
+         geste qu'on regarde le plus dans ce niveau. */
+      const H = D.Hortense;
+      H.cachette = null; H.etat = D.ETAT_H.LANCE;
+      const vues = [];
+      for (let i = 0; i < 14; i++){ H.chrono = i / 60; vues.push(H.sprite); }
+      const distinctes = [...new Set(vues)];
+      H.etat = D.ETAT_H.RIRE;
+      const rire = H.sprite;
+      messageDetail = distinctes.length + " phases, rire = " + rire;
+      return distinctes.length === 3 &&
+        ["h_lance1", "h_lance2", "h_lance3"].every(x => vues.indexOf(x) >= 0) &&
+        rire === "h_rire";
+    })());
+
+  verifier("un fragment détaché n'est pas pris pour une pose",
+    (() => {
+      /* La planche d'Hortense a une TARTE EN VOL, séparée de sa main : un
+         bloc de 60x33 px pris pour un neuvième personnage. Le seuil d'aire
+         ne le filtrait pas — il faut le comparer à la HAUTEUR des vrais
+         sujets, et le RATTACHER au voisin plutôt que le jeter. */
+      const a = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      const b = fs.readFileSync(path.join(RACINE, "decouper_planche.py"), "utf8");
+      return /UN FRAGMENT DÉTACHÉ N'EST PAS UNE POSE/.test(a) &&
+        /UN FRAGMENT DÉTACHÉ N'EST PAS UNE POSE/.test(b) &&
+        /hmed \* 0\.5/.test(a) && /hmed \* 0\.5/.test(b);
+    })());
+
+  verifier("le canevas de découpe s'élargit sans toucher à l'échelle",
+    (() => {
+      /* Les deux venaient du même sprite témoin, ce qui interdisait toute
+         pose plus LARGE que l'ancienne : le lancer bras tendu fait 118 px
+         là où le sprite d'affût en fait 97. Refuser la pose parce que le
+         témoin est étroit revient à interdire tout geste nouveau. */
+      const b = fs.readFileSync(path.join(RACINE, "decouper_planche.py"), "utf8");
+      return /if cfg\.get\("largeur"\):/.test(b) &&
+        /reste calée sur la\s*\n?\s*#\s*HAUTEUR du témoin/.test(b);
+    })());
+
   verifier("le lancer d'Hortense ne tient plus sur UNE image",
     (() => {
       /* Mesuré dans le code : l'état LANCE dure 0,22 s et RIRE 0,80 s, et

@@ -573,6 +573,34 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**Le lancer d'Hortense est un geste en trois temps** (v7.00). Il tenait
+1,02 seconde sur une image fixe : l'état LANCE affichait `h_lance` pendant
+0,22 s, et le RIRE la MÊME image pendant 0,80 s. Pour le geste qu'on
+regarde le plus dans ce niveau.
+
+Huit sprites découpés d'une planche à deux rangées : `lance1`, `lance2`,
+`lance3` s'enchaînent sur la durée du lancer — cinq images, quatre, cinq —
+et le rire a enfin son propre dessin.
+
+**Deux rangées à partir de cinq poses**, désormais demandé dans tous les
+prompts. Ce qui limitait n'était pas le nombre de poses mais la LARGEUR :
+huit sujets sur une seule rangée obligent à les rétrécir, et les têtes
+cessent d'être égales. Sur deux rangées, la planche d'Hortense tient ses
+huit poses avec 13 % d'écart de hauteur seulement.
+
+**Trois défauts d'outillage corrigés en découpant** :
+
+- **une tarte en vol prise pour un personnage.** Un bloc de 60 × 33 px
+  détaché de la main : neuf poses détectées au lieu de huit. Un fragment
+  se reconnaît à sa hauteur, et se RATTACHE au voisin plutôt que de se
+  faire jeter.
+- **le canevas et l'échelle venaient du même sprite témoin**, ce qui
+  interdisait toute pose plus LARGE que l'ancienne — le lancer bras tendu
+  fait 118 px là où l'affût en fait 97. Refuser la pose parce que le
+  témoin est étroit revient à interdire tout geste nouveau.
+- la tarte n'est PAS dans le sprite, et c'est voulu : le jeu la dessine
+  déjà comme objet mobile, avec ses six images.
+
 **Les héros du niveau 1 refaits, et quatre situations distinguées**
 (v6.99). Vingt-deux sprites découpés de quatre planches, calés sur les
 sprites existants — échelles 0,84 à 0,98, donc aucune dérive.

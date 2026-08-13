@@ -75,7 +75,14 @@ haut de la planche. Le texte blanc laisse un halo qui se mélange au fond.
   ombre portée, aucun décor, aucun élément de mobilier, aucun sol
   dessiné, aucun cadre, aucune bordure.
 - AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro de pose.
-- Toutes les poses sur UNE SEULE RANGÉE horizontale, alignées.
+- DISPOSITION : jusqu'à quatre poses, UNE SEULE RANGÉE. À partir de
+  cinq, DEUX RANGÉES de taille égale — par exemple 4 + 4 pour huit poses,
+  3 + 2 pour cinq. Une rangée de huit oblige à rétrécir chaque sujet pour
+  tout faire tenir, et les têtes cessent d'être de la même taille : c'est
+  le défaut le plus coûteux, il ne se rattrape pas au découpage.
+  Les deux rangées doivent avoir la MÊME échelle : un personnage de la
+  rangée du bas fait exactement la même taille qu'un de la rangée du
+  haut.
 - Au moins 80 pixels de fond magenta VIDE entre deux poses voisines.
   Aucune partie d'un personnage — bras tendu, jambe de course, objet
   tenu — ne doit entrer dans la colonne de sa voisine. On doit pouvoir

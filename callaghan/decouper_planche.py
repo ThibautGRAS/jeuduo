@@ -96,6 +96,26 @@ def composantes(a, coupures):
         sl = tranches[i - 1]
         gardes.append((sl[1].start, sl[0].start, sl[1].stop, sl[0].stop, i))
 
+    # UN FRAGMENT DÉTACHÉ N'EST PAS UNE POSE. La planche d'Hortense a une
+    # tarte en VOL, séparée de sa main : un bloc de 60x33 px que l'aire
+    # minimale ne filtre pas et qui passait pour un personnage de plus.
+    # On le RATTACHE au voisin le plus proche — la tarte fait partie de la
+    # pose de lancer, la jeter reviendrait à lancer dans le vide.
+    if len(gardes) >= 3:
+        hs = sorted(y2 - y1 for _, y1, _, y2, _ in gardes)
+        hmed = hs[len(hs) // 2]
+        vrais = [g for g in gardes if g[3] - g[1] >= hmed * 0.5]
+        frags = [g for g in gardes if g[3] - g[1] < hmed * 0.5]
+        for fx1, fy1, fx2, fy2, fi in frags:
+            if not vrais: break
+            k = min(range(len(vrais)),
+                    key=lambda j: min(abs(vrais[j][0] - fx2), abs(fx1 - vrais[j][2])))
+            x1, y1, x2, y2, idx = vrais[k]
+            vrais[k] = (min(x1, fx1), min(y1, fy1), max(x2, fx2), max(y2, fy2), idx)
+            # la composante du fragment doit suivre dans le masque
+            lab[lab == fi] = idx
+        if vrais: gardes = sorted(vrais)
+
     # UN BLOC ANORMALEMENT LARGE CONTIENT PLUSIEURS POSES qui se touchent.
     # On le coupe automatiquement au creux, au lieu de demander une
     # abscisse relevée à l'œil. La largeur médiane sert d'étalon : c'est
@@ -151,6 +171,17 @@ def main(cfg):
 
     imref = Image.open(cfg["reference"])
     COTE_L, COTE_H = imref.size
+    # LE CANEVAS PEUT ÊTRE ÉLARGI SANS TOUCHER À L'ÉCHELLE. Les deux
+    # venaient du même sprite témoin, ce qui interdisait toute pose plus
+    # LARGE que l'ancienne : le lancer d'Hortense, bras tendu, fait 118 px
+    # là où son sprite d'affût en fait 97. Refuser la pose parce que le
+    # témoin est étroit revient à interdire tout geste nouveau.
+    #
+    # `largeur` élargit le canevas ; l'échelle, elle, reste calée sur la
+    # HAUTEUR du témoin — c'est elle qui garantit que le personnage garde
+    # sa taille en jeu.
+    if cfg.get("largeur"):
+        COTE_L = max(COTE_L, int(cfg["largeur"]))
     al = np.asarray(imref.convert("RGBA"))[..., 3]
     ys = np.nonzero(al.max(axis=1) > 16)[0]
     haut_ref = int(ys.max() - ys.min() + 1)

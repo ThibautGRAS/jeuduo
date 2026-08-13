@@ -168,8 +168,17 @@ const Hortense = {
       case ETAT_H.ENTREE: return this.phase % 2 < 1 ? "h_courtA" : "h_courtB";
       case ETAT_H.GUET: return "h_sournoise";
       case ETAT_H.PREPARE: return "h_arme";
-      case ETAT_H.LANCE: return "h_lance";
-      case ETAT_H.RIRE: return "h_lance";
+      /* LE LANCER EST UN GESTE EN TROIS TEMPS. Il affichait `h_lance`
+         pendant 0,22 s, et le RIRE la même image pendant 0,80 s : une
+         seconde entière sur un dessin fixe, pour le geste qu'on regarde
+         le plus dans ce niveau.
+         Les trois phases se répartissent sur la durée de l'état, et le
+         rire a désormais sa propre image. */
+      case ETAT_H.LANCE: {
+        const p = borne(this.chrono / DUREE_LANCE, 0, 0.999);
+        return "h_lance" + (1 + Math.floor(p * 3));
+      }
+      case ETAT_H.RIRE: return "h_rire";
       case ETAT_H.SORTIE: return "h_courtB";
       default: return "h_debout";
     }

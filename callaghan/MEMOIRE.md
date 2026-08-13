@@ -2235,6 +2235,47 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Ce qui limite une planche c'est la LARGEUR, pas le nombre de poses
+
+J'ai fait descendre le maximum de neuf poses à cinq, puis remonté à six,
+puis à huit, en croyant chaque fois régler un problème de nombre. Thibaut
+a proposé la vraie solution : demander DEUX RANGÉES à partir de cinq
+poses.
+
+Huit sujets sur une seule rangée obligent le générateur à les rétrécir
+pour tout faire tenir, et les têtes cessent d'être égales. Sur deux
+rangées, chacun retrouve sa place : la planche d'Hortense tient ses huit
+poses avec 13 % d'écart de hauteur.
+
+Le nombre n'était qu'un symptôme de la largeur. J'ai passé trois réglages
+à traiter le symptôme.
+
+#### Un FRAGMENT détaché n'est pas une pose, et ne se jette pas non plus
+
+La planche d'Hortense a une tarte en VOL, séparée de sa main : un bloc de
+60 × 33 px compté comme un neuvième personnage. L'aire minimale ne le
+filtrait pas — 3 000 px, et le fragment en fait 2 000.
+
+Deux décisions, et la seconde compte autant que la première :
+- un fragment se reconnaît à sa HAUTEUR, comparée à la médiane des vrais
+  sujets. Un seuil d'aire absolu ne s'adapte pas à l'échelle de la
+  planche.
+- il se RATTACHE au voisin le plus proche, il ne se jette pas. Jeter la
+  tarte reviendrait à lancer dans le vide — et sur une autre planche, le
+  fragment pourrait être une main ou un pied.
+
+#### Le canevas et l'échelle ne doivent pas venir de la même mesure
+
+Le découpeur prenait les deux du sprite témoin : l'échelle de sa hauteur,
+le canevas de sa taille. Conséquence, aucune pose ne pouvait être plus
+LARGE que l'ancienne — le lancer bras tendu fait 118 px là où le sprite
+d'affût en fait 97, et le découpage refusait d'écrire.
+
+Refuser une pose parce que le témoin est étroit revient à interdire tout
+geste nouveau. Le canevas s'élargit désormais par une option ; l'échelle
+reste calée sur la hauteur, seule garantie que le personnage garde sa
+taille en jeu.
+
 #### Une correction peut rendre AVEUGLE l'outil qui la vérifie
 
 La règle du voile de transition — aucune image montrée pendant un

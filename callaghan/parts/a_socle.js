@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "6.99";
+const VERSION = "7.00";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -815,8 +815,13 @@ const EFFETS = ["fx_poignee","fx_combo","fx_goutte","fx_question"];
 /* Hortense et sa tarte au citron meringuée : deux jeux d'images bien
    séparés. La tarte n'appartient JAMAIS au sprite d'Hortense — elle
    n'existe qu'à partir du lancer, comme un projectile à part entière. */
+/* `h_lance1/2/3` et `h_rire` sont NOUVEAUX. L'état LANCE durait 0,22 s et
+   RIRE 0,80 s en affichant tous deux `h_lance` : le geste central du
+   niveau 1 tenait 1,02 seconde sur une image fixe. `h_lance` reste
+   déclaré — il sert encore au passage du bar. */
 const SPRITES_HORTENSE = ["h_debout","h_marche","h_sournoise","h_arme","h_lance",
-                          "h_courtA","h_courtB","h_pointe","h_parasol","h_chaise"];
+                          "h_lance1","h_lance2","h_lance3","h_rire",
+                          "h_courtA","h_courtB","h_pointe","h_chaise","h_parasol"];
 const SPRITES_TARTE = ["tarte0","tarte1","tarte2","tarte3","tarte_boom","tarte_ecrasee",
                        "debris_meringue","debris_citron","debris_part"];
 
