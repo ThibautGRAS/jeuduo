@@ -1,5 +1,6 @@
 Planche de 4 poses d'un même personnage, côte à côte
 sur une seule rangée.
+Image de référence à joindre : reference/thibaut.png
 
 RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
 qu'il existe déjà.

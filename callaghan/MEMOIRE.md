@@ -2187,6 +2187,38 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Une image par variante bat une bascule dans le texte
+
+Le niveau 1 habille les héros autrement que le bar. Première solution :
+garder une seule référence et écrire dans le prompt « la référence ne
+fait pas foi sur les vêtements, voici le costume ». Deux consignes qui se
+marchent dessus — et le premier essai se contredisait littéralement deux
+lignes plus bas, parce que j'avais rapiécé le texte par des
+remplacements de phrases au lieu d'écrire un mode entier.
+
+La bonne solution est arrivée avec les planches : **une image de
+référence par TENUE**, numérotée, et chaque prompt écrit le nom de celle
+qu'il faut joindre. Plus de bascule, plus de contradiction possible.
+
+Corollaire : quand un texte doit dire « sauf que », se demander s'il ne
+manque pas une donnée. Ici il manquait une image.
+
+#### Un contrôleur doit MESURER ce qu'il contrôle, pas le supposer
+
+Mon contrôleur de planche cherchait un fond `#FF00FF`. Les planches
+arrivent en capture d'écran : le magenta y est à (216, 2, 213), mesuré.
+Le seuil en dur comptait donc **le fond lui-même** comme du rose
+parasite — 98 % du contour signalé sur une planche parfaitement saine.
+
+Deux corrections, et la seconde n'était pas évidente :
+- la couleur du fond se MESURE sur les bords de l'image ;
+- l'image se RECADRE d'abord sur la zone colorée, parce qu'une capture
+  d'écran porte des bandes noires qui faussent tous les contrôles de
+  bord et de proportion.
+
+Un outil de contrôle qui suppose ses entrées parfaites ne sert que dans
+le cas où on n'en a pas besoin.
+
 #### Une image de référence bat une description écrite
 
 Le t-shirt de BruHell a changé entre deux planches. Rien dans le texte

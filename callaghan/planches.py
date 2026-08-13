@@ -186,12 +186,13 @@ SCENES = {
   "n1": {
     "titre": "la file d'attente",
     "prefixe": {"thibaut": "thibaut", "pf": "pierre"},
-    "costume": {
-      "thibaut": "Blouson bomber VERT OLIVE ouvert sur un t-shirt crème, "
-                 "jean bleu, baskets blanches.",
-      "pf": "Manteau BEIGE long et ouvert sur un col roulé BLEU MARINE, "
-            "jean bleu, baskets blanches.",
-    },
+    # SA PROPRE RÉFÉRENCE. Les héros y sont en tenue de rue — blouson
+    # pour Thibaut, manteau pour PF. Tant que le niveau n'avait pas son
+    # image, il fallait décrire ce costume par écrit et dire à la
+    # référence du bar de ne pas faire foi sur les vêtements : deux
+    # consignes qui se marchaient dessus. Une image par tenue est plus
+    # simple et plus sûre qu'une bascule dans le texte.
+    "ref": "-2",
     "poses": [
       ("idle", "debout, détendu, les bras le long du corps, léger sourire"),
       ("attente", "debout, les bras croisés, poids sur une jambe, l'air de "
@@ -388,9 +389,15 @@ def fabriquer(perso, mouvements, mode="texte"):
                  f"cessent d'être égales.\nDemander deux planches, en "
                  f"joignant la MÊME référence aux deux.")
 
+    # Le nom de la référence est ÉCRIT dans le prompt. Un personnage peut
+    # en avoir plusieurs — une par tenue — et sans ce nom on ne sait pas
+    # laquelle joindre.
+    ligne_ref = (f"Image de référence à joindre : reference/{perso}.png\n"
+                 if mode == "poses" else "")
+
     return f"""Planche de {len(poses)} poses d'un même personnage, côte à côte
 sur une seule rangée.
-
+{ligne_ref}
 {bloc}
 
 LES POSES, de gauche à droite :
@@ -413,9 +420,32 @@ def verifier(chemin, attendu=None):
 
     im = Image.open(chemin).convert("RGB")
     a = np.asarray(im).astype(int)
+
+    # RECADRAGE AUTOMATIQUE. Les planches arrivent souvent en capture
+    # d'écran, avec des bandes noires en haut et en bas. Sans ce
+    # recadrage, tous les contrôles de bord et de proportion sont faux et
+    # l'outil rejette une planche parfaitement bonne.
+    r0, g0, b0 = a[..., 0], a[..., 1], a[..., 2]
+    zone = (r0 > 110) & (b0 > 110) & (g0 < 130)
+    if zone.any():
+        ys, xs = np.nonzero(zone)
+        if (ys.max() - ys.min() + 1) < a.shape[0] * 0.98:
+            a = a[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+            print(f"  (recadré sur le magenta : {a.shape[1]}x{a.shape[0]})")
+
     H, L, _ = a.shape
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
-    fond = (r > 150) & (b > 150) & (g < 120)
+
+    # LA COULEUR DU FOND SE MESURE, elle ne se suppose pas. Le magenta
+    # d'une capture d'écran n'est pas #FF00FF : mesuré à (216, 2, 213) sur
+    # une planche livrée. Le seuil en dur rejetait le fond comme du rose
+    # parasite — 98 % du contour signalé sur une planche saine.
+    coins = np.concatenate([a[:8].reshape(-1, 3), a[-8:].reshape(-1, 3),
+                            a[:, :8].reshape(-1, 3), a[:, -8:].reshape(-1, 3)])
+    fr, fg, fb = np.median(coins, axis=0)
+    print(f"  fond mesuré           ({fr:.0f}, {fg:.0f}, {fb:.0f})")
+    # est du fond ce qui est PROCHE de cette couleur
+    fond = (np.abs(r - fr) < 42) & (np.abs(g - fg) < 42) & (np.abs(b - fb) < 42)
 
     print(f"{chemin}  {L}x{H}")
     soucis = []
@@ -435,7 +465,10 @@ def verifier(chemin, attendu=None):
         br, bg, bb = r[bord_sujet], g[bord_sujet], b[bord_sujet]
         # rose délavé : rouge et bleu dominent le vert, sans être du
         # magenta pur — celui-ci est le fond légitime
-        rose = ((br > bg + 25) & (bb > bg + 25) & (br < 230)).mean()
+        # rose parasite = teinté magenta MAIS assez loin du fond pour ne
+        # pas être le fond lui-même
+        loin = (np.abs(br - fr) > 42) | (np.abs(bg - fg) > 42) | (np.abs(bb - fb) > 42)
+        rose = ((br > bg + 25) & (bb > bg + 25) & loin).mean()
         print(f"  bord rosi             {rose*100:5.1f} % (il faut < 12)")
         if rose > 0.12:
             soucis.append(f"{rose*100:.0f} % du contour est rosi : le fond "
@@ -572,10 +605,12 @@ def fabriquer_scene(niveau, perso):
                  "planche où toutes les poses ont le même pied en avant est "
                  "INUTILISABLE — l'animation semble bloquée.")
 
+    suff = sc.get("ref", "")
     return f"""Planche de {len(details)} poses d'un même personnage, côte à côte
 sur une seule rangée.
 
 Scène : {sc['titre']}.
+Image de référence à joindre : reference/{perso}{suff}.png
 
 {ident}
 

@@ -2055,11 +2055,48 @@ if (D){
          référence fait foi sur les vêtements, puis deux lignes plus bas
          que le costume la remplace. Le mode est écrit en entier au lieu
          d'être dérivé par des remplacements de phrases. */
+      /* Le niveau 1 a SA propre référence, en tenue de rue : il n'a donc
+         plus besoin de décrire le costume par écrit ni de dire à la
+         référence de ne pas faire foi sur les vêtements. Deux consignes
+         qui se marchaient dessus ont été remplacées par une image. */
       const s = fs.readFileSync(
         path.join(RACINE, "prompts", "n1", "thibaut.txt"), "utf8");
-      return /ne fait PAS foi sur les VÊTEMENTS/.test(s) &&
-        /LE COSTUME DE CE NIVEAU/.test(s) &&
-        !/change la couleur d'un\nvêtement/.test(s);
+      return !/ne fait PAS foi sur les VÊTEMENTS/.test(s) &&
+        !/LE COSTUME DE CE NIVEAU/.test(s) &&
+        /reference\/thibaut-2\.png/.test(s);
+    })());
+
+  verifier("chaque prompt NOMME la référence à joindre",
+    (() => {
+      /* Un personnage peut avoir plusieurs références — une par tenue.
+         Sans le nom écrit dans le prompt, on ne sait pas laquelle
+         joindre, et on renvoie le bar dans la file d'attente. */
+      const d = path.join(RACINE, "prompts");
+      const manquants = [];
+      for (const niv of ["n1", "n2", "n3", "n4"]){
+        for (const n of fs.readdirSync(path.join(d, niv))){
+          if (!n.endsWith(".txt")) continue;
+          const s = fs.readFileSync(path.join(d, niv, n), "utf8");
+          const m = s.match(/Image de référence à joindre : reference\/(\S+\.png)/);
+          if (!m){ manquants.push(niv + "/" + n + " (pas nommée)"); continue; }
+          if (!fs.existsSync(path.join(d, "reference", m[1])))
+            manquants.push(niv + "/" + n + " -> " + m[1]);
+        }
+      }
+      messageDetail = manquants.length ? manquants.join(", ") : "toutes nommées et présentes";
+      return manquants.length === 0;
+    })());
+
+  verifier("le contrôleur MESURE la couleur du fond",
+    (() => {
+      /* Une capture d'écran n'a pas un magenta pur : mesuré à
+         (216, 2, 213) sur une planche livrée. Le seuil en dur comptait le
+         fond lui-même comme du rose parasite — 98 % du contour signalé
+         sur une planche saine. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      return /coins = np\.concatenate/.test(s) &&
+        /fr, fg, fb = np\.median/.test(s) &&
+        /recadré sur le magenta/.test(s);
     })());
 
   verifier("neuf poses par planche au maximum",

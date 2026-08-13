@@ -20,7 +20,27 @@ On copie tout le texte, on joint l'image, on envoie. Rien à compléter.
 
 **Ne PAS coller `../PROMPTS.md`** : c'est de la documentation.
 
-## Pourquoi UNE référence par personnage
+## Plusieurs références par personnage : une par TENUE
+
+Un personnage peut avoir plusieurs images de référence, numérotées :
+
+| image | tenue | utilisée par |
+|---|---|---|
+| `thibaut.png` | polo vert | n2, n3, n4, sup |
+| `thibaut-2.png` | blouson bomber vert olive | n1 |
+| `pf.png` | t-shirt beige | n2, n3, n4, sup |
+| `pf-2.png` | manteau beige, col roulé bleu | n1 |
+
+**Chaque prompt écrit le nom de celle qu'il faut joindre**, en haut,
+juste sous le titre de la scène. Sans ce nom, on ne sait pas laquelle
+prendre et on envoie le bar dans la file d'attente.
+
+Avant que le niveau 1 ait la sienne, son prompt décrivait le costume par
+écrit ET disait à la référence du bar de ne pas faire foi sur les
+vêtements — deux consignes qui se marchaient dessus. **Une image par
+tenue est plus simple et plus sûre qu'une bascule dans le texte.**
+
+## Pourquoi une référence tout court
 
 C'est le point de toute l'organisation. Thibaut a **une seule** image de
 référence, partagée par les quatre niveaux. Le jour où elle change — un
