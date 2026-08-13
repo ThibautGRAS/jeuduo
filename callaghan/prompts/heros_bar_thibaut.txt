@@ -15,6 +15,12 @@ pas aux images déjà en jeu.
 
 SEULES les poses décrites ci-dessous changent.
 
+SI L'IMAGE DE RÉFÉRENCE EST SUR FOND MAGENTA : ce fond est un fond de
+travail, rien d'autre. Il ne fait PAS partie du personnage. Ne pas en
+tirer de lumière rose ou violette sur la peau, les cheveux, les
+vêtements ou les contours. L'éclairage du personnage doit rester neutre,
+identique à celui de la référence une fois le fond mis de côté.
+
 Rappel de contrôle, à confirmer sur l'image et non à interpréter :
 polo vert, jean bleu, cheveux bruns en bataille, barbe de trois jours
 
@@ -52,7 +58,13 @@ CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
   imaginaire, sauf pour les phases où le personnage est explicitement en
   l'air.
 - Aucune lueur, aucun halo, aucun effet lumineux qui déborde de la
-  silhouette : le halo se mélange au magenta et laisse une bavure rose.
+  silhouette. Mesuré sur une planche livrée : une bande rose de 15 à
+  30 px de couleur (134, 58, 116) tout autour du sujet — du magenta
+  délavé, que rien ne sait retirer puisqu'on ignore la couleur qui était
+  dessous. Le bord doit être FRANC.
+- Le fond magenta ne teinte RIEN. Aucun reflet rose ou violet sur la
+  peau, les cheveux, les vêtements ou les contours : l'éclairage du
+  personnage est neutre.
 - Style : bande dessinée aux couleurs franches, contours nets, éclairage
   neutre et identique pour toutes les poses.
 - Personnage vu de TROIS QUARTS, tourné vers la DROITE, corps entier,

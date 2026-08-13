@@ -284,6 +284,23 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**Une référence sur fond magenta est prévue** (v6.98) : c'est même
+pratique, puisque c'est le fond attendu en sortie.
+
+Une seule précaution, et elle est réelle : le magenta **bave sur ce qui
+brille**. Mesuré une fois sur une planche livrée, une bande rose de
+(134, 58, 116) sur 15 à 30 px tout autour du sujet — que rien ne sait
+retirer, puisqu'on ignore la couleur qui était dessous.
+
+Les prompts portent donc une consigne explicite — le fond est un fond de
+travail, il ne teinte ni la peau, ni les cheveux, ni les contours — et le
+contrôle de planche le **mesure**.
+
+**Défaut trouvé en le vérifiant** : ma première version prenait l'anneau
+à l'INTÉRIEUR du sujet. Sur une planche volontairement rosie pour
+l'essai, elle donnait 0,2 % au lieu de 83 %. La bavure est dans le FOND,
+entre la silhouette et le magenta pur.
+
 **Les prompts marchent par IMAGE de référence** (v6.97) : ton idée est
 meilleure que ce que j'avais construit, et pour une raison qu'on peut
 nommer.

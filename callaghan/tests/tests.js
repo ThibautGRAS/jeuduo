@@ -2041,6 +2041,31 @@ if (D){
         fs.existsSync(path.join(d, "LISEZMOI.md"));
     })());
 
+  verifier("une référence sur fond magenta est prévue, et gardée",
+    (() => {
+      /* Le magenta bave sur ce qui brille : mesuré une fois à
+         (134, 58, 116) sur 15 à 30 px autour du sujet, et rien ne sait
+         le retirer puisqu'on ignore la couleur qui était dessous. Une
+         référence sur magenta est donc pratique — c'est le fond attendu
+         en sortie — mais elle ne doit pas teinter le personnage. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      const un = fs.readFileSync(
+        path.join(RACINE, "prompts", "heros_bar_thibaut.txt"), "utf8");
+      return /SI L'IMAGE DE RÉFÉRENCE EST SUR FOND MAGENTA/.test(un) &&
+        /ne teinte RIEN/.test(un) &&
+        /134, 58, 116/.test(s) &&
+        /bord rosi/.test(s);
+    })());
+
+  verifier("le rosissement se mesure À L'EXTÉRIEUR du sujet",
+    (() => {
+      /* La bavure est DANS le fond, entre la silhouette et le magenta
+         pur. Première version, mesurée à l'intérieur : 0,2 % sur une
+         planche volontairement rosie, contre 83 % avec le bon anneau. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      return /binary_dilation\(obj0, np\.ones\(\(13, 13\)\)\) & ~obj0/.test(s);
+    })());
+
   verifier("chaque prompt a son IMAGE de référence",
     (() => {
       /* Une description écrite est relue et réinterprétée à chaque

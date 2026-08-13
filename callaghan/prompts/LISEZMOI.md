@@ -50,6 +50,20 @@ concurrence avec elle, et le générateur tranche au hasard.
 | `mechant_base_abbe.txt` | l'Abbé | course + touche + chute | 8 |
 | `mechant_base_bruh.txt` | BruHell | course + touche + chute | 8 |
 
+## Si ta référence est sur fond magenta
+
+**Pas grave, c'est même pratique** : c'est le fond attendu en sortie, et
+le générateur a un exemple sous les yeux.
+
+Une seule précaution, et elle est déjà dans les prompts : le magenta ne
+doit pas TEINDRE le personnage. Le fond `#FF00FF` se mélange à toute
+lueur douce — mesuré une fois sur une planche livrée, une bande rose de
+(134, 58, 116) sur 15 à 30 px tout autour du sujet. Rien ne sait la
+retirer : on ignore la couleur qui était dessous.
+
+Le contrôle de planche le vérifie désormais, et il discrimine bien —
+0,0 % sur une planche saine, 83 % sur une planche volontairement rosie.
+
 ## Après réception de la planche
 
 **L'envoyer dans la conversation AVANT de la découper.** Une commande la

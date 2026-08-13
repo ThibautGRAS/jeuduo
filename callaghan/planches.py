@@ -134,7 +134,13 @@ REGLES = """CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
   imaginaire, sauf pour les phases où le personnage est explicitement en
   l'air.
 - Aucune lueur, aucun halo, aucun effet lumineux qui déborde de la
-  silhouette : le halo se mélange au magenta et laisse une bavure rose.
+  silhouette. Mesuré sur une planche livrée : une bande rose de 15 à
+  30 px de couleur (134, 58, 116) tout autour du sujet — du magenta
+  délavé, que rien ne sait retirer puisqu'on ignore la couleur qui était
+  dessous. Le bord doit être FRANC.
+- Le fond magenta ne teinte RIEN. Aucun reflet rose ou violet sur la
+  peau, les cheveux, les vêtements ou les contours : l'éclairage du
+  personnage est neutre.
 - Style : bande dessinée aux couleurs franches, contours nets, éclairage
   neutre et identique pour toutes les poses.
 - Personnage vu de TROIS QUARTS, tourné vers la DROITE, corps entier,
@@ -195,7 +201,13 @@ moderniser, ne rien « améliorer ». Une planche qui change la couleur d'un
 vêtement ou la coupe d'une barbe est inutilisable : elle ne se raccorde
 pas aux images déjà en jeu.
 
-SEULES les poses décrites ci-dessous changent.""",
+SEULES les poses décrites ci-dessous changent.
+
+SI L'IMAGE DE RÉFÉRENCE EST SUR FOND MAGENTA : ce fond est un fond de
+travail, rien d'autre. Il ne fait PAS partie du personnage. Ne pas en
+tirer de lumière rose ou violette sur la peau, les cheveux, les
+vêtements ou les contours. L'éclairage du personnage doit rester neutre,
+identique à celui de la référence une fois le fond mis de côté.""",
 }
 
 
@@ -277,6 +289,28 @@ def verifier(chemin, attendu=None):
 
     print(f"{chemin}  {L}x{H}")
     soucis = []
+
+    # 0. LE MAGENTA A-T-IL DÉTEINT SUR LE PERSONNAGE ? Mesuré une fois
+    #    sur une planche livrée : une bande rose de (134, 58, 116) sur
+    #    15 à 30 px autour du sujet. Elle n'est pas retirable — on ignore
+    #    la couleur qui était dessous. Il faut donc la refuser AVANT
+    #    découpage, pas la rattraper après.
+    #    L'anneau se prend À L'EXTÉRIEUR du sujet, pas à l'intérieur : la
+    #    bavure est DANS le fond, entre la silhouette et le magenta pur.
+    #    Première version fautive, prise à l'intérieur : 0,2 % sur une
+    #    planche volontairement rosie, contre 83 % avec le bon anneau.
+    obj0 = ndimage.binary_opening(~fond, np.ones((5, 5)))
+    bord_sujet = ndimage.binary_dilation(obj0, np.ones((13, 13))) & ~obj0
+    if bord_sujet.sum() > 100:
+        br, bg, bb = r[bord_sujet], g[bord_sujet], b[bord_sujet]
+        # rose délavé : rouge et bleu dominent le vert, sans être du
+        # magenta pur — celui-ci est le fond légitime
+        rose = ((br > bg + 25) & (bb > bg + 25) & (br < 230)).mean()
+        print(f"  bord rosi             {rose*100:5.1f} % (il faut < 12)")
+        if rose > 0.12:
+            soucis.append(f"{rose*100:.0f} % du contour est rosi : le fond "
+                          "magenta a déteint sur le sujet, ou une lueur "
+                          "déborde. Rien ne sait le retirer.")
 
     # 1. le fond est-il bien magenta, et majoritaire ?
     part = fond.mean()
