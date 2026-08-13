@@ -283,6 +283,27 @@ ne lit que l'en-tête WebP de quelques images. Le contrôle Python ouvre
 désormais TOUS les fichiers et rend un code non nul sur le premier
 illisible. Il en a trouvé un second dans la seconde qui a suivi.
 
+**UNE RÈGLE POUR TOUS LES SCINTILLEMENTS** (v6.87) — et tu avais raison
+de me le demander : je les corrigeais un par un, ce qui garantissait d'en
+laisser passer.
+
+Le problème était toujours le même. À chaque passage d'un écran à un
+autre — chargement vers affiche, affiche vers choix, choix vers jeu,
+rotation — une ou deux images sont dessinées dans un état intermédiaire :
+décor pas encore couvert, taille pas encore ajustée, ancien écran encore
+en place.
+
+Désormais, **une seule mécanique** : le jeu donne un NOM à l'écran
+courant, et dès que ce nom change, un voile opaque tombe. Il ne se lève
+qu'après **deux images** dessinées dans le nouvel état et la taille
+stabilisée — la première pose les tailles, la seconde dessine dedans. Le
+joueur voit une transition nette d'environ 130 ms au lieu d'un sursaut.
+
+Six écrans sont nommés aujourd'hui : titre, affiche du bar, choix du
+champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
+plus tard ne demandera rien** — c'est là toute la valeur d'une règle
+générale : elle couvre aussi les écrans qui n'existent pas encore.
+
 **Plus de scintillement à l'entrée d'un niveau** (v6.86) : et ta
 proposition était la bonne — c'est bien le voile de chargement qui règle
 ça, à condition de le retirer AU BON MOMENT.

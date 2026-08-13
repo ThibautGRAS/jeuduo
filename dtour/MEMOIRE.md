@@ -1,5 +1,28 @@
 # MEMOIRE.md — ce que ce dossier a appris
 
+### RÈGLE EN DUR — aucune image pendant un changement d'écran
+
+Le jeu donne un NOM à l'écran courant (`Transition.nomActuel`). Dès que
+ce nom change, un voile opaque tombe, et il ne se lève qu'après DEUX
+images dessinées dans le nouvel état et la taille stabilisée.
+
+Pourquoi une règle générale plutôt que des correctifs : le même
+scintillement a été corrigé SIX fois séparément — chargement vers
+affiche, affiche vers choix, choix vers jeu, entrée de niveau, rotation,
+recalage — avant qu'on comprenne que c'était un seul problème. Chaque
+correctif était juste et insuffisant, parce qu'il ne couvrait que son
+cas.
+
+Deux images et non une : la première sert à poser les tailles, la
+seconde à dessiner dedans.
+
+Conséquence pour la suite : **ajouter un écran ne demande rien d'autre
+que de le distinguer dans `nomActuel`**. Et deux états qui se ressemblent
+à l'œil ne doivent PAS produire deux noms, sinon on ajoute des fondus là
+où rien ne change.
+
+---
+
 ### RÈGLE EN DUR — regarder le rendu avant de pousser
 Aucune modification visuelle ne part sans qu'on ait OUVERT une image du
 résultat. Pas « les tests sont verts, donc ça va » : les tests ont

@@ -1578,6 +1578,76 @@ if (D){
   for (let i = 0; i < 60 * 8; i++) D.Jeu.pas(1 / 60);
   void scoreGele; void viesGelees;
   D.Pause.reprendre();
+  /* ---- LA RÈGLE GÉNÉRALE : aucune image pendant un changement d'écran ---- */
+  verifier("changer d'écran fait tomber un voile opaque",
+    (() => {
+      /* Six scintillements corrigés séparément avant d'être compris :
+         chargement vers affiche, affiche vers choix, choix vers jeu,
+         rotation... Une seule mécanique les couvre tous, ET ceux des
+         écrans qui n'existent pas encore. */
+      D.Jeu.demarrer(3); D.Camera.mesurer(844, 390, 1);
+      const T2 = D.Transition;
+      T2.nom = ""; T2.voile = 0; T2.images = 0;
+      T2.pas();
+      const auChangement = T2.voile;
+      T2.pas(); T2.pas();
+      const apresDeux = T2.voile;
+      messageDetail = "au changement " + auChangement.toFixed(2) +
+                      ", après 3 images " + apresDeux.toFixed(2);
+      return auChangement === 1 && apresDeux < 1;
+    })());
+
+  verifier("il ne se lève qu'après DEUX images dans le nouvel état",
+    (() => {
+      /* La première pose les tailles, la seconde dessine dedans. */
+      D.Jeu.demarrer(3); D.Camera.mesurer(844, 390, 1);
+      const T2 = D.Transition;
+      /* on force un état connu : le test précédent laisse le sien, et
+         sans ça le changement n'est pas détecté au premier appel */
+      T2.nom = ""; T2.voile = 0; T2.images = 0;
+      T2.pas();                 /* changement détecté */
+      T2.pas();                 /* image 1 */
+      const apres1 = T2.voile;
+      T2.pas();                 /* image 2 */
+      return apres1 === 1 && T2.voile < 1;
+    })());
+
+  verifier("et il finit toujours par se lever",
+    (() => {
+      D.Jeu.demarrer(3); D.Camera.mesurer(844, 390, 1);
+      const T2 = D.Transition;
+      for (let k = 0; k < 60; k++) T2.pas();
+      return T2.voile === 0;
+    })());
+
+  verifier("chaque écran du jeu a son propre nom",
+    (() => {
+      /* Deux états qui se ressemblent à l'œil ne doivent PAS produire
+         deux noms, sinon on ajoute des fondus là où rien ne change. Mais
+         deux écrans différents DOIVENT en produire deux, sinon la
+         transition manque. */
+      const T2 = D.Transition;
+      const vus = new Set();
+      D.Jeu.retourTitre(); vus.add(T2.nomActuel());
+      D.Jeu.demarrer(3); vus.add(T2.nomActuel());
+      D.Tournee.introT = 0; D.Tournee.enChoix = true; vus.add(T2.nomActuel());
+      D.Tournee.enChoix = false; D.Tournee.lancer(); D.Tournee.introT = 0;
+      vus.add(T2.nomActuel());
+      D.Jeu.demarrer(4); vus.add(T2.nomActuel());
+      D.Ruelle.introT = 0; vus.add(T2.nomActuel());
+      messageDetail = [...vus].join(", ");
+      return vus.size === 6;
+    })());
+
+  verifier("le voile est peint APRÈS la scène, jamais avant",
+    (() => {
+      /* Peint avant, il serait recouvert par le décor : c'est
+         exactement le défaut qu'on veut supprimer. */
+      const i = source.indexOf("function dessiner(){");
+      const bloc = source.slice(i, i + 400);
+      return /Transition\.pas\(\);[\s\S]{0,200}?try \{ dessinerScene\(\); \} finally \{ Transition\.peindre\(\); \}/.test(bloc);
+    })());
+
   verifier("le niveau démarre AVANT que le voile de chargement se lève",
     (() => {
       /* On retirait le voile puis on démarrait : au moins une image était

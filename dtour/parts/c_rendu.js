@@ -574,7 +574,78 @@ function dessinerPnj(p, voile){
 }
 
 /* --- boucle de dessin --- */
+/* ================= LE VOILE DE TRANSITION =================
+   RÈGLE EN DUR, valable pour TOUT le jeu : aucune image n'est montrée
+   pendant qu'on change d'écran.
+
+   Le problème, réglé six fois séparément avant d'être compris : à chaque
+   passage d'un écran à un autre — chargement vers affiche, affiche vers
+   choix, choix vers jeu, rotation — une ou deux images sont dessinées
+   dans un état intermédiaire. Décor pas encore couvert, taille pas
+   encore ajustée, ancien écran encore en place. Chacune produit un
+   scintillement, et chacune se corrigeait à part.
+
+   Ici, une seule mécanique : on donne un NOM à l'écran courant, et dès
+   que ce nom change, un voile opaque tombe. Il ne se lève qu'une fois
+   DEUX images dessinées dans le nouvel état et la taille stabilisée. Le
+   joueur voit une transition nette au lieu d'un sursaut.
+
+   Deux images et non une : la première sert à poser les tailles, la
+   seconde à dessiner dedans.
+
+   Ajouter un écran plus tard ne demande rien — il suffit que `nomEcran`
+   le distingue. C'est là toute la valeur d'une règle générale : elle
+   couvre aussi les écrans qui n'existent pas encore. */
+const Transition = {
+  nom:"", voile:0, images:0,
+
+  /* Ce qui définit un écran : ce qu'on voit, pas ce que le jeu calcule.
+     Deux états qui se ressemblent à l'œil ne doivent PAS produire deux
+     noms, sinon on ajoute des fondus là où rien ne change. */
+  nomActuel(){
+    const p = Jeu.phase, n = Jeu.niveau;
+    if (p === "titre") return "titre";
+    if (n === 4) return Ruelle.introEnCours() ? "n4-intro" : "n4-jeu";
+    if (n === 3){
+      if (Tournee.introT > 0) return "n3-intro";
+      if (Tournee.enChoix) return "n3-choix";
+      return "n3-jeu";
+    }
+    return "n" + n + "-" + p;
+  },
+
+  pas(){
+    const nom = this.nomActuel();
+    if (nom !== this.nom){
+      this.nom = nom; this.voile = 1; this.images = 0;
+      return;
+    }
+    if (this.voile <= 0) return;
+    this.images++;
+    if (this.images >= 2 && tailleCalme()) this.voile = Math.max(0, this.voile - 0.22);
+  },
+
+  peindre(){
+    if (this.voile <= 0 || !ctx) return;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = this.voile;
+    ctx.fillStyle = "#05070E";
+    ctx.fillRect(0, 0, cv ? cv.width : 0, cv ? cv.height : 0);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  },
+};
+
 function dessiner(){
+  if (!ctx) return;
+  /* Le voile est calculé AVANT le dessin et peint APRÈS : ainsi la toute
+     première image du nouvel écran est déjà couverte. */
+  Transition.pas();
+  try { dessinerScene(); } finally { Transition.peindre(); }
+}
+
+function dessinerScene(){
   if (!ctx) return;
   if (Jeu.niveau === 4 && Jeu.phase !== "titre"){
     const dpr4 = Math.min(2, globalThis.devicePixelRatio || 1);
