@@ -884,6 +884,42 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "48_foulee");
   }
 
+  /* 49. TIR ET RECHARGEMENT DES DEUX HÉROS, pour juger de l'ORIENTATION.
+     Les nouvelles planches regardent dans deux sens opposés — Thibaut à
+     droite, PF à gauche — et le rendu ne retourne plus l'indice 1 en dur
+     mais compare le sens VOULU au sens NATIF. Cette scène est le seul
+     endroit où l'on voit si les deux se font bien face. */
+  for (const [nom, etat] of [["49_ruelle_tir", "tir"], ["50_ruelle_recharge", "recharge"]]){
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4);
+    D.Ruelle.introT = 0; D.Ruelle.introSortie = true;
+    D.Ruelle.annonce = null; D.Ruelle.mot = null;
+    for (let i = 0; i < 30; i++) D.Jeu.pas(1 / 60);
+    D.Ruelle.annonce = null;
+    /* LES DEUX HÉROS DOIVENT ÊTRE DEBOUT. Le jeu accroupit celui qui
+       n'est pas actif — c'est voulu, il se met à couvert — mais alors on
+       ne voit qu'une seule arme et on ne peut rien juger de
+       l'orientation. On force donc les deux hors de leur abri.
+       Ma première version forçait le tir sans lever l'abri : PF sortait
+       accroupi et j'ai cru un instant à un défaut d'échelle. */
+    /* `iaActive` EST CE QUI DÉCIDE. J'avais d'abord forcé `h.abri`,
+       `h.leve`, `h.couvert` — trois champs qui n'existent pas sur un
+       héros : l'abri est CALCULÉ au moment du dessin, à partir de
+       `Ruelle.iaActive` et de l'index actif. Forcer des variables sans
+       vérifier qu'elles existent ne fait rien et ne dit rien. */
+    D.Ruelle.iaActive = true;
+    D.Ruelle.couvert = false;
+    if (etat === "tir"){
+      for (const h of D.Ruelle.heros){ h.recharge = 0; h.tirT = 0.05; }
+      D.Ruelle.flashes = D.Ruelle.heros.map((h, i) => ({ heros:i, t:0.03, duree:0.06 }));
+    } else {
+      for (const h of D.Ruelle.heros){ h.recharge = 0.5; h.balles = 0; }
+    }
+    dessinerVia(D, canevas);
+    ecrire(canevas, nom);
+  }
+
   /* 27. les poses propres de Depardiahree, à leur taille de jeu, sur
      une même ligne de sol : c'est la seule façon de voir qu'une pose
      plus haute que les autres ne fait pas grandir le personnage. */

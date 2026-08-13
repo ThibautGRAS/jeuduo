@@ -573,6 +573,23 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**L'orientation des héros se DÉCLARE** (v7.04). Vingt-huit sprites de
+la ruelle refaits, et une correction de fond : le rendu retournait
+l'héros d'indice 1 **en dur**, ce qui ne marchait que si toutes les
+planches regardaient du même côté.
+
+Les nouvelles regardent dans deux sens opposés — mesuré, **Thibaut à
+droite et PF à gauche**. Retourner l'indice 1 aurait donc mis PF à
+l'endroit et Thibaut à l'envers. Chaque planche déclare son sens natif, et
+le rendu retourne l'image seulement quand le sens voulu en diffère.
+
+Effet de bord heureux : PF n'est plus miroité du tout, donc son brassard
+POLICE reste du bon bras.
+
+**Deux scènes de contrôle ajoutées** — tir et rechargement des deux héros
+côte à côte. C'est le seul endroit où l'on voit si les deux se font bien
+face.
+
 **La course ne sautille plus** (v7.03) : **trois** causes qui
 s'additionnaient, et deux venaient de moi.
 

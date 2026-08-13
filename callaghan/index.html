@@ -783,7 +783,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v7.03</div>
+  <div id="version">CALLAGHAN v7.04</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -855,7 +855,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.03";
+const VERSION = "7.04";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1822,10 +1822,24 @@ const OBJETS_RUELLE = [
 /* Les deux héros derrière la barricade, vus de dos. Thibaut a douze
    poses, PF onze : leurs planches n'en donnaient pas autant, et rien
    n'oblige deux personnages à avoir le même nombre d'images. */
+/* L'ORIENTATION NATIVE DE CHAQUE PLANCHE, déclarée. Le rendu retournait
+   l'héros d'indice 1 EN DUR — ce qui marchait tant que toutes les
+   planches regardaient du même côté. Les nouvelles regardent dans deux
+   sens opposés : Thibaut à droite, PF à gauche, mesuré sur les planches.
+   Un `+1` regarde à droite, un `-1` à gauche. Le rendu retourne
+   l'image quand le sens VOULU diffère du sens natif, au lieu de retourner
+   un indice choisi une fois pour toutes. */
+const SENS_NATIF = { ruel_th: +1, ruel_pf: -1 };
+
+/* Le sens vers lequel chaque héros doit regarder dans la ruelle : ils
+   encadrent la barricade, donc ils se font face. */
+const SENS_VOULU = [+1, -1];
+
 const POSES_RUEL_TH = ["accroupi", "leve1", "leve2", "debout", "arme1", "arme2",
-                       "vise1", "vise2", "tir", "recul1", "recul2", "baisse"];
-const POSES_RUEL_PF = ["accroupi", "leve1", "leve2", "arme1", "arme2", "vise",
-                       "tir", "fumee", "recul1", "recul2", "baisse"];
+                       "vise1", "vise2", "tir", "fumee", "recul1", "recul2",
+                       "baisse"];
+const POSES_RUEL_PF = ["accroupi", "leve1", "leve2", "debout", "arme1", "arme2",
+                       "vise", "tir", "fumee", "recul1", "recul2", "baisse"];
 /* L'intro du niveau 4 : le duo sur la ruelle floutée. Elle sert à deux
    choses — annoncer le niveau, et donner au navigateur le temps de
    charger le décor et les ennemis avant la première image. */
@@ -10324,8 +10338,13 @@ const CANONS = {
     baisse:[0.701, 0.421],   debout:[0.834, 0.496], leve1:[0.562, 0.407],
     leve2:[0.671, 0.393],    recul1:[0.825, 0.136], recul2:[0.725, 0.186],
     tir:[0.964, 0.160],      vise1:[0.894, 0.153],  vise2:[0.906, 0.167],
+    /* MESURÉE sur le nouveau sprite : l'arme retombe, la bouche descend
+       à mi-hauteur et recule au milieu du corps. */
+    fumee:[0.574, 0.416],
   },
   pf: {
+    /* MESURÉE sur le nouveau sprite. */
+    debout:[0.222, 0.603],
     accroupi:[0.701, 0.451], arme1:[0.911, 0.240], arme2:[0.958, 0.093],
     baisse:[0.729, 0.411],   fumee:[0.864, 0.128], leve1:[0.571, 0.492],
     leve2:[0.601, 0.494],    recul1:[0.787, 0.192], recul2:[0.751, 0.342],
@@ -11929,7 +11948,14 @@ const RuelleVue = {
         ang = borne(brut, VISEE_INCLINE_MIN, VISEE_INCLINE_MAX);
       }
       ctx.translate(ex, ey);
-      if (i === 1) ctx.scale(-1, 1);
+      /* ON RETOURNE SI LE SENS VOULU DIFFÈRE DU SENS NATIF de la planche,
+         au lieu de retourner l'indice 1 en dur. L'ancien code supposait
+         que toutes les planches regardaient à droite ; celles de la
+         ruelle regardent dans deux sens opposés — Thibaut à droite, PF à
+         gauche. Retourner l'indice 1 aurait donc mis PF à l'endroit et
+         Thibaut à l'envers. */
+      const natif = SENS_NATIF[h.sprite] || 1;
+      if (SENS_VOULU[i] !== natif) ctx.scale(-1, 1);
       ctx.rotate(-ang);
       ctx.drawImage(spr, -larg / 2, -haut * 0.34, larg, haut);
       /* La flamme de bouche est PEINTE, pas dessinée dans la planche :
@@ -13709,7 +13735,8 @@ globalThis.DTOUR = {
   attenuation, PORTEE_MIN, PORTEE_PLEINE, PROJ_HAUTEUR, ANNONCE_CARTE_MIN, GROGNE_DELAI,
   CANONS, POSES_RUEL_TH, POSES_RUEL_PF,
   HEURES, PART_TYPES, PART_MAX, FLAQUES, MOT_DUREE,
-  BARMANS, BAR_COMPTOIR, BAR_INTRO_PALIER, INTRO_PALIER, POSES_HEROS, POSES_RUEL_TH, POSES_RUEL_PF,
+  BARMANS, BAR_COMPTOIR, BAR_INTRO_PALIER, INTRO_PALIER, POSES_HEROS,
+  SENS_NATIF, SENS_VOULU,
   Transition, nomNiveau, sensNiveau, NOMS_NIVEAUX,
   ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, IA_REUSSITE, IA_CADENCE, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, RUELLE_DEGAT_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,

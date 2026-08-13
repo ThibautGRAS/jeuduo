@@ -58,8 +58,12 @@ Rangées par `archiver.py`, jamais à la main.
 | `n3` | `heros_pf_verre.webp` | 109 Ko |
 | `n3` | `heros_th_deplacement.webp` | 97 Ko |
 | `n3` | `heros_th_verre.webp` | 98 Ko |
+| `n4` | `heros_pf_recharge.webp` | 95 Ko |
+| `n4` | `heros_pf_tir.webp` | 82 Ko |
+| `n4` | `heros_th_recharge.webp` | 95 Ko |
+| `n4` | `heros_th_tir.webp` | 94 Ko |
 
-**5.8 Mo au total.**
+**6.1 Mo au total.**
 
 ## 24 planches à identifier
 

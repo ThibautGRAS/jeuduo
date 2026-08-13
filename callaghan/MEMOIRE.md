@@ -2235,6 +2235,39 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Une orientation se DÉCLARE, elle ne se déduit pas d'un indice
+
+Le rendu de la ruelle retournait l'héros d'indice 1 en dur :
+`if (i === 1) ctx.scale(-1, 1)`. Ça marchait, et ça reposait sur une
+hypothèse jamais écrite — que toutes les planches regardent à droite.
+
+Les nouvelles planches regardent dans deux sens opposés : Thibaut à
+droite, PF à gauche. Retourner l'indice 1 aurait mis PF à l'endroit et
+Thibaut à l'envers.
+
+Chaque planche déclare désormais son sens natif, et le rendu retourne
+l'image seulement quand le sens VOULU en diffère. Effet de bord heureux :
+PF n'est plus miroité du tout, donc son brassard POLICE reste du bon bras.
+
+**Une constante en dur qui « marche » cache souvent une hypothèse sur les
+données.** Le jour où les données changent, elle ne se plaint pas : elle
+donne un résultat faux.
+
+#### Forcer une variable sans vérifier qu'elle existe ne fait rien
+
+Pour rendre les deux héros debout dans une scène de contrôle, j'ai forcé
+`h.abri`, `h.leve` et `h.couvert`. Aucun des trois n'existe : l'abri est
+CALCULÉ au moment du dessin, à partir de `Ruelle.iaActive` et de l'index
+actif.
+
+Le rendu est sorti identique, sans erreur, et j'ai d'abord cru à un défaut
+d'échelle de PF — j'ai mesuré ses sprites avant de comprendre qu'il était
+simplement accroupi, ce qui est le comportement normal du héros inactif.
+
+**En JavaScript, écrire un champ qui n'existe pas le crée** : aucune
+erreur, aucun effet. Lire le code qui décide vaut mieux que deviner le nom
+du champ.
+
 #### Ce que l'AUTRE écrit ne se régénère pas
 
 Thibaut a réécrit le prompt du bar en anglais, plus direct : profil strict,

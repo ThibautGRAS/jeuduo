@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.03";
+const VERSION = "7.04";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -985,10 +985,24 @@ const OBJETS_RUELLE = [
 /* Les deux héros derrière la barricade, vus de dos. Thibaut a douze
    poses, PF onze : leurs planches n'en donnaient pas autant, et rien
    n'oblige deux personnages à avoir le même nombre d'images. */
+/* L'ORIENTATION NATIVE DE CHAQUE PLANCHE, déclarée. Le rendu retournait
+   l'héros d'indice 1 EN DUR — ce qui marchait tant que toutes les
+   planches regardaient du même côté. Les nouvelles regardent dans deux
+   sens opposés : Thibaut à droite, PF à gauche, mesuré sur les planches.
+   Un `+1` regarde à droite, un `-1` à gauche. Le rendu retourne
+   l'image quand le sens VOULU diffère du sens natif, au lieu de retourner
+   un indice choisi une fois pour toutes. */
+const SENS_NATIF = { ruel_th: +1, ruel_pf: -1 };
+
+/* Le sens vers lequel chaque héros doit regarder dans la ruelle : ils
+   encadrent la barricade, donc ils se font face. */
+const SENS_VOULU = [+1, -1];
+
 const POSES_RUEL_TH = ["accroupi", "leve1", "leve2", "debout", "arme1", "arme2",
-                       "vise1", "vise2", "tir", "recul1", "recul2", "baisse"];
-const POSES_RUEL_PF = ["accroupi", "leve1", "leve2", "arme1", "arme2", "vise",
-                       "tir", "fumee", "recul1", "recul2", "baisse"];
+                       "vise1", "vise2", "tir", "fumee", "recul1", "recul2",
+                       "baisse"];
+const POSES_RUEL_PF = ["accroupi", "leve1", "leve2", "debout", "arme1", "arme2",
+                       "vise", "tir", "fumee", "recul1", "recul2", "baisse"];
 /* L'intro du niveau 4 : le duo sur la ruelle floutée. Elle sert à deux
    choses — annoncer le niveau, et donner au navigateur le temps de
    charger le décor et les ennemis avant la première image. */

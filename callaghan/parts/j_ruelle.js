@@ -353,8 +353,13 @@ const CANONS = {
     baisse:[0.701, 0.421],   debout:[0.834, 0.496], leve1:[0.562, 0.407],
     leve2:[0.671, 0.393],    recul1:[0.825, 0.136], recul2:[0.725, 0.186],
     tir:[0.964, 0.160],      vise1:[0.894, 0.153],  vise2:[0.906, 0.167],
+    /* MESURÉE sur le nouveau sprite : l'arme retombe, la bouche descend
+       à mi-hauteur et recule au milieu du corps. */
+    fumee:[0.574, 0.416],
   },
   pf: {
+    /* MESURÉE sur le nouveau sprite. */
+    debout:[0.222, 0.603],
     accroupi:[0.701, 0.451], arme1:[0.911, 0.240], arme2:[0.958, 0.093],
     baisse:[0.729, 0.411],   fumee:[0.864, 0.128], leve1:[0.571, 0.492],
     leve2:[0.601, 0.494],    recul1:[0.787, 0.192], recul2:[0.751, 0.342],
@@ -1958,7 +1963,14 @@ const RuelleVue = {
         ang = borne(brut, VISEE_INCLINE_MIN, VISEE_INCLINE_MAX);
       }
       ctx.translate(ex, ey);
-      if (i === 1) ctx.scale(-1, 1);
+      /* ON RETOURNE SI LE SENS VOULU DIFFÈRE DU SENS NATIF de la planche,
+         au lieu de retourner l'indice 1 en dur. L'ancien code supposait
+         que toutes les planches regardaient à droite ; celles de la
+         ruelle regardent dans deux sens opposés — Thibaut à droite, PF à
+         gauche. Retourner l'indice 1 aurait donc mis PF à l'endroit et
+         Thibaut à l'envers. */
+      const natif = SENS_NATIF[h.sprite] || 1;
+      if (SENS_VOULU[i] !== natif) ctx.scale(-1, 1);
       ctx.rotate(-ang);
       ctx.drawImage(spr, -larg / 2, -haut * 0.34, larg, haut);
       /* La flamme de bouche est PEINTE, pas dessinée dans la planche :

@@ -4775,7 +4775,14 @@ if (D){
       D.Ruelle.changerHeros();
       return avant === "thibaut,pf" &&
         D.Ruelle.heros.map(h => h.id).join(",") === avant &&
-        /if \(i === 1\) ctx\.scale\(-1, 1\)/.test(source);
+        /* L'INVARIANT N'EST PAS « on retourne l'indice 1 » mais « chacun
+           garde son côté ». Le retournement était écrit en dur, ce qui
+           supposait que toutes les planches regardaient à droite. Celles
+           de la ruelle regardent dans deux sens opposés — Thibaut à
+           droite, PF à gauche — donc le sens se DÉCLARE et le
+           retournement se déduit. */
+        D.SENS_VOULU.length === 2 && D.SENS_VOULU[0] === -D.SENS_VOULU[1] &&
+        /if \(SENS_VOULU\[i\] !== natif\) ctx\.scale\(-1, 1\)/.test(source);
     })());
 
   verifier("l'équipier couvre sans qu'on change de personnage",
