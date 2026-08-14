@@ -10,14 +10,18 @@
   "temoin": 1,
   "rangees": [
     [
+      null
+    ],
+    [
       "arret",
       "arme2",
       "arme1",
       "lance",
-      null,
       "lache",
       "plie",
       null
     ]
-  ]
+  ],
+  "__rangees": "LA PELLE EN VOL FAIT SA PROPRE RANGÉE. Les rangées sont groupées par LIGNE DE SOL : la pelle est en l'air, sa ligne basse est plus haute que celle des sept figures, donc elle se détache. Elle est découpée à part, en obj_pelle, et n'est pas nommée ici.",
+  "temoin_rangee": 2
 }

@@ -1,0 +1,11 @@
+{
+  "_": "Xavier, planche de mort. Original : planches/n4/xavier-chute.webp. Trois poses sur une rangée : chute1 à genoux, chute2 affaissé sur le côté, sol allongé.",
+  "__echelle": "CETTE PLANCHE NE SE CALE PAS SUR LA TÊTE. Les deux autres le pouvaient : le personnage y est debout, sa tête se mesure et vaut 58 px en jeu. Ici il est à genoux puis couché, et la tête est dessinée plus petite par rapport au corps que sur les planches debout — la caler donnait un homme allongé de 184 px pour un homme debout de 329, soit un cadavre deux fois trop court. L'échelle se cale donc sur le CORPS : un homme à genoux fait 72 % de sa taille debout, soit 237 px pour 329, d'où hauteur_ref = 237 avec chute1 comme témoin. Vérifié à l'oeil contre run1 et plie.",
+  "planche": "planches/n4/xavier-chute.webp",
+  "reference": "img/n4/enn_jubi_run1.webp",
+  "hauteur_ref": 237,
+  "sortie": "img/n4",
+  "prefixe": "enn_xavier",
+  "temoin": 1,
+  "rangees": [["chute1", "chute2", "sol"]]
+}

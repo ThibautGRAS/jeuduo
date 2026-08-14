@@ -2260,6 +2260,69 @@ se demander de quoi elle dépend : ici, du fait qu'une foulée ne se lit que
 de profil. La vue se déclare maintenant par scène, et l'oubli est une
 erreur bruyante.
 
+#### Un corps COUCHÉ passe pour un fragment détaché
+
+Le découpeur recolle au voisin les composantes trop petites pour être des
+poses — c'est ce qui rattrape la tarte en vol d'Hortense, 60 x 33 px,
+séparée de sa main. Le critère ne regardait que la HAUTEUR.
+
+La planche de mort de Xavier l'a pris en défaut : son corps au sol fait
+**517 x 200 px** contre 457 px de haut pour la pose à genoux — moitié
+moins haut, donc « fragment », donc recollé à la pose d'à côté. Deux
+poses n'en faisaient plus qu'une, à 150 px de fond vide près, et le
+vérificateur annonçait pourtant trois poses.
+
+**Un fragment est petit dans LES DEUX SENS.** Une tarte est courte et
+étroite ; un homme allongé est court et LARGE. Le critère porte
+maintenant sur la hauteur ET la largeur, vérifié sans régression sur les
+soixante-huit planches archivées.
+
+Deux effets de bord de la même famille, trouvés dans la foulée :
+- les rangées se groupent par LIGNE DE SOL, donc un objet en l'air se
+  détache des figures et forme sa propre rangée. La pelle en vol servait
+  alors de témoin d'échelle : 117 px pour 329 attendus, soit un facteur
+  2,81 et un personnage de 554 px de large dans un canevas de 302. D'où
+  `temoin_rangee`.
+- les bandes de cadre à **(95, 1, 85)** sont un magenta si sombre que
+  l'écart au vert n'y atteint pas le seuil : onze bandes pleine hauteur
+  passaient pour des poses.
+
+#### L'échelle se cale sur la TÊTE — sauf quand le personnage est à terre
+
+Les méchants en jeu ont une tête de 58 px pour un sujet de 332. Les trois
+planches debout de Xavier avaient des têtes de 72, 80 et 90 px pour des
+corps de 412, 449 et 510 : **les proportions changent d'une planche à
+l'autre**, et caler sur la hauteur du corps le faisait grandir d'un quart
+en armant son bras. La tête est l'invariant, et c'est cohérent avec ce
+que le joueur regarde — c'est la zone qu'il vise.
+
+Sa planche de MORT casse la règle : à genoux puis couché, la tête y est
+dessinée plus petite par rapport au corps. La caler dessus donnait un
+cadavre de 184 px pour un homme debout de 329, **deux fois trop court**.
+Là, c'est le corps qui sert d'étalon — un homme à genoux fait 72 % de sa
+taille debout — et l'œil qui tranche, en posant les poses sur la même
+ligne de sol.
+
+#### Un DÉCOMPTE figé dans un test est une dette
+
+Cinq tests ont bloqué l'arrivée d'un sixième méchant, et aucun ne portait
+sur le nombre d'ennemis : `cles.length === 5` dans un test d'équilibrage
+qui mesure un écart de menace, `>= 2` dans un test qui vérifiait qu'un
+personnage a des planches, une liste d'échantillons sonores recopiée à la
+main, une liste de portraits recopiée elle aussi.
+
+Écrire le nombre attendu, c'est demander à relire le test à chaque ajout.
+Les mêmes tests tirent maintenant leur liste du code — `ENNEMIS_RUELLE`
+pour les portraits, `ENNEMIS` pour les cris — et ne vérifient plus que ce
+qu'ils prétendent vérifier.
+
+Corollaire trouvé au même endroit : **deux tables des inachevés valent
+mieux qu'une mauvaise**. `ENNEMIS_INCOMPLETS` exige une entrée dans
+`ENNEMIS`, or la dernière horde exige que tout `ENNEMIS` y figure — donc
+un méchant à moitié dessiné y meurt sans pose de mort, et le rendu se
+replie sur `run1` : le cadavre continue de courir. `ENNEMIS_EN_ATTENTE`
+porte ce cas-là, et un test vérifie que ce qui y figure n'est pas jouable.
+
 #### Un prompt tiré du CATALOGUE demande d'autres poses que le jeu
 
 Quatrième fois que le même défaut est trouvé, et chaque fois par Thibaut.

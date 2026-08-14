@@ -226,6 +226,40 @@ const ENNEMIS = {
     jet:{ zMin:0.25, zMax:0.80, attente:[2.2, 3.6], objet:"pave",
           vol:1.00, degat:14, cible:{ x:0.14, y:0.05 }, penalite:1.6 },
   },
+  xavier: {
+    nom:"XAVIER LE TERRASSIER", pv:100, vitesse:0.105, taille:0.99, sprite:"xavier",
+    /* pv x vitesse = 10,5, comme Jubilar : la menace reste la même, la
+       répartition change. Il est le plus RAPIDE des porteurs de cible —
+       ce qui laisse moins de temps pour choisir entre tirer dedans et
+       se mettre à couvert. */
+    mult:{ tete:1.35, torse:0.50, jambes:0.85, epaule:0.65 },
+    /* La tête la plus payante du niveau (1,35) contre le torse le moins
+       rentable (0,50) : sec et anguleux, il ne se tue pas au jugé. */
+    /* IL LANCE SA PELLE, et de PRÈS — sa fourchette commence là où celle
+       de Jubilar s'arrête. Les deux bombardiers de fond (l'Abbé, BruHell)
+       tiennent 0,12 à 0,52 ; Jubilar 0,25 à 0,80 ; Xavier 0,55 à 0,92.
+       Une pelle lancée à bout portant ne se voit pas venir de loin : le
+       joueur a moins d'une seconde, et la cible est haute et large. */
+    jet:{ zMin:0.55, zMax:0.92, attente:[2.6, 4.0], objet:"pelle",
+          vol:0.80, degat:18,
+          /* cible mesurée sur enn_xavier_arme2. Le barycentre de l'encre
+             du haut donnait 0,485 / 0,105 — et à l'aperçu l'anneau
+             mordait sur le crâne, qui commence à 0,145 de la hauteur et
+             0,503 de la largeur : la cible et la tête devenaient une
+             seule zone à viser. On monte sur la POIGNÉE de la pelle,
+             0,436 / 0,045, la seule partie franchement détachée. Le
+             corps de la main, lui, est à 0,411-0,470.
+             À REMESURER si la planche est refaite. */
+          cible:{ x:0.436, y:0.045 }, penalite:1.5 },
+    /* Jet annulé : il reste plié, tête offerte. Moins longtemps que
+       l'Abbé (1,2 s contre 1,5) parce qu'il est plus près — la fenêtre
+       doit rester une récompense, pas une exécution gratuite. */
+    plie:{ duree:1.2, multTete:1.7 },
+    /* Au contact il ABAT SA PELLE sur la barricade au lieu de s'évaporer.
+       22 comme DSKKK ferait deux mécaniques identiques : 18 et un saut
+       plus court, parce qu'il frappe de plain-pied au lieu de sauter. */
+    bond:{ z:0.94, duree:0.42, degat:18 },
+  },
 };
 
 /* ---------------- ce qui vole ----------------
@@ -497,6 +531,32 @@ const BESTIAIRE = {
            "Un Enfoiré de moins au générique.",
            "Il gardait le nom. Il a gardé que ça."],
   },
+  xavier: {
+    /* LE RATÉ RANGÉ. Seul FICTIF du bestiaire, et sa fiche y tient : les
+       cinq autres se moquent d'une impunité réelle, lui incarne la
+       violence ordinaire, celle qui ne fait pas la une. Les répliques
+       tapent donc sur la FAÇADE — la veste blanche impeccable, les bottes
+       crottées jusqu'aux genoux — et jamais sur ce qu'il y a sous la
+       terrasse. Une première version le renvoyait à un fait divers connu
+       (cavale, signalements à l'étranger) : c'était le contraire de sa
+       fiche, et ça revenait à faire du fait divers de la vanne. */
+    soustitre: "Il lance sa pelle de près. Cible haute.",
+    arrivee: ["Un Xavier ! Il a ressorti la pelle.",
+              "Voilà Xavier. Le voisin qu'on ne remarque jamais.",
+              "Mon Dieu, Xavier le Terrassier.",
+              "Xavier. Veste blanche, bottes crottées.",
+              "Tiens, Xavier. Il a dû finir sa terrasse."],
+    reponse: ["Il lance de près. Tire dans la pelle, ou couvre-toi.",
+              "Sa pelle arrive vite. Vise le bras, pas le ventre.",
+              "Veste impeccable, bottes pleines de terre. Tout est là.",
+              "La tête paye. Le torse, rien : personne là-dedans.",
+              "À la messe le matin, à la pelle le soir.",
+              "Le genre dont les voisins disent qu'il était très bien."],
+    mort: ["Il ne creusera plus.",
+           "La terrasse restera comme ça.",
+           "« Un homme très bien », qu'ils disaient.",
+           "Celui-là s'arrête enfin quelque part."],
+  },
 };
 
 /* ---------------- l'annonce de horde ----------------
@@ -645,6 +705,14 @@ const PIQUES = {
          "Il reste à distance. Comme l'Abbé.",
          "Le floquage tient mieux que la conduite."],
   },
+  xavier: {
+    th: ["Le voisin parfait. On sait ce que ça vaut.",
+         "Veste blanche, mains sales. Comme d'habitude.",
+         "Il lance de près. Poli jusqu'au bout, celui-là."],
+    pf: ["Rangé, pratiquant, et une pelle.",
+         "La respectabilité, c'est un vêtement.",
+         "Il a coulé sa terrasse un dimanche."],
+  },
 };
 /* Plus RARE qu'un mot de mort : une pique commente l'arrivée d'un type,
    pas un événement d'action. Une sur quatre apparitions. */
@@ -717,8 +785,12 @@ const Ruelle = {
     { nombre:11, delai:1.4,  vitesse:1.14, simultanes:3, nbTypes:4 },
     { nombre:12, delai:1.3,  vitesse:1.18, simultanes:3, nbTypes:5 },
     { nombre:11, delai:1.4,  vitesse:1.12, simultanes:3, nbTypes:5, geant:true },
-    { nombre:14, delai:1.1,  vitesse:1.24, simultanes:3, nbTypes:5 },
-    { nombre:16, delai:0.95, vitesse:1.32, simultanes:3, nbTypes:5 },
+    /* LE SIXIÈME TYPE ARRIVE APRÈS LE SECOND GÉANT, et pas avant : la
+       leçon de Xavier — une cible haute qu'on n'a qu'une seconde pour
+       toucher — ne s'apprend pas au milieu d'une horde de quatorze. Il
+       entre quand le joueur a déjà vu les cinq autres. */
+    { nombre:14, delai:1.1,  vitesse:1.24, simultanes:3, nbTypes:6 },
+    { nombre:16, delai:0.95, vitesse:1.32, simultanes:3, nbTypes:6 },
   ],
   /* Les types d'une horde : les `nbTypes` premiers de l'ordre tiré. */
   typesVague(v){

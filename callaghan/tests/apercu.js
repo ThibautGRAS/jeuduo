@@ -661,9 +661,9 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "36_bar_foule_derriere");
   }
 
-  /* 37. LES CINQ ENNEMIS à la même profondeur : la seule image qui dit
+  /* 37. TOUS LES ENNEMIS à la même profondeur : la seule image qui dit
      s'ils se distinguent de LOIN, ce qui est toute la question quand la
-     rue se remplit. */
+     rue se remplit. Ils étaient cinq, ils sont six. */
   {
     const { D, canevas } = await preparer(390, 780);
     D.amorcer(); D.Camera.mesurer(390, 780, 1);
@@ -677,7 +677,7 @@ function jouerJusqua(D, condition, limite){
     });
     D.Ruelle.secousse = 0;
     D.RuelleVue.dessiner();
-    ecrire(canevas, "37_cinq_ennemis");
+    ecrire(canevas, "37_tous_ennemis");
   }
 
   /* 37-38. L'ABBÉ FORCEUR. Deux instants : l'encensoir brandi avec sa
@@ -722,6 +722,64 @@ function jouerJusqua(D, condition, limite){
     D.Ruelle.secousse = 0;
     D.RuelleVue.dessiner();
     ecrire(canevas, "38_abbe_cloche");
+  }
+
+  /* 38b. XAVIER, les trois instants qu'aucun test ne peut juger : sa
+     pelle brandie avec la cible dessus — elle doit tomber SUR la pelle et
+     pas sur le crâne —, la pelle en plein vol de PRÈS, et sa mort. La
+     séquence de mort a sa propre planche, dessinée à une autre échelle
+     que les poses debout : c'est l'image qui dit si le raccord tient. */
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 4;
+    const x = D.ENNEMIS.xavier;
+    const poser = (z, couloir, etat) => D.Ruelle.ennemis.push({
+      ref:x, pv:x.pv, pvMax:x.pv, couloir, z, vitesse:x.vitesse, etat,
+      frame:0, tFrame:0, tEtat:0.1, mort:0, touche:null, usure:0,
+      attente:99, usureGarde:0, attenteGarde:999 });
+    poser(0.62, 2, "arme2");
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "38b_xavier_pelle_armee");
+  }
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 4;
+    const x = D.ENNEMIS.xavier;
+    D.Ruelle.ennemis.push({ ref:x, pv:x.pv, pvMax:x.pv, couloir:2, z:0.72,
+      vitesse:x.vitesse, etat:"lance", frame:0, tFrame:0, tEtat:0.1, mort:0,
+      touche:null, usure:0, attente:99, usureGarde:0, attenteGarde:999 });
+    D.Ruelle.lancerProjectile(D.Ruelle.ennemis[0]);
+    D.Ruelle.projectiles[0].t = x.jet.vol * 0.55;
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "38c_xavier_pelle_en_vol");
+  }
+  {
+    const { D, canevas } = await preparer(390, 780);
+    D.amorcer(); D.Camera.mesurer(390, 780, 1);
+    D.Jeu.demarrer(4); D.Ruelle.introT = 0;
+    D.Ruelle.ennemis.length = 0; D.Ruelle.aSortir = 4;
+    const x = D.ENNEMIS.xavier;
+    /* les trois temps de la mort, côte à côte à la même profondeur */
+    /* Les états s'appellent `chute` et `sol` ; la POSE se déduit ensuite
+       du temps écoulé — chute1 avant 0,21 s, chute2 après, et sol2 après
+       0,55 s pour qui en a un. Écrire "mort" comme état donnait trois
+       morts qui couraient : c'est l'aperçu qui l'a montré, aucun test ne
+       l'aurait vu. */
+    [["chute", 0.10, 0], ["chute", 0.40, 0], ["sol", 0, 0.9]]
+      .forEach(([etat, tEtat, mort], i) => {
+        D.Ruelle.ennemis.push({ ref:x, pv:0, pvMax:x.pv, couloir:i + 1, z:0.60,
+          vitesse:0, etat, frame:0, tFrame:0, tEtat, mort,
+          touche:null, usure:0, attente:99, usureGarde:0, attenteGarde:999 });
+      });
+    D.Ruelle.secousse = 0;
+    D.RuelleVue.dessiner();
+    ecrire(canevas, "38d_xavier_mort");
   }
 
   /* 39. LES DEUX BOMBARDIERS ENSEMBLE, chacun en pleine préparation avec

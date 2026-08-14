@@ -6175,15 +6175,20 @@ if (D){
              b.degat > a.degat && b.attente[0] > a.attente[0];
     })());
 
-  verifier("les cinq ennemis sont complets",
+  verifier("tous les ennemis sont complets",
     (() => {
-      const manquants = Object.keys(D.ENNEMIS_INCOMPLETS);
+      /* Le compte était figé à CINQ. Xavier fait six, et le figer à six
+         reproduirait la même dette au prochain. Ce qui compte n'est pas
+         le nombre : c'est qu'aucun ne traîne dans les deux tables des
+         inachevés, et que chacun ait de quoi jouer sa mécanique. */
+      const manquants = Object.keys(D.ENNEMIS_INCOMPLETS)
+        .concat(Object.keys(D.ENNEMIS_EN_ATTENTE || {}));
+      const maigres = Object.keys(D.ENNEMIS)
+        .filter(k => (D.POSES_PROPRES[k] || []).length < 5);
       messageDetail = manquants.length ? "encore attendus : " + manquants.join(", ")
-                                       : "aucun";
-      return manquants.length === 0 &&
-        Object.keys(D.ENNEMIS).length === 5 &&
-        Object.keys(D.ENNEMIS).every(k =>
-          (D.POSES_PROPRES[k] || []).length >= 5);
+        : Object.keys(D.ENNEMIS).length + " ennemis, aucun inachevé";
+      return manquants.length === 0 && maigres.length === 0 &&
+        Object.keys(D.ENNEMIS).length >= 5;
     })());
 
   verifier("chacun pose une question DIFFÉRENTE",
@@ -6206,7 +6211,7 @@ if (D){
       return new Set(sigs).size === sigs.length;
     })());
 
-  verifier("la dernière horde les réunit tous les cinq",
+  verifier("la dernière horde les réunit TOUS",
     (() => {
       const v = D.Ruelle.VAGUES;
       const derniere = D.Ruelle.typesVague(v[v.length - 1]);
@@ -6377,7 +6382,11 @@ if (D){
       const contact = cles.filter(k => !D.ENNEMIS[k].menaceDistante);
       const m = contact.map(k => D.ENNEMIS[k].pv * D.ENNEMIS[k].vitesse);
       messageDetail = "pv x vitesse : " + contact.map((k, i) => k + " " + m[i].toFixed(1)).join(", ");
-      return cles.length === 5 && m.length >= 3 &&
+      /* `cles.length === 5` figeait le casting dans un test d'ÉQUILIBRAGE
+         qui n'a rien à dire du nombre d'ennemis. Ce qui est vérifié ici
+         est l'écart entre les menaces, pas le compte : au moins trois
+         mesurés, et pas plus de 15 % d'écart entre eux. */
+      return m.length >= 3 &&
         (Math.max(...m) - Math.min(...m)) / Math.max(...m) < 0.15;
     })());
 
@@ -6415,7 +6424,7 @@ if (D){
       return Math.max(...n) - Math.min(...n) >= 1 && cout.depar >= 2;
     })());
 
-  verifier("la dernière horde mélange les cinq",
+  verifier("la dernière horde mélange TOUS les types",
     (() => {
       const v = D.Ruelle.VAGUES;
       const derniere = D.Ruelle.typesVague(v[v.length - 1]);

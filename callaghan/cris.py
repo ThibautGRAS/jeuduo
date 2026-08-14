@@ -47,6 +47,23 @@ VOIX = {
 }
 SR = 44100
 
+# UN CRI DÉRIVÉ D'UN AUTRE CRI. Le source des grognements n'est pas
+# versionné (4,9 Mo, §3) : le jour où un sixième méchant est arrivé, il
+# n'y avait plus de matière pour lui tailler une fenêtre à lui. On repart
+# donc d'un cri DÉJÀ FABRIQUÉ, avec sa propre transformation.
+#
+# C'est un pis-aller assumé, et il se voit : passer deux fois par
+# l'encodeur ajoute du grain. Il reste préférable à un cri en double —
+# deux méchants qui meurent avec la même voix s'entendent tout de suite.
+# Si le source revient un jour, tailler à Xavier sa propre fenêtre et le
+# sortir d'ici.
+#
+# Xavier est sec et nerveux : plus haut et plus court que Jubilar, sans
+# aller jusqu'au fluet de l'Abbé.
+DERIVES = {
+    "cri_xavier": ("cri_jubi", 1.16, 1.00),
+}
+
 
 def extraire(src, dst, nom, depart, duree, hauteur, gain):
     tmp = dst / (nom + ".ogg.tmp")
@@ -112,4 +129,16 @@ if __name__ == "__main__":
         o = extraire(src, dst, nom, d, du, h, g)
         total += o
         print(f"  {nom:12s} {d:6.2f} s  x{h:.2f}  {o / 1024:5.1f} Ko")
-    print(f"\n{len(VOIX)} cris, {total / 1024:.0f} Ko")
+    for nom, (base, h, g) in DERIVES.items():
+        source = dst / (base + ".ogg")
+        if not source.exists():
+            sys.exit(f"ABANDON : {source} manquant, il sert de matière à {nom}")
+        import wave
+        duree = float(subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "csv=p=0", str(source)],
+            capture_output=True).stdout.decode().strip())
+        o = extraire(source, dst, nom, 0.0, duree, h, g)
+        total += o
+        print(f"  {nom:12s} tiré de {base}  x{h:.2f}  {o / 1024:5.1f} Ko")
+    print(f"\n{len(VOIX) + len(DERIVES)} cris, {total / 1024:.0f} Ko")

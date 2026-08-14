@@ -108,11 +108,21 @@ def composantes(a, coupures):
     # minimale ne filtre pas et qui passait pour un personnage de plus.
     # On le RATTACHE au voisin le plus proche — la tarte fait partie de la
     # pose de lancer, la jeter reviendrait à lancer dans le vide.
+    #
+    # UN FRAGMENT EST PETIT DANS LES DEUX SENS. Le critère ne regardait
+    # que la HAUTEUR, et la planche de chutes de Xavier l'a pris en
+    # défaut : son corps au sol fait 517 x 200 px contre 457 px de haut
+    # pour les poses à genoux — moitié moins haut, donc « fragment », donc
+    # recollé à la pose d'à côté. Deux poses n'en faisaient plus qu'une,
+    # à 150 px de fond vide près. Une tarte est courte ET étroite ; un
+    # homme allongé est court et LARGE.
     if len(gardes) >= 3:
         hs = sorted(y2 - y1 for _, y1, _, y2, _ in gardes)
-        hmed = hs[len(hs) // 2]
-        vrais = [g for g in gardes if g[3] - g[1] >= hmed * 0.5]
-        frags = [g for g in gardes if g[3] - g[1] < hmed * 0.5]
+        ws = sorted(x2 - x1 for x1, _, x2, _, _ in gardes)
+        hmed, wmed = hs[len(hs) // 2], ws[len(ws) // 2]
+        petit = lambda g: (g[3] - g[1] < hmed * 0.5) and (g[2] - g[0] < wmed * 0.5)
+        vrais = [g for g in gardes if not petit(g)]
+        frags = [g for g in gardes if petit(g)]
         for fx1, fy1, fx2, fy2, fi in frags:
             if not vrais: break
             k = min(range(len(vrais)),
@@ -216,8 +226,16 @@ def main(cfg):
     #
     # Le témoin doit être le MÊME sprite pour toutes les planches d'un
     # personnage. `temoin` dit lequel prendre, en rang dans la rangée.
+    #
+    # `temoin_rangee` dit dans QUELLE rangée le chercher. Il a fallu
+    # l'ajouter le jour où la pelle en vol de Xavier a formé sa propre
+    # rangée : les rangées se groupent par ligne de sol, un objet en l'air
+    # se détache donc des figures, arrive en premier, et servait d'étalon
+    # — 117 px de pelle pour 329 px attendus, soit une échelle de 2,81 et
+    # un personnage de 554 px de large dans un canevas de 302.
     it = int(cfg.get("temoin", 1)) - 1
-    tx0, ty0, tx1, ty1, _ = rgs[0][min(it, len(rgs[0]) - 1)]
+    ir = min(int(cfg.get("temoin_rangee", 1)) - 1, len(rgs) - 1)
+    tx0, ty0, tx1, ty1, _ = rgs[ir][min(it, len(rgs[ir]) - 1)]
     haut_temoin = ty1 - ty0
     ech = haut_ref / haut_temoin
     print(f"témoin : {haut_temoin} px sur la planche, {haut_ref} px sur {pathlib.Path(cfg['reference']).name}")
