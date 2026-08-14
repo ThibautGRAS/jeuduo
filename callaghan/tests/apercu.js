@@ -695,7 +695,7 @@ function jouerJusqua(D, condition, limite){
     const { D, canevas } = await preparer(844, 318);
     D.amorcer(); D.Camera.mesurer(844, 318, 1);
     D.Jeu.demarrer(3); D.Tournee.lancer(); D.Tournee.introT = 0;
-    D.Tournee.x = 0.64; D.Tournee.ambiance = 85;
+    D.Tournee.x = 0.64; D.Tournee.ambiance = 92; D.Tournee.temps = 118;
     D.Tournee.marche = 0; D.Tournee.dir = 1;
     /* soixante images et non huit : la caméra suit le champion en
        douceur, et à huit images elle n'était pas encore arrivée — le

@@ -76,6 +76,10 @@ const BarVue = {
        foule se retrouvait derrière un mobilier plus petit qu'elle. */
     this.dessinerTabourets();
     this.dessinerFoule();
+    /* LES PROJECTEURS PASSENT SUR LES GENS, pas dessous : dessinés avant
+       la foule, ils éclairaient le sol et laissaient les danseurs dans le
+       noir — l'inverse de ce que fait une salle. */
+    this.dessinerProjecteurs();
     if (T.tarte) this.dessinerTarte();
 
     /* Le coup de feu réchauffe la salle. */
@@ -424,6 +428,55 @@ const BarVue = {
     g.addColorStop(1, "rgba(" + c[0] + "," + c[1] + "," + c[2] + ",0)");
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.42, 0, 0, 6.283); ctx.fill();
+  },
+
+  /* ================= LES PROJECTEURS =================
+     Le bar avait ses néons — fixes, peints sur le fond — et rien qui
+     bouge. Une salle où l'on danse a des taches de couleur qui balayent
+     le sol et les gens, et c'est ce qui fait qu'on la sent VIVANTE sans
+     rien changer au décor.
+
+     Trois décisions, et elles tiennent toutes à la lisibilité :
+
+     1. ILS SUIVENT L'AMBIANCE. À froid, presque rien — deux taches
+        molles. À chaud, elles balayent vite et fort. Le joueur voit donc
+        sa jauge dans la SALLE, pas seulement dans la barre du haut.
+     2. ILS PASSENT AU-DESSUS DES GENS mais sous l'interface : un
+        projecteur qui éclaire le sol derrière les danseurs ne ressemble à
+        rien, et un projecteur qui délave les boutons rend le jeu illisible.
+     3. ILS NE TOUCHENT PAS LE COMPTOIR. Les verres sont l'enjeu du
+        niveau : une tache de couleur qui passe dessus change leur teinte,
+        et un cocktail se distingue d'une eau par sa COULEUR. Ils sont
+        donc bornés SOUS la ligne du comptoir. */
+  PROJECTEURS: [
+    { teinte:[255,60,180], phase:0.0, vitesse:0.23, large:0.30 },
+    { teinte:[60,140,255], phase:2.1, vitesse:0.31, large:0.26 },
+    { teinte:[120,255,180], phase:4.2, vitesse:0.19, large:0.22 },
+  ],
+  dessinerProjecteurs(){
+    const T = Tournee, H = Camera.H, L = Camera.L;
+    if (!T.actif) return;
+    const chaud = borne(T.ambiance / BAR_AMBIANCE_BUT, 0, 1);
+    /* en dessous d'un tiers d'ambiance, la salle est éteinte : c'est ce
+       qui rend le passage à chaud visible */
+    const force = borne((chaud - 0.28) / 0.72, 0, 1);
+    if (force <= 0.01) return;
+    const t = T.temps || 0;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (const pr of this.PROJECTEURS){
+      /* un aller-retour, pas un tour de piste : une tache qui ressort
+         d'un bord et rentre par l'autre saute à l'oeil */
+      const u = 0.5 + 0.5 * Math.sin(t * pr.vitesse * (0.6 + chaud) + pr.phase);
+      const x = L * (0.08 + 0.84 * u);
+      const y = H * (BAR_COMPTOIR + 0.06) + H * 0.30;
+      const puls = 0.72 + 0.28 * Math.sin(t * 3.1 + pr.phase);
+      /* 0,30 et non 0,16 : à 0,16 on ne les voyait qu'en comparant deux
+         captures. Au-delà de 0,35 en revanche, le rose passe sur les
+         visages et les habitués changent de couleur de peau. */
+      this.halo(x, y, L * pr.large, pr.teinte, 0.30 * force * puls);
+    }
+    ctx.restore();
   },
 
   /* le liseré de néon qui court le long du comptoir, au tempo de la

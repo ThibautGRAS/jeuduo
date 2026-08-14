@@ -134,6 +134,12 @@ même comptoir se disputaient l'oeil. `assis_canape` reste découpé et
 chargé — il attend le canapé du niveau 2. Au bar, le verre change la pose
 de l'assis (`assis_verre`), pas son siège.
 
+**La salle bouge et se soûle** (v7.31) : trois projecteurs balayent la
+piste dès que l'ambiance dépasse 28 %, un changement d'humeur toutes les
+4 à 9 secondes au lieu de 9 à 17, et une ivresse qui monte avec le temps —
+à la fin, un habitué sur deux tangue et un échange sur trois part en
+vrille.
+
 **Une planche n'a pas besoin d'être complète.** Chaque pose absente se
 replie : `danse2` sur `danse1`, tout le reste sur `idle`. Un habitué qui
 n'a que trois poses danse quand même, sur un temps au lieu de deux.

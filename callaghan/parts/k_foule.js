@@ -112,6 +112,16 @@ const FOULE_PHRASES = {
     "Francky va exploser.",
     "Regarde-moi ce comptoir.",
   ],
+  fin_de_soiree: [
+    "Il est tard, non ?",
+    "Je vois double. Deux fois.",
+    "Qui a éteint la lumière ?",
+    "Je vais bien. Je vais TRÈS bien.",
+    "Le tabouret bouge tout seul.",
+    "On reste encore un peu.",
+    "J'ai plus de voix. J'ai encore soif.",
+    "Demain, je fais rien.",
+  ],
   pompette: [
     "Il tient plus debout.",
     "Doucement, champion.",
@@ -284,6 +294,35 @@ const FOULE_DISCUSSIONS = {
     ["Moi je dis rien, hein.", "Tu dis rien depuis vingt minutes.",
      "Je dis rien, mais je pense fort."],
   ],
+  /* CE QU'ILS DISENT QUAND IL EST TARD. Pas de méchanceté, pas de
+     gueule de bois : juste des gens qui perdent le fil et le disent. */
+  ivres: [
+    ["J'ai quelque chose à te dire.", "Vas-y.", "J'ai oublié.",
+     "C'était sûrement important."],
+    ["Je t'aime bien, toi.", "Toi aussi tu es bien.", "On est bien."],
+    ["Attends. Attends. ATTENDS.", "J'attends.", "Voilà."],
+    ["Il est quelle heure ?", "Tard.", "Non mais VRAIMENT quelle heure ?",
+     "Vraiment tard."],
+    ["On devrait faire ça plus souvent.", "On fait ça tous les vendredis.",
+     "Ah. Alors on fait bien."],
+    ["Je vais rentrer.", "Tu as dit ça il y a une heure.",
+     "Et je le pense encore plus fort."],
+    ["Explique-moi un truc.", "Oui ?", "N'importe quoi. Je veux juste écouter."],
+    ["Mon verre a bougé.", "Personne n'a touché ton verre.",
+     "Alors c'est moi qui ai bougé."],
+    ["Chut. Écoute.", "Y'a rien.", "Exactement."],
+    ["Je danse mieux que d'habitude, non ?", "Non.", "Bon."],
+    ["Tu es mon meilleur ami.", "On s'est vus trois fois.",
+     "Trois fois PARFAITES."],
+    ["Faut que je dise un truc à tout le monde.", "Vas-y.",
+     "Non. Pas maintenant. Ce soir.", "On EST ce soir."],
+    ["Le sol est bizarre ici.", "Le sol va très bien.",
+     "Alors c'est autre chose."],
+    ["Une dernière.", "Tu as dit ça quatre fois.",
+     "Et à chaque fois c'était vrai."],
+    ["Qui a commandé ça ?", "Toi.", "Alors c'est bon.",
+     "Tu l'as commandé deux fois."],
+  ],
   commun: [
     ["Tu reprends quelque chose ?", "Le même.", "Le même pour moi aussi."],
     ["Il en met du temps.", "Il est tout seul.", "Il est toujours tout seul."],
@@ -345,8 +384,12 @@ const FOULE_ENCHAINE = 0.35;          /* blanc entre deux répliques      */
    Tout est en REPLI : un habitué qui n'a pas la planche garde son `idle`.
    C'est ce qui permet d'ajouter les poses personnage par personnage sans
    que le bar attende le dernier. */
-const FOULE_HUMEUR = [9.0, 17.0];     /* délai entre deux changements     */
-const FOULE_HUMEUR_DUREE = [4.0, 9.0];
+/* 4 À 9 SECONDES, et non 9 à 17. Un seul changement d'humeur toutes les
+   treize secondes pour onze habitués, ça faisait un danseur toutes les
+   deux minutes : la salle restait plantée. À cette cadence il y a presque
+   toujours quelqu'un qui bouge, et jamais tout le monde en même temps. */
+const FOULE_HUMEUR = [4.0, 9.0];      /* délai entre deux changements     */
+const FOULE_HUMEUR_DUREE = [6.0, 13.0];
 const FOULE_ASSIS_DUREE = [14.0, 26.0];
 const FOULE_CHANCE_ASSIS = 0.34;
 /* La cadence des pas de danse et du tangage. Plus lente que la marche :
@@ -713,9 +756,12 @@ Object.assign(Tournee, {
       m.humeur = melange(FOULE_ASSIS_DUREE[0], FOULE_ASSIS_DUREE[1], Math.random());
       return;
     }
-    const haute = this.ambiance > BAR_AMBIANCE_BUT * 0.70;
-    const soul = this.bourre > 0 || Math.random() < 0.35;
-    m.etat = haute ? "danse" : (soul ? "titube" : "danse");
+    /* L'IVRESSE DE LA SALLE monte avec la soirée : c'est le temps écoulé,
+       rien de plus, et ça suffit à ce que le bar finisse autrement qu'il
+       n'a commencé. À la fin, un habitué sur deux tangue. */
+    const haute = this.ambiance > BAR_AMBIANCE_BUT * 0.50;
+    const soul = Math.random() < 0.22 + this.ivresse() * 0.45 || this.bourre > 0;
+    m.etat = soul ? "titube" : (haute || Math.random() < 0.6 ? "danse" : "titube");
     m.humeur = melange(FOULE_HUMEUR_DUREE[0], FOULE_HUMEUR_DUREE[1], Math.random());
     m.t = 0;
   },
@@ -812,8 +858,18 @@ Object.assign(Tournee, {
      arrivent assez souvent pour qu'on tombe dessus dans une soirée, pas
      assez pour que le comptoir devienne une revue de presse. */
   seauDiscussion(){
+    /* En fin de soirée, un échange sur trois part en vrille : c'est le
+       même bar, mais plus personne ne finit ses phrases. */
+    if (this.ivresse() > 0.60 && Math.random() < 0.38) return "ivres";
     const r = Math.random();
     return r < 0.46 ? "ragots" : r < 0.76 ? "faits_divers" : "commun";
+  },
+
+  /* De 0 au début à 1 à la dernière minute. Le coup de feu la pousse :
+     tout le monde a un verre en main au même moment. */
+  ivresse(){
+    const t = borne((this.temps || 0) / BAR_DUREE, 0, 1);
+    return borne(t * (this.coupDeFeu ? 1.25 : 1), 0, 1);
   },
 
   contexteFoule(){
@@ -822,6 +878,8 @@ Object.assign(Tournee, {
     if (this.bourre > 0) seaux.push("pompette");
     if (this.ambiance < BAR_AMBIANCE_BUT * 0.30) seaux.push("ambiance_basse");
     if (this.ambiance > BAR_AMBIANCE_BUT * 0.80) seaux.push("ambiance_haute");
+    /* PASSÉ LES DEUX TIERS DE LA SOIRÉE, ils ne parlent plus pareil. */
+    if (this.ivresse() > 0.66) seaux.push("fin_de_soiree");
     return seaux;
   },
 

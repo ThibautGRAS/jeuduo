@@ -5804,6 +5804,47 @@ if (D){
         .test(src);
     })());
 
+  verifier("les projecteurs suivent l'ambiance et ÉPARGNENT le comptoir",
+    (() => {
+      /* Le bar n'avait que des néons peints sur le fond. Trois taches de
+         couleur balayent maintenant la piste, et leur force suit la
+         jauge : le joueur voit son ambiance dans la SALLE, pas seulement
+         dans la barre du haut.
+
+         Elles restent SOUS la ligne du comptoir. Les verres sont l'enjeu
+         du niveau et un cocktail se distingue d'une eau par sa COULEUR :
+         une tache rose qui passe dessus rend le niveau injouable. */
+      const vue = source.slice(source.indexOf("PROJECTEURS:"));
+      const y = /const y = H \* \(BAR_COMPTOIR \+ ([\d.]+)\)/.exec(vue);
+      const sous = y && parseFloat(y[1]) > 0;
+      /* et rien ne se dessine tant que la salle est froide */
+      const froid = /const force = borne\(\(chaud - 0\.28\)/.test(vue);
+      messageDetail = (sous ? "sous le comptoir" : "SUR le comptoir")
+        + (froid ? ", éteints à froid" : ", allumés en permanence");
+      return sous && froid &&
+        /globalCompositeOperation = "lighter"/.test(vue) &&
+        /dessinerProjecteurs\(\);/.test(source);
+    })());
+
+  verifier("la salle se soûle avec la soirée",
+    (() => {
+      /* L'ivresse est le TEMPS ÉCOULÉ, rien de plus, et ça suffit à ce
+         que le bar finisse autrement qu'il n'a commencé : plus de gens
+         qui tanguent, et un échange sur trois qui part en vrille. */
+      const T = unBar();
+      T.temps = 0; T.coupDeFeu = false;
+      const debut = T.ivresse();
+      T.temps = D.BAR_DUREE * 0.95;
+      const fin = T.ivresse();
+      const seaux = new Set();
+      for (let i = 0; i < 400; i++) seaux.add(T.seauDiscussion());
+      messageDetail = "ivresse " + debut.toFixed(2) + " -> " + fin.toFixed(2)
+        + " | " + [...seaux].join(", ");
+      return debut < 0.05 && fin > 0.9 && seaux.has("ivres") &&
+        (D.FOULE_DISCUSSIONS.ivres || []).length >= 10 &&
+        (D.FOULE_PHRASES.fin_de_soiree || []).length >= 6;
+    })());
+
   verifier("le verre change la pose de l'assis, pas son siège",
     (() => {
       /* Le canapé du bar a été retiré : il ne plaisait pas, et deux
