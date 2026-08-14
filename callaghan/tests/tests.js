@@ -5487,6 +5487,48 @@ if (D){
       return jouables.length === 0 && nonDeclares.length === 0;
     })());
 
+  verifier("le prompt des figurants demande les poses que le bar consomme",
+    (() => {
+      /* Les habitués n'avaient jamais eu de prompt : leurs planches sont
+         arrivées avant qu'on écrive ce qu'on leur demandait. Il existe
+         maintenant, et il est GÉNÉRALISTE — un texte pour les onze, et
+         c'est l'image jointe qui change.
+
+         La liste attendue est tirée de `poseClient` : les suffixes que le
+         code compose lui-même. Ajouter un état au bar sans ajouter la
+         pose au prompt fait tomber ce test. */
+      const dansCode = new Set(
+        (source.match(/p \+ "_[a-z0-9_]+"/g) || [])
+          .map(x => x.slice(6, -1)));
+      const d = path.join(RACINE, "prompts", "communs");
+      const demandees = new Set();
+      for (const f of fs.readdirSync(d).filter(n => n.startsWith("figurant")))
+        for (const t of fs.readFileSync(path.join(d, f), "utf8")
+                          .match(/^\d+\. \[[a-z0-9_]+\]/gm) || [])
+          demandees.add(t.slice(t.indexOf("[") + 1, -1));
+      const trous = [...dansCode].filter(po => !demandees.has(po));
+      messageDetail = trous.length ? "jamais demandées : " + trous.join(", ")
+        : demandees.size + " poses demandées, " + dansCode.size + " consommées";
+      return dansCode.size >= 5 && !trous.length;
+    })());
+
+  verifier("chaque figurant du bar a son image de référence",
+    (() => {
+      /* Sans référence, il n'y a rien à joindre au prompt généraliste — et
+         le modèle réinvente le personnage. Elles sont fabriquées depuis
+         les sprites du jeu, donc elles montrent l'habitué tel qu'il est
+         AUJOURD'HUI, pas tel qu'une vieille planche le montrait. */
+      const cles = (source.match(/prefixe:"bar_[a-z]+"/g) || [])
+        .map(x => x.slice(13, -1))
+        .filter(k => k !== "th" && k !== "pf");
+      const d = path.join(RACINE, "prompts", "reference");
+      const manque = [...new Set(cles)]
+        .filter(k => !fs.existsSync(path.join(d, k + ".png")));
+      messageDetail = manque.length ? "sans référence : " + manque.join(", ")
+        : [...new Set(cles)].length + " figurants, tous référencés";
+      return cles.length >= 8 && !manque.length;
+    })());
+
   /* ---- le bar qui parle ---- */
   verifier("le comptoir tient des CONVERSATIONS, pas des phrases isolées",
     (() => {

@@ -25,7 +25,7 @@ choisis — exactement comme `index.html` s'assemble depuis `parts/`. On
 n'écrit plus un prompt, on le demande. Et une planche livrée se contrôle
 par une commande avant qu'on la découpe.
 """
-import sys, pathlib, json
+import sys, re, pathlib, json
 
 # ─────────────────────────────────────────────────────────────────────
 # LE CATALOGUE DE MOUVEMENTS
@@ -1931,6 +1931,161 @@ def rangees(n):
     return haut, n - haut
 
 
+# ─────────────────────────────────────────────────────────────────────
+# LES FIGURANTS DU BAR ET DU CANAPÉ
+#
+# Les habitués n'avaient que six poses : debout, deux de marche, attraper,
+# boire, verre vide. De quoi longer un comptoir, pas de quoi habiter une
+# soirée — un bar où personne ne s'assoit, ne danse et ne tangue est un
+# couloir avec des gens dedans.
+#
+# UN SEUL PROMPT POUR TOUT LE MONDE, et c'est le principe du projet :
+# le texte ne décrit JAMAIS le personnage, il décrit les poses. Ce qui
+# change d'un figurant à l'autre est l'image jointe — d'où les vingt-trois
+# références de `prompts/reference/`, fabriquées depuis les sprites du jeu.
+#
+# TREIZE POSES, donc deux planches. La coupure suit l'usage : ce qui se
+# joue DEBOUT au bar d'un côté, ce qui se joue ASSIS de l'autre — au
+# tabouret pour le niveau 3, au canapé pour le niveau 2, où Charles et Teo
+# étaient jusqu'ici assis sans jambes.
+#
+# `planches.py figurant assis_tabouret danse1` ne demande que ces
+# poses-là : une planche livrée est rarement complète, et redemander les
+# treize pour en obtenir deux redessine le personnage à l'identique —
+# donc jamais tout à fait à l'identique.
+VUE_FIGURANT = ("de TROIS QUARTS, le personnage tourné vers la DROITE et "
+                "vu à hauteur d'homme. Il longe un comptoir : on le voit "
+                "de trois quarts avant, jamais de dos, jamais de face. Le "
+                "jeu RETOURNE l'image quand il marche vers la gauche, donc "
+                "toutes les poses regardent du même côté.")
+
+FIGURANT_POSES = [
+  # --- ce qui se joue debout ---
+  ("idle",
+    "AU REPOS, DEBOUT : le poids sur une jambe, l'autre relâchée, une "
+    "main dans la poche ou le long du corps. Il ne fait rien et il est "
+    "bien. C'est la pose la plus vue du jeu : elle doit tenir sans "
+    "raconter d'histoire"),
+  ("idle2",
+    "AU REPOS, AUTREMENT : le poids passé sur L'AUTRE jambe, le buste "
+    "tourné d'un rien, la tête ailleurs — il regarde quelque chose hors "
+    "champ. Même silhouette, même hauteur, même place au sol que `idle` : "
+    "le jeu passe de l'une à l'autre, et tout ce qui bouge d'autre que le "
+    "poids et le regard se voit comme un saut"),
+  ("marche1",
+    "MARCHE, PREMIER APPUI : la jambe droite devant, en contact avec le "
+    "sol, la gauche derrière en fin de poussée. Bras en balancier opposé. "
+    "Pas de course : il se déplace dans un bar, il ne va nulle part"),
+  ("marche2",
+    "MARCHE, SECOND APPUI : l'inverse exact — jambe gauche devant, droite "
+    "derrière, balancier inversé. Le sommet du crâne est à la MÊME hauteur "
+    "que sur `marche1` : deux images qui alternent, une tête qui monte et "
+    "descend fait boiter"),
+  ("attrape",
+    "IL TEND LE BRAS : le buste penché en avant vers le comptoir, le bras "
+    "droit tendu à hauteur de hanche, la main OUVERTE et VIDE, doigts "
+    "écartés. Il ne tient rien encore — le jeu dessine le verre lui-même"),
+  ("boit",
+    "IL BOIT : le verre à la bouche, la tête légèrement rejetée en "
+    "arrière, le coude levé. L'autre bras retombe. Le verre est DESSINÉ "
+    "dans sa main, petit, transparent, sans marque ni couleur franche"),
+  ("vide",
+    "LE VERRE EST VIDE : il le tient à hauteur de poitrine et le regarde, "
+    "bras à demi replié, l'air de constater. Le verre est dessiné, vide"),
+  ("titube",
+    "IL A TROP BU : le corps penché sur le côté, en déséquilibre, un pied "
+    "en avant qui rattrape, les bras écartés pour tenir. La tête suit le "
+    "mouvement au lieu de le corriger. Ridicule, jamais malade : ni verre "
+    "renversé, ni air souffrant"),
+  ("danse1",
+    "IL DANSE, PREMIER TEMPS : les genoux fléchis, le poids sur la jambe "
+    "droite, les deux bras levés à hauteur d'épaule, coudes pliés. Une "
+    "danse de bar, joyeuse et sans technique"),
+  ("danse2",
+    "IL DANSE, SECOND TEMPS : le poids passé sur la jambe gauche, les bras "
+    "descendus à hauteur de taille, le buste tourné de l'autre côté. Même "
+    "hauteur de tête que `danse1` : les deux images alternent"),
+  # --- ce qui se joue assis ---
+  ("assis_tabouret",
+    "ASSIS SUR UN TABOURET DE BAR, vu de trois quarts : fesses sur "
+    "l'assise, dos droit ou légèrement voûté, un pied sur le barreau, "
+    "l'autre jambe pendante. Les avant-bras posés sur le comptoir. LE "
+    "TABOURET N'EST PAS DESSINÉ et le comptoir non plus : le jeu a les "
+    "siens et les place lui-même. On doit reconnaître un homme assis à sa "
+    "seule posture, dans le vide"),
+  ("assis_canape",
+    "ASSIS DANS UN CANAPÉ BAS, vu de trois quarts : enfoncé dans "
+    "l'assise, dos calé en arrière, genoux plus hauts que les hanches, "
+    "cuisses presque à l'horizontale, un bras posé sur le dossier. LE "
+    "CANAPÉ N'EST PAS DESSINÉ. C'est la posture d'un salon, pas celle "
+    "d'une chaise : sans elle, on obtient quelqu'un d'assis sur rien"),
+  ("assis_verre",
+    "ASSIS, LE VERRE À LA MAIN : même assise que `assis_canape`, mais le "
+    "buste penché en avant, les coudes sur les genoux, le verre tenu à "
+    "deux mains devant lui. Le verre est dessiné. C'est la pose de "
+    "quelqu'un qui écoute"),
+]
+
+FIGURANT_BLOCS = """LES POSES ASSISES N'ONT NI SIÈGE NI SOL. Le tabouret, le canapé et le comptoir appartiennent au décor du jeu, qui les dessine à sa place et à sa taille. Une pose livrée avec son meuble est INUTILISABLE : le meuble se retrouve en double, et jamais au bon endroit.
+
+LA LIGNE DE SOL EST LA MÊME POUR TOUTES LES POSES DEBOUT — les pieds se posent sur une horizontale commune. Les poses ASSISES, elles, ont leurs pieds plus bas que leurs fesses : c'est normal, le découpage en tient compte. Ce qui doit rester constant d'une pose à l'autre est la TAILLE DE LA TÊTE, jamais la hauteur totale.
+
+AUCUN ACCESSOIRE AJOUTÉ. Pas de téléphone, pas de cigarette, pas de sac qui n'est pas déjà sur l'image de référence. Un objet qui apparaît dans une pose et pas dans les autres se met à clignoter dès que le jeu enchaîne les images."""
+
+
+def fabriquer_figurant(part=None, parts=None, seulement=None):
+    """Le prompt d'une planche de figurant. Un seul texte pour les onze
+    habitués : ce qui change est l'image jointe.
+
+    `part` découpe en planches de MAX_POSES ; `seulement` réduit à des
+    poses nommées, pour ne redemander qu'un trou."""
+    poses = FIGURANT_POSES
+    if seulement:
+        connues = [q[0] for q in poses]
+        inconnues = [q for q in seulement if q not in connues]
+        if inconnues:
+            sys.exit(f"ABANDON : pose(s) inconnue(s) « {', '.join(inconnues)} ».\n"
+                     f"Connues : {', '.join(connues)}")
+        poses = [q for q in poses if q[0] in seulement]
+    if part:
+        # même découpe équitable que partout : deux planches de sept et
+        # six plutôt qu'une de dix et une de trois
+        n, k = len(poses), parts
+        base, reste = divmod(n, k)
+        i = (part - 1) * base + min(part - 1, reste)
+        poses = poses[i:i + base + (1 if part <= reste else 0)]
+    n = len(poses)
+    haut, bas = rangees(n)
+    details = "\n".join(f"{i}. [{q[0]}] {q[1]}" for i, q in enumerate(poses, 1))
+    titre = (f"sur DEUX RANGÉES de {haut} et {bas}" if bas
+             else "côte à côte sur UNE SEULE RANGÉE")
+    ordre = ("dans l'ordre de lecture (rangée du haut puis rangée du bas)"
+             if bas else "de gauche à droite")
+    suite = (f"\nPlanche {part} sur {parts} : joindre la MÊME image de "
+             f"référence que pour les autres.\n" if part else "")
+    return f"""Planche de {n} poses d'un habitué du D'Tour, {titre}.
+Image de référence à joindre : reference/<le personnage voulu>.png
+{suite}
+VUE : {VUE_FIGURANT}
+
+{MODES["poses"]}
+
+LES POSES, {ordre} :
+{details}
+
+{FIGURANT_BLOCS}
+
+{REGLES}"""
+
+
+def ecrire_figurant(dossier):
+    """Deux planches : ce qui se joue debout, ce qui se joue assis."""
+    parts = -(-len(FIGURANT_POSES) // MAX_POSES)
+    for part in range(1, parts + 1):
+        ecrire_prompt(dossier / f"figurant-{part}.txt",
+                      fabriquer_figurant(part, parts))
+
+
 def fabriquer_mechant(cle=None, seulement=None):
     """Le prompt d'une planche de méchant. `cle` à None = la planche
     COMMUNE aux cinq, celle où seule l'image jointe change.
@@ -2056,6 +2211,7 @@ def tout():
     # du catalogue générique et demandait donc [course1] à [chute2] quand
     # le jeu attend `run1`, `hit_tete`, `arme2`… Ses deux fichiers
     # `xavier-1` et `xavier-2` disparaissent au profit d'un `xavier.txt`.
+    ecrire_figurant(base / "communs")
     for f in d.glob("xavier-*.txt"):
         if MARQUE in f.read_text(encoding="utf-8"): f.unlink()
     ecrire_mechants(d)
@@ -2096,9 +2252,26 @@ def tout():
     #
     # On ne fabrique donc que ce qui MANQUE. Pour refaire une référence
     # dérivée volontairement : supprimer le fichier, puis relancer.
-    for perso, tenue in (("thibaut", "-muscle"), ("pf", "-muscle"),
-                         ("hortense", ""), ("depar", ""), ("dsk", ""),
-                         ("jubi", ""), ("abbe", ""), ("bruh", "")):
+    # LES FIGURANTS AUSSI ONT DROIT À UNE RÉFÉRENCE. Ils n'en avaient pas :
+    # on ne demandait jamais de planche pour eux, donc jamais de prompt,
+    # donc jamais d'image à joindre. Le jour où on veut leur ajouter des
+    # poses — assis sur un tabouret, qui danse, qui titube — il n'y a rien
+    # à attacher au prompt, et le modèle réinvente le personnage.
+    #
+    # La liste vient du CODE : tous les figurants déclarés dans
+    # BAR_CLIENTS. Elle ne se recopie pas.
+    # `th` et `pf` sont exclus : ce sont les deux HÉROS, qui ont déjà
+    # leurs trois tenues fournies. Les fabriquer depuis leurs sprites du
+    # bar aurait ajouté une quatrième référence, plus pauvre, sous un
+    # autre nom — de quoi joindre la mauvaise image sans s'en apercevoir.
+    figurants = sorted(set(re.findall(
+        r'prefixe:"bar_([a-z]+)"',
+        (pathlib.Path(__file__).parent / "parts" / "h_bar.js")
+        .read_text(encoding="utf-8"))) - {"th", "pf"})
+    for perso, tenue in ([("thibaut", "-muscle"), ("pf", "-muscle"),
+                          ("hortense", ""), ("depar", ""), ("dsk", ""),
+                          ("jubi", ""), ("abbe", ""), ("bruh", "")]
+                         + [(f, "") for f in figurants]):
         if (ref / f"{perso}{tenue}.png").exists():
             continue
         try: reference(perso, ref, tenue)
@@ -2180,6 +2353,15 @@ def main():
         if len(sys.argv) < 3:
             sys.exit("usage : planches.py reference <personnage>")
         reference(sys.argv[2])
+    elif cmd == "figurant":
+        # sans argument : la planche entière, découpée comme dans `tout`
+        if len(sys.argv) > 2:
+            print(fabriquer_figurant(seulement=sys.argv[2:]))
+        else:
+            parts = -(-len(FIGURANT_POSES) // MAX_POSES)
+            for part in range(1, parts + 1):
+                print(fabriquer_figurant(part, parts))
+                if part < parts: print("\n" + "=" * 70 + "\n")
     elif cmd == "mechant":
         # sans argument : la planche COMMUNE aux cinq. Les arguments qui
         # suivent le nom réduisent la planche à ces poses-là.

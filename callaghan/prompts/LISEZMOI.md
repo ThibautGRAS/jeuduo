@@ -113,6 +113,31 @@ n'obtenait jamais en le redemandant. Au-delà de dix, le script refuse.
 Les scènes plus longues sont scindées, et chaque planche dit de joindre
 la MÊME référence : c'est elle qui les raccorde.
 
+## Les figurants : un prompt pour les onze
+
+`communs/figurant-1.txt` et `figurant-2.txt`. Le texte ne décrit jamais le
+personnage — c'est l'image jointe qui décide de qui il s'agit, et il y en
+a une par habitué dans `reference/`, fabriquée depuis ses sprites du jeu.
+
+| planche | poses | état |
+|---|---|---|
+| `figurant-1` | idle, idle2, marche1, marche2, attrape, boit, vide | six sur sept existent déjà |
+| `figurant-2` | titube, danse1, danse2, assis_tabouret, assis_canape, assis_verre | tout est à faire |
+
+La coupure tombe bien : la première planche est ce que le bar consomme
+aujourd'hui, la seconde est ce qui manque. Pour un habitué déjà dessiné,
+il n'y a donc que la SECONDE à générer.
+
+Les poses assises ne portent **ni tabouret, ni canapé, ni comptoir** : le
+jeu a les siens et les place lui-même. Une pose livrée avec son meuble est
+inutilisable — le meuble se retrouve en double et jamais au bon endroit.
+
+Pour ne redemander qu'un trou :
+
+```
+python3 callaghan/planches.py figurant assis_tabouret danse1
+```
+
 ## Les cinq méchants : deux planches chacun
 
 Dix-neuf poses ne tiennent pas sur dix, et la coupure suit le sens.

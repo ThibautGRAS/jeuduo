@@ -1,0 +1,120 @@
+Planche de 6 poses d'un habitué du D'Tour, sur DEUX RANGÉES de 3 et 3.
+Image de référence à joindre : reference/<le personnage voulu>.png
+
+Planche 2 sur 2 : joindre la MÊME image de référence que pour les autres.
+
+VUE : de TROIS QUARTS, le personnage tourné vers la DROITE et vu à hauteur d'homme. Il longe un comptoir : on le voit de trois quarts avant, jamais de dos, jamais de face. Le jeu RETOURNE l'image quand il marche vers la gauche, donc toutes les poses regardent du même côté.
+
+RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
+qu'il existe déjà.
+
+Elle fait FOI sur tout ce qui le définit : visage, coupe de cheveux,
+pilosité, corpulence, vêtements, couleurs, chaussures, accessoires, et
+le style de dessin lui-même — trait, palette, éclairage.
+
+Reproduire ces éléments à l'identique. Ne rien réinventer, ne rien
+moderniser, ne rien « améliorer ». Une planche qui change la couleur d'un
+vêtement ou la coupe d'une barbe est inutilisable : elle ne se raccorde
+pas aux images déjà en jeu.
+
+SEULES les poses décrites ci-dessous changent.
+
+SI L'IMAGE DE RÉFÉRENCE EST SUR FOND MAGENTA : ce fond est un fond de
+travail, rien d'autre. Il ne fait PAS partie du personnage. Ne pas en
+tirer de lumière rose ou violette sur la peau, les cheveux, les
+vêtements ou les contours. L'éclairage du personnage doit rester neutre,
+identique à celui de la référence une fois le fond mis de côté.
+
+LES POSES, dans l'ordre de lecture (rangée du haut puis rangée du bas) :
+1. [titube] IL A TROP BU : le corps penché sur le côté, en déséquilibre, un pied en avant qui rattrape, les bras écartés pour tenir. La tête suit le mouvement au lieu de le corriger. Ridicule, jamais malade : ni verre renversé, ni air souffrant
+2. [danse1] IL DANSE, PREMIER TEMPS : les genoux fléchis, le poids sur la jambe droite, les deux bras levés à hauteur d'épaule, coudes pliés. Une danse de bar, joyeuse et sans technique
+3. [danse2] IL DANSE, SECOND TEMPS : le poids passé sur la jambe gauche, les bras descendus à hauteur de taille, le buste tourné de l'autre côté. Même hauteur de tête que `danse1` : les deux images alternent
+4. [assis_tabouret] ASSIS SUR UN TABOURET DE BAR, vu de trois quarts : fesses sur l'assise, dos droit ou légèrement voûté, un pied sur le barreau, l'autre jambe pendante. Les avant-bras posés sur le comptoir. LE TABOURET N'EST PAS DESSINÉ et le comptoir non plus : le jeu a les siens et les place lui-même. On doit reconnaître un homme assis à sa seule posture, dans le vide
+5. [assis_canape] ASSIS DANS UN CANAPÉ BAS, vu de trois quarts : enfoncé dans l'assise, dos calé en arrière, genoux plus hauts que les hanches, cuisses presque à l'horizontale, un bras posé sur le dossier. LE CANAPÉ N'EST PAS DESSINÉ. C'est la posture d'un salon, pas celle d'une chaise : sans elle, on obtient quelqu'un d'assis sur rien
+6. [assis_verre] ASSIS, LE VERRE À LA MAIN : même assise que `assis_canape`, mais le buste penché en avant, les coudes sur les genoux, le verre tenu à deux mains devant lui. Le verre est dessiné. C'est la pose de quelqu'un qui écoute
+
+LES POSES ASSISES N'ONT NI SIÈGE NI SOL. Le tabouret, le canapé et le comptoir appartiennent au décor du jeu, qui les dessine à sa place et à sa taille. Une pose livrée avec son meuble est INUTILISABLE : le meuble se retrouve en double, et jamais au bon endroit.
+
+LA LIGNE DE SOL EST LA MÊME POUR TOUTES LES POSES DEBOUT — les pieds se posent sur une horizontale commune. Les poses ASSISES, elles, ont leurs pieds plus bas que leurs fesses : c'est normal, le découpage en tient compte. Ce qui doit rester constant d'une pose à l'autre est la TAILLE DE LA TÊTE, jamais la hauteur totale.
+
+AUCUN ACCESSOIRE AJOUTÉ. Pas de téléphone, pas de cigarette, pas de sac qui n'est pas déjà sur l'image de référence. Un objet qui apparaît dans une pose et pas dans les autres se met à clignoter dès que le jeu enchaîne les images.
+
+CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
+
+LA PLUS IMPORTANTE, ET LA PLUS SOUVENT RATÉE : L'ESPACEMENT.
+Chaque pose doit être séparée de sa voisine par au moins 80 pixels de
+fond VIDE. Un doigt pointé, un bras tendu, un coude, un pied de course,
+un objet tenu : RIEN ne doit entrer dans la colonne d'à côté. Deux poses
+qui se touchent, même par un seul doigt, ne peuvent pas être séparées
+automatiquement, et toute la planche est à refaire.
+Test à faire mentalement : entre deux poses voisines, peut-on tracer un
+trait vertical du haut en bas de l'image sans jamais toucher un
+personnage ? Si non, écarter davantage.
+Dans le doute, ÉCARTER PLUS. Une planche trop aérée se découpe très bien.
+
+DESSINER UN CADRE AUTOUR DE CHAQUE POSE. Tracer une bande verticale
+d'un MAGENTA PLUS FONCÉ (par exemple #8C008C) de part et d'autre de
+chaque pose, du haut en bas de l'image, comme les cases d'une planche de
+bande dessinée. Chaque personnage doit tenir ENTIÈREMENT dans sa case,
+bras tendus et objets compris, sans jamais toucher une bande.
+Ces bandes ne gênent pas : le découpage les reconnaît comme du fond et
+les retire. Elles servent à VOIR l'espace que chaque pose a le droit
+d'occuper.
+
+AUCUNE POSE N'INTERAGIT AVEC SA VOISINE. Chaque pose est un personnage
+SEUL, qui sera découpé en image indépendante. Si une pose tend la main,
+brandit un objet ou s'adresse à quelqu'un, ce quelqu'un est INVISIBLE et
+n'est pas dessiné — surtout pas la pose d'à côté. Deux poses qui se
+répondent forment une illustration, et une illustration ne se découpe pas.
+
+TOUTES LES POSES REGARDENT DU MÊME CÔTÉ : vers la DROITE. Aucune pose
+retournée vers la gauche, aucune pose de face si les autres sont de trois
+quarts. Le jeu retourne les images lui-même quand il en a besoin.
+
+AUCUNE OMBRE PORTÉE AU SOL, aucune ellipse sombre sous les pieds : le jeu
+dessine l'ombre lui-même, et celle de la planche viendrait s'y ajouter.
+
+AUCUN TITRE, AUCUNE LÉGENDE, AUCUN NUMÉRO. Ni au-dessus des poses, ni en
+haut de la planche. Le texte blanc laisse un halo qui se mélange au fond.
+
+- Fond MAGENTA PUR uni #FF00FF sur toute l'image. Aucun dégradé, aucune
+  ombre portée, aucun décor, aucun élément de mobilier, aucun sol
+  dessiné, aucun cadre, aucune bordure.
+- AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro de pose.
+- GRILLE : une grille RÉGULIÈRE, rangées de taille égale, un large écart
+  de fond entre chaque figure, et un trait vertical de magenta plus foncé
+  entre chaque case. Échelle et taille de tête IDENTIQUES sur toutes les
+  figures.
+- DISPOSITION : jusqu'à quatre poses, UNE SEULE RANGÉE. À partir de
+  cinq, DEUX RANGÉES de taille égale et CINQ POSES AU MAXIMUM PAR
+  RANGÉE — 5 + 5 pour dix poses, 5 + 4 pour neuf, 4 + 4 pour huit,
+  3 + 2 pour cinq. Une rangée de huit oblige à rétrécir chaque sujet pour
+  tout faire tenir, et les têtes cessent d'être de la même taille : c'est
+  le défaut le plus coûteux, il ne se rattrape pas au découpage.
+  Les deux rangées doivent avoir la MÊME échelle : un personnage de la
+  rangée du bas fait exactement la même taille qu'un de la rangée du
+  haut.
+- Au moins 80 pixels de fond magenta VIDE entre deux poses voisines.
+  Aucune partie d'un personnage — bras tendu, jambe de course, objet
+  tenu — ne doit entrer dans la colonne de sa voisine. On doit pouvoir
+  tracer un trait vertical entièrement magenta entre deux poses.
+- Au moins 60 pixels de magenta vide sur les QUATRE bords de l'image.
+  Une lueur ou un vêtement coupé par le bord ne peut pas être détouré
+  proprement.
+- MÊME ÉCHELLE pour toutes les poses : la tête doit avoir exactement la
+  même taille d'une pose à l'autre. C'est le défaut le plus fréquent.
+- Les PIEDS de toutes les poses reposent sur la même ligne horizontale
+  imaginaire, sauf pour les phases où le personnage est explicitement en
+  l'air.
+- Aucune lueur, aucun halo, aucun effet lumineux qui déborde de la
+  silhouette. Mesuré sur une planche livrée : une bande rose de 15 à
+  30 px de couleur (134, 58, 116) tout autour du sujet — du magenta
+  délavé, que rien ne sait retirer puisqu'on ignore la couleur qui était
+  dessous. Le bord doit être FRANC.
+- Le fond magenta ne teinte RIEN. Aucun reflet rose ou violet sur la
+  peau, les cheveux, les vêtements ou les contours : l'éclairage du
+  personnage est neutre.
+- Style : bande dessinée aux couleurs franches, contours nets, éclairage
+  neutre et identique pour toutes les poses.
+- Personnage vu de TROIS QUARTS, tourné vers la DROITE, corps entier,
+  de la tête aux pieds.
