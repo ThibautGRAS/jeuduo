@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.24";
+const VERSION = "7.25";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1066,11 +1066,14 @@ const IMAGES_NIVEAU3 = [
   "bar_marini_attrape", "bar_marini_boit", "bar_marini_vide",
   "bar_gabi_idle", "bar_gabi_marche1", "bar_gabi_marche2",
   "bar_gabi_attrape", "bar_gabi_boit", "bar_gabi_vide",
+  "bar_gabi_idle2", "bar_gabi_titube", "bar_gabi_danse1", "bar_gabi_danse2",
   "bar_martin_idle", "bar_martin_marche1", "bar_martin_marche2",
   "bar_mathilde_idle", "bar_mathilde_marche1", "bar_mathilde_marche2",
   "bar_mathilde_attrape", "bar_mathilde_boit", "bar_mathilde_vide",
+  "bar_mathilde_titube", "bar_mathilde_danse1", "bar_mathilde_danse2", "bar_mathilde_assis_tabouret", "bar_mathilde_assis_canape", "bar_mathilde_assis_verre",
   "bar_charles_idle", "bar_charles_marche1", "bar_charles_marche2",
   "bar_charles_attrape", "bar_charles_boit", "bar_charles_vide",
+  "bar_charles_titube", "bar_charles_danse1", "bar_charles_assis_verre",
   "bar_tristan_idle", "bar_tristan_marche1", "bar_tristan_marche2",
   "bar_tristan_attrape", "bar_tristan_boit", "bar_tristan_vide",
   /* TRISTAN OUVRE LE BAL. Il est le premier à avoir les six poses de
@@ -1083,12 +1086,15 @@ const IMAGES_NIVEAU3 = [
   "bar_tristan_assis_verre",
   "bar_teo_idle", "bar_teo_marche1", "bar_teo_marche2",
   "bar_teo_attrape", "bar_teo_boit", "bar_teo_vide",
+  "bar_teo_titube", "bar_teo_danse1", "bar_teo_assis_tabouret",
   "bar_solene_idle", "bar_solene_marche1", "bar_solene_marche2",
   "bar_solene_attrape", "bar_solene_boit", "bar_solene_vide",
   "bar_kevin_idle", "bar_kevin_marche1", "bar_kevin_marche2",
   "bar_kevin_attrape", "bar_kevin_boit", "bar_kevin_vide",
+  "bar_kevin_titube", "bar_kevin_danse1", "bar_kevin_assis_tabouret",
   "bar_remy_idle", "bar_remy_marche1", "bar_remy_marche2",
   "bar_remy_attrape", "bar_remy_boit", "bar_remy_vide",
+  "bar_remy_titube", "bar_remy_danse1", "bar_remy_assis_tabouret",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
 

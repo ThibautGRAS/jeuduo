@@ -704,14 +704,19 @@ function jouerJusqua(D, condition, limite){
       if (m.ref.id !== "tristan") m.etat = "grappe";
     });
     /* on force quatre habitués sur la planche de Tristan, un par état */
-    const ref = D.BAR_CLIENTS.find(c => c.id === "tristan");
-    D.Tournee.foule.slice(0, 4).forEach((m, i) => {
-      m.ref = ref;
-      m.x = 0.30 + i * 0.06;
-      m.etat = i < 3 ? etats[i] : "grappe";
+    /* SIX HABITUÉS DIFFÉRENTS, un par état : c'est la seule image qui dise
+       si les six planches se raccordent entre elles et avec les `idle`
+       d'origine. Une planche par personnage, découpée à six échelles
+       différentes — l'erreur se verrait ici et nulle part ailleurs. */
+    const qui = ["tristan", "mathilde", "kevin", "remy", "charles", "teo"];
+    D.Tournee.foule.slice(0, 6).forEach((m, i) => {
+      m.ref = D.BAR_CLIENTS.find(c => c.id === qui[i]) || m.ref;
+      m.x = 0.26 + i * 0.055;
+      m.etat = etats[i % 3];
       m.foulee = 0.4; m.t = 3.0; m.humeur = 5;
       if (m.etat === "assis"){
-        m.tabouret = 4; m.xAssis = D.BAR_TABOURETS[4].x; m.verre = true;
+        const t2 = 2 + i;
+        m.tabouret = t2; m.xAssis = D.BAR_TABOURETS[t2].x; m.verre = i > 2;
       }
     });
     void tri;

@@ -1,0 +1,22 @@
+{
+  "_": "Gabi, planche de figurant-2. Original : planches/n3/gabi-figurant.webp. Sa case 1 est une variante de repos, un verre à la main : elle sert d'`idle2`. Les cases 2 et 3 refont `marche1` et `attrape`, qui existent déjà — on ne les recoupe pas, deux versions du même sprite finissent par se contredire.",
+  "__echelle": "L'ÉCHELLE SE LIT SUR LE CANEVAS, pas sur le sujet : le rendu cale la HAUTEUR D'IMAGE du sprite sur une fraction d'écran. Toutes les poses d'un habitué doivent donc sortir du même canevas — celui de son `idle`, qui sert de référence — et c'est `hauteur_ref` qui décide de la place du sujet dedans.",
+  "planche": "planches/n3/gabi-figurant.webp",
+  "reference": "img/n3/bar_gabi_idle.webp",
+  "sortie": "img/n3",
+  "prefixe": "bar_gabi",
+  "temoin": 1,
+  "temoin_rangee": 1,
+  "rangees": [
+    [
+      "idle2",
+      null,
+      null
+    ],
+    [
+      "titube",
+      "danse1",
+      "danse2"
+    ]
+  ]
+}

@@ -569,7 +569,12 @@ Object.assign(Tournee, {
     if (m.etat === "assis")
       return dispo(m.verre ? "assis_verre" : "assis_tabouret") || "idle";
     if (m.etat === "danse")
-      return dispo("danse" + (1 + (Math.floor(m.foulee) % 2))) || "idle";
+      /* DEUX TEMPS SI LA PLANCHE LES A, UN SEUL SINON. Six habitués sur
+         sept n'ont que `danse1` : alterner avec une pose absente les
+         faisait clignoter entre la danse et le repos, ce qui est pire que
+         de ne pas danser. On retombe sur `danse1`, qui tient tout seul. */
+      return dispo("danse" + (1 + (Math.floor(m.foulee) % 2)))
+          || dispo("danse1") || "idle";
     if (m.etat === "titube") return dispo("titube") || "idle";
     if (m.etat === "grappe")
       /* `idle2` respire : on alterne LENTEMENT, une fois toutes les deux

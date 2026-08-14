@@ -1,0 +1,22 @@
+{
+  "_": "Teo, planche de figurant-2. Original : planches/n3/teo-figurant.webp. La rangée du haut refait des poses existantes : on ne recoupe pas, deux versions du même sprite finissent par se contredire. Le témoin est sa case 1, seule pose DEBOUT de la planche.",
+  "__echelle": "L'ÉCHELLE SE LIT SUR LE CANEVAS, pas sur le sujet : le rendu cale la HAUTEUR D'IMAGE du sprite sur une fraction d'écran. Toutes les poses d'un habitué doivent donc sortir du même canevas — celui de son `idle`, qui sert de référence — et c'est `hauteur_ref` qui décide de la place du sujet dedans.",
+  "planche": "planches/n3/teo-figurant.webp",
+  "reference": "img/n3/bar_teo_idle.webp",
+  "sortie": "img/n3",
+  "prefixe": "bar_teo",
+  "temoin": 1,
+  "temoin_rangee": 1,
+  "rangees": [
+    [
+      null,
+      null,
+      null
+    ],
+    [
+      "titube",
+      "danse1",
+      "assis_tabouret"
+    ]
+  ]
+}

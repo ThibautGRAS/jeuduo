@@ -122,7 +122,16 @@ a une par habitué dans `reference/`, fabriquée depuis ses sprites du jeu.
 | planche | poses | état |
 |---|---|---|
 | `figurant-1` | idle, idle2, marche1, marche2, attrape, boit, vide | six sur sept existent déjà |
-| `figurant-2` | titube, danse1, danse2, assis_tabouret, assis_canape, assis_verre | **Tristan l'a**, les dix autres non |
+| `figurant-2` | titube, danse1, danse2, assis_tabouret, assis_canape, assis_verre | **sept l'ont**, en partie |
+
+Sept habitués sur onze en ont au moins trois : Tristan et Mathilde ont les
+six, Gabi a la danse et le tangage, Charles, Kevin, Rémy et Teo ont
+`titube`, `danse1` et une pose assise. Manquent Solène, Martin, le Maire
+et Hortense.
+
+**Une planche n'a pas besoin d'être complète.** Chaque pose absente se
+replie : `danse2` sur `danse1`, tout le reste sur `idle`. Un habitué qui
+n'a que trois poses danse quand même, sur un temps au lieu de deux.
 
 La coupure tombe bien : la première planche est ce que le bar consomme
 aujourd'hui, la seconde est ce qui manque. Pour un habitué déjà dessiné,

@@ -1,0 +1,23 @@
+{
+  "_": "Mathilde, planche de figurant-2. Original : planches/n3/mathilde-figurant.webp. Pas de pose debout sur la planche : le témoin est `titube`. Sa hauteur de sujet en jeu est 439 px ; une pose penchée fait environ 95 % d'une pose debout, d'où 417.",
+  "__echelle": "L'ÉCHELLE SE LIT SUR LE CANEVAS, pas sur le sujet : le rendu cale la HAUTEUR D'IMAGE du sprite sur une fraction d'écran. Toutes les poses d'un habitué doivent donc sortir du même canevas — celui de son `idle`, qui sert de référence — et c'est `hauteur_ref` qui décide de la place du sujet dedans.",
+  "planche": "planches/n3/mathilde-figurant.webp",
+  "reference": "img/n3/bar_mathilde_idle.webp",
+  "sortie": "img/n3",
+  "prefixe": "bar_mathilde",
+  "temoin": 1,
+  "temoin_rangee": 1,
+  "rangees": [
+    [
+      "titube",
+      "danse1",
+      "danse2"
+    ],
+    [
+      "assis_tabouret",
+      "assis_canape",
+      "assis_verre"
+    ]
+  ],
+  "hauteur_ref": 417
+}

@@ -5757,6 +5757,26 @@ if (D){
         (vus.titube || vus.danse);
     })());
 
+  verifier("une danse à un seul temps ne CLIGNOTE pas",
+    (() => {
+      /* Six habitués sur sept n'ont que `danse1`. Alterner avec une pose
+         absente les faisait passer de la danse au repos une image sur
+         deux — un clignotement, pire que de ne pas danser du tout. */
+      const T = unBar();
+      const m = T.foule[0];
+      m.ref = D.BAR_CLIENTS.find(c => c.id === "kevin") || m.ref;
+      /* Le harnais ne charge aucune image : on pose à la main la seule
+         que Kevin possède, et c'est exactement le cas qu'on veut — une
+         planche à un seul temps de danse. */
+      D.Images.table["bar_kevin_danse1"] = { naturalWidth:1, naturalHeight:1 };
+      delete D.Images.table["bar_kevin_danse2"];
+      m.etat = "danse";
+      const vues = new Set();
+      for (let i = 0; i < 12; i++){ m.foulee = i; vues.add(T.poseFoule(m)); }
+      messageDetail = [...vues].join(", ");
+      return vues.size === 1 && vues.has("danse1");
+    })());
+
   verifier("une pose qui manque se replie sur l'idle, elle ne fait pas de trou",
     (() => {
       /* Les onze habitués n'auront pas leurs nouvelles poses le même
