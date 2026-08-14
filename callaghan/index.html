@@ -783,7 +783,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v7.27</div>
+  <div id="version">CALLAGHAN v7.28</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -855,7 +855,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.27";
+const VERSION = "7.28";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1933,6 +1933,7 @@ const IMAGES_NIVEAU3 = [
   "bar_kevin_titube", "bar_kevin_danse1", "bar_kevin_assis_tabouret",
   "bar_remy_idle", "bar_remy_marche1", "bar_remy_marche2",
   "bar_remy_attrape", "bar_remy_boit", "bar_remy_vide",
+  "bar_bobito_idle", "bar_bobito_idle2", "bar_bobito_marche1", "bar_bobito_marche2", "bar_bobito_attrape", "bar_bobito_boit", "bar_bobito_vide", "bar_bobito_titube", "bar_bobito_danse1", "bar_bobito_danse2", "bar_bobito_assis_tabouret", "bar_bobito_assis_canape", "bar_bobito_assis_verre",
   "bar_remy_titube", "bar_remy_danse1", "bar_remy_assis_tabouret",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
@@ -4751,10 +4752,16 @@ const LIENS = {
   gabi:     { pf:true,  th:false, amis:["solene", "teo", "charles"] },
   charles:  { pf:true,  th:false, amis:["gabi"] },
   mathilde: { pf:false, th:true,  amis:["solene", "remy", "kevin", "tristan"] },
-  tristan:  { pf:true,  th:true,  amis:["solene", "kevin", "remy", "mathilde"] },
-  solene:   { pf:false, th:false, amis:["tristan", "mathilde", "kevin", "gabi"] },
+  tristan:  { pf:true,  th:true,  amis:["solene", "kevin", "remy", "mathilde", "bobito"] },
+  solene:   { pf:false, th:false, amis:["tristan", "mathilde", "kevin", "gabi", "bobito"] },
   kevin:    { pf:true,  th:true,  amis:["tristan", "mathilde", "solene", "remy"] },
-  remy:     { pf:true,  th:true,  amis:["mathilde", "tristan", "kevin", "teo"] },
+  remy:     { pf:true,  th:true,  amis:["bobito", "mathilde", "tristan", "kevin", "teo"] },
+  /* MATHILDE BOBITO, la compagne de Rémy. Elle porte le même prénom que
+     l'autre Mathilde — d'où la clé `bobito`, qui est le surnom que Rémy
+     lui donne et le seul moyen de ne pas confondre les deux dans un
+     dialogue. Elle connaît Thibaut, Tristan et Solène ; PF ne l'a jamais
+     rencontrée. */
+  bobito:   { pf:false, th:true,  amis:["remy", "tristan", "solene"] },
   marini:   { pf:false, th:false, amis:[] },
   martin:   { pf:false, th:false, amis:[] },
   francky:  { pf:false, th:false, amis:["mathilde"] },
@@ -8419,6 +8426,12 @@ const BAR_CLIENTS = [
     prefixe:"bar_kevin", gestes:true },
   { id:"remy", sprite:"bar_remy_idle", nom:"RÉMY", taille:0.93,
     prefixe:"bar_remy", gestes:true },
+  /* MATHILDE BOBITO. Elle arrive avec ses treize poses d'un coup — la
+     première du bar dans ce cas — donc rien à replier chez elle. Son id
+     est `bobito` et pas `mathilde` : deux Mathilde dans les dialogues du
+     comptoir, et plus personne ne sait de qui on parle. */
+  { id:"bobito", sprite:"bar_bobito_idle", nom:"MATHILDE BOBITO", taille:0.90,
+    prefixe:"bar_bobito", gestes:true },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;
@@ -10221,7 +10234,14 @@ const FOULE_PHRASES = {
   solene:   ["Tu as vu qui est là ?", "Je préviens Mathilde.",
              "Chocho, c'est elle qui a commencé."],
   kevin:    ["C'est ma tournée. Enfin, presque.", "Jägerbombs. Point."],
-  remy:     ["Le premier qui craque paie.", "J'ai vu Teo boire de l'eau."],
+  remy:     ["Le premier qui craque paie.", "J'ai vu Teo boire de l'eau.",
+             "BOBITO ! Tu bois quoi ?"],
+  /* MATHILDE BOBITO. Ses trois sujets, et elle y revient : le chien, ses
+     élèves, et la piste de danse. */
+  bobito:   ["Chaussette a mangé une chaussette.",
+             "Mes troisièmes ignorent le prétérit.",
+             "Il est où, Rémy ? Il danse pas.",
+             "On en reprend un et on danse."],
   marini:   ["La municipalité soutient ce lieu.", "Un buffet non conforme."],
   martin:   ["Je suis pas en service.", "Enfin, un peu quand même."],
   commun:   ["Il en met du temps.", "Tu reprends quelque chose ?",
@@ -10256,6 +10276,21 @@ const FOULE_DISCUSSIONS = {
     ["Teo avait dit cinq minutes.", "Il est là depuis dix-neuf heures."],
     ["Solène a tout raconté à Mathilde.", "Évidemment.", "En trois minutes."],
     ["Mathilde l'appelle Chocho.", "Qui ça ?", "Solène.", "Ah. Chocho, alors."],
+    ["Rémy dit Bobito à tout bout de champ.", "C'est sa copine.",
+     "Je sais, mais à CHAQUE phrase."],
+    ["Bobito a ramené des photos du chien.", "Encore ?", "Trente-quatre."],
+    ["Le chien s'appelle Chaussette.", "C'est mignon.",
+     "Attends de voir ce qu'il fait aux chaussettes."],
+    ["Bobito est prof d'anglais.", "Elle corrige nos fautes ?",
+     "Que celles en anglais. Pour le reste elle a renoncé."],
+    ["Elle danse depuis tout à l'heure.", "Bobito ?", "Bobito.",
+     "Elle s'arrêtera pas."],
+    ["Rémy essaie de suivre.", "En danse ?", "En danse.",
+     "Il devrait pas."],
+    ["Bobito a dit un truc en anglais.", "Et ?",
+     "On a tous hoché la tête."],
+    ["Elle veut un deuxième chien.", "Rémy sait ?",
+     "Rémy l'apprend là, en fait."],
     ["Chocho a dit quoi ?", "Que t'allais demander.", "Elle dit toujours ça."],
     ["Y'a que Mathilde qui a le droit de dire Chocho.", "J'ai essayé une fois.",
      "Et ?", "Une fois."],

@@ -1,0 +1,22 @@
+{
+  "_": "Mathilde Bobito, planche de figurant-2.",
+  "__echelle": "Aucune pose debout : le témoin est `titube`. L'échelle vient de sa planche de BASE — 0.9516 — appliquée à son témoin de 465 px, d'où 442. Les deux planches se raccordent par construction.",
+  "planche": "planches/n3/bobito-figurant.webp",
+  "reference": "img/n3/bar_solene_idle.webp",
+  "hauteur_ref": 442,
+  "sortie": "img/n3",
+  "prefixe": "bar_bobito",
+  "temoin": 1,
+  "rangees": [
+    [
+      "titube",
+      "danse1",
+      "danse2"
+    ],
+    [
+      "assis_tabouret",
+      "assis_canape",
+      "assis_verre"
+    ]
+  ]
+}

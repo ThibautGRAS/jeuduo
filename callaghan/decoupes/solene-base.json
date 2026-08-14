@@ -1,12 +1,21 @@
 {
   "_": "Solène, planche de figurant-1 : elle REMPLACE ses six poses d'origine, moins bien tenues. Original : planches/n3/solene-base.webp.",
-  "__rangees": "Sa main tendue se détache en un fragment qui forme sa propre rangée : elle est déclarée comme une rangée d'une case sans nom, plutôt que d'inventer une exception dans le découpeur.",
   "planche": "planches/n3/solene-base.webp",
   "reference": "img/n3/bar_solene_idle.webp",
   "sortie": "img/n3",
   "prefixe": "bar_solene",
   "temoin": 1,
-  "rangees": [["idle", "idle2", "marche1", "marche2"],
-              [null],
-              ["attrape", "boit", "vide"]]
+  "rangees": [
+    [
+      "idle",
+      "idle2",
+      "marche1",
+      "marche2"
+    ],
+    [
+      "attrape",
+      "boit",
+      "vide"
+    ]
+  ]
 }

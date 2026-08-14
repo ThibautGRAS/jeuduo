@@ -2618,7 +2618,11 @@ if (D){
       const b = fs.readFileSync(path.join(RACINE, "decouper_planche.py"), "utf8");
       return /def couper_au_creux/.test(b) &&
         /larg \/ n \* 0\.35/.test(b) && /larg \/ n \* 0\.35/.test(a) &&
-        /med \* 1\.6/.test(a) && /med \* 1\.6/.test(b);
+        /* 1,9 dans le découpeur, 1,6 dans planches.py : ce sont deux
+           outils différents, et seul le découpeur a rencontré une pose au
+           BRAS TENDU — 1,63 fois la médiane, coupée en deux, et la moitié
+           gauche prise pour une pose entière. */
+        /med \* 1\.6/.test(a) && /med \* 1\.9/.test(b);
     })());
 
   verifier("le fond magenta se reconnaît à sa FORME, pas à sa clarté",

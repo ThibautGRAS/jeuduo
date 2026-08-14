@@ -1,0 +1,10 @@
+{
+  "_": "Mathilde Bobito, planche de figurant-1. Nouveau personnage : elle n'a aucun sprite d'origine, donc le canevas et l'échelle sont empruntés à Solène — même gabarit, même plan, et c'est ce qui garantit qu'elles font la même taille côte à côte au comptoir.",
+  "planche": "planches/n3/bobito-base.webp",
+  "reference": "img/n3/bar_solene_idle.webp",
+  "sortie": "img/n3",
+  "prefixe": "bar_bobito",
+  "temoin": 1,
+  "rangees": [["idle", "idle2", "marche1", "marche2"],
+              ["attrape", "boit", "vide"]]
+}

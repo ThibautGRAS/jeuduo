@@ -177,6 +177,12 @@ const BAR_CLIENTS = [
     prefixe:"bar_kevin", gestes:true },
   { id:"remy", sprite:"bar_remy_idle", nom:"RÉMY", taille:0.93,
     prefixe:"bar_remy", gestes:true },
+  /* MATHILDE BOBITO. Elle arrive avec ses treize poses d'un coup — la
+     première du bar dans ce cas — donc rien à replier chez elle. Son id
+     est `bobito` et pas `mathilde` : deux Mathilde dans les dialogues du
+     comptoir, et plus personne ne sait de qui on parle. */
+  { id:"bobito", sprite:"bar_bobito_idle", nom:"MATHILDE BOBITO", taille:0.90,
+    prefixe:"bar_bobito", gestes:true },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;

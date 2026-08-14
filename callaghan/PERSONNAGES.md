@@ -428,6 +428,29 @@ d'un type d'homme se défend, le récit d'un fait divers non.
 - Sa question : **« ai-je le temps d'interrompre son lancer ? »**
 - Sprites : `enn_abbe_*`, 19 poses.
 
+### MATHILDE BOBITO — la compagne de Rémy
+
+- **Le surnom fait la clé.** Elle porte le même prénom que Mathilde, qui
+  est au bar depuis le début. Rémy l'appelle **Bobito**, et c'est ce nom-là
+  qui sert d'identifiant dans le code (`bobito`) comme dans les dialogues :
+  deux Mathilde au comptoir, et plus personne ne sait de qui on parle.
+
+- **Professeure d'anglais.** Elle corrige les fautes des autres, mais
+  seulement en anglais — pour le reste elle a renoncé.
+
+- **Elle aime les animaux**, et elle a un chien avec Rémy : **Chaussette**.
+  Elle en a trente-quatre photos et elle les montre.
+
+- **Elle danse.** C'est le premier réflexe dès que l'ambiance monte, et
+  Rémy essaie de suivre — il ne devrait pas.
+
+- **Qui elle connaît** : Rémy, évidemment, puis Tristan et Solène. Thibaut
+  l'a déjà rencontrée, PF jamais.
+
+- **Treize poses d'un coup** — la première du bar dans ce cas : rien à
+  replier chez elle, elle marche, boit, tangue, danse et s'assoit dès son
+  arrivée.
+
 ### XAVIER LE TERRASSIER — le lanceur de pelle
 
 - **Personnage FICTIF**, contrairement aux cinq autres. C'est le premier du

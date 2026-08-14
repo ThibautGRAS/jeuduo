@@ -679,10 +679,16 @@ const LIENS = {
   gabi:     { pf:true,  th:false, amis:["solene", "teo", "charles"] },
   charles:  { pf:true,  th:false, amis:["gabi"] },
   mathilde: { pf:false, th:true,  amis:["solene", "remy", "kevin", "tristan"] },
-  tristan:  { pf:true,  th:true,  amis:["solene", "kevin", "remy", "mathilde"] },
-  solene:   { pf:false, th:false, amis:["tristan", "mathilde", "kevin", "gabi"] },
+  tristan:  { pf:true,  th:true,  amis:["solene", "kevin", "remy", "mathilde", "bobito"] },
+  solene:   { pf:false, th:false, amis:["tristan", "mathilde", "kevin", "gabi", "bobito"] },
   kevin:    { pf:true,  th:true,  amis:["tristan", "mathilde", "solene", "remy"] },
-  remy:     { pf:true,  th:true,  amis:["mathilde", "tristan", "kevin", "teo"] },
+  remy:     { pf:true,  th:true,  amis:["bobito", "mathilde", "tristan", "kevin", "teo"] },
+  /* MATHILDE BOBITO, la compagne de Rémy. Elle porte le même prénom que
+     l'autre Mathilde — d'où la clé `bobito`, qui est le surnom que Rémy
+     lui donne et le seul moyen de ne pas confondre les deux dans un
+     dialogue. Elle connaît Thibaut, Tristan et Solène ; PF ne l'a jamais
+     rencontrée. */
+  bobito:   { pf:false, th:true,  amis:["remy", "tristan", "solene"] },
   marini:   { pf:false, th:false, amis:[] },
   martin:   { pf:false, th:false, amis:[] },
   francky:  { pf:false, th:false, amis:["mathilde"] },

@@ -726,7 +726,7 @@ function jouerJusqua(D, condition, limite){
       }
     });
     /* Solène et le Maire, les deux dernières planches arrivées */
-    [["solene", "danse", 7], ["marini", "assis", 8]].forEach(([id, etat, t2], k) => {
+    [["bobito", "danse", 7], ["marini", "assis", 8]].forEach(([id, etat, t2], k) => {
       const m = D.Tournee.foule[6 + k];
       if (!m) return;
       m.ref = D.BAR_CLIENTS.find(c => c.id === id) || m.ref;

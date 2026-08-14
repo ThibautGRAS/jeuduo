@@ -159,7 +159,12 @@ def composantes(a, coupures):
         eclate = []
         for x1, y1, x2, y2, idx in gardes:
             n2 = max(1, round((x2 - x1) / max(1, med)))
-            if n2 == 1 or (x2 - x1) < med * 1.6:
+            # 1,9 ET NON 1,6. Un bras TENDU élargit une pose sans qu'il y
+            # ait deux personnages : celle de Bobito fait 312 px pour une
+            # médiane de 192, soit 1,63 — elle était coupée en deux, et
+            # la moitié gauche passait pour une pose entière. Deux poses
+            # qui se touchent, elles, font au moins deux fois la médiane.
+            if n2 == 1 or (x2 - x1) < med * 1.9:
                 eclate.append((x1, y1, x2, y2, idx)); continue
             bande = obj[y1:y2]
             for d, f in couper_au_creux(bande, x1, x2, n2):
