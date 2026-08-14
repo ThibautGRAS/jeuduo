@@ -700,9 +700,16 @@ const BarVue = {
     if (c.dir < 0){ ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0); }
     ctx.drawImage(spr, x - sl / 2, y - sh, sl, sh);
     ctx.restore();
-    if (c.dit)
-      this.bulle(c.dit, x, y - sh - H * 0.012, L * 0.80, 0.034,
+    if (c.dit){
+      /* UN CRI SE VOIT AVANT DE SE LIRE. Même bulle, mais plus grosse et
+         plus large : à taille égale, une phrase en capitales passait pour
+         une remarque de plus. La marge de largeur monte à 0,92 parce que
+         les capitales sont plus larges — sans ça le repli rétrécissait la
+         police, et un cri écrit petit n'est plus un cri. */
+      this.bulle(c.dit, x, y - sh - H * (c.crie ? 0.020 : 0.012),
+                 L * (c.crie ? 0.92 : 0.80), c.crie ? 0.044 : 0.034,
                  borne(c.ditT / 0.4, 0, 1));
+    }
   },
 
   dessinerClients(){

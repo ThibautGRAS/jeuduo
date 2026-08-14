@@ -285,6 +285,35 @@ const COMPERE_PAROLE = [6.0, 11.0];
 const COMPERE_DUREE = 3.4;
 const COMPERE_ENTREE = 6.0;          /* il arrive après le début, pas avec */
 
+/* CE QU'IL CRIE. Une remarque de comptoir et un cri à travers la salle
+   ne se disent pas dans la même bulle : les cris sortent en capitales,
+   plus gros, et durent plus longtemps parce qu'on les regarde arriver.
+
+   Ils ne parlent pas forcément de son collègue — c'est justement ce qui
+   les rend drôles : un type qui traverse le bar en hurlant une question
+   de sondage n'a besoin d'aucun contexte. */
+const COMPERE_CRIS = {
+  pf: [
+    "JEAAAAANNE ! AU SECOURS !",
+    "SUR 100 FRANÇAISES, COMBIEN ONT DÉJÀ FAIT OUMBAOUMBA ?",
+    "CE N'EST QU'UN DÉTAIL !",
+    "JEAAAANNE ! J'AI RETROUVÉ MON VERRE !",
+    "QUELQU'UN A VU MA VOITURE ? NON ? TANT MIEUX !",
+  ],
+  th: [
+    "JE SUIS PAS EN SERVICE ! ENFIN, UN PEU !",
+    "SUR 100 COLLÈGUES, COMBIEN SAVENT COURIR ? UN !",
+    "C'EST MOI QUI CONDUIS ! NON. C'EST PAS MOI.",
+    "FRANCKYYY ! LA MÊME ! POUR TOUT LE MONDE !",
+    "J'AI UNE PISTE ! ENFIN, J'AVAIS.",
+  ],
+};
+/* Un peu plus d'un quart des prises de parole. Au-delà il ne parlait plus
+   qu'en capitales et le procédé s'usait ; en dessous, on faisait une
+   partie entière sans en entendre un seul. */
+const COMPERE_CHANCE_CRI = 0.28;
+const COMPERE_DUREE_CRI = 4.2;
+
 /* Ce qu'il raconte sur l'autre. Deux jeux, un par héros : il faut que ce
    soit le COLLÈGUE qu'on entend, pas une voix générique. On se moque de
    ce qu'il fait, jamais de ce qu'il est — et jamais au point que le
@@ -492,7 +521,7 @@ Object.assign(Tournee, {
       x:hasard(0.15, 0.85), dir:1, foulee:0,
       etat:"pause", t:COMPERE_ENTREE, cible:0.5,
       parleT:hasard(COMPERE_PAROLE[0], COMPERE_PAROLE[1]),
-      dit:null, ditT:0,
+      dit:null, ditT:0, crie:false,
     };
   },
 
@@ -524,8 +553,9 @@ Object.assign(Tournee, {
       c.parleT -= dt;
       if (c.parleT <= 0){
         c.parleT = melange(COMPERE_PAROLE[0], COMPERE_PAROLE[1], Math.random());
-        c.dit = piocher(COMPERE_PHRASES[c.cle]);
-        c.ditT = COMPERE_DUREE;
+        c.crie = Math.random() < COMPERE_CHANCE_CRI;
+        c.dit = piocher((c.crie ? COMPERE_CRIS : COMPERE_PHRASES)[c.cle]);
+        c.ditT = c.crie ? COMPERE_DUREE_CRI : COMPERE_DUREE;
       }
     }
   },

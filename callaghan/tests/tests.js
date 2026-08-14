@@ -5525,6 +5525,16 @@ if (D){
         D.FOULE_PHRASES[k].forEach(t => voir(k, t));
       for (const k of Object.keys(D.COMPERE_PHRASES))
         D.COMPERE_PHRASES[k].forEach(t => voir("collègue " + k, t));
+      /* UN CRI A MOINS DE PLACE. Il est écrit plus gros — 0,044 de la
+         hauteur contre 0,034 — et en capitales, qui sont plus larges. Le
+         plafond descend donc à cinquante-six signes : mesuré, au-delà le
+         repli rétrécit la police et le cri redevient une remarque. */
+      const MAX_CRI = 56;
+      for (const k of Object.keys(D.COMPERE_CRIS))
+        D.COMPERE_CRIS[k].forEach(t => {
+          if (t.length > MAX_CRI) longues.push("cri " + k + " : " + t.length);
+          if (t !== t.toUpperCase()) longues.push("cri " + k + " pas en capitales");
+        });
       messageDetail = longues.length ? longues.join(", ") : "toutes sous " + MAX + " signes";
       return !longues.length;
     })());
@@ -5536,7 +5546,8 @@ if (D){
          générique. La clé se déduit du préfixe de planche, donc rien à
          maintenir le jour où un troisième champion arrive. */
       const cles = D.BAR_CHAMPIONS.map(c => c.prefixe.replace("bar_", ""));
-      const manque = cles.filter(k => !(D.COMPERE_PHRASES[k] || []).length);
+      const manque = cles.filter(k => !(D.COMPERE_PHRASES[k] || []).length
+                                   || !(D.COMPERE_CRIS[k] || []).length);
       const maigres = cles.filter(k => (D.COMPERE_PHRASES[k] || []).length < 8);
       messageDetail = manque.length ? "sans répliques : " + manque.join(", ")
         : cles.map(k => k + " " + D.COMPERE_PHRASES[k].length).join(", ");

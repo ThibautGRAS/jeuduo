@@ -627,6 +627,13 @@ présents, les faits divers du niveau 4 vus du comptoir, et le reste. Le
 contexte passe devant : pendant le coup de feu, la salle commente ce qui
 se passe.
 
+**Il CRIE une fois sur quatre** (v7.23). Cinq cris par héros, en
+capitales, dans une bulle plus grosse et plus large — 0,044 de hauteur
+contre 0,034, et 0,92 d'écran contre 0,80. À taille égale, une phrase en
+capitales passait pour une remarque de plus. Le plafond de longueur
+descend à cinquante-six signes pour la même raison : au-delà, le repli
+rétrécit la police et le cri redevient une remarque.
+
 **Le collègue déambule au fond, pas frais** (v7.22). C'est l'AUTRE
 champion, celui qu'on n'a pas choisi. Il titube, s'arrête, et parle de son
 binôme — quatorze répliques par héros. Il ne touche jamais un verre : un

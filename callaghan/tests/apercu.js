@@ -679,12 +679,35 @@ function jouerJusqua(D, condition, limite){
     if (c){
       c.x = 0.56; c.dir = -1; c.etat = "marche"; c.foulee = 1.2;
       c.dit = "Il a mis vingt minutes à choisir une bière. Vingt.";
-      c.ditT = 3.0;
+      c.ditT = 3.0; c.crie = false;
     }
     D.Tournee.replique = { qui:D.Tournee.foule[0], txt:"Le maire est là.", t:3 };
     D.Tournee.secousse = 0;
     dessinerVia(D, canevas);
     ecrire(canevas, "36b_bar_collegue");
+  }
+
+  /* 36c. LE CRI. La plus longue des phrases criées, dans la plus grosse
+     des bulles : c'est le pire cas, et le seul qui dise si le repli tient
+     sans rétrécir la police au point que le cri redevienne une remarque. */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(3); D.Tournee.lancer(); D.Tournee.introT = 0;
+    D.Tournee.x = 0.42; D.Tournee.ambiance = 62;
+    D.Tournee.marche = 0; D.Tournee.dir = 1;
+    for (let i = 0; i < 8; i++) D.Jeu.pas(1 / 60);
+    const c = D.Tournee.compere;
+    if (c){
+      c.x = 0.50; c.dir = 1; c.etat = "marche"; c.foulee = 0.6;
+      c.crie = true; c.ditT = 4.0;
+      const cris = D.COMPERE_CRIS[c.cle] || [];
+      c.dit = cris.reduce((a, b) => (b.length > a.length ? b : a), "");
+    }
+    D.Tournee.replique = null;
+    D.Tournee.secousse = 0;
+    dessinerVia(D, canevas);
+    ecrire(canevas, "36c_bar_collegue_cri");
   }
 
   /* 37. TOUS LES ENNEMIS à la même profondeur : la seule image qui dit
