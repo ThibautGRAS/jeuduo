@@ -783,7 +783,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v7.31</div>
+  <div id="version">CALLAGHAN v7.32</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -855,7 +855,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.31";
+const VERSION = "7.32";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -10297,6 +10297,11 @@ const FOULE_PHRASES = {
     "Regarde-moi ce comptoir.",
   ],
   fin_de_soiree: [
+    "Putain, il est tard.",
+    "J'ai la tête dans le cul.",
+    "J'suis pas bourré, j'suis fatigué.",
+    "Merde, j'ai dit quoi ?",
+    "On s'en fout, on est bien.",
     "Il est tard, non ?",
     "Je vois double. Deux fois.",
     "Qui a éteint la lumière ?",
@@ -10313,18 +10318,22 @@ const FOULE_PHRASES = {
   ],
   gabi:     ["J'ai commandé une pizza.", "Personne n'a vu ma part ?"],
   charles:  ["Moi je bois pas, je goûte.", "C'était mieux avant. Enfin, non."],
-  teo:      ["Je reste cinq minutes.", "Bon. Dix minutes."],
+  teo:      ["Je reste cinq minutes.", "Bon. Dix minutes.",
+             "Je suis nul en horaires, merde."],
   mathilde: ["Jojo m'a encore ignorée.", "Ses cocktails sont meilleurs.",
              "CHOCHO ! Viens voir !"],
-  tristan:  ["Deux, et j'y vais.", "On refait la même ?"],
+  tristan:  ["Deux, et j'y vais.", "On refait la même ?",
+             "Putain, deux. J'avais dit deux."],
   solene:   ["Tu as vu qui est là ?", "Je préviens Mathilde.",
              "Chocho, c'est elle qui a commencé."],
-  kevin:    ["C'est ma tournée. Enfin, presque.", "Jägerbombs. Point."],
+  kevin:    ["C'est ma tournée. Enfin, presque.", "Jägerbombs. Point.",
+             "On fait pas les cons. On fait les Jäger."],
   remy:     ["Le premier qui craque paie.", "J'ai vu Teo boire de l'eau.",
              "BOBITO ! Tu bois quoi ?"],
   /* MATHILDE BOBITO. Ses trois sujets, et elle y revient : le chien, ses
      élèves, et la piste de danse. */
   gautier:  ["Ce soir je joue pas. Enfin, presque pas.",
+             "J'ai tout perdu. Enfin, presque tout.",
              "À Malte il fait beau. Ici aussi, ça va.",
              "Mon frère me surveille. Il surveille tout.",
              "Je cours demain. Enfin, dimanche."],
@@ -10478,8 +10487,10 @@ const FOULE_DISCUSSIONS = {
     ["Moi je dis rien, hein.", "Tu dis rien depuis vingt minutes.",
      "Je dis rien, mais je pense fort."],
   ],
-  /* CE QU'ILS DISENT QUAND IL EST TARD. Pas de méchanceté, pas de
-     gueule de bois : juste des gens qui perdent le fil et le disent. */
+  /* CE QU'ILS DISENT QUAND IL EST TARD. Ça jure, c'est un bar — mais la
+     vanne revient TOUJOURS sur celui qui parle. Un ivrogne qui se moque
+     de lui-même est drôle ; un ivrogne qui se moque du voisin est juste
+     un type désagréable, et on l'entend quinze fois par soirée. */
   ivres: [
     ["J'ai quelque chose à te dire.", "Vas-y.", "J'ai oublié.",
      "C'était sûrement important."],
@@ -10506,6 +10517,28 @@ const FOULE_DISCUSSIONS = {
      "Et à chaque fois c'était vrai."],
     ["Qui a commandé ça ?", "Toi.", "Alors c'est bon.",
      "Tu l'as commandé deux fois."],
+    ["Putain la marche.", "Y'a pas de marche.", "Ben si, je viens de la faire."],
+    ["J'ai la tête dans le cul.", "Ça se voit un peu.", "Ça se VOIT ?"],
+    ["Merde, mon téléphone.", "Il est dans ta main.",
+     "Ah. Merde quand même."],
+    ["J'suis pas bourré.", "Personne a dit ça.",
+     "Ben voilà. Alors j'suis pas bourré."],
+    ["C'est quoi ce bordel dans mon verre ?", "C'est ce que tu as commandé.",
+     "J'ai des goûts de merde."],
+    ["J'ai essayé de la draguer.", "Et ?",
+     "J'ai parlé de la Formule 1. Vingt minutes."],
+    ["J'ai dit un truc con tout à l'heure.", "Lequel ?",
+     "Tous, en fait."],
+    ["Je vais me coucher.", "Il est 22 h.", "Putain déjà ?", "DÉJÀ ?"],
+    ["Faut que j'arrête.", "D'accord.", "Pas maintenant. Le mois prochain."],
+    ["J'me suis pris les pieds dans rien.", "Dans rien du tout ?",
+     "Dans le vide. Le vide entier."],
+    ["Franchement, on est cons.", "Ouais.", "Mais bien."],
+    ["J'ai chanté ?", "Tu as chanté.", "Fort ?", "Très fort.", "Merde."],
+    ["Je paie ma tournée.", "Avec quoi ?",
+     "Avec ma carte. Elle est chez moi. Ma carte est chez moi."],
+    ["T'as vu comment je danse ?", "Oui.", "C'est bien, hein ?",
+     "Non. Mais continue."],
   ],
   commun: [
     ["Tu reprends quelque chose ?", "Le même.", "Le même pour moi aussi."],
