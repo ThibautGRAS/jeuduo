@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.23";
+const VERSION = "7.24";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1073,6 +1073,14 @@ const IMAGES_NIVEAU3 = [
   "bar_charles_attrape", "bar_charles_boit", "bar_charles_vide",
   "bar_tristan_idle", "bar_tristan_marche1", "bar_tristan_marche2",
   "bar_tristan_attrape", "bar_tristan_boit", "bar_tristan_vide",
+  /* TRISTAN OUVRE LE BAL. Il est le premier à avoir les six poses de
+     `communs/figurant-2` : il tangue, il danse, il s'assoit. Les autres
+     les auront une planche à la fois, et le code n'attend personne — une
+     pose absente se replie sur `idle`, ce qui fait un habitué immobile
+     au milieu d'un bar qui bouge, pas un trou. */
+  "bar_tristan_titube", "bar_tristan_danse1", "bar_tristan_danse2",
+  "bar_tristan_assis_tabouret", "bar_tristan_assis_canape",
+  "bar_tristan_assis_verre",
   "bar_teo_idle", "bar_teo_marche1", "bar_teo_marche2",
   "bar_teo_attrape", "bar_teo_boit", "bar_teo_vide",
   "bar_solene_idle", "bar_solene_marche1", "bar_solene_marche2",

@@ -67,6 +67,7 @@ Rangées par `archiver.py`, jamais à la main.
 | `n3` | `heros_th_verre.webp` | 98 Ko |
 | `n3` | `plante_suspendue.webp` | 130 Ko |
 | `n3` | `tabourets.webp` | 76 Ko |
+| `n3` | `tristan-figurant.webp` | 108 Ko |
 | `n4` | `heros_pf_flic.webp` | 113 Ko |
 | `n4` | `heros_pf_recharge.webp` | 95 Ko |
 | `n4` | `heros_pf_tir.webp` | 82 Ko |
@@ -80,7 +81,7 @@ Rangées par `archiver.py`, jamais à la main.
 | `n4` | `xavier-pelle.webp` | 72 Ko |
 | `n4` | `xavier_reference.webp` | 111 Ko |
 
-**8.5 Mo au total.**
+**8.6 Mo au total.**
 
 ## 24 planches à identifier
 

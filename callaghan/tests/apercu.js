@@ -687,6 +687,40 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "36b_bar_collegue");
   }
 
+  /* 36d. LES HUMEURS DES HABITUÉS. Tristan est le premier à avoir les six
+     poses de figurant-2 : on le met quatre fois dans la même image, une
+     par état. C'est la seule façon de voir si l'assis tombe SUR le
+     tabouret et si les échelles se raccordent. */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(3); D.Tournee.lancer(); D.Tournee.introT = 0;
+    D.Tournee.x = 0.42; D.Tournee.ambiance = 85;
+    D.Tournee.marche = 0; D.Tournee.dir = 1;
+    for (let i = 0; i < 8; i++) D.Jeu.pas(1 / 60);
+    const tri = D.Tournee.foule.filter(m => m.ref.id === "tristan");
+    const etats = ["danse", "titube", "assis"];
+    D.Tournee.foule.forEach((m, i) => {
+      if (m.ref.id !== "tristan") m.etat = "grappe";
+    });
+    /* on force quatre habitués sur la planche de Tristan, un par état */
+    const ref = D.BAR_CLIENTS.find(c => c.id === "tristan");
+    D.Tournee.foule.slice(0, 4).forEach((m, i) => {
+      m.ref = ref;
+      m.x = 0.30 + i * 0.06;
+      m.etat = i < 3 ? etats[i] : "grappe";
+      m.foulee = 0.4; m.t = 3.0; m.humeur = 5;
+      if (m.etat === "assis"){
+        m.tabouret = 4; m.xAssis = D.BAR_TABOURETS[4].x; m.verre = true;
+      }
+    });
+    void tri;
+    D.Tournee.replique = null;
+    D.Tournee.secousse = 0;
+    dessinerVia(D, canevas);
+    ecrire(canevas, "36d_bar_humeurs");
+  }
+
   /* 36c. LE CRI. La plus longue des phrases criées, dans la plus grosse
      des bulles : c'est le pire cas, et le seul qui dise si le repli tient
      sans rétrécir la police au point que le cri redevienne une remarque. */

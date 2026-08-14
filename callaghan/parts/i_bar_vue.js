@@ -584,17 +584,26 @@ const BarVue = {
        traverser un voisin */
     const liste = T.foule.slice().sort((a, b) => a.x - b.x);
     for (const m of liste){
-      const pose = m.etat === "grappe" ? "idle" : "marche" + (1 + (Math.floor(m.foulee) % 2));
+      const pose = T.poseFoule(m);
       const spr = Images.table[m.ref.prefixe + "_" + pose]
                || Images.table[m.ref.prefixe + "_idle"]
                || Images.table[m.ref.sprite];
       if (!spr || !spr.naturalWidth) continue;
-      const sh = H * FOULE_TAILLE * m.ref.taille * echellePerso(m.ref.id);
+      /* UN HABITUÉ ASSIS EST AU COMPTOIR, PAS AU PREMIER PLAN. Il monte
+         donc sur la ligne des tabourets — plus haute que celle de la
+         foule — et rapetisse d'autant : c'est la même perspective que
+         pour les clients qui longent le bar.
+         Sa pose n'a PAS de tabouret dessiné : le décor a les siens, et
+         c'est celui-là qu'il faut voir sous lui. */
+      const assis = m.etat === "assis";
+      const sh = H * FOULE_TAILLE * m.ref.taille * echellePerso(m.ref.id)
+               * (assis ? FOULE_ASSIS_ECH : 1);
       const sl = sh * spr.naturalWidth / spr.naturalHeight;
       /* `ex` convertit une position DU MONDE en position d'écran : la
          grappe reste sur place quand le champion se déplace, et on la
          dépasse. Hors champ, on ne la dessine pas. */
-      const x = this.ex(m.x), y = H * FOULE_PIEDS;
+      const x = this.ex(assis ? m.xAssis + FOULE_ASSIS_DECALE : m.x);
+      const y = H * (assis ? BAR_TAB_PIEDS : FOULE_PIEDS);
       if (x < -L * 0.25 || x > L * 1.25) continue;
       ctx.save();
       /* un cran plus sombre que le champion : ils sont du décor vivant,

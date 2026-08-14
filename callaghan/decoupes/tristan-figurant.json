@@ -1,0 +1,14 @@
+{
+  "_": "Tristan, planche de figurant-2 : les six poses que le bar n'avait pas. Original : planches/n3/tristan-figurant.webp.",
+  "__echelle": "MESURÉE AU VISAGE, comme pour Xavier : 72 px de large sur bar_tristan_idle, 73 en moyenne sur la planche — elle est livrée à l'échelle du jeu. hauteur_ref est donc calé sur le témoin lui-même (407 px) pour donner une échelle de 1,00. Caler sur la hauteur du sujet du sprite de référence (478 px) aurait donné 1,17 : le témoin est `titube`, penché, donc plus court qu'un homme debout.",
+  "planche": "planches/n3/tristan-figurant.webp",
+  "reference": "img/n3/bar_tristan_idle.webp",
+  "hauteur_ref": 407,
+  "sortie": "img/n3",
+  "prefixe": "bar_tristan",
+  "temoin": 1,
+  "rangees": [
+    ["titube", "danse1", "danse2"],
+    ["assis_tabouret", "assis_canape", "assis_verre"]
+  ]
+}

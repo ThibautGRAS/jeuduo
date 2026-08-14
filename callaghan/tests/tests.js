@@ -5736,6 +5736,44 @@ if (D){
   /* ---- la foule du premier plan (niveau 3) ---- */
   const unBar = () => { D.Jeu.demarrer(3); D.Tournee.lancer(); D.Tournee.introT = 0; D.Camera.mesurer(844, 318, 1); return D.Tournee; };
 
+  verifier("un habitué danse, tangue ou s'assoit — et jamais à deux sur un tabouret",
+    (() => {
+      /* Ils étaient debout, immobiles, à la même place toute la soirée :
+         une haie d'honneur. Trois états s'ajoutent au repos.
+         DEUX SUR LE MÊME TABOURET, ça s'est vu à l'écran avant qu'on le
+         compte : la place occupée se retire de la liste des libres. */
+      const T = unBar();
+      const vus = {}; let doublon = null;
+      for (let i = 0; i < 60 * 60 * 3; i++){
+        T.majFoule(1 / 60);
+        const assis = T.foule.filter(m => m.etat === "assis");
+        const pris = assis.map(m => m.tabouret);
+        if (new Set(pris).size !== pris.length) doublon = pris.join(",");
+        for (const m of T.foule) vus[m.etat] = (vus[m.etat] || 0) + 1;
+      }
+      messageDetail = doublon ? "deux sur le tabouret " + doublon
+        : Object.keys(vus).sort().join(", ");
+      return !doublon && vus.danse && vus.assis &&
+        (vus.titube || vus.danse);
+    })());
+
+  verifier("une pose qui manque se replie sur l'idle, elle ne fait pas de trou",
+    (() => {
+      /* Les onze habitués n'auront pas leurs nouvelles poses le même
+         jour. Le code ne doit pas attendre le dernier : un habitué sans
+         planche reste immobile au milieu d'un bar qui bouge, ce qui est
+         un défaut acceptable — un carré vide ne l'est pas. */
+      const T = unBar();
+      const m = T.foule[0];
+      /* Martin n'a que trois poses : ni boire, ni danser, ni s'asseoir */
+      m.ref = D.BAR_CLIENTS.find(c => c.id === "martin") || m.ref;
+      m.etat = "danse"; m.foulee = 0;
+      const pose = T.poseFoule(m);
+      messageDetail = "martin en danse -> " + pose;
+      return pose === "idle";
+    })());
+
+
   verifier("les grappes sont RÉPARTIES DANS LE BAR, pas collées à la caméra",
     (() => {
       /* Accrochées à l'écran, elles suivaient le champion comme un décor
@@ -5747,7 +5785,7 @@ if (D){
       messageDetail = D.FOULE_PLACES.length + " grappes, étendue " + etendue.toFixed(2);
       return D.FOULE_PLACES.length >= 4 && etendue > 0.7 &&
         D.FOULE_PLACES.every(p => T.grappe(p.id).length > 0) &&
-        /const x = this\.ex\(m\.x\)/.test(source);
+        /const x = this\.ex\(assis \? m\.xAssis \+ FOULE_ASSIS_DECALE : m\.x\)/.test(source);
     })());
 
   verifier("une grappe hors champ n'est pas dessinée",

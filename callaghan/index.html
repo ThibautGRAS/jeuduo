@@ -783,7 +783,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v7.23</div>
+  <div id="version">CALLAGHAN v7.24</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -855,7 +855,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.23";
+const VERSION = "7.24";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1910,6 +1910,14 @@ const IMAGES_NIVEAU3 = [
   "bar_charles_attrape", "bar_charles_boit", "bar_charles_vide",
   "bar_tristan_idle", "bar_tristan_marche1", "bar_tristan_marche2",
   "bar_tristan_attrape", "bar_tristan_boit", "bar_tristan_vide",
+  /* TRISTAN OUVRE LE BAL. Il est le premier à avoir les six poses de
+     `communs/figurant-2` : il tangue, il danse, il s'assoit. Les autres
+     les auront une planche à la fois, et le code n'attend personne — une
+     pose absente se replie sur `idle`, ce qui fait un habitué immobile
+     au milieu d'un bar qui bouge, pas un trou. */
+  "bar_tristan_titube", "bar_tristan_danse1", "bar_tristan_danse2",
+  "bar_tristan_assis_tabouret", "bar_tristan_assis_canape",
+  "bar_tristan_assis_verre",
   "bar_teo_idle", "bar_teo_marche1", "bar_teo_marche2",
   "bar_teo_attrape", "bar_teo_boit", "bar_teo_vide",
   "bar_solene_idle", "bar_solene_marche1", "bar_solene_marche2",
@@ -9756,17 +9764,26 @@ const BarVue = {
        traverser un voisin */
     const liste = T.foule.slice().sort((a, b) => a.x - b.x);
     for (const m of liste){
-      const pose = m.etat === "grappe" ? "idle" : "marche" + (1 + (Math.floor(m.foulee) % 2));
+      const pose = T.poseFoule(m);
       const spr = Images.table[m.ref.prefixe + "_" + pose]
                || Images.table[m.ref.prefixe + "_idle"]
                || Images.table[m.ref.sprite];
       if (!spr || !spr.naturalWidth) continue;
-      const sh = H * FOULE_TAILLE * m.ref.taille * echellePerso(m.ref.id);
+      /* UN HABITUÉ ASSIS EST AU COMPTOIR, PAS AU PREMIER PLAN. Il monte
+         donc sur la ligne des tabourets — plus haute que celle de la
+         foule — et rapetisse d'autant : c'est la même perspective que
+         pour les clients qui longent le bar.
+         Sa pose n'a PAS de tabouret dessiné : le décor a les siens, et
+         c'est celui-là qu'il faut voir sous lui. */
+      const assis = m.etat === "assis";
+      const sh = H * FOULE_TAILLE * m.ref.taille * echellePerso(m.ref.id)
+               * (assis ? FOULE_ASSIS_ECH : 1);
       const sl = sh * spr.naturalWidth / spr.naturalHeight;
       /* `ex` convertit une position DU MONDE en position d'écran : la
          grappe reste sur place quand le champion se déplace, et on la
          dépasse. Hors champ, on ne la dessine pas. */
-      const x = this.ex(m.x), y = H * FOULE_PIEDS;
+      const x = this.ex(assis ? m.xAssis + FOULE_ASSIS_DECALE : m.x);
+      const y = H * (assis ? BAR_TAB_PIEDS : FOULE_PIEDS);
       if (x < -L * 0.25 || x > L * 1.25) continue;
       ctx.save();
       /* un cran plus sombre que le champion : ils sont du décor vivant,
@@ -10348,6 +10365,41 @@ const FOULE_ENCHAINE = 0.35;          /* blanc entre deux répliques      */
    Il TITUBE, il ne marche pas : la planche du bar a une pose `titube`
    par héros, faite pour l'état pompette du champion. C'est elle qui
    sert ici, en permanence. */
+/* CE QUE FAIT UN HABITUÉ QUAND IL NE FAIT RIEN. Ils étaient debout,
+   immobiles, à la même place toute la soirée : une haie d'honneur, pas un
+   bar. Trois états s'ajoutent au repos, et chacun a sa condition —
+   sinon tout le monde danse tout le temps et plus rien ne veut dire rien.
+
+     `danse`   quand l'ambiance est HAUTE. C'est la récompense visible
+               d'une bonne tournée : la salle se met à bouger.
+     `titube`  quand le champion lui-même est pompette, ou de temps en
+               temps. Un bar où personne ne tangue est un bar fictif.
+     `assis`   sur un tabouret libre du comptoir, pour un long moment.
+
+   Tout est en REPLI : un habitué qui n'a pas la planche garde son `idle`.
+   C'est ce qui permet d'ajouter les poses personnage par personnage sans
+   que le bar attende le dernier. */
+const FOULE_HUMEUR = [9.0, 17.0];     /* délai entre deux changements     */
+const FOULE_HUMEUR_DUREE = [4.0, 9.0];
+const FOULE_ASSIS_DUREE = [14.0, 26.0];
+const FOULE_CHANCE_ASSIS = 0.34;
+/* La cadence des pas de danse et du tangage. Plus lente que la marche :
+   deux images qui alternent trop vite se lisent comme un tremblement. */
+const FOULE_CADENCE_DANSE = 3.4;
+/* LA TAILLE D'UN HABITUÉ ASSIS. Il quitte le premier plan pour la ligne
+   des tabourets, plus haute, donc plus loin : il rapetisse. Mais pas de
+   moitié — mesuré sur le décor, un tabouret fait 0,245 de la hauteur
+   d'écran et un homme debout dans les trois quarts d'un mètre quatre-
+   vingts, soit deux fois et demie le tabouret. À 0,74 il flottait
+   au-dessus de l'assise comme un enfant sur un tabouret d'adulte. */
+const FOULE_ASSIS_ECH = 0.98;
+/* IL S'ASSOIT À CÔTÉ, PAS DESSUS. Le tabouret est dessiné AVANT la foule,
+   donc un habitué posé exactement sur son abscisse le recouvre
+   entièrement — il est plus large que lui — et on obtient un homme assis
+   sur rien. Décalé d'un centième de monde vers la droite, le tabouret
+   réapparaît à sa gauche et la scène se lit. */
+const FOULE_ASSIS_DECALE = 0.013;
+
 const COMPERE_MARCHE = 0.055;        /* moitié moins vite qu'un client   */
 const COMPERE_PAUSE = [2.2, 5.5];    /* il s'arrête souvent, et longtemps */
 const COMPERE_TRAJET = [3.0, 7.0];
@@ -10435,6 +10487,7 @@ Object.assign(Tournee, {
     this.foule = [];
     this.replT = melange(FOULE_ECHANGE[0], FOULE_ECHANGE[1], Math.random());
     this.echange = null;
+    this.humeurT = melange(FOULE_HUMEUR[0], FOULE_HUMEUR[1], Math.random());
     this.baladeT = melange(FOULE_BALADE[0], FOULE_BALADE[1], Math.random());
     this.replique = null;
     const libres = BAR_CLIENTS.map(c => c.id);
@@ -10524,6 +10577,8 @@ Object.assign(Tournee, {
       }
     }
 
+    this.majHumeurs(dt);
+
     /* les balades et les départs */
     this.baladeT -= dt;
     if (this.baladeT <= 0){
@@ -10542,6 +10597,12 @@ Object.assign(Tournee, {
     for (let i = this.foule.length - 1; i >= 0; i--){
       const m = this.foule[i];
       m.t += dt;
+      /* danse et tangage : ils restent sur place, seule la cadence court */
+      if (m.etat === "danse" || m.etat === "titube"){
+        m.foulee += dt * FOULE_CADENCE_DANSE;
+        continue;
+      }
+      if (m.etat === "assis") continue;
       if (m.etat === "grappe"){
         /* il rejoint doucement sa place : après un départ voisin, les
            rangs se resserrent au lieu de sauter */
@@ -10577,6 +10638,65 @@ Object.assign(Tournee, {
         if (Math.abs(m.x - cible) < 0.02){ m.etat = "grappe"; m.t = 0; }
       }
     }
+  },
+
+  /* La pose d'un habitué se déduit de son état, comme partout ailleurs —
+     elle était écrite dans la VUE, ce qui la rendait impossible à faire
+     grandir sans toucher au dessin.
+
+     Chaque pose se replie sur `idle` si la planche du personnage ne l'a
+     pas encore : les onze habitués n'auront pas leurs poses le même jour,
+     et le bar ne doit pas attendre le dernier. */
+  poseFoule(m){
+    const p = m.ref.prefixe, dispo = n => Images.table[p + "_" + n] ? n : null;
+    /* LE DERNIER REPLI EST UN NOM, PAS UNE RECHERCHE. `dispo("idle")`
+       rendait `null` quand aucune image n'est chargée — le harnais de
+       test, par exemple — et le dessin recevait null au lieu du nom d'une
+       pose. Un repli qui peut échouer n'est pas un repli. */
+    if (m.etat === "assis")
+      return dispo(m.verre ? "assis_verre" : "assis_tabouret") || "idle";
+    if (m.etat === "danse")
+      return dispo("danse" + (1 + (Math.floor(m.foulee) % 2))) || "idle";
+    if (m.etat === "titube") return dispo("titube") || "idle";
+    if (m.etat === "grappe")
+      /* `idle2` respire : on alterne LENTEMENT, une fois toutes les deux
+         secondes et demie, sinon le repos se met à clignoter */
+      return (Math.floor(m.t / 2.5) % 2 && dispo("idle2")) || "idle";
+    return "marche" + (1 + (Math.floor(m.foulee) % 2));
+  },
+
+  /* Un habitué change d'humeur : il se met à danser, il tangue, ou il va
+     s'asseoir. Il ne le fait que depuis sa grappe — on ne s'assoit pas au
+     milieu d'une traversée. */
+  majHumeurs(dt){
+    this.humeurT -= dt;
+    for (const m of this.foule){
+      if (m.humeur > 0){
+        m.humeur -= dt;
+        if (m.humeur <= 0){ m.etat = "grappe"; m.t = 0; m.verre = false; }
+      }
+    }
+    if (this.humeurT > 0) return;
+    this.humeurT = melange(FOULE_HUMEUR[0], FOULE_HUMEUR[1], Math.random());
+    const dispos = this.foule.filter(m => m.etat === "grappe");
+    if (!dispos.length) return;
+    const m = piocher(dispos);
+    /* UN TABOURET LIBRE, ET UN SEUL PAR PLACE. Deux habitués sur le même
+       tabouret, ça s'est vu à l'écran avant qu'on le compte. */
+    const pris = this.foule.filter(q => q.etat === "assis").map(q => q.tabouret);
+    const libres = BAR_TABOURETS.filter((t, i) => pris.indexOf(i) < 0);
+    if (libres.length && Math.random() < FOULE_CHANCE_ASSIS){
+      const i = BAR_TABOURETS.indexOf(piocher(libres));
+      m.etat = "assis"; m.tabouret = i; m.xAssis = BAR_TABOURETS[i].x;
+      m.verre = Math.random() < 0.5;
+      m.humeur = melange(FOULE_ASSIS_DUREE[0], FOULE_ASSIS_DUREE[1], Math.random());
+      return;
+    }
+    const haute = this.ambiance > BAR_AMBIANCE_BUT * 0.70;
+    const soul = this.bourre > 0 || Math.random() < 0.35;
+    m.etat = haute ? "danse" : (soul ? "titube" : "danse");
+    m.humeur = melange(FOULE_HUMEUR_DUREE[0], FOULE_HUMEUR_DUREE[1], Math.random());
+    m.t = 0;
   },
 
   /* --------- le collègue --------- */

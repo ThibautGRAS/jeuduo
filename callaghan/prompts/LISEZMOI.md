@@ -122,7 +122,7 @@ a une par habitué dans `reference/`, fabriquée depuis ses sprites du jeu.
 | planche | poses | état |
 |---|---|---|
 | `figurant-1` | idle, idle2, marche1, marche2, attrape, boit, vide | six sur sept existent déjà |
-| `figurant-2` | titube, danse1, danse2, assis_tabouret, assis_canape, assis_verre | tout est à faire |
+| `figurant-2` | titube, danse1, danse2, assis_tabouret, assis_canape, assis_verre | **Tristan l'a**, les dix autres non |
 
 La coupure tombe bien : la première planche est ce que le bar consomme
 aujourd'hui, la seconde est ce qui manque. Pour un habitué déjà dessiné,
