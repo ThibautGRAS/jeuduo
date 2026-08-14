@@ -573,6 +573,31 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**XAVIER LE TERRASSIER entre au bestiaire** (v7.18), et c'est le
+premier personnage FICTIF des six. Les autres caricaturent une impunité
+réelle ; lui incarne la violence ordinaire, celle qui ne fait pas la une.
+
+Bon père de famille, catholique pratiquant, une vie de frustrations
+tenues — puis un jour il a tué sa femme, ses enfants et le chien, et les a
+enterrés sous la terrasse qu'il venait de couler. Il a continué à aller à
+la messe.
+
+**Ce qui le rend inquiétant, c'est la propreté** : veste blanche
+impeccable, col roulé noir, et de la boue jusqu'aux genoux. Le haut
+respectable, le bas qui creuse.
+
+Il LANCE sa pelle, comme l'Abbé son encensoir. Un mouvement `lancer_objet`
+en trois temps entre au catalogue, partagé par les trois ennemis qui
+frappent à distance.
+
+**BruHell lance du VIN, alors que sa fiche dit Molotov depuis le début.**
+Le sprite est une bouteille de château, l'impact s'appelle `imp_vin`.
+Repéré par Thibaut, prompt de remplacement écrit — une bouteille de vodka
+avec un chiffon enflammé.
+
+**Deux sprites morts trouvés au passage** : `obj_bouteille_g` et
+`obj_bouteille_gf` ne sont référencés nulle part dans le code.
+
 **Trois plans au bar, dans le bon ordre** (v7.17) : le héros, puis les
 tabourets, puis la foule.
 

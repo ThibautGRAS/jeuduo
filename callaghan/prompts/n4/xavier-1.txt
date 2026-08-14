@@ -1,0 +1,119 @@
+Planche de 6 poses d'un même personnage, côte à côte
+sur une seule rangée.
+Image de référence à joindre : reference/<le personnage voulu>.png
+Planche 1 sur 2 — joindre la MÊME image de référence à toutes.
+
+RÉFÉRENCE DE PERSONNAGE — l'image jointe montre ce personnage tel
+qu'il existe déjà.
+
+Elle fait FOI sur tout ce qui le définit : visage, coupe de cheveux,
+pilosité, corpulence, vêtements, couleurs, chaussures, accessoires, et
+le style de dessin lui-même — trait, palette, éclairage.
+
+Reproduire ces éléments à l'identique. Ne rien réinventer, ne rien
+moderniser, ne rien « améliorer ». Une planche qui change la couleur d'un
+vêtement ou la coupe d'une barbe est inutilisable : elle ne se raccorde
+pas aux images déjà en jeu.
+
+SEULES les poses décrites ci-dessous changent.
+
+SI L'IMAGE DE RÉFÉRENCE EST SUR FOND MAGENTA : ce fond est un fond de
+travail, rien d'autre. Il ne fait PAS partie du personnage. Ne pas en
+tirer de lumière rose ou violette sur la peau, les cheveux, les
+vêtements ou les contours. L'éclairage du personnage doit rester neutre,
+identique à celui de la référence une fois le fond mis de côté.
+
+LES POSES, de gauche à droite :
+1. [course1] APPUI : la jambe la plus PROCHE du spectateur est lancée loin devant, genou haut ; l'autre jambe est tendue loin en arrière. Bras opposés, coudes pliés
+2. [course2] SUSPENSION : les DEUX pieds sont décollés du sol, la jambe proche se replie sous le corps et passe DEVANT l'autre, buste penché en avant
+3. [course3] APPUI INVERSE : c'est la jambe du FOND qui est lancée loin devant, genou haut, et la jambe proche qui part en arrière. Exactement l'inverse de la première pose
+4. [course4] SUSPENSION INVERSE : les deux pieds décollés, mais c'est la jambe du FOND qui se replie devant. Cette pose doit être VISIBLEMENT différente de la seconde : si on superposait les deux, les jambes ne coïncideraient pas
+5. [touche1] le buste part en arrière, tête rejetée, bras qui se lèvent
+6. [touche2] plié en deux, mains sur le ventre
+
+
+AVERTISSEMENT SUR LES CYCLES. Les phases d'une marche ou d'une course doivent différer sur le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à l'autre. Une planche où toutes les poses ont le même pied en avant est INUTILISABLE — l'animation semble bloquée. Ne pas se contenter de changer la position des bras.
+
+CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
+
+LA PLUS IMPORTANTE, ET LA PLUS SOUVENT RATÉE : L'ESPACEMENT.
+Chaque pose doit être séparée de sa voisine par au moins 80 pixels de
+fond VIDE. Un doigt pointé, un bras tendu, un coude, un pied de course,
+un objet tenu : RIEN ne doit entrer dans la colonne d'à côté. Deux poses
+qui se touchent, même par un seul doigt, ne peuvent pas être séparées
+automatiquement, et toute la planche est à refaire.
+Test à faire mentalement : entre deux poses voisines, peut-on tracer un
+trait vertical du haut en bas de l'image sans jamais toucher un
+personnage ? Si non, écarter davantage.
+Dans le doute, ÉCARTER PLUS. Une planche trop aérée se découpe très bien.
+
+DESSINER UN CADRE AUTOUR DE CHAQUE POSE. Tracer une bande verticale
+d'un MAGENTA PLUS FONCÉ (par exemple #8C008C) de part et d'autre de
+chaque pose, du haut en bas de l'image, comme les cases d'une planche de
+bande dessinée. Chaque personnage doit tenir ENTIÈREMENT dans sa case,
+bras tendus et objets compris, sans jamais toucher une bande.
+Ces bandes ne gênent pas : le découpage les reconnaît comme du fond et
+les retire. Elles servent à VOIR l'espace que chaque pose a le droit
+d'occuper.
+
+AUCUNE POSE N'INTERAGIT AVEC SA VOISINE. Chaque pose est un personnage
+SEUL, qui sera découpé en image indépendante. Si une pose tend la main,
+brandit un objet ou s'adresse à quelqu'un, ce quelqu'un est INVISIBLE et
+n'est pas dessiné — surtout pas la pose d'à côté. Deux poses qui se
+répondent forment une illustration, et une illustration ne se découpe pas.
+
+TOUTES LES POSES REGARDENT DU MÊME CÔTÉ : vers la DROITE. Aucune pose
+retournée vers la gauche, aucune pose de face si les autres sont de trois
+quarts. Le jeu retourne les images lui-même quand il en a besoin.
+
+AUCUNE OMBRE PORTÉE AU SOL, aucune ellipse sombre sous les pieds : le jeu
+dessine l'ombre lui-même, et celle de la planche viendrait s'y ajouter.
+
+AUCUN TITRE, AUCUNE LÉGENDE, AUCUN NUMÉRO. Ni au-dessus des poses, ni en
+haut de la planche. Le texte blanc laisse un halo qui se mélange au fond.
+
+- Fond MAGENTA PUR uni #FF00FF sur toute l'image. Aucun dégradé, aucune
+  ombre portée, aucun décor, aucun élément de mobilier, aucun sol
+  dessiné, aucun cadre, aucune bordure.
+- AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro de pose.
+- VUE : profil STRICT, à cent pour cent de profil, tourné vers la DROITE.
+  Pas de trois quarts, pas de face. Un profil franc est la seule vue où
+  l'on voit quelle jambe passe devant l'autre — c'est de là que vient
+  l'alternance. (Reprise de la formulation de Thibaut, qui a produit le
+  premier cycle de course correct du projet.)
+- GRILLE : une grille RÉGULIÈRE, rangées de taille égale, un large écart
+  de fond entre chaque figure, et un trait vertical de magenta plus foncé
+  entre chaque case. Échelle et taille de tête IDENTIQUES sur toutes les
+  figures.
+- DISPOSITION : jusqu'à quatre poses, UNE SEULE RANGÉE. À partir de
+  cinq, DEUX RANGÉES de taille égale — par exemple 4 + 4 pour huit poses,
+  3 + 2 pour cinq. Une rangée de huit oblige à rétrécir chaque sujet pour
+  tout faire tenir, et les têtes cessent d'être de la même taille : c'est
+  le défaut le plus coûteux, il ne se rattrape pas au découpage.
+  Les deux rangées doivent avoir la MÊME échelle : un personnage de la
+  rangée du bas fait exactement la même taille qu'un de la rangée du
+  haut.
+- Au moins 80 pixels de fond magenta VIDE entre deux poses voisines.
+  Aucune partie d'un personnage — bras tendu, jambe de course, objet
+  tenu — ne doit entrer dans la colonne de sa voisine. On doit pouvoir
+  tracer un trait vertical entièrement magenta entre deux poses.
+- Au moins 60 pixels de magenta vide sur les QUATRE bords de l'image.
+  Une lueur ou un vêtement coupé par le bord ne peut pas être détouré
+  proprement.
+- MÊME ÉCHELLE pour toutes les poses : la tête doit avoir exactement la
+  même taille d'une pose à l'autre. C'est le défaut le plus fréquent.
+- Les PIEDS de toutes les poses reposent sur la même ligne horizontale
+  imaginaire, sauf pour les phases où le personnage est explicitement en
+  l'air.
+- Aucune lueur, aucun halo, aucun effet lumineux qui déborde de la
+  silhouette. Mesuré sur une planche livrée : une bande rose de 15 à
+  30 px de couleur (134, 58, 116) tout autour du sujet — du magenta
+  délavé, que rien ne sait retirer puisqu'on ignore la couleur qui était
+  dessous. Le bord doit être FRANC.
+- Le fond magenta ne teinte RIEN. Aucun reflet rose ou violet sur la
+  peau, les cheveux, les vêtements ou les contours : l'éclairage du
+  personnage est neutre.
+- Style : bande dessinée aux couleurs franches, contours nets, éclairage
+  neutre et identique pour toutes les poses.
+- Personnage vu de TROIS QUARTS, tourné vers la DROITE, corps entier,
+  de la tête aux pieds.

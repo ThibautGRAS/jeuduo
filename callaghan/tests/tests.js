@@ -5586,6 +5586,37 @@ if (D){
       return tete > D.BAR_COMPTOIR && tete < D.BAR_COMPTOIR + 0.10;
     })());
 
+  verifier("Xavier a sa fiche, sa référence et ses planches",
+    (() => {
+      /* Premier personnage FICTIF du bestiaire : les cinq autres
+         caricaturent une impunité réelle, lui incarne la violence
+         ordinaire. Il n'est PAS encore dans ENNEMIS — le déclarer avant
+         que ses images existent ferait échouer le chargeur, qui exige que
+         chaque pose annoncée soit sur le disque. */
+      const d = path.join(RACINE, "prompts");
+      const ref = fs.existsSync(path.join(d, "reference", "xavier.png"));
+      const pl = fs.readdirSync(path.join(d, "n4"))
+        .filter(n => n.startsWith("xavier"));
+      const fiche = fs.readFileSync(
+        path.join(RACINE, "PERSONNAGES.md"), "utf8");
+      messageDetail = pl.length + " planche(s), référence " + (ref ? "oui" : "NON");
+      return ref && pl.length >= 2 && /XAVIER LE TERRASSIER/.test(fiche);
+    })());
+
+  verifier("le projectile de BruHell est signalé comme À CORRIGER",
+    (() => {
+      /* Sa fiche annonce « le lanceur de Molotov » depuis le début, et le
+         sprite est une bouteille de VIN avec une étiquette de château.
+         L'impact s'appelle même `imp_vin`. Tant que ce n'est pas corrigé,
+         la trace doit rester — sinon l'écart se referme dans l'oubli. */
+      const m = fs.readFileSync(path.join(RACINE, "MEMOIRE.md"), "utf8");
+      const pr = fs.readFileSync(path.join(RACINE, "PROMPTS.md"), "utf8");
+      const encoreVin = fs.existsSync(
+        path.join(RACINE, "img", "n4", "obj_bouteille.webp"));
+      messageDetail = encoreVin ? "toujours du vin, prompt écrit" : "corrigé";
+      return !encoreVin || (/lance du VIN/.test(m) && /obj_molotov/.test(pr));
+    })());
+
   verifier("une plante MASQUE la jonction du fond",
     (() => {
       /* Le fond est l'image complète répétée deux fois : la seule couture

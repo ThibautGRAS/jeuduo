@@ -3365,6 +3365,17 @@ d'enquête, resté quarante versions sans que personne y revienne.
   masque la jonction du fond. Le reste attend un besoin précis : poser un
   élément « pour habiller » sans qu'il serve à rien alourdit le
   chargement.
+- **XAVIER LE TERRASSIER est au bestiaire mais pas dans le jeu.** Sa
+  fiche est écrite, sa référence est dans `prompts/reference/xavier.png`,
+  et ses deux planches sont générées — onze poses, dont les treize de
+  `POSES_ENNEMI` moins celles qu'il partage. Il reste à produire les
+  images, puis à l'ajouter à `ENNEMIS` : le déclarer avant ferait échouer
+  le chargeur, qui exige que chaque pose annoncée existe.
+- **BruHell lance du VIN alors que sa fiche dit Molotov.** Le sprite est
+  une bouteille de château, l'impact s'appelle `imp_vin`. Les prompts de
+  remplacement sont dans `PROMPTS.md`.
+- **`obj_bouteille_g` et `obj_bouteille_gf` sont MORTS** : référencés
+  nulle part dans le code. À supprimer.
 - **La pose `serie` de Jojo** montre une passoire au lieu de la série de
   shots prête. La bonne pose est dans la rangée chorégraphiée de sa
   planche, mais celle-ci a un comptoir et un cadre blanc qui gênent la

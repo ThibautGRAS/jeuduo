@@ -72,8 +72,9 @@ Rangées par `archiver.py`, jamais à la main.
 | `n4` | `heros_pf_tir.webp` | 82 Ko |
 | `n4` | `heros_th_recharge.webp` | 95 Ko |
 | `n4` | `heros_th_tir.webp` | 94 Ko |
+| `n4` | `xavier_reference.webp` | 111 Ko |
 
-**7.7 Mo au total.**
+**7.8 Mo au total.**
 
 ## 24 planches à identifier
 

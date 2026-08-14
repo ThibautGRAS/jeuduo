@@ -38,5 +38,10 @@
     "physique": "Une femme d'une quarantaine d'années, cheveux CHÂTAINS très BOUCLÉS et volumineux, mi-longs. Veste NOIRE ouverte sur un haut à motif léopard, jean bleu large, baskets blanches, petit sac noir en bandoulière. Silhouette ronde et vive.",
     "costume": "Veste noire ouverte sur un haut à motif léopard, jean bleu large, baskets blanches, sac noir en bandoulière.",
     "rappel": "cheveux châtains très bouclés, veste noire, haut léopard, jean large"
+  },
+  "xavier": {
+    "physique": "Un homme d'une quarantaine d'années, MINCE et sec, cheveux NOIRS courts plaqués en arrière, lunettes fines rectangulaires, visage anguleux, sourire en coin discret et froid. VESTE BLANCHE cintrée à boutons gris, col roulé NOIR dessous, pantalon cargo SOMBRE éclaboussé de boue jusqu'aux genoux, rangers de chantier usés. Il porte une PELLE DE TERRASSIER : long manche en bois, fer métallique taché de rouge séché.",
+    "costume": "Veste blanche cintrée à boutons, col roulé noir, pantalon cargo sombre boueux, rangers. Pelle de terrassier à manche bois.",
+    "rappel": "mince, cheveux noirs plaqués, lunettes fines, veste BLANCHE, col roulé noir, pantalon boueux, pelle"
   }
 }

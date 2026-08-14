@@ -428,6 +428,35 @@ d'un type d'homme se défend, le récit d'un fait divers non.
 - Sa question : **« ai-je le temps d'interrompre son lancer ? »**
 - Sprites : `enn_abbe_*`, 19 poses.
 
+### XAVIER LE TERRASSIER — le lanceur de pelle
+
+- **Personnage FICTIF**, contrairement aux cinq autres. C'est le premier du
+  bestiaire à ne caricaturer personne, et c'est voulu : les autres se
+  moquent d'une impunité réelle, lui incarne la violence ordinaire, celle
+  qui ne fait pas la une.
+
+- **Le personnage** : LE RATÉ RANGÉ. Bon père de famille, catholique
+  pratiquant, une vie de frustrations tenues. Un jour il a pété un câble
+  et a tué toute sa famille — sa femme, ses enfants, le chien — puis les a
+  enterrés sous la terrasse qu'il venait de couler. Il a continué à aller
+  à la messe.
+
+- **Ce qui le rend inquiétant, c'est la propreté.** Les autres méchants
+  s'affichent ; lui a une veste blanche impeccable sur un col roulé noir,
+  et de la boue jusqu'aux genoux. Le haut respectable, le bas qui creuse.
+  C'est le personnage entier.
+
+- **Physique** : la quarantaine, mince et sec, cheveux noirs courts
+  plaqués, lunettes fines rectangulaires, sourire en coin discret. Veste
+  blanche cintrée à boutons, col roulé noir, pantalon cargo sombre
+  éclaboussé de boue, rangers de chantier. Une PELLE de terrassier, manche
+  bois, fer taché de rouge séché.
+
+- **Mécanique** : il LANCE sa pelle sur les héros, comme l'Abbé lance son
+  encensoir et BruHell sa bouteille. La pelle tourne en vol.
+
+- Sprites à venir : `enn_xav_*` et `obj_pelle`.
+
 ### BRUHELL L'ENFOIRÉ — le lanceur de Molotov
 - **Le personnage** : LE CŒUR EN FLOQUAGE. Il porte la générosité sur son t-shirt et rien dessous. Il donne en public et prend en privé. **Il lance de loin et n'approche jamais**, comme l'Abbé — deux façons de ne pas se salir les mains.
 

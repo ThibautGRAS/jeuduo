@@ -141,6 +141,25 @@ MOUVEMENTS = {
             "pour l'équilibre",
         ],
     },
+    # LE LANCER D'UN OBJET LOURD, partagé par les trois ennemis qui
+    # frappent à distance : l'Abbé et son encensoir, BruHell et sa
+    # bouteille, Xavier et sa pelle. Trois temps, comme le lancer
+    # d'Hortense — armer, détendre, retomber.
+    "lancer_objet": {
+        "titre": "lancer d'un objet lourd",
+        "phases": [
+            "il ARME : l'objet ramené loin en arrière au-dessus de "
+            "l'épaule, à deux mains, buste tourné vers l'arrière, poids "
+            "sur la jambe arrière, regard fixé vers la DROITE",
+            "il LÂCHE : les bras se détendent vers la droite à "
+            "l'horizontale, les mains OUVERTES et VIDES — l'objet vient de "
+            "partir et n'est plus dessiné. Buste projeté en avant, jambe "
+            "arrière décollée",
+            "il RETOMBE : les bras redescendent en travers du corps, buste "
+            "encore penché en avant, il regarde le résultat vers la droite. "
+            "Mains vides",
+        ],
+    },
     "roulade": {
         "titre": "roulade avant",
         "cycle": True,
@@ -1297,6 +1316,10 @@ def tout():
     # les méchants aussi passent au découpage : huit poses, donc deux
     # planches de quatre. Même raison que pour les héros.
     ecrire_jeu(d, "mechants", ["course", "touche", "chute"])
+    # XAVIER a les mêmes poses de base que les autres — treize, imposées
+    # par POSES_ENNEMI — plus les trois du LANCER, qu'il partage avec
+    # l'Abbé et BruHell. 
+    ecrire_jeu(d, "xavier", ["course", "touche", "chute", "lancer_objet"])
     # les mouvements de réserve : un prompt commun aux deux héros, comme
     # partout ailleurs. Ils n'étaient dupliqués que parce que le rappel
     # écrit les distinguait — et il n'existe plus.
