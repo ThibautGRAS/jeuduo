@@ -1,0 +1,26 @@
+Trois objets sur une seule rangée, sur fond MAGENTA PUR (#FF00FF) uni.
+
+Sujet : le cocktail Molotov de BruHell.
+
+Il lance actuellement une bouteille de VIN avec une étiquette de château, alors que sa fiche l'annonce en lanceur de Molotov depuis le début. C'est cet écart qu'on corrige.
+
+1. [obj_molotov] un COCKTAIL MOLOTOV vu de PROFIL, à l'horizontale, goulot vers la gauche. Bouteille de VODKA en verre transparent, étiquette blanche et argent à moitié arrachée, remplie d'un liquide clair. Un chiffon blanc enfoncé dans le goulot et ENFLAMMÉ : flamme orange vive et un peu de fumée noire, couchée vers l'arrière du mouvement.
+
+2. [obj_molotov_f] le MÊME cocktail Molotov vu DE FACE, cul de bouteille vers le spectateur, la flamme débordant tout autour.
+
+3. [imp_molotov] un IMPACT DE MOLOTOV : une flaque de feu qui s'étale, flammes orange et jaunes, éclats de verre, fumée noire. Vu de face, comme une explosion au sol.
+
+CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
+
+- Fond MAGENTA PUR #FF00FF, parfaitement uni, sur toute l'image. Aucun
+  dégradé, aucune texture, aucune vignette.
+- Au moins 80 pixels de fond magenta VIDE entre deux objets, et autour de
+  chacun. Rien ne doit toucher le bord ni la case voisine.
+- AUCUNE OMBRE PORTÉE, aucun sol, aucun décor, aucun support. Les objets
+  flottent sur le magenta.
+- AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro.
+- Les trois objets à la MÊME échelle relative que dans la description :
+  celui de face est plus GRAND que celui de profil, puisqu'il arrive sur
+  le joueur.
+- Style : bande dessinée, trait net, éclairage de nuit avec un reflet
+  chaud venant du haut. Même facture que des sprites de jeu.

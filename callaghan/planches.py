@@ -1236,6 +1236,82 @@ LES POSES, de gauche à droite :
 {REGLES}"""
 
 
+# ---------------------------------------------------------------------
+#  LES OBJETS LANCÉS
+#
+#  Ils suivaient un chemin à part : écrits à la main dans PROMPTS.md,
+#  donc à recopier depuis un document au lieu d'être un fichier prêt à
+#  coller comme les planches de poses. Un prompt qu'on doit recopier est
+#  un prompt qu'on modifie en le recopiant.
+#
+#  UN PROJECTILE = TROIS IMAGES : `obj_<nom>` au départ du vol,
+#  `obj_<nom>_f` après la bascule à 62 % de la trajectoire — il arrive
+#  alors de face — et `imp_<nom>` pour l'impact.
+# ---------------------------------------------------------------------
+OBJETS = {
+  "pelle": {
+    "titre": "la pelle de Xavier le terrassier",
+    "profil": "une PELLE DE TERRASSIER vue de PROFIL, à l'horizontale, "
+              "manche vers la gauche et fer vers la droite. Long manche en "
+              "bois usé, fer métallique large et légèrement incurvé, taché "
+              "de rouge séché et de terre",
+    "face": "la MÊME pelle vue DE FACE, fer en avant vers le spectateur, "
+            "manche raccourci par la perspective derrière. On voit le fer "
+            "presque de plein fouet, taché",
+    "impact": "un IMPACT DE PELLE : une entaille dans le sol, éclats de "
+              "pierre et de terre projetés, un peu de poussière. Vu de face",
+  },
+  "molotov": {
+    "titre": "le cocktail Molotov de BruHell",
+    "note": "Il lance actuellement une bouteille de VIN avec une étiquette "
+            "de château, alors que sa fiche l'annonce en lanceur de Molotov "
+            "depuis le début. C'est cet écart qu'on corrige.",
+    "profil": "un COCKTAIL MOLOTOV vu de PROFIL, à l'horizontale, goulot "
+              "vers la gauche. Bouteille de VODKA en verre transparent, "
+              "étiquette blanche et argent à moitié arrachée, remplie d'un "
+              "liquide clair. Un chiffon blanc enfoncé dans le goulot et "
+              "ENFLAMMÉ : flamme orange vive et un peu de fumée noire, "
+              "couchée vers l'arrière du mouvement",
+    "face": "le MÊME cocktail Molotov vu DE FACE, cul de bouteille vers le "
+            "spectateur, la flamme débordant tout autour",
+    "impact": "un IMPACT DE MOLOTOV : une flaque de feu qui s'étale, "
+              "flammes orange et jaunes, éclats de verre, fumée noire. Vu "
+              "de face, comme une explosion au sol",
+  },
+}
+
+
+def fabriquer_objet(cle):
+    """Le prompt d'un objet lancé, prêt à coller."""
+    o = OBJETS[cle]
+    note = ("\n" + o["note"] + "\n") if o.get("note") else ""
+    return f"""Trois objets sur une seule rangée, sur fond MAGENTA PUR (#FF00FF) uni.
+
+Sujet : {o['titre']}.
+{note}
+1. [obj_{cle}] {o['profil']}.
+
+2. [obj_{cle}_f] {o['face']}.
+
+3. [imp_{cle}] {o['impact']}.
+
+CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
+
+- Fond MAGENTA PUR #FF00FF, parfaitement uni, sur toute l'image. Aucun
+  dégradé, aucune texture, aucune vignette.
+- Au moins 80 pixels de fond magenta VIDE entre deux objets, et autour de
+  chacun. Rien ne doit toucher le bord ni la case voisine.
+- AUCUNE OMBRE PORTÉE, aucun sol, aucun décor, aucun support. Les objets
+  flottent sur le magenta.
+- AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro.
+- Les trois objets à la MÊME échelle relative que dans la description :
+  celui de face est plus GRAND que celui de profil, puisqu'il arrive sur
+  le joueur.
+- Style : bande dessinée, trait net, éclairage de nuit avec un reflet
+  chaud venant du haut. Même facture que des sprites de jeu.
+"""
+
+
 def ecrire_jeu(dossier, nom, mouvements):
     """Écrit un jeu de mouvements, découpé autant de fois qu'il le faut.
 
@@ -1328,6 +1404,15 @@ def tout():
     for f in sup.glob("*.txt"): f.unlink()
     ecrire_jeu(sup, "saut", ["saut"])
     ecrire_jeu(sup, "roulades", ["roulade", "roulade_cote"])
+
+    # LES OBJETS ont leur dossier, comme les poses : un fichier prêt à
+    # coller, pas un paragraphe à retrouver dans un document.
+    do = base / "objets"
+    do.mkdir(parents=True, exist_ok=True)
+    for f in do.glob("*.txt"):
+        if MARQUE in f.read_text(encoding="utf-8"): f.unlink()
+    for cle in OBJETS:
+        ecrire_prompt(do / f"{cle}.txt", fabriquer_objet(cle))
 
     ref = base / "reference"
     ref.mkdir(exist_ok=True)

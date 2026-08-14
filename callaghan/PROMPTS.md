@@ -623,60 +623,16 @@ couleurs de ceux déjà peints dans le décor.
 à une ligne de sol plus basse que la leur pour être au premier plan.
 
 
-## Les objets lancés — `obj_pelle` et `obj_molotov`
+## Les objets lancés — voir `prompts/objets/`
 
-**Comment un projectile est fait.** Chacun a DEUX images : `obj_<nom>` au
-départ du vol, et `obj_<nom>_f` après la bascule à 62 % de la trajectoire —
-l'objet arrive alors de face, agrandi. Plus un sprite d'impact `imp_<nom>`.
+Ils sont GÉNÉRÉS, plus écrits ici. Un prompt qu'on doit recopier depuis un
+document est un prompt qu'on modifie en le recopiant — et il finit par
+diverger de ce que le jeu attend.
 
-**Une correction au passage** : la fiche de BruHell annonce « le lanceur de
-Molotov » depuis le début, et il lance une bouteille de VIN avec une
-étiquette de château. L'impact s'appelle même `imp_vin`. Un cocktail
-Molotov est ce que le personnage doit lancer.
-
-```
-Trois objets sur une seule rangée, sur fond MAGENTA PUR (#FF00FF) uni,
-séparés par au moins 80 pixels de fond vide.
-
-1. UNE PELLE DE TERRASSIER vue de PROFIL, à l'horizontale, manche vers la
-   gauche et fer vers la droite. Long manche en bois usé, fer métallique
-   large et légèrement incurvé, taché de rouge séché et de terre. C'est
-   l'objet en vol, vu de côté.
-
-2. LA MÊME PELLE vue DE FACE, fer en avant vers le spectateur, manche
-   raccourci par la perspective derrière. On voit le fer presque de plein
-   fouet, taché. C'est le même objet à la fin de son vol, quand il arrive
-   sur le joueur.
-
-3. UN COCKTAIL MOLOTOV vu de PROFIL, à l'horizontale, goulot vers la
-   gauche. Bouteille de VODKA en verre transparent, étiquette blanche et
-   argent arrachée, remplie d'un liquide clair. Un chiffon blanc enfoncé
-   dans le goulot, ENFLAMMÉ : une flamme orange vive avec un peu de fumée
-   noire, orientée vers l'arrière du mouvement.
-
-Style : bande dessinée, trait net, éclairage de nuit avec un reflet
-chaud. Aucune ombre portée, aucun décor, aucun titre.
-```
-
-Puis, sur une seconde planche :
-
-```
-Deux objets sur fond MAGENTA PUR (#FF00FF) uni, séparés par au moins
-80 pixels.
-
-1. LE MÊME COCKTAIL MOLOTOV vu DE FACE, cul de bouteille vers le
-   spectateur, la flamme débordant autour. C'est l'objet à la fin de son
-   vol.
-
-2. UN IMPACT DE MOLOTOV : une flaque de feu qui s'étale, flammes orange et
-   jaunes, éclats de verre, fumée noire. Vu de face, comme une explosion
-   au sol.
-
-Style identique. Aucune ombre portée, aucun décor, aucun titre.
-```
-
-**Ensuite** : `obj_pelle`, `obj_pelle_f`, `obj_molotov`, `obj_molotov_f`,
-`imp_molotov`. Les anciens `obj_bouteille*` et `imp_vin` seront remplacés.
+`prompts/objets/pelle.txt` et `prompts/objets/molotov.txt` sont prêts à
+coller. Un projectile = TROIS images : `obj_<nom>` au départ du vol,
+`obj_<nom>_f` après la bascule à 62 % de la trajectoire — il arrive alors
+de face — et `imp_<nom>` pour l'impact.
 
 Note : `obj_bouteille_g` et `obj_bouteille_gf` ne sont référencés NULLE
-PART dans le code — deux sprites morts, à supprimer au passage.
+PART dans le code. À supprimer en remplaçant le projectile de BruHell.

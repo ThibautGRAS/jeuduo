@@ -2851,7 +2851,11 @@ if (D){
         for (const n of fs.readdirSync(dossier)){
           const f = path.join(dossier, n);
           if (fs.statSync(f).isDirectory()){
-            if (n !== "reference") parcourir(f);
+            /* `objets/` n'a pas de référence : on ne fabrique pas un
+               cocktail Molotov « à l'identique » d'une image existante,
+               on le décrit. Une référence n'a de sens que pour un
+               PERSONNAGE, dont l'identité doit se raccorder. */
+            if (n !== "reference" && n !== "objets") parcourir(f);
             continue;
           }
           if (!n.endsWith(".txt")) continue;
@@ -5586,6 +5590,28 @@ if (D){
       return tete > D.BAR_COMPTOIR && tete < D.BAR_COMPTOIR + 0.10;
     })());
 
+  verifier("les prompts d'OBJET sont générés, pas à recopier",
+    (() => {
+      /* Ils étaient écrits à la main dans PROMPTS.md : un paragraphe à
+         retrouver et à recopier, au lieu d'un fichier prêt à coller comme
+         les planches de poses. Un prompt qu'on recopie est un prompt qu'on
+         modifie en le recopiant, et il finit par diverger.
+         Chacun doit porter les trois noms que le code attend. */
+      const d = path.join(RACINE, "prompts", "objets");
+      if (!fs.existsSync(d)) return false;
+      const f = fs.readdirSync(d).filter(n => n.endsWith(".txt"));
+      const manques = [];
+      for (const n of f){
+        const cle = n.replace(/\.txt$/, "");
+        const s = fs.readFileSync(path.join(d, n), "utf8");
+        for (const att of ["obj_" + cle, "obj_" + cle + "_f", "imp_" + cle])
+          if (s.indexOf("[" + att + "]") < 0) manques.push(n + " -> " + att);
+      }
+      messageDetail = manques.length ? manques.join(", ")
+                                     : f.length + " objet(s) : " + f.join(", ");
+      return f.length >= 2 && manques.length === 0;
+    })());
+
   verifier("Xavier a sa fiche, sa référence et ses planches",
     (() => {
       /* Premier personnage FICTIF du bestiaire : les cinq autres
@@ -5614,7 +5640,11 @@ if (D){
       const encoreVin = fs.existsSync(
         path.join(RACINE, "img", "n4", "obj_bouteille.webp"));
       messageDetail = encoreVin ? "toujours du vin, prompt écrit" : "corrigé";
-      return !encoreVin || (/lance du VIN/.test(m) && /obj_molotov/.test(pr));
+      /* la trace vit maintenant dans `prompts/objets/molotov.txt`, qui
+         est GÉNÉRÉ — PROMPTS.md n'en garde qu'un renvoi */
+      const om = fs.existsSync(
+        path.join(RACINE, "prompts", "objets", "molotov.txt"));
+      return !encoreVin || (/lance du VIN/.test(m) && om);
     })());
 
   verifier("une plante MASQUE la jonction du fond",

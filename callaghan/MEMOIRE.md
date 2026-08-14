@@ -2235,6 +2235,26 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Un prompt qu'on RECOPIE est un prompt qui dérive
+
+Les prompts d'objets étaient écrits à la main dans `PROMPTS.md`, au milieu
+d'un document de dix-huit sections. Pour s'en servir il fallait retrouver
+le bon paragraphe et le recopier — alors que les planches de poses sont
+des fichiers prêts à coller depuis des heures.
+
+Thibaut l'a demandé en une phrase : « donne le prompt objet
+systématiquement à un nouveau prompt que je copie colle rapide. »
+
+Ce que ça change au-delà du confort : un texte qu'on recopie, on le
+modifie en le recopiant — une virgule, un mot qui semble mieux — et il
+diverge de ce que le code attend. Les trois noms `obj_x`, `obj_x_f`,
+`imp_x` doivent correspondre EXACTEMENT aux clés du chargeur. Un test le
+vérifie maintenant sur chaque fichier généré.
+
+**Ce qui est décrit dans un document se recopie ; ce qui est généré se
+colle.** Et l'entrée manuelle a été remplacée par un renvoi, pour qu'il
+n'existe pas deux versions.
+
 #### Optimiser la bonne quantité, sinon on empire
 
 Le raccord entre deux copies du décor sautait. J'ai mesuré « le saut »

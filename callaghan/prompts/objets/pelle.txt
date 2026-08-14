@@ -1,0 +1,24 @@
+Trois objets sur une seule rangée, sur fond MAGENTA PUR (#FF00FF) uni.
+
+Sujet : la pelle de Xavier le terrassier.
+
+1. [obj_pelle] une PELLE DE TERRASSIER vue de PROFIL, à l'horizontale, manche vers la gauche et fer vers la droite. Long manche en bois usé, fer métallique large et légèrement incurvé, taché de rouge séché et de terre.
+
+2. [obj_pelle_f] la MÊME pelle vue DE FACE, fer en avant vers le spectateur, manche raccourci par la perspective derrière. On voit le fer presque de plein fouet, taché.
+
+3. [imp_pelle] un IMPACT DE PELLE : une entaille dans le sol, éclats de pierre et de terre projetés, un peu de poussière. Vu de face.
+
+CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
+
+- Fond MAGENTA PUR #FF00FF, parfaitement uni, sur toute l'image. Aucun
+  dégradé, aucune texture, aucune vignette.
+- Au moins 80 pixels de fond magenta VIDE entre deux objets, et autour de
+  chacun. Rien ne doit toucher le bord ni la case voisine.
+- AUCUNE OMBRE PORTÉE, aucun sol, aucun décor, aucun support. Les objets
+  flottent sur le magenta.
+- AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro.
+- Les trois objets à la MÊME échelle relative que dans la description :
+  celui de face est plus GRAND que celui de profil, puisqu'il arrive sur
+  le joueur.
+- Style : bande dessinée, trait net, éclairage de nuit avec un reflet
+  chaud venant du haut. Même facture que des sprites de jeu.
