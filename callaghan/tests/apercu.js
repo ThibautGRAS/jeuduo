@@ -711,7 +711,7 @@ function jouerJusqua(D, condition, limite){
        si les six planches se raccordent entre elles et avec les `idle`
        d'origine. Une planche par personnage, découpée à six échelles
        différentes — l'erreur se verrait ici et nulle part ailleurs. */
-    const qui = ["tristan", "mathilde", "kevin", "remy", "charles", "teo"];
+    const qui = ["gautier", "capucine", "kevin", "bobito", "charles", "teo"];
     D.Tournee.foule.slice(0, 6).forEach((m, i) => {
       m.ref = D.BAR_CLIENTS.find(c => c.id === qui[i]) || m.ref;
       m.x = 0.55 + i * 0.045;

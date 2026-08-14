@@ -1,0 +1,22 @@
+{
+  "_": "Capucine, planche de figurant-2.",
+  "__echelle": "Aucune pose debout : le témoin est `titube`. L'échelle vient de sa planche de BASE — 0.9113 — appliquée à son témoin de 499 px, d'où 455. Les deux planches se raccordent par construction.",
+  "planche": "planches/n3/capucine-figurant.webp",
+  "reference": "img/n3/bar_solene_idle.webp",
+  "hauteur_ref": 455,
+  "sortie": "img/n3",
+  "prefixe": "bar_capucine",
+  "temoin": 1,
+  "rangees": [
+    [
+      "titube",
+      "danse1",
+      "danse2"
+    ],
+    [
+      "assis_tabouret",
+      "assis_canape",
+      "assis_verre"
+    ]
+  ]
+}

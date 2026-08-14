@@ -783,7 +783,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v7.29</div>
+  <div id="version">CALLAGHAN v7.30</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -855,7 +855,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.29";
+const VERSION = "7.30";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1934,6 +1934,8 @@ const IMAGES_NIVEAU3 = [
   "bar_remy_idle", "bar_remy_marche1", "bar_remy_marche2",
   "bar_remy_attrape", "bar_remy_boit", "bar_remy_vide",
   "bar_bobito_idle", "bar_bobito_idle2", "bar_bobito_marche1", "bar_bobito_marche2", "bar_bobito_attrape", "bar_bobito_boit", "bar_bobito_vide", "bar_bobito_titube", "bar_bobito_danse1", "bar_bobito_danse2", "bar_bobito_assis_tabouret", "bar_bobito_assis_canape", "bar_bobito_assis_verre",
+  "bar_gautier_idle", "bar_gautier_idle2", "bar_gautier_marche1", "bar_gautier_marche2", "bar_gautier_attrape", "bar_gautier_boit", "bar_gautier_vide", "bar_gautier_titube", "bar_gautier_danse1", "bar_gautier_danse2", "bar_gautier_assis_tabouret", "bar_gautier_assis_canape", "bar_gautier_assis_verre",
+  "bar_capucine_idle", "bar_capucine_idle2", "bar_capucine_marche1", "bar_capucine_marche2", "bar_capucine_attrape", "bar_capucine_boit", "bar_capucine_vide", "bar_capucine_titube", "bar_capucine_danse1", "bar_capucine_danse2", "bar_capucine_assis_tabouret", "bar_capucine_assis_canape", "bar_capucine_assis_verre",
   "bar_remy_titube", "bar_remy_danse1", "bar_remy_assis_tabouret",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
@@ -4752,16 +4754,22 @@ const LIENS = {
   gabi:     { pf:true,  th:false, amis:["solene", "teo", "charles"] },
   charles:  { pf:true,  th:false, amis:["gabi"] },
   mathilde: { pf:false, th:true,  amis:["solene", "remy", "kevin", "tristan"] },
-  tristan:  { pf:true,  th:true,  amis:["solene", "kevin", "remy", "mathilde", "bobito"] },
-  solene:   { pf:false, th:false, amis:["tristan", "mathilde", "kevin", "gabi", "bobito"] },
-  kevin:    { pf:true,  th:true,  amis:["tristan", "mathilde", "solene", "remy"] },
+  tristan:  { pf:true,  th:true,  amis:["solene", "kevin", "remy", "mathilde", "bobito", "gautier"] },
+  solene:   { pf:false, th:false, amis:["tristan", "mathilde", "kevin", "gabi", "bobito", "capucine"] },
+  kevin:    { pf:true,  th:true,  amis:["tristan", "mathilde", "solene", "remy", "gautier"] },
   remy:     { pf:true,  th:true,  amis:["bobito", "mathilde", "tristan", "kevin", "teo"] },
   /* MATHILDE BOBITO, la compagne de Rémy. Elle porte le même prénom que
      l'autre Mathilde — d'où la clé `bobito`, qui est le surnom que Rémy
      lui donne et le seul moyen de ne pas confondre les deux dans un
      dialogue. Elle connaît Thibaut, Tristan et Solène ; PF ne l'a jamais
      rencontrée. */
-  bobito:   { pf:false, th:true,  amis:["remy", "tristan", "solene"] },
+  bobito:   { pf:false, th:true,  amis:["remy", "tristan", "solene", "capucine"] },
+  /* GAUTIER est le PETIT FRÈRE de Thibaut : personne d'autre au D'Tour
+     n'a un lien de sang avec un inspecteur, et c'est ce qui le rend
+     intéressant — Thibaut a une prise sur lui que PF n'aura jamais.
+     Capucine est sa compagne ; elle l'appelle Gogo. */
+  gautier:  { pf:false, th:true,  amis:["capucine", "tristan", "kevin"] },
+  capucine: { pf:false, th:true,  amis:["gautier", "solene", "bobito"] },
   marini:   { pf:false, th:false, amis:[] },
   martin:   { pf:false, th:false, amis:[] },
   francky:  { pf:false, th:false, amis:["mathilde"] },
@@ -8432,6 +8440,14 @@ const BAR_CLIENTS = [
      comptoir, et plus personne ne sait de qui on parle. */
   { id:"bobito", sprite:"bar_bobito_idle", nom:"MATHILDE BOBITO", taille:0.90,
     prefixe:"bar_bobito", gestes:true },
+  /* GAUTIER et CAPUCINE vivent à Malte : ils ne sont là que quand ils
+     descendent, ce qui en fait des habitués de passage — mais au bar, un
+     habitué de passage se tient comme les autres. Le jeu ne fait pas la
+     différence, la lore si. */
+  { id:"gautier", sprite:"bar_gautier_idle", nom:"GAUTIER", taille:0.93,
+    prefixe:"bar_gautier", gestes:true },
+  { id:"capucine", sprite:"bar_capucine_idle", nom:"CAPUCINE", taille:0.89,
+    prefixe:"bar_capucine", gestes:true },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;
@@ -10245,6 +10261,14 @@ const FOULE_PHRASES = {
              "BOBITO ! Tu bois quoi ?"],
   /* MATHILDE BOBITO. Ses trois sujets, et elle y revient : le chien, ses
      élèves, et la piste de danse. */
+  gautier:  ["Ce soir je joue pas. Enfin, presque pas.",
+             "À Malte il fait beau. Ici aussi, ça va.",
+             "Mon frère me surveille. Il surveille tout.",
+             "Je cours demain. Enfin, dimanche."],
+  capucine: ["GOGO ! Tu fais quoi ?",
+             "Ce bar aurait besoin d'un autre éclairage.",
+             "Ces chaises, non. Vraiment non.",
+             "On rentre mardi. Ou pas."],
   bobito:   ["Chaussette a mangé une chaussette.",
              "Mes troisièmes ignorent le prétérit.",
              "Il est où, Rémy ? Il danse pas.",
@@ -10298,6 +10322,23 @@ const FOULE_DISCUSSIONS = {
      "On a tous hoché la tête."],
     ["Elle veut un deuxième chien.", "Rémy sait ?",
      "Rémy l'apprend là, en fait."],
+    ["Le petit frère de Thibaut est là.", "Gautier ?", "Gautier.",
+     "Alors la soirée va être longue."],
+    ["Il vit à Malte, maintenant.", "Pour le soleil ?",
+     "Pour le poker.", "Ah. Pour le soleil, alors."],
+    ["Capucine l'appelle Gogo.", "Devant tout le monde ?",
+     "Surtout devant tout le monde."],
+    ["Gautier a gagné combien hier ?", "Il dit qu'il a gagné.",
+     "Donc il a perdu."],
+    ["Capucine refait des appartements.", "Le sien ?",
+     "Ceux des autres. Le sien, c'est un chantier."],
+    ["Gautier court un semi dimanche.", "Après ce soir ?",
+     "Après ce soir.", "Il court, ou il rentre en courant ?"],
+    ["Thibaut surveille son frère.", "Il fait quoi ?",
+     "Il compte ses verres. À voix haute."],
+    ["Ils repartent quand ?", "Mardi.", "Ils disent toujours mardi."],
+    ["Capucine a redécoré leur salon trois fois.", "En un an ?",
+     "En six mois. Gogo n'a rien remarqué."],
     ["Chocho a dit quoi ?", "Que t'allais demander.", "Elle dit toujours ça."],
     ["Y'a que Mathilde qui a le droit de dire Chocho.", "J'ai essayé une fois.",
      "Et ?", "Une fois."],

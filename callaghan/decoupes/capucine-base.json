@@ -1,0 +1,21 @@
+{
+  "_": "Capucine, planche de figurant-1. Nouveau personnage : aucun sprite d'origine, donc le canevas et l'échelle sont empruntés à un habitué de même gabarit — c'est ce qui garantit qu'ils font la même taille côte à côte au comptoir.",
+  "planche": "planches/n3/capucine-base.webp",
+  "reference": "img/n3/bar_solene_idle.webp",
+  "sortie": "img/n3",
+  "prefixe": "bar_capucine",
+  "temoin": 1,
+  "rangees": [
+    [
+      "idle",
+      "idle2",
+      "marche1",
+      "marche2"
+    ],
+    [
+      "attrape",
+      "boit",
+      "vide"
+    ]
+  ]
+}

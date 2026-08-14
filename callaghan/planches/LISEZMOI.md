@@ -55,6 +55,8 @@ Rangées par `archiver.py`, jamais à la main.
 | `n2` | `heros_th_policier.webp` | 147 Ko |
 | `n3` | `bobito-base.webp` | 189 Ko |
 | `n3` | `bobito-figurant.webp` | 201 Ko |
+| `n3` | `capucine-base.webp` | 159 Ko |
+| `n3` | `capucine-figurant.webp` | 169 Ko |
 | `n3` | `charles-figurant.webp` | 105 Ko |
 | `n3` | `comptoir_detoure.webp` | 113 Ko |
 | `n3` | `elements_decor.webp` | 210 Ko |
@@ -64,6 +66,8 @@ Rangées par `archiver.py`, jamais à la main.
 | `n3` | `fond_bar_section_b.webp` | 180 Ko |
 | `n3` | `fond_bar_section_c.webp` | 168 Ko |
 | `n3` | `gabi-figurant.webp` | 103 Ko |
+| `n3` | `gautier-base.webp` | 146 Ko |
+| `n3` | `gautier-figurant.webp` | 153 Ko |
 | `n3` | `heros_pf_deplacement-v2.webp` | 101 Ko |
 | `n3` | `heros_pf_deplacement.webp` | 98 Ko |
 | `n3` | `heros_pf_verre.webp` | 109 Ko |
@@ -92,7 +96,7 @@ Rangées par `archiver.py`, jamais à la main.
 | `n4` | `xavier-pelle.webp` | 72 Ko |
 | `n4` | `xavier_reference.webp` | 111 Ko |
 
-**10.1 Mo au total.**
+**10.7 Mo au total.**
 
 ## 24 planches à identifier
 

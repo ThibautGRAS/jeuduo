@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.29";
+const VERSION = "7.30";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1097,6 +1097,8 @@ const IMAGES_NIVEAU3 = [
   "bar_remy_idle", "bar_remy_marche1", "bar_remy_marche2",
   "bar_remy_attrape", "bar_remy_boit", "bar_remy_vide",
   "bar_bobito_idle", "bar_bobito_idle2", "bar_bobito_marche1", "bar_bobito_marche2", "bar_bobito_attrape", "bar_bobito_boit", "bar_bobito_vide", "bar_bobito_titube", "bar_bobito_danse1", "bar_bobito_danse2", "bar_bobito_assis_tabouret", "bar_bobito_assis_canape", "bar_bobito_assis_verre",
+  "bar_gautier_idle", "bar_gautier_idle2", "bar_gautier_marche1", "bar_gautier_marche2", "bar_gautier_attrape", "bar_gautier_boit", "bar_gautier_vide", "bar_gautier_titube", "bar_gautier_danse1", "bar_gautier_danse2", "bar_gautier_assis_tabouret", "bar_gautier_assis_canape", "bar_gautier_assis_verre",
+  "bar_capucine_idle", "bar_capucine_idle2", "bar_capucine_marche1", "bar_capucine_marche2", "bar_capucine_attrape", "bar_capucine_boit", "bar_capucine_vide", "bar_capucine_titube", "bar_capucine_danse1", "bar_capucine_danse2", "bar_capucine_assis_tabouret", "bar_capucine_assis_canape", "bar_capucine_assis_verre",
   "bar_remy_titube", "bar_remy_danse1", "bar_remy_assis_tabouret",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));

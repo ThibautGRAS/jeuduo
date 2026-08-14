@@ -679,16 +679,22 @@ const LIENS = {
   gabi:     { pf:true,  th:false, amis:["solene", "teo", "charles"] },
   charles:  { pf:true,  th:false, amis:["gabi"] },
   mathilde: { pf:false, th:true,  amis:["solene", "remy", "kevin", "tristan"] },
-  tristan:  { pf:true,  th:true,  amis:["solene", "kevin", "remy", "mathilde", "bobito"] },
-  solene:   { pf:false, th:false, amis:["tristan", "mathilde", "kevin", "gabi", "bobito"] },
-  kevin:    { pf:true,  th:true,  amis:["tristan", "mathilde", "solene", "remy"] },
+  tristan:  { pf:true,  th:true,  amis:["solene", "kevin", "remy", "mathilde", "bobito", "gautier"] },
+  solene:   { pf:false, th:false, amis:["tristan", "mathilde", "kevin", "gabi", "bobito", "capucine"] },
+  kevin:    { pf:true,  th:true,  amis:["tristan", "mathilde", "solene", "remy", "gautier"] },
   remy:     { pf:true,  th:true,  amis:["bobito", "mathilde", "tristan", "kevin", "teo"] },
   /* MATHILDE BOBITO, la compagne de Rémy. Elle porte le même prénom que
      l'autre Mathilde — d'où la clé `bobito`, qui est le surnom que Rémy
      lui donne et le seul moyen de ne pas confondre les deux dans un
      dialogue. Elle connaît Thibaut, Tristan et Solène ; PF ne l'a jamais
      rencontrée. */
-  bobito:   { pf:false, th:true,  amis:["remy", "tristan", "solene"] },
+  bobito:   { pf:false, th:true,  amis:["remy", "tristan", "solene", "capucine"] },
+  /* GAUTIER est le PETIT FRÈRE de Thibaut : personne d'autre au D'Tour
+     n'a un lien de sang avec un inspecteur, et c'est ce qui le rend
+     intéressant — Thibaut a une prise sur lui que PF n'aura jamais.
+     Capucine est sa compagne ; elle l'appelle Gogo. */
+  gautier:  { pf:false, th:true,  amis:["capucine", "tristan", "kevin"] },
+  capucine: { pf:false, th:true,  amis:["gautier", "solene", "bobito"] },
   marini:   { pf:false, th:false, amis:[] },
   martin:   { pf:false, th:false, amis:[] },
   francky:  { pf:false, th:false, amis:["mathilde"] },

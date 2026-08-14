@@ -183,6 +183,14 @@ const BAR_CLIENTS = [
      comptoir, et plus personne ne sait de qui on parle. */
   { id:"bobito", sprite:"bar_bobito_idle", nom:"MATHILDE BOBITO", taille:0.90,
     prefixe:"bar_bobito", gestes:true },
+  /* GAUTIER et CAPUCINE vivent à Malte : ils ne sont là que quand ils
+     descendent, ce qui en fait des habitués de passage — mais au bar, un
+     habitué de passage se tient comme les autres. Le jeu ne fait pas la
+     différence, la lore si. */
+  { id:"gautier", sprite:"bar_gautier_idle", nom:"GAUTIER", taille:0.93,
+    prefixe:"bar_gautier", gestes:true },
+  { id:"capucine", sprite:"bar_capucine_idle", nom:"CAPUCINE", taille:0.89,
+    prefixe:"bar_capucine", gestes:true },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;

@@ -451,6 +451,37 @@ d'un type d'homme se défend, le récit d'un fait divers non.
   replier chez elle, elle marche, boit, tangue, danse et s'assoit dès son
   arrivée.
 
+### GAUTIER — le petit frère de Thibaut
+
+- **Le seul du D'Tour qui ait un lien de SANG avec un inspecteur.** C'est
+  ce qui le rend intéressant au niveau 2 : Thibaut a une prise sur lui que
+  PF n'aura jamais, et un interrogatoire ne se joue pas pareil quand celui
+  d'en face vous a vu grandir.
+
+- **Joueur de poker.** Il annonce toujours qu'il a gagné, ce qui veut dire
+  qu'il a perdu.
+
+- **Il aime la fête et la course**, dans cet ordre et souvent le même
+  week-end. Il court un semi le dimanche qui suit la soirée du vendredi.
+
+- **Il habite à Malte** avec Capucine : c'est un habitué de PASSAGE. Au bar
+  le jeu ne fait pas la différence, la lore si — ils repartent mardi, et
+  ils disent toujours mardi.
+
+### CAPUCINE — la compagne de Gautier
+
+- **Elle l'appelle Gogo**, devant tout le monde et surtout devant tout le
+  monde.
+
+- **Designer d'intérieur.** Elle refait les appartements des autres ; le
+  sien est un chantier. Elle a redécoré leur salon trois fois en six mois
+  et Gogo n'a rien remarqué.
+
+- **Elle habite Malte** elle aussi, et regarde le D'Tour comme un chantier
+  qu'on ne lui a pas confié : l'éclairage, les chaises, tout y passe.
+
+- **Qui elle connaît** : Gautier, puis Solène et Bobito.
+
 ### XAVIER LE TERRASSIER — le lanceur de pelle
 
 - **Personnage FICTIF**, contrairement aux cinq autres. C'est le premier du
