@@ -2235,6 +2235,31 @@ Les cases acquises sont maintenant protégées, et on renonce plutôt que
 d'écraser. Le symptôme n'apparaissait qu'une fois sur trois : **une
 suite lancée une seule fois ne prouve rien sur un tirage aléatoire**.
 
+#### Adopter la trouvaille de l'autre sans en vérifier la PORTÉE
+
+Thibaut avait réécrit le prompt du bar en exigeant un « full side-profile
+view », et c'est cette version qui a produit le premier cycle de course
+correct du projet. J'ai adopté la formule dans le générateur — et je l'ai
+mise dans le bloc de règles COMMUNES à tous les prompts.
+
+Elle était juste pour un CYCLE DE MARCHE, et fausse partout ailleurs.
+Vérifié en ouvrant les sprites du jeu :
+- niveau 1 : de FACE, le héros fait la queue face au bar ;
+- niveau 2 : de trois quarts face ;
+- héros de la ruelle : DE DOS, ils tirent vers l'horizon ;
+- les cinq méchants : de trois quarts FACE, ils courent vers la caméra.
+  Un profil les ferait courir en travers de l'écran.
+
+Onze prompts sur onze demandaient donc une vue fausse, et le prompt de
+Xavier — écrit dans la foulée — aussi. C'est Thibaut qui l'a vu, en
+demandant si ce prompt était bien conforme aux autres images.
+
+**Une règle qui marche sur un cas et qu'on place dans le bloc commun
+devient fausse pour tous les autres.** Avant de généraliser une trouvaille,
+se demander de quoi elle dépend : ici, du fait qu'une foulée ne se lit que
+de profil. La vue se déclare maintenant par scène, et l'oubli est une
+erreur bruyante.
+
 #### Un prompt qu'on RECOPIE est un prompt qui dérive
 
 Les prompts d'objets étaient écrits à la main dans `PROMPTS.md`, au milieu

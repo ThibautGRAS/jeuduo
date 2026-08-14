@@ -5590,6 +5590,47 @@ if (D){
       return tete > D.BAR_COMPTOIR && tete < D.BAR_COMPTOIR + 0.10;
     })());
 
+  verifier("chaque prompt déclare SA vue, et elles diffèrent",
+    (() => {
+      /* J'avais mis « profil STRICT vers la droite » dans les règles
+         COMMUNES, en reprenant la formulation de Thibaut qui avait produit
+         le premier cycle de course correct. C'était juste pour un CYCLE DE
+         MARCHE, et faux partout ailleurs — vérifié en ouvrant les sprites :
+         le niveau 1 est de face, le niveau 2 de trois quarts, les héros de
+         la ruelle vus DE DOS, et les méchants de trois quarts face
+         puisqu'ils courent vers la caméra, pas en travers de l'écran.
+
+         Une règle qui marche sur un cas et qu'on met dans le bloc commun
+         devient fausse pour tous les autres. */
+      const d = path.join(RACINE, "prompts");
+      const vues = {};
+      const sans = [];
+      const parcourir = (dossier) => {
+        for (const n of fs.readdirSync(dossier)){
+          const f = path.join(dossier, n);
+          if (fs.statSync(f).isDirectory()){
+            if (n !== "reference" && n !== "objets") parcourir(f);
+            continue;
+          }
+          if (!n.endsWith(".txt")) continue;
+          const s = fs.readFileSync(f, "utf8");
+          /* un prompt RÉÉCRIT à la main porte sa vue comme il veut :
+             celui du bar dit « full side-profile view » en anglais. */
+          if (!estGenere(s)) continue;
+          const m = s.match(/^VUE : (.+)$/m);
+          if (!m) sans.push(n); else vues[n] = m[1].slice(0, 30);
+        }
+      };
+      parcourir(d);
+      const distinctes = new Set(Object.values(vues));
+      messageDetail = sans.length ? "sans VUE : " + sans.join(", ")
+        : Object.keys(vues).length + " prompts, " + distinctes.size + " vues distinctes";
+      /* plusieurs vues distinctes : la preuve qu'elle n'est plus commune */
+      return sans.length === 0 && distinctes.size >= 4 &&
+        !/profil STRICT[\s\S]{0,80}CONTRAINTES/.test(
+          fs.readFileSync(path.join(RACINE, "planches.py"), "utf8"));
+    })());
+
   verifier("les prompts d'OBJET sont générés, pas à recopier",
     (() => {
       /* Ils étaient écrits à la main dans PROMPTS.md : un paragraphe à

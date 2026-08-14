@@ -256,11 +256,6 @@ haut de la planche. Le texte blanc laisse un halo qui se mélange au fond.
   ombre portée, aucun décor, aucun élément de mobilier, aucun sol
   dessiné, aucun cadre, aucune bordure.
 - AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro de pose.
-- VUE : profil STRICT, à cent pour cent de profil, tourné vers la DROITE.
-  Pas de trois quarts, pas de face. Un profil franc est la seule vue où
-  l'on voit quelle jambe passe devant l'autre — c'est de là que vient
-  l'alternance. (Reprise de la formulation de Thibaut, qui a produit le
-  premier cycle de course correct du projet.)
 - GRILLE : une grille RÉGULIÈRE, rangées de taille égale, un large écart
   de fond entre chaque figure, et un trait vertical de magenta plus foncé
   entre chaque case. Échelle et taille de tête IDENTIQUES sur toutes les
@@ -315,6 +310,7 @@ haut de la planche. Le texte blanc laisse un halo qui se mélange au fond.
 SCENES = {
   "n1": {
     "titre": "la file d'attente",
+    "vue": "de FACE, légèrement de trois quarts, le personnage tourné vers le spectateur. Il fait la queue face au bar, on le voit donc de devant.",
     "prefixe": {"thibaut": "thibaut", "pf": "pierre"},
     # SA PROPRE RÉFÉRENCE. Les héros y sont en tenue de rue — blouson
     # pour Thibaut, manteau pour PF. Tant que le niveau n'avait pas son
@@ -405,6 +401,7 @@ SCENES = {
   },
   "n2": {
     "titre": "l'enquête de l'appartement",
+    "vue": "de TROIS QUARTS FACE, le personnage tourné vers le spectateur et légèrement vers la droite. On doit voir son visage et ce qu'il fait de ses mains.",
     "prefixe": {"thibaut": "enq_th", "pf": "enq_pf"},
     # LA TENUE DE POLICIER, partagée avec la ruelle. Les deux niveaux se
     # jouent dans la même soirée d'enquête : brassard, holster, manteau
@@ -447,6 +444,7 @@ SCENES = {
   },
   "n3": {
     "titre": "la tournée du bar",
+    "vue": "de FACE pour les poses immobiles et celles au verre — on doit voir ce qu'il tient — et de PROFIL STRICT vers la DROITE pour la marche et la course, seule vue où l'on voit quelle jambe passe devant l'autre.",
     "prefixe": {"thibaut": "bar_th", "pf": "bar_pf"},
     "ref": "-muscle",
     # QUATORZE POSES. Le prompt n'en demandait que neuf — les
@@ -523,6 +521,7 @@ SCENES = {
   # monde aurait rangé selon une distinction qui n'existe pas.
   "communs": {
     "titre": "Hortense et son lancer de tarte",
+    "vue": "de PROFIL vers la DROITE pour la course et le lancer, de FACE pour le rire — c'est son visage qu'on veut voir.",
     # Hortense n'a qu'une tenue : le suffixe est vide, mais il est
     # DÉCLARÉ. Un vide explicite se distingue d'un oubli.
     "ref": "",
@@ -555,6 +554,7 @@ SCENES = {
 
   "n4": {
     "titre": "la ruelle",
+    "vue": "de DOS, le personnage vu de derrière, tourné vers le fond de la ruelle. Il tire vers l'horizon, le joueur est derrière lui. On voit son dos, sa nuque et son arme tendue devant lui.",
     "prefixe": {"thibaut": "ruel_th", "pf": "ruel_pf"},
     # LA RUELLE SE JOUE EN TENUE DE POLICIER, comme le niveau 2.
     #
@@ -703,7 +703,17 @@ identique à celui de la référence une fois le fond mis de côté.""",
 }
 
 
-def fabriquer(perso, mouvements, mode="texte", part=None, parts=None):
+# LA VUE DES MÉCHANTS. Vérifié en ouvrant `enn_bruh_run1` et
+# `enn_abbe_run1` : ils sont dessinés de TROIS QUARTS FACE, courant vers la
+# caméra. C'est la mécanique du niveau — ils remontent la ruelle vers le
+# joueur — et un profil les ferait courir en travers de l'écran.
+VUE_MECHANT = ("de TROIS QUARTS FACE, le personnage tourné vers le "
+               "spectateur et courant DANS SA DIRECTION. Il remonte la "
+               "ruelle vers le joueur : on voit son visage, sa poitrine, et "
+               "ses jambes qui avancent vers nous. Surtout PAS de profil — "
+               "il ne traverse pas l'écran, il vient vers nous.")
+
+def fabriquer(perso, mouvements, mode="texte", part=None, parts=None, vue=None):
     """`perso` à None = un prompt commun, où seule l'image jointe change."""
     fiches = charger_fiches()
     if perso is not None and perso not in fiches:
@@ -784,6 +794,7 @@ def fabriquer(perso, mouvements, mode="texte", part=None, parts=None):
     qui = perso or "<le personnage voulu>"
     ligne_ref = (f"Image de référence à joindre : reference/{qui}.png\n"
                  if mode == "poses" else "")
+    if vue: ligne_ref += f"VUE : {vue}\n"
     if part and parts and parts > 1:
         ligne_ref += (f"Planche {part} sur {parts} — joindre la MÊME image de "
                       f"référence à toutes.\n")
@@ -1199,6 +1210,20 @@ def fabriquer_scene(niveau, perso=None, part=None, parts=None):
     # PAS DE SUFFIXE VIDE PAR DÉFAUT : une tenue sans nom obligeait à
     # savoir laquelle était « celle par défaut ». Chaque scène nomme la
     # sienne, et l'oubli est une erreur bruyante.
+    # LA VUE SE DÉCLARE PAR SCÈNE. J'avais mis « profil STRICT » dans les
+    # règles générales, en reprenant la formulation de Thibaut qui avait
+    # produit le premier cycle de course correct. C'était juste POUR UN
+    # CYCLE DE MARCHE, et faux partout ailleurs — vérifié en ouvrant les
+    # sprites : le niveau 1 est de face, le niveau 2 de trois quarts, les
+    # héros de la ruelle vus DE DOS, et les méchants de trois quarts face
+    # puisqu'ils courent vers la caméra.
+    #
+    # Une règle qui marche sur un cas et qu'on met dans le bloc commun
+    # devient fausse pour tous les autres.
+    vue = sc.get("vue")
+    if not vue:
+        sys.exit(f"ABANDON : la scène « {niveau} » ne déclare pas sa VUE.")
+
     suff = sc.get("ref")
     if suff is None:
         sys.exit(f"ABANDON : la scène « {niveau} » ne nomme pas sa tenue "
@@ -1226,6 +1251,7 @@ sur une seule rangée.
 
 Scène : {sc['titre']}.{surtitre}
 Image de référence à joindre : reference/{qui}{suff}.png
+VUE : {vue}
 
 {ident}
 
@@ -1312,7 +1338,7 @@ CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
 """
 
 
-def ecrire_jeu(dossier, nom, mouvements):
+def ecrire_jeu(dossier, nom, mouvements, vue=None):
     """Écrit un jeu de mouvements, découpé autant de fois qu'il le faut.
 
     Une aide unique plutôt qu'un cas par famille : les méchants et les
@@ -1323,11 +1349,12 @@ def ecrire_jeu(dossier, nom, mouvements):
     for f in dossier.glob(nom + "*.txt"):
         if MARQUE in f.read_text(encoding="utf-8"): f.unlink()
     if parts <= 1:
-        ecrire_prompt(dossier / f"{nom}.txt", fabriquer(None, mouvements, "poses"))
+        ecrire_prompt(dossier / f"{nom}.txt",
+                      fabriquer(None, mouvements, "poses", vue=vue))
         return
     for k in range(1, parts + 1):
         ecrire_prompt(dossier / f"{nom}-{k}.txt",
-                      fabriquer(None, mouvements, "poses", k, parts))
+                      fabriquer(None, mouvements, "poses", k, parts, vue))
 
 
 # UN PROMPT RÉÉCRIT À LA MAIN NE SE RÉGÉNÈRE PAS. Thibaut a réécrit
@@ -1391,19 +1418,24 @@ def tout():
     for f in d.glob("mechant_*.txt"): f.unlink()
     # les méchants aussi passent au découpage : huit poses, donc deux
     # planches de quatre. Même raison que pour les héros.
-    ecrire_jeu(d, "mechants", ["course", "touche", "chute"])
+    ecrire_jeu(d, "mechants", ["course", "touche", "chute"], VUE_MECHANT)
     # XAVIER a les mêmes poses de base que les autres — treize, imposées
     # par POSES_ENNEMI — plus les trois du LANCER, qu'il partage avec
     # l'Abbé et BruHell. 
-    ecrire_jeu(d, "xavier", ["course", "touche", "chute", "lancer_objet"])
+    ecrire_jeu(d, "xavier", ["course", "touche", "chute", "lancer_objet"], VUE_MECHANT)
     # les mouvements de réserve : un prompt commun aux deux héros, comme
     # partout ailleurs. Ils n'étaient dupliqués que parce que le rappel
     # écrit les distinguait — et il n'existe plus.
     sup = base / "sup"
     sup.mkdir(parents=True, exist_ok=True)
     for f in sup.glob("*.txt"): f.unlink()
-    ecrire_jeu(sup, "saut", ["saut"])
-    ecrire_jeu(sup, "roulades", ["roulade", "roulade_cote"])
+    # LES MOUVEMENTS DE RÉSERVE sont des mouvements de CORPS : saut,
+    # roulades. Le profil est la seule vue où l'on lit la trajectoire.
+    VUE_SUP = ("de PROFIL STRICT vers la DROITE. Ce sont des mouvements de "
+               "corps — un saut, une roulade — et le profil est la seule vue "
+               "où l'on lit la trajectoire et la position des membres.")
+    ecrire_jeu(sup, "saut", ["saut"], VUE_SUP)
+    ecrire_jeu(sup, "roulades", ["roulade", "roulade_cote"], VUE_SUP)
 
     # LES OBJETS ont leur dossier, comme les poses : un fichier prêt à
     # coller, pas un paragraphe à retrouver dans un document.

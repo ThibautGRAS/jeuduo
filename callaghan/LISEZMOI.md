@@ -573,6 +573,28 @@ champion, tournée, affiche de la ruelle, fusillade. **Ajouter un écran
 plus tard ne demandera rien** — c'est là toute la valeur d'une règle
 générale : elle couvre aussi les écrans qui n'existent pas encore.
 
+**Chaque prompt déclare SA vue** (v7.19), et c'était un défaut sérieux.
+
+J'avais mis « profil STRICT vers la droite » dans les règles COMMUNES, en
+reprenant la formulation qui avait produit le premier cycle de course
+correct du projet. Elle était juste pour un CYCLE DE MARCHE, et fausse
+partout ailleurs — vérifié en ouvrant les sprites :
+
+| niveau | vue réelle |
+|---|---|
+| n1, la file | de FACE, il fait la queue face au bar |
+| n2, l'enquête | de trois quarts face |
+| n3, le bar | de face pour le verre, de PROFIL pour la marche |
+| n4, les héros | **de DOS**, ils tirent vers l'horizon |
+| n4, les méchants | de trois quarts FACE, ils courent vers la caméra |
+
+**Les onze prompts demandaient donc une vue fausse**, et celui de Xavier
+aussi. Un profil aurait fait courir les méchants en travers de l'écran au
+lieu de remonter la ruelle vers le joueur.
+
+C'est Thibaut qui l'a vu, en demandant si le prompt de Xavier était
+conforme aux autres images.
+
 **XAVIER LE TERRASSIER entre au bestiaire** (v7.18), et c'est le
 premier personnage FICTIF des six. Les autres caricaturent une impunité
 réelle ; lui incarne la violence ordinaire, celle qui ne fait pas la une.
