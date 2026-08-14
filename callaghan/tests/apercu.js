@@ -695,9 +695,12 @@ function jouerJusqua(D, condition, limite){
     const { D, canevas } = await preparer(844, 318);
     D.amorcer(); D.Camera.mesurer(844, 318, 1);
     D.Jeu.demarrer(3); D.Tournee.lancer(); D.Tournee.introT = 0;
-    D.Tournee.x = 0.42; D.Tournee.ambiance = 85;
+    D.Tournee.x = 0.64; D.Tournee.ambiance = 85;
     D.Tournee.marche = 0; D.Tournee.dir = 1;
-    for (let i = 0; i < 8; i++) D.Jeu.pas(1 / 60);
+    /* soixante images et non huit : la caméra suit le champion en
+       douceur, et à huit images elle n'était pas encore arrivée — le
+       canapé tombait hors champ sans que rien ne le signale */
+    for (let i = 0; i < 60; i++) D.Jeu.pas(1 / 60);
     const tri = D.Tournee.foule.filter(m => m.ref.id === "tristan");
     const etats = ["danse", "titube", "assis"];
     D.Tournee.foule.forEach((m, i) => {
@@ -711,14 +714,31 @@ function jouerJusqua(D, condition, limite){
     const qui = ["tristan", "mathilde", "kevin", "remy", "charles", "teo"];
     D.Tournee.foule.slice(0, 6).forEach((m, i) => {
       m.ref = D.BAR_CLIENTS.find(c => c.id === qui[i]) || m.ref;
-      m.x = 0.26 + i * 0.055;
+      m.x = 0.55 + i * 0.045;
       m.etat = etats[i % 3];
       m.foulee = 0.4; m.t = 3.0; m.humeur = 5;
       if (m.etat === "assis"){
-        const t2 = 2 + i;
-        m.tabouret = t2; m.xAssis = D.BAR_TABOURETS[t2].x; m.verre = i > 2;
+        /* le premier assis prend un tabouret, le second le canapé :
+           l'image doit montrer les DEUX postures côte à côte */
+        if (i === 2){
+          m.tabouret = 4; m.xAssis = D.BAR_TABOURETS[4].x;
+          m.canape = false; m.verre = false;
+        } else {
+          m.tabouret = D.BAR_TABOURETS.length;
+          m.xAssis = D.BAR_CANAPE.x + D.BAR_CANAPE_PLACES[0];
+          m.canape = true; m.verre = true;
+        }
       }
     });
+    /* et quelqu'un sur la seconde place du canapé */
+    const dernier = D.Tournee.foule[6];
+    if (dernier){
+      dernier.ref = D.BAR_CLIENTS.find(c => c.id === "mathilde") || dernier.ref;
+      dernier.etat = "assis"; dernier.canape = true; dernier.verre = false;
+      dernier.tabouret = D.BAR_TABOURETS.length + 1;
+      dernier.xAssis = D.BAR_CANAPE.x + D.BAR_CANAPE_PLACES[1];
+      dernier.humeur = 9;
+    }
     void tri;
     D.Tournee.replique = null;
     D.Tournee.secousse = 0;

@@ -129,6 +129,10 @@ six, Gabi a la danse et le tangage, Charles, Kevin, Rémy et Teo ont
 `titube`, `danse1` et une pose assise. Manquent Solène, Martin, le Maire
 et Hortense.
 
+**Le canapé existe** (v7.26) : deux places au comptoir, à l'endroit d'un
+tabouret retiré. `assis_canape` et `assis_verre` avaient attendu deux
+planches sans rien pour les porter.
+
 **Une planche n'a pas besoin d'être complète.** Chaque pose absente se
 replie : `danse2` sur `danse1`, tout le reste sur `idle`. Un habitué qui
 n'a que trois poses danse quand même, sur un temps au lieu de deux.

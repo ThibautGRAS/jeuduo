@@ -64,9 +64,30 @@ const BAR_TABOURETS = [
   { x:0.03, teinte:"vert"   }, { x:0.16, teinte:"bleu"   },
   { x:0.26, teinte:"orange" }, { x:0.38, teinte:"violet" },
   { x:0.49, teinte:"vert"   }, { x:0.60, teinte:"orange" },
-  { x:0.71, teinte:"bleu"   }, { x:0.83, teinte:"violet" },
+  /* le tabouret de 0,71 a laissé la place au canapé : deux assises au
+     même endroit, l'une derrière l'autre, ne se lisaient plus */
+  { x:0.83, teinte:"violet" },
   { x:0.94, teinte:"vert"   },
 ];
+/* LE CANAPÉ. Les poses `assis_canape` et `assis_verre` existaient depuis
+   deux planches sans que rien ne puisse les porter : un habitué enfoncé
+   dans une assise basse, au milieu d'un bar qui n'a que des tabourets,
+   a l'air tombé par terre.
+
+   Il est au même plan que les tabourets — même ligne de sol, donc même
+   profondeur — et occupe la place d'un tabouret retiré. Deux assises
+   dessus : un canapé où une seule personne s'assoit n'est pas un canapé,
+   c'est un fauteuil. */
+/* 0,44 ET NON 0,30. Mesuré à l'écran : à 0,30 il faisait 179 px de large
+   pour deux personnes assises de 150 px chacune — elles se chevauchaient
+   et débordaient des accoudoirs. Un canapé se dimensionne sur CEUX QUI
+   S'Y ASSOIENT, pas sur les tabourets d'à côté : deux places, donc au
+   moins deux fois la largeur d'épaules. */
+const BAR_CANAPE = { x:0.705, taille:0.44 };
+/* Les deux places, en écart au CENTRE du canapé. Mesuré sur l'image :
+   les deux coussins d'assise sont centrés à un quart de la largeur de
+   part et d'autre du milieu, et la largeur vaut 1,88 fois la hauteur. */
+const BAR_CANAPE_PLACES = [-0.038, 0.034];
 /* Leur ligne de sol est PLUS BASSE que celle des héros : c'est ce qui les
    place devant. Et leur taille est celle des tabourets peints, relevée
    sur le fond — 0,245 de la hauteur d'image. */

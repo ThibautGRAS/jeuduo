@@ -566,8 +566,15 @@ Object.assign(Tournee, {
        rendait `null` quand aucune image n'est chargée — le harnais de
        test, par exemple — et le dessin recevait null au lieu du nom d'une
        pose. Un repli qui peut échouer n'est pas un repli. */
-    if (m.etat === "assis")
-      return dispo(m.verre ? "assis_verre" : "assis_tabouret") || "idle";
+    if (m.etat === "assis"){
+      /* SUR LE CANAPÉ, ON S'ENFONCE ; SUR LE TABOURET, ON SE TIENT. Ce
+         sont deux postures différentes, et prendre l'une pour l'autre se
+         voit tout de suite : un homme assis droit sur un canapé flotte
+         au-dessus de l'assise. */
+      if (m.canape) return dispo(m.verre ? "assis_verre" : "assis_canape")
+                        || dispo("assis_canape") || "idle";
+      return dispo("assis_tabouret") || "idle";
+    }
     if (m.etat === "danse")
       /* DEUX TEMPS SI LA PLANCHE LES A, UN SEUL SINON. Six habitués sur
          sept n'ont que `danse1` : alterner avec une pose absente les
@@ -591,7 +598,9 @@ Object.assign(Tournee, {
     for (const m of this.foule){
       if (m.humeur > 0){
         m.humeur -= dt;
-        if (m.humeur <= 0){ m.etat = "grappe"; m.t = 0; m.verre = false; }
+        if (m.humeur <= 0){
+          m.etat = "grappe"; m.t = 0; m.verre = false; m.canape = false;
+        }
       }
     }
     if (this.humeurT > 0) return;
@@ -601,11 +610,18 @@ Object.assign(Tournee, {
     const m = piocher(dispos);
     /* UN TABOURET LIBRE, ET UN SEUL PAR PLACE. Deux habitués sur le même
        tabouret, ça s'est vu à l'écran avant qu'on le compte. */
+    /* Les places assises du bar : les tabourets, PLUS les deux du canapé.
+       Elles sont numérotées à la suite — le canapé commence là où les
+       tabourets s'arrêtent — pour que la même liste de places prises
+       serve aux deux. */
+    const places = BAR_TABOURETS.map((t, i) => ({ i, x:t.x, canape:false }))
+      .concat(BAR_CANAPE_PLACES.map((d, j) => ({
+        i:BAR_TABOURETS.length + j, x:BAR_CANAPE.x + d, canape:true })));
     const pris = this.foule.filter(q => q.etat === "assis").map(q => q.tabouret);
-    const libres = BAR_TABOURETS.filter((t, i) => pris.indexOf(i) < 0);
+    const libres = places.filter(pl => pris.indexOf(pl.i) < 0);
     if (libres.length && Math.random() < FOULE_CHANCE_ASSIS){
-      const i = BAR_TABOURETS.indexOf(piocher(libres));
-      m.etat = "assis"; m.tabouret = i; m.xAssis = BAR_TABOURETS[i].x;
+      const pl = piocher(libres);
+      m.etat = "assis"; m.tabouret = pl.i; m.xAssis = pl.x; m.canape = pl.canape;
       m.verre = Math.random() < 0.5;
       m.humeur = melange(FOULE_ASSIS_DUREE[0], FOULE_ASSIS_DUREE[1], Math.random());
       return;

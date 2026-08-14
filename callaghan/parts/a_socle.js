@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.25";
+const VERSION = "7.26";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1059,6 +1059,7 @@ const IMAGES_NIVEAU3 = [
      fond, ceux-ci sont dessinés après les héros pour qu'on passe
      derrière eux. */
   "bar_plante",
+  "bar_canape",
   "bar_tabouret_vert", "bar_tabouret_violet",
   "bar_tabouret_bleu", "bar_tabouret_orange",
   /* les habitués animés, et le passage d'Hortense */

@@ -310,6 +310,17 @@ const BarVue = {
         if (cx < -sl || cx > L + sl) continue;
         ctx.drawImage(spr, cx - sl / 2, H * BAR_TAB_PIEDS - sh, sl, sh);
       }
+      /* LE CANAPÉ, au même plan et sur la même ligne de sol. Il est
+         dessiné APRÈS les tabourets et AVANT la foule : ceux qui s'y
+         assoient passent donc devant lui, comme sur un vrai canapé. */
+      const cana = Images.table["bar_canape"];
+      if (cana && cana.naturalWidth){
+        const ch = H * BAR_CANAPE.taille;
+        const cl2 = ch * cana.naturalWidth / cana.naturalHeight;
+        const cx = this.ex(BAR_CANAPE.x);
+        if (cx > -cl2 && cx < L + cl2)
+          ctx.drawImage(cana, cx - cl2 / 2, H * BAR_TAB_PIEDS - ch, cl2, ch);
+      }
     }
   },
 
@@ -602,7 +613,12 @@ const BarVue = {
       /* `ex` convertit une position DU MONDE en position d'écran : la
          grappe reste sur place quand le champion se déplace, et on la
          dépasse. Hors champ, on ne la dessine pas. */
-      const x = this.ex(assis ? m.xAssis + FOULE_ASSIS_DECALE : m.x);
+      /* SUR LE CANAPÉ ON NE DÉCALE PAS. Le décalage sert à faire
+         réapparaître le tabouret, plus étroit que celui qui s'assoit ;
+         le canapé, lui, est trois fois plus large — décalé, l'habitué
+         glissait vers l'accoudoir. */
+      const x = this.ex(assis ? m.xAssis + (m.canape ? 0 : FOULE_ASSIS_DECALE)
+                              : m.x);
       const y = H * (assis ? BAR_TAB_PIEDS : FOULE_PIEDS);
       if (x < -L * 0.25 || x > L * 1.25) continue;
       ctx.save();
