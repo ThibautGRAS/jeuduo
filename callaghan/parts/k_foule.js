@@ -302,6 +302,38 @@ const FOULE_DISCUSSIONS = {
      "Évidemment sur lui."],
     ["Moi je dis rien, hein.", "Tu dis rien depuis vingt minutes.",
      "Je dis rien, mais je pense fort."],
+    ["L'acteur, il est reparti où déjà ?", "Là où on paie pas d'impôts.",
+     "Ça restreint pas beaucoup."],
+    ["Il a dit qu'on l'aimait plus.", "On l'a jamais autant payé.",
+     "C'est ça, aimer, pour lui."],
+    ["Le banquier a écrit un bouquin.", "Sur quoi ?", "Sur l'injustice.",
+     "Putain, le culot."],
+    ["Il a repris une chaire quelque part.", "À enseigner quoi ?",
+     "L'économie. Et la morale, j'imagine."],
+    ["Y'en a un qui a porté plainte.", "Contre qui ?",
+     "Contre ceux qui parlaient de lui.", "Évidemment."],
+    ["Ils ont retiré la plaque.", "Et le nom de la rue ?",
+     "Ça coûte cher, une rue.", "La honte, c'est gratuit pourtant."],
+    ["Le curé, il avait une fondation.", "Elle existe encore ?",
+     "Elle a changé de nom. Comme lui, en somme."],
+    ["Le chanteur fait une tournée d'adieu.", "La combientième ?",
+     "La quatrième.", "Il part jamais, ce con."],
+    ["Il chante toujours pour les pauvres ?", "En janvier.",
+     "Et le reste de l'année ?", "Le reste de l'année il facture."],
+    ["Y'a un mec qui a balancé un pavé.", "Il visait qui ?",
+     "Personne. Il voulait juste qu'on parle de lui.", "Ça a marché."],
+    ["Il a dit que c'était monté en épingle.", "Par qui ?",
+     "Par les gens qui l'ont vu faire."],
+    ["Ils sont tous passés au tribunal ?", "Deux sur cinq.",
+     "Et les trois autres ?", "Ils ont un bon avocat. Le même."],
+    ["Mon voisin dit qu'on exagère.", "Ton voisin dit toujours ça.",
+     "Mon voisin est peut-être le sixième."],
+    ["Le pire c'est ceux qui les défendent.", "Y'a des gens pour ça ?",
+     "Y'a des gens pour tout, merde."],
+    ["Ils vieillissent, au moins.", "Et alors ?",
+     "Alors rien. C'est déjà ça."],
+    ["Je les mettrais tous dans une ruelle.", "Pour quoi faire ?",
+     "Rien. Juste dans une ruelle. Sans sortie."],
   ],
   /* CE QU'ILS DISENT QUAND IL EST TARD. Ça jure, c'est un bar — mais la
      vanne revient TOUJOURS sur celui qui parle. Un ivrogne qui se moque
@@ -894,8 +926,11 @@ Object.assign(Tournee, {
     /* En fin de soirée, un échange sur trois part en vrille : c'est le
        même bar, mais plus personne ne finit ses phrases. */
     if (this.ivresse() > 0.60 && Math.random() < 0.38) return "ivres";
+    /* 34 échanges de faits divers contre 46 de ragots : la proportion
+       suit le réservoir, sinon on tire toujours dans le même et on
+       réentend les mêmes vannes en une soirée. */
     const r = Math.random();
-    return r < 0.46 ? "ragots" : r < 0.76 ? "faits_divers" : "commun";
+    return r < 0.40 ? "ragots" : r < 0.80 ? "faits_divers" : "commun";
   },
 
   /* De 0 au début à 1 à la dernière minute. Le coup de feu la pousse :
