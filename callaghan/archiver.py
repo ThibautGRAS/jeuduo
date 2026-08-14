@@ -53,7 +53,12 @@ def archiver(source, dossier, nom):
 
     im = Image.open(src).convert("RGB")
     tmp = d / (nom + ".webp.tmp")
-    im.save(tmp, "WEBP", quality=82, method=6)
+    # 92 ET NON 82. Mesuré sur la planche de Solène : à 82, la
+    # compression déplace assez de couleurs pour que le détourage
+    # fragmente le personnage — sa pose de danse sortait en trois
+    # morceaux, alors que le PNG d'origine se découpait proprement. Une
+    # archive dont on ne peut pas rejouer la découpe ne sert à rien.
+    im.save(tmp, "WEBP", quality=92, method=6)
     neuf = empreinte(tmp)
 
     # NE JAMAIS ÉCRASER. On cherche d'abord si cette planche EXACTE est

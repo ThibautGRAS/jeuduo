@@ -1,0 +1,12 @@
+{
+  "_": "Le Maire, planche de figurant-2. Original : planches/n3/marini-figurant.webp.",
+  "__echelle": "Aucune pose debout sur la planche : le témoin est `titube`, penché, donc plus court. Son sujet en jeu fait 308 px ; une pose penchée en fait environ 95 %, d'où 293.",
+  "planche": "planches/n3/marini-figurant.webp",
+  "reference": "img/n3/bar_marini_idle.webp",
+  "hauteur_ref": 293,
+  "sortie": "img/n3",
+  "prefixe": "bar_marini",
+  "temoin": 1,
+  "rangees": [["titube", "danse1", "danse2"],
+              ["assis_tabouret", "assis_canape", "assis_verre"]]
+}

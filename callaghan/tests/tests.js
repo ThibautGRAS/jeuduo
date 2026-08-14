@@ -2561,14 +2561,19 @@ if (D){
   verifier("un fragment détaché n'est pas pris pour une pose",
     (() => {
       /* La planche d'Hortense a une TARTE EN VOL, séparée de sa main : un
-         bloc de 60x33 px pris pour un neuvième personnage. Le seuil d'aire
-         ne le filtrait pas — il faut le comparer à la HAUTEUR des vrais
-         sujets, et le RATTACHER au voisin plutôt que le jeter. */
+         bloc de 60x33 px pris pour un neuvième personnage. Il faut le
+         RATTACHER au voisin plutôt que le jeter.
+
+         Le critère a changé deux fois, et chaque fois parce qu'il mesurait
+         la mauvaise chose : la HAUTEUR seule prenait le corps allongé de
+         Xavier pour un fragment ; hauteur ET largeur laissaient passer la
+         main tendue du Maire, plus large que la moitié d'une pose mais
+         six fois plus petite en SURFACE. C'est une aire relative. */
       const a = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
       const b = fs.readFileSync(path.join(RACINE, "decouper_planche.py"), "utf8");
       return /UN FRAGMENT DÉTACHÉ N'EST PAS UNE POSE/.test(a) &&
         /UN FRAGMENT DÉTACHÉ N'EST PAS UNE POSE/.test(b) &&
-        /hmed \* 0\.5/.test(a) && /hmed \* 0\.5/.test(b);
+        /amed \* 0\.25/.test(b);
     })());
 
   verifier("le canevas de découpe s'élargit sans toucher à l'échelle",
@@ -5757,47 +5762,25 @@ if (D){
         (vus.titube || vus.danse);
     })());
 
-  verifier("le canapé a DEUX places, et aucun tabouret dessous",
+  verifier("le verre change la pose de l'assis, pas son siège",
     (() => {
-      /* Les poses `assis_canape` et `assis_verre` ont existé deux
-         planches durant sans que rien ne puisse les porter : un habitué
-         enfoncé dans une assise basse, dans un bar qui n'a que des
-         tabourets, a l'air tombé par terre.
-
-         Tout est mesuré EN MONDE ici, et rien en pixels : la taille du
-         canapé, elle, est une fraction de la hauteur d'ÉCRAN, et mélanger
-         les deux donne un canapé cinq fois trop large sans que rien ne
-         proteste. Le contrôle de largeur se fait à l'oeil, sur l'aperçu.
-
-         0,072 d'écart entre les places : mesuré, à 0,058 les deux assis
-         se chevauchaient. */
-      const pl = D.BAR_CANAPE_PLACES;
-      const ecart = Math.abs(pl[1] - pl[0]);
-      const dessous = D.BAR_TABOURETS.filter(t =>
-        Math.abs(t.x - D.BAR_CANAPE.x) < 0.06);
-      messageDetail = "places écartées de " + ecart.toFixed(3)
-        + (dessous.length ? ", TABOURET DESSOUS : " + dessous.map(t => t.x).join(", ")
-                          : ", aucun tabouret dessous");
-      return pl.length === 2 && ecart >= 0.06 && !dessous.length &&
-        D.BAR_CANAPE.x > 0 && D.BAR_CANAPE.x < 1;
-    })());
-
-  verifier("on ne s'assoit pas sur un canapé comme sur un tabouret",
-    (() => {
-      /* Deux postures différentes, et prendre l'une pour l'autre se voit
-         tout de suite : un homme assis droit sur un canapé flotte
-         au-dessus de l'assise. */
+      /* Le canapé du bar a été retiré : il ne plaisait pas, et deux
+         assises différentes au même comptoir se disputaient l'oeil.
+         `assis_canape` reste découpé et chargé — il attend le canapé du
+         niveau 2 — mais au bar il ne reste que le tabouret, avec ou sans
+         verre. */
       const T = unBar();
       const m = T.foule[0];
-      m.ref = D.BAR_CLIENTS.find(c => c.id === "mathilde") || m.ref;
-      for (const n of ["assis_canape", "assis_verre", "assis_tabouret"])
-        D.Images.table["bar_mathilde_" + n] = { naturalWidth:1, naturalHeight:1 };
-      m.etat = "assis"; m.canape = true; m.verre = false;
-      const surCanape = T.poseFoule(m);
-      m.canape = false;
-      const surTabouret = T.poseFoule(m);
-      messageDetail = "canapé -> " + surCanape + ", tabouret -> " + surTabouret;
-      return surCanape === "assis_canape" && surTabouret === "assis_tabouret";
+      m.ref = D.BAR_CLIENTS.find(c => c.id === "solene") || m.ref;
+      for (const n of ["assis_verre", "assis_tabouret"])
+        D.Images.table["bar_solene_" + n] = { naturalWidth:1, naturalHeight:1 };
+      m.etat = "assis"; m.verre = true;
+      const avecVerre = T.poseFoule(m);
+      m.verre = false;
+      const sansVerre = T.poseFoule(m);
+      messageDetail = "avec verre -> " + avecVerre + ", sans -> " + sansVerre;
+      return avecVerre === "assis_verre" && sansVerre === "assis_tabouret" &&
+        !/BAR_CANAPE/.test(source);
     })());
 
   verifier("une danse à un seul temps ne CLIGNOTE pas",
@@ -5848,7 +5831,7 @@ if (D){
       messageDetail = D.FOULE_PLACES.length + " grappes, étendue " + etendue.toFixed(2);
       return D.FOULE_PLACES.length >= 4 && etendue > 0.7 &&
         D.FOULE_PLACES.every(p => T.grappe(p.id).length > 0) &&
-        /const x = this\.ex\(assis \? m\.xAssis \+ \(m\.canape \? 0 : FOULE_ASSIS_DECALE\)/.test(source);
+        /const x = this\.ex\(assis \? m\.xAssis \+ FOULE_ASSIS_DECALE : m\.x\)/.test(source);
     })());
 
   verifier("une grappe hors champ n'est pas dessinée",

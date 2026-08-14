@@ -122,16 +122,17 @@ a une par habitué dans `reference/`, fabriquée depuis ses sprites du jeu.
 | planche | poses | état |
 |---|---|---|
 | `figurant-1` | idle, idle2, marche1, marche2, attrape, boit, vide | six sur sept existent déjà |
-| `figurant-2` | titube, danse1, danse2, assis_tabouret, assis_canape, assis_verre | **sept l'ont**, en partie |
+| `figurant-2` | titube, danse1, danse2, assis_tabouret, assis_canape, assis_verre | **neuf l'ont**, en partie |
 
 Sept habitués sur onze en ont au moins trois : Tristan et Mathilde ont les
 six, Gabi a la danse et le tangage, Charles, Kevin, Rémy et Teo ont
-`titube`, `danse1` et une pose assise. Manquent Solène, Martin, le Maire
-et Hortense.
+`titube`, `danse1` et une pose assise. Solène et le Maire ont les six.
+Manquent Martin et Hortense.
 
-**Le canapé existe** (v7.26) : deux places au comptoir, à l'endroit d'un
-tabouret retiré. `assis_canape` et `assis_verre` avaient attendu deux
-planches sans rien pour les porter.
+**Le canapé du bar a été retiré** (v7.27) : deux assises différentes au
+même comptoir se disputaient l'oeil. `assis_canape` reste découpé et
+chargé — il attend le canapé du niveau 2. Au bar, le verre change la pose
+de l'assis (`assis_verre`), pas son siège.
 
 **Une planche n'a pas besoin d'être complète.** Chaque pose absente se
 replie : `danse2` sur `danse1`, tout le reste sur `idle`. Un habitué qui

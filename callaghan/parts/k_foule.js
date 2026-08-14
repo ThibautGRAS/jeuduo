@@ -120,9 +120,11 @@ const FOULE_PHRASES = {
   gabi:     ["J'ai commandé une pizza.", "Personne n'a vu ma part ?"],
   charles:  ["Moi je bois pas, je goûte.", "C'était mieux avant. Enfin, non."],
   teo:      ["Je reste cinq minutes.", "Bon. Dix minutes."],
-  mathilde: ["Jojo m'a encore ignorée.", "Ses cocktails sont meilleurs."],
+  mathilde: ["Jojo m'a encore ignorée.", "Ses cocktails sont meilleurs.",
+             "CHOCHO ! Viens voir !"],
   tristan:  ["Deux, et j'y vais.", "On refait la même ?"],
-  solene:   ["Tu as vu qui est là ?", "Je préviens Mathilde."],
+  solene:   ["Tu as vu qui est là ?", "Je préviens Mathilde.",
+             "Chocho, c'est elle qui a commencé."],
   kevin:    ["C'est ma tournée. Enfin, presque.", "Jägerbombs. Point."],
   remy:     ["Le premier qui craque paie.", "J'ai vu Teo boire de l'eau."],
   marini:   ["La municipalité soutient ce lieu.", "Un buffet non conforme."],
@@ -158,6 +160,10 @@ const FOULE_DISCUSSIONS = {
     ["Kevin a payé sa tournée.", "Non.", "Si.", "Alors là je m'assois."],
     ["Teo avait dit cinq minutes.", "Il est là depuis dix-neuf heures."],
     ["Solène a tout raconté à Mathilde.", "Évidemment.", "En trois minutes."],
+    ["Mathilde l'appelle Chocho.", "Qui ça ?", "Solène.", "Ah. Chocho, alors."],
+    ["Chocho a dit quoi ?", "Que t'allais demander.", "Elle dit toujours ça."],
+    ["Y'a que Mathilde qui a le droit de dire Chocho.", "J'ai essayé une fois.",
+     "Et ?", "Une fois."],
     ["Charles boit pas, il goûte.", "Il goûte depuis vingt ans."],
     ["Rémy a compté les verres de Tristan.", "Et ?", "Il a arrêté à onze."],
     ["Gabi cherche sa part de pizza.", "Elle la cherche encore ?",
@@ -566,15 +572,12 @@ Object.assign(Tournee, {
        rendait `null` quand aucune image n'est chargée — le harnais de
        test, par exemple — et le dessin recevait null au lieu du nom d'une
        pose. Un repli qui peut échouer n'est pas un repli. */
-    if (m.etat === "assis"){
-      /* SUR LE CANAPÉ, ON S'ENFONCE ; SUR LE TABOURET, ON SE TIENT. Ce
-         sont deux postures différentes, et prendre l'une pour l'autre se
-         voit tout de suite : un homme assis droit sur un canapé flotte
-         au-dessus de l'assise. */
-      if (m.canape) return dispo(m.verre ? "assis_verre" : "assis_canape")
-                        || dispo("assis_canape") || "idle";
-      return dispo("assis_tabouret") || "idle";
-    }
+    /* SUR UN TABOURET, LE VERRE CHANGE LA POSE, pas l'assise : c'est le
+       même homme assis, mais penché sur son verre. `assis_canape` ne sert
+       plus au bar — il n'y a plus de canapé — mais la pose reste
+       découpée et chargée : elle attend le canapé du niveau 2. */
+    if (m.etat === "assis")
+      return (m.verre && dispo("assis_verre")) || dispo("assis_tabouret") || "idle";
     if (m.etat === "danse")
       /* DEUX TEMPS SI LA PLANCHE LES A, UN SEUL SINON. Six habitués sur
          sept n'ont que `danse1` : alterner avec une pose absente les
@@ -599,7 +602,7 @@ Object.assign(Tournee, {
       if (m.humeur > 0){
         m.humeur -= dt;
         if (m.humeur <= 0){
-          m.etat = "grappe"; m.t = 0; m.verre = false; m.canape = false;
+          m.etat = "grappe"; m.t = 0; m.verre = false;
         }
       }
     }
@@ -610,18 +613,11 @@ Object.assign(Tournee, {
     const m = piocher(dispos);
     /* UN TABOURET LIBRE, ET UN SEUL PAR PLACE. Deux habitués sur le même
        tabouret, ça s'est vu à l'écran avant qu'on le compte. */
-    /* Les places assises du bar : les tabourets, PLUS les deux du canapé.
-       Elles sont numérotées à la suite — le canapé commence là où les
-       tabourets s'arrêtent — pour que la même liste de places prises
-       serve aux deux. */
-    const places = BAR_TABOURETS.map((t, i) => ({ i, x:t.x, canape:false }))
-      .concat(BAR_CANAPE_PLACES.map((d, j) => ({
-        i:BAR_TABOURETS.length + j, x:BAR_CANAPE.x + d, canape:true })));
     const pris = this.foule.filter(q => q.etat === "assis").map(q => q.tabouret);
-    const libres = places.filter(pl => pris.indexOf(pl.i) < 0);
+    const libres = BAR_TABOURETS.filter((t, i) => pris.indexOf(i) < 0);
     if (libres.length && Math.random() < FOULE_CHANCE_ASSIS){
-      const pl = piocher(libres);
-      m.etat = "assis"; m.tabouret = pl.i; m.xAssis = pl.x; m.canape = pl.canape;
+      const i = BAR_TABOURETS.indexOf(piocher(libres));
+      m.etat = "assis"; m.tabouret = i; m.xAssis = BAR_TABOURETS[i].x;
       m.verre = Math.random() < 0.5;
       m.humeur = melange(FOULE_ASSIS_DUREE[0], FOULE_ASSIS_DUREE[1], Math.random());
       return;

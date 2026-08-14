@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.26";
+const VERSION = "7.27";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1059,12 +1059,12 @@ const IMAGES_NIVEAU3 = [
      fond, ceux-ci sont dessinés après les héros pour qu'on passe
      derrière eux. */
   "bar_plante",
-  "bar_canape",
   "bar_tabouret_vert", "bar_tabouret_violet",
   "bar_tabouret_bleu", "bar_tabouret_orange",
   /* les habitués animés, et le passage d'Hortense */
   "bar_marini_idle", "bar_marini_marche1", "bar_marini_marche2",
   "bar_marini_attrape", "bar_marini_boit", "bar_marini_vide",
+  "bar_marini_titube", "bar_marini_danse1", "bar_marini_danse2", "bar_marini_assis_tabouret", "bar_marini_assis_canape", "bar_marini_assis_verre",
   "bar_gabi_idle", "bar_gabi_marche1", "bar_gabi_marche2",
   "bar_gabi_attrape", "bar_gabi_boit", "bar_gabi_vide",
   "bar_gabi_idle2", "bar_gabi_titube", "bar_gabi_danse1", "bar_gabi_danse2",
@@ -1090,6 +1090,7 @@ const IMAGES_NIVEAU3 = [
   "bar_teo_titube", "bar_teo_danse1", "bar_teo_assis_tabouret",
   "bar_solene_idle", "bar_solene_marche1", "bar_solene_marche2",
   "bar_solene_attrape", "bar_solene_boit", "bar_solene_vide",
+  "bar_solene_idle2", "bar_solene_titube", "bar_solene_danse1", "bar_solene_danse2", "bar_solene_assis_tabouret", "bar_solene_assis_canape", "bar_solene_assis_verre",
   "bar_kevin_idle", "bar_kevin_marche1", "bar_kevin_marche2",
   "bar_kevin_attrape", "bar_kevin_boit", "bar_kevin_vide",
   "bar_kevin_titube", "bar_kevin_danse1", "bar_kevin_assis_tabouret",

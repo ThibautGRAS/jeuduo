@@ -79,8 +79,18 @@ def composantes(a, coupures):
     # pleine hauteur passaient pour des poses. Le rapport MULTIPLICATIF
     # les attrape sans risque pour les teintes chaudes : une peau ou une
     # brique a du vert, pas un magenta pur.
+    # LE SECOND CRITÈRE A MANGÉ UN COSTUME. Écrit pour rattraper les
+    # bandes de cadre très sombres, il acceptait `g < 90` et un rapport —
+    # or le bleu marine du Maire est à (47, 48, 105) : rouge au-dessus de
+    # 40, bleu au-dessus de 30, vert sous 90, rapport tenu. Son costume
+    # passait pour du fond et sa silhouette sortait en dentelle.
+    #
+    # Ce qui distingue vraiment une bande de cadre, c'est que le vert y
+    # est QUASI NUL et que le rouge et le bleu s'y équilibrent — (95, 1,
+    # 85), (153, 11, 154). Un bleu marine a du vert autant que du rouge.
     magenta = ((r > g + 120) & (b > g + 120)) | \
-              ((r > 40) & (b > 30) & (g < 90) & (r + b > 3 * g))
+              ((g < 30) & (r > 40) & (b > 30) &
+               (np.abs(r - b) < np.maximum(r, b) * 0.45))
     obj = ndimage.binary_opening(~magenta, np.ones((5, 5)))
     # Les coupures séparent deux poses qui se touchent. Une coupure peut
     # être LIMITÉE EN HAUTEUR : une colonne coupée sur toute la planche
@@ -116,11 +126,17 @@ def composantes(a, coupures):
     # recollé à la pose d'à côté. Deux poses n'en faisaient plus qu'une,
     # à 150 px de fond vide près. Une tarte est courte ET étroite ; un
     # homme allongé est court et LARGE.
+    # LE CRITÈRE EST UNE AIRE, pas deux longueurs. Mesuré : la main
+    # tendue du Maire se détache en un bloc de 119 x 131 px, plus large
+    # que la moitié d'une pose — donc « vraie pose » — alors qu'elle en
+    # fait le sixième en SURFACE. Une aire relative range les trois cas
+    # d'un coup : la tarte d'Hortense (2 % de la médiane), une main
+    # détachée (16 %), et le corps allongé de Xavier qui n'est PAS un
+    # fragment (59 %).
     if len(gardes) >= 3:
-        hs = sorted(y2 - y1 for _, y1, _, y2, _ in gardes)
-        ws = sorted(x2 - x1 for x1, _, x2, _, _ in gardes)
-        hmed, wmed = hs[len(hs) // 2], ws[len(ws) // 2]
-        petit = lambda g: (g[3] - g[1] < hmed * 0.5) and (g[2] - g[0] < wmed * 0.5)
+        aires = sorted((y2 - y1) * (x2 - x1) for x1, y1, x2, y2, _ in gardes)
+        amed = aires[len(aires) // 2]
+        petit = lambda g: (g[3] - g[1]) * (g[2] - g[0]) < amed * 0.25
         vrais = [g for g in gardes if not petit(g)]
         frags = [g for g in gardes if petit(g)]
         for fx1, fy1, fx2, fy2, fi in frags:

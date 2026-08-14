@@ -68,9 +68,12 @@ Rangées par `archiver.py`, jamais à la main.
 | `n3` | `heros_th_deplacement.webp` | 97 Ko |
 | `n3` | `heros_th_verre.webp` | 98 Ko |
 | `n3` | `kevin-figurant.webp` | 97 Ko |
+| `n3` | `marini-figurant.webp` | 162 Ko |
 | `n3` | `mathilde-figurant.webp` | 120 Ko |
 | `n3` | `plante_suspendue.webp` | 130 Ko |
 | `n3` | `remy-figurant.webp` | 114 Ko |
+| `n3` | `solene-base.webp` | 188 Ko |
+| `n3` | `solene-figurant.webp` | 185 Ko |
 | `n3` | `tabourets.webp` | 76 Ko |
 | `n3` | `teo-figurant.webp` | 100 Ko |
 | `n3` | `tristan-figurant.webp` | 108 Ko |
@@ -87,7 +90,7 @@ Rangées par `archiver.py`, jamais à la main.
 | `n4` | `xavier-pelle.webp` | 72 Ko |
 | `n4` | `xavier_reference.webp` | 111 Ko |
 
-**9.2 Mo au total.**
+**9.7 Mo au total.**
 
 ## 24 planches à identifier
 

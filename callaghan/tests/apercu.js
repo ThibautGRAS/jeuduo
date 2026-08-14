@@ -718,27 +718,22 @@ function jouerJusqua(D, condition, limite){
       m.etat = etats[i % 3];
       m.foulee = 0.4; m.t = 3.0; m.humeur = 5;
       if (m.etat === "assis"){
-        /* le premier assis prend un tabouret, le second le canapé :
-           l'image doit montrer les DEUX postures côte à côte */
-        if (i === 2){
-          m.tabouret = 4; m.xAssis = D.BAR_TABOURETS[4].x;
-          m.canape = false; m.verre = false;
-        } else {
-          m.tabouret = D.BAR_TABOURETS.length;
-          m.xAssis = D.BAR_CANAPE.x + D.BAR_CANAPE_PLACES[0];
-          m.canape = true; m.verre = true;
-        }
+        /* deux tabourets voisins, l'un avec verre et l'autre sans :
+           l'image doit montrer les DEUX poses assises côte à côte */
+        const t2 = i === 2 ? 4 : 6;
+        m.tabouret = t2; m.xAssis = D.BAR_TABOURETS[t2].x;
+        m.verre = i !== 2;
       }
     });
-    /* et quelqu'un sur la seconde place du canapé */
-    const dernier = D.Tournee.foule[6];
-    if (dernier){
-      dernier.ref = D.BAR_CLIENTS.find(c => c.id === "mathilde") || dernier.ref;
-      dernier.etat = "assis"; dernier.canape = true; dernier.verre = false;
-      dernier.tabouret = D.BAR_TABOURETS.length + 1;
-      dernier.xAssis = D.BAR_CANAPE.x + D.BAR_CANAPE_PLACES[1];
-      dernier.humeur = 9;
-    }
+    /* Solène et le Maire, les deux dernières planches arrivées */
+    [["solene", "danse", 7], ["marini", "assis", 8]].forEach(([id, etat, t2], k) => {
+      const m = D.Tournee.foule[6 + k];
+      if (!m) return;
+      m.ref = D.BAR_CLIENTS.find(c => c.id === id) || m.ref;
+      m.etat = etat; m.humeur = 9; m.foulee = 0.4;
+      m.x = 0.80 + k * 0.05;
+      if (etat === "assis"){ m.tabouret = t2; m.xAssis = D.BAR_TABOURETS[t2].x; m.verre = true; }
+    });
     void tri;
     D.Tournee.replique = null;
     D.Tournee.secousse = 0;
