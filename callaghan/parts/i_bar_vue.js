@@ -58,6 +58,9 @@ const BarVue = {
     this.dessinerVerres();
     if (T.invite) this.dessinerInvite();
     this.dessinerClients();
+    /* LE COLLÈGUE AVANT LE CHAMPION : il est du décor vivant, il ne doit
+       jamais passer devant celui qu'on joue. */
+    this.dessinerCompere();
     this.dessinerHeros();
     /* LA FOULE PASSE APRÈS LE CHAMPION : c'est tout l'intérêt du premier
        plan, il circule DERRIÈRE eux. Mais après les verres aussi, sans
@@ -608,25 +611,98 @@ const BarVue = {
     if (r && r.qui && T.foule.indexOf(r.qui) >= 0){
       const m = r.qui;
       const sh = H * FOULE_TAILLE * m.ref.taille * echellePerso(m.ref.id);
-      const by = H * FOULE_PIEDS - sh * 0.98;
-      ctx.save();
-      ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.font = "800 " + Math.round(H * 0.042) + "px 'Baloo 2', system-ui, sans-serif";
-      const w = ctx.measureText(r.txt).width;
-      const bw = Math.min(w + 20, L * 0.44);
       /* On ramène la bulle dans l'écran d'après SA LARGEUR, pas d'après
          une marge fixe : borner le centre à 0,14 laissait quand même
-         dépasser une bulle de 0,44 de large, et la phrase était coupée. */
-      const bx = borne(this.ex(m.x), bw / 2 + 6, L - bw / 2 - 6);
-      ctx.globalAlpha = borne(r.t / 0.4, 0, 1);
-      ctx.fillStyle = "rgba(250,248,255,.95)";
-      arrondi(bx - bw / 2, by - H * 0.036, bw, H * 0.072, H * 0.030); ctx.fill();
-      ctx.fillStyle = "#171226";
-      ctx.fillText(r.txt, bx, by);
-      ctx.restore();
-      ctx.globalAlpha = 1;
-      ctx.textAlign = "left";
+         dépasser une bulle de 0,44 de large, et la phrase était coupée.
+         Elle va jusqu'à 0,74 de l'écran depuis que les répliques sont des
+         conversations : à 0,44, une phrase sur deux se coupait. */
+      this.bulle(r.txt, this.ex(m.x), H * FOULE_PIEDS - sh * 0.98 + H * 0.036,
+                 L * 0.74, 0.042, borne(r.t / 0.4, 0, 1));
     }
+  },
+
+  /* Le collègue, au même plan que les clients : il déambule derrière le
+     champion et ne touche à rien. Sa bulle est dessinée ici plutôt qu'avec
+     celle de la foule — la foule est au premier plan, lui est au fond,
+     et deux bulles au même endroit se recouvriraient. */
+  /* UNE BULLE QUI TIENT DANS L'ÉCRAN. Elle était dessinée à la largeur
+     du texte, plafonnée à une fraction de l'écran — et au-delà, la
+     phrase sortait par les deux côtés. Personne ne l'avait vu parce que
+     les répliques de la foule tenaient toutes en quatre mots ; les
+     conversations et le collègue en font trois fois plus.
+
+     On coupe en DEUX LIGNES au dernier espace qui tient, et si ça ne
+     suffit toujours pas on rétrécit la police — jusqu'à 70 % et pas en
+     dessous : une bulle illisible ne vaut pas mieux qu'une bulle qui
+     déborde, autant couper la phrase plus court à l'écriture. */
+  bulle(txt, cx, bas, maxL, taille, alpha){
+    const H = Camera.H, L = Camera.L;
+    let px = Math.round(H * taille);
+    const police = t => "800 " + t + "px 'Baloo 2', system-ui, sans-serif";
+    const decouper = () => {
+      ctx.font = police(px);
+      if (ctx.measureText(txt).width <= maxL - 22) return [txt];
+      const mots = txt.split(" ");
+      let a = "", b = "";
+      for (const m of mots){
+        const essai = a ? a + " " + m : m;
+        if (!b && ctx.measureText(essai).width <= maxL - 22) a = essai;
+        else b = b ? b + " " + m : m;
+      }
+      return b ? [a, b] : [a];
+    };
+    let lignes = decouper();
+    const trop = () => Math.max(...lignes.map(l => ctx.measureText(l).width)) > maxL - 22;
+    let garde = 0;
+    while (trop() && px > Math.round(H * taille * 0.70) && garde++ < 12){
+      px -= 1; lignes = decouper();
+    }
+    ctx.font = police(px);
+    const w = Math.max(...lignes.map(l => ctx.measureText(l).width));
+    const bw = Math.min(w + 22, maxL);
+    const bh = px * (lignes.length === 2 ? 2.30 : 1.62);
+    const bx = borne(cx, bw / 2 + 6, L - bw / 2 - 6);
+    ctx.save();
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = "rgba(250,248,255,.95)";
+    arrondi(bx - bw / 2, bas - bh, bw, bh, Math.min(bh / 2, H * 0.030)); ctx.fill();
+    ctx.fillStyle = "#171226";
+    lignes.forEach((l, i) => {
+      ctx.fillText(l, bx, bas - bh / 2 + (i - (lignes.length - 1) / 2) * px * 1.12);
+    });
+    ctx.restore();
+    ctx.globalAlpha = 1; ctx.textAlign = "left";
+  },
+
+  dessinerCompere(){
+    const c = Tournee.compere;
+    if (!c) return;
+    const H = Camera.H, L = Camera.L;
+    const nom = Tournee.poseCompere();
+    const spr = nom && Images.table[nom];
+    if (!spr || !spr.naturalWidth) return;
+    const sh = H * BAR_TAILLE_HEROS * 0.94;
+    const sl = sh * spr.naturalWidth / spr.naturalHeight;
+    const x = this.ex(c.x), y = this.ey(BAR_SOL) - H * 0.022;
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,.24)";
+    ctx.beginPath(); ctx.ellipse(x, y, sl * 0.26, H * 0.011, 0, 0, 6.283); ctx.fill();
+    /* le même cran de gris que les clients : il est derrière, il ne se
+       dispute pas l'œil avec le champion */
+    ctx.globalAlpha = 0.90;
+    /* IL TANGUE. La pose `titube` est une image fixe ; sans ce roulis il
+       avait l'air d'un homme penché, pas d'un homme qui a bu. Deux
+       degrés d'amplitude, lents : au-delà on ne lisait plus la
+       silhouette. */
+    const roulis = Math.sin(c.foulee * 0.9) * (c.etat === "marche" ? 0.038 : 0.016);
+    ctx.translate(x, y); ctx.rotate(roulis); ctx.translate(-x, -y);
+    if (c.dir < 0){ ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0); }
+    ctx.drawImage(spr, x - sl / 2, y - sh, sl, sh);
+    ctx.restore();
+    if (c.dit)
+      this.bulle(c.dit, x, y - sh - H * 0.012, L * 0.80, 0.034,
+                 borne(c.ditT / 0.4, 0, 1));
   },
 
   dessinerClients(){

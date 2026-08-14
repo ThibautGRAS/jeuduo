@@ -620,8 +620,20 @@ avec un chiffon enflammé.
 **Deux sprites morts trouvés au passage** : `obj_bouteille_g` et
 `obj_bouteille_gf` ne sont référencés nulle part dans le code.
 
-**Trois plans au bar, dans le bon ordre** (v7.17) : le héros, puis les
-tabourets, puis la foule.
+**Le bar tient des conversations** (v7.22). Cinquante-six échanges, cent
+soixante-seize répliques, joués par deux voisins de la même grappe : la
+bulle passe de l'un à l'autre. Trois réservoirs — les ragots sur les gens
+présents, les faits divers du niveau 4 vus du comptoir, et le reste. Le
+contexte passe devant : pendant le coup de feu, la salle commente ce qui
+se passe.
+
+**Le collègue déambule au fond, pas frais** (v7.22). C'est l'AUTRE
+champion, celui qu'on n'a pas choisi. Il titube, s'arrête, et parle de son
+binôme — quatorze répliques par héros. Il ne touche jamais un verre : un
+test le vérifie sur la mécanique, pas sur l'intention.
+
+**Quatre plans au bar, dans le bon ordre** (v7.17, v7.22) : le collègue,
+le héros, puis les tabourets, puis la foule.
 
 Chacun a sa raison. Le héros passe **derrière** les tabourets — c'était la
 demande, qu'il circule entre le comptoir et eux. La foule passe **devant**,

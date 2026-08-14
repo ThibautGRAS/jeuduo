@@ -661,6 +661,32 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "36_bar_foule_derriere");
   }
 
+  /* 36b. LE COLLÈGUE ET UNE CONVERSATION. Deux choses qu'aucun test ne
+     juge : est-ce qu'il se lit comme l'AUTRE héros — même planche, même
+     taille, mais titubant — et est-ce que sa bulle et celle de la foule
+     tiennent ensemble à l'écran sans se recouvrir.
+     Comme pour la scène 35 : passer par dessinerVia et laisser tourner
+     huit images, sinon la caméra n'est pas recalée et personne
+     n'apparaît. */
+  {
+    const { D, canevas } = await preparer(844, 318);
+    D.amorcer(); D.Camera.mesurer(844, 318, 1);
+    D.Jeu.demarrer(3); D.Tournee.lancer(); D.Tournee.introT = 0;
+    D.Tournee.x = 0.42; D.Tournee.ambiance = 62;
+    D.Tournee.marche = 0; D.Tournee.dir = 1;
+    for (let i = 0; i < 8; i++) D.Jeu.pas(1 / 60);
+    const c = D.Tournee.compere;
+    if (c){
+      c.x = 0.56; c.dir = -1; c.etat = "marche"; c.foulee = 1.2;
+      c.dit = "Il a mis vingt minutes à choisir une bière. Vingt.";
+      c.ditT = 3.0;
+    }
+    D.Tournee.replique = { qui:D.Tournee.foule[0], txt:"Le maire est là.", t:3 };
+    D.Tournee.secousse = 0;
+    dessinerVia(D, canevas);
+    ecrire(canevas, "36b_bar_collegue");
+  }
+
   /* 37. TOUS LES ENNEMIS à la même profondeur : la seule image qui dit
      s'ils se distinguent de LOIN, ce qui est toute la question quand la
      rue se remplit. Ils étaient cinq, ils sont six. */

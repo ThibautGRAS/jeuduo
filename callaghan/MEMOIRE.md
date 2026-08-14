@@ -2260,6 +2260,41 @@ se demander de quoi elle dépend : ici, du fait qu'une foulée ne se lit que
 de profil. La vue se déclare maintenant par scène, et l'oubli est une
 erreur bruyante.
 
+#### Une phrase isolée ne fait pas un bar
+
+Le comptoir lâchait une réplique toutes les sept à treize secondes, sans
+que personne ne réponde. Chacun pensait tout haut dans son coin : une
+salle d'attente. Un bar, c'est deux personnes qui se racontent une
+histoire que tout le monde connaît déjà.
+
+Ce qui a changé n'est pas le nombre de phrases, c'est leur **forme** : un
+échange est une SUITE jouée par deux voisins de la même grappe, la bulle
+passant de l'un à l'autre avec 0,35 s de blanc. Sept secondes entre la
+question et la réponse, ce n'était plus une réponse, c'était une autre
+phrase.
+
+Deux détails qui font la différence entre un dialogue et un mécanisme :
+- **celui qui devait répondre a pu partir** en balade entre-temps. On
+  rend alors la parole à n'importe qui de sa grappe, et si la grappe s'est
+  vidée, l'échange s'arrête là. C'est ce qui arrive dans un vrai bar.
+- **le contexte passe devant.** Pendant le coup de feu ou quand le
+  champion titube, la salle commente ce qui se passe. Une conversation sur
+  le maire pendant que tout brûle sonne faux.
+
+#### Une bulle sans repli finit par déborder
+
+Elle était dessinée à la largeur du texte, plafonnée à 0,44 d'écran — et
+au-delà, la phrase sortait par les deux côtés. **Le défaut existait
+depuis le début et personne ne l'avait vu**, parce que toutes les
+répliques de la foule tenaient en quatre mots. Les conversations en font
+trois fois plus, et il est apparu à la première image d'aperçu.
+
+Une bulle a besoin de DEUX replis, pas d'un plafond : couper en deux
+lignes au dernier espace qui tient, puis rétrécir la police — jusqu'à
+70 % et pas en dessous, une bulle illisible ne vaut pas mieux qu'une
+bulle qui déborde. Et le garde-fou final est sur le TEXTE, à
+soixante-douze signes : c'est lui qu'on écrit.
+
 #### Un corps COUCHÉ passe pour un fragment détaché
 
 Le découpeur recolle au voisin les composantes trop petites pour être des

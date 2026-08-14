@@ -5487,6 +5487,80 @@ if (D){
       return jouables.length === 0 && nonDeclares.length === 0;
     })());
 
+  /* ---- le bar qui parle ---- */
+  verifier("le comptoir tient des CONVERSATIONS, pas des phrases isolées",
+    (() => {
+      /* Le bar disait une phrase toutes les sept à treize secondes, sans
+         que personne ne réponde : une salle d'attente, pas un bar. Un
+         échange est une SUITE — donc au moins deux répliques, sinon
+         c'est l'ancienne version sous un autre nom. */
+      const seaux = Object.keys(D.FOULE_DISCUSSIONS);
+      const courts = [];
+      let total = 0;
+      for (const k of seaux)
+        for (const e of D.FOULE_DISCUSSIONS[k]){
+          total += e.length;
+          if (e.length < 2) courts.push(k + " : " + e[0]);
+        }
+      messageDetail = courts.length ? "monologues : " + courts.join(", ")
+        : total + " répliques en " + seaux.reduce(
+            (n, k) => n + D.FOULE_DISCUSSIONS[k].length, 0) + " échanges";
+      return !courts.length && seaux.length >= 3 &&
+        seaux.every(k => D.FOULE_DISCUSSIONS[k].length >= 8);
+    })());
+
+  verifier("aucune réplique du bar ne déborde de sa bulle",
+    (() => {
+      /* La bulle coupe en deux lignes et rétrécit la police jusqu'à 70 %,
+         puis renonce. Mesuré sur les planches livrées : au-delà de
+         soixante-douze signes, la seconde ligne sort du cadre même à
+         taille minimale. Le garde-fou est sur le TEXTE, parce que c'est
+         lui qu'on écrit — la bulle, elle, fait déjà ce qu'elle peut. */
+      const MAX = 72;
+      const longues = [];
+      const voir = (ou, t) => { if (t.length > MAX) longues.push(ou + " : " + t.length); };
+      for (const k of Object.keys(D.FOULE_DISCUSSIONS))
+        for (const e of D.FOULE_DISCUSSIONS[k]) e.forEach(t => voir(k, t));
+      for (const k of Object.keys(D.FOULE_PHRASES))
+        D.FOULE_PHRASES[k].forEach(t => voir(k, t));
+      for (const k of Object.keys(D.COMPERE_PHRASES))
+        D.COMPERE_PHRASES[k].forEach(t => voir("collègue " + k, t));
+      messageDetail = longues.length ? longues.join(", ") : "toutes sous " + MAX + " signes";
+      return !longues.length;
+    })());
+
+  verifier("le collègue est l'AUTRE héros, et il a de quoi parler de lui",
+    (() => {
+      /* On joue un inspecteur, l'autre traîne au fond. Ses répliques sont
+         rangées par HÉROS : il faut entendre le collègue, pas une voix
+         générique. La clé se déduit du préfixe de planche, donc rien à
+         maintenir le jour où un troisième champion arrive. */
+      const cles = D.BAR_CHAMPIONS.map(c => c.prefixe.replace("bar_", ""));
+      const manque = cles.filter(k => !(D.COMPERE_PHRASES[k] || []).length);
+      const maigres = cles.filter(k => (D.COMPERE_PHRASES[k] || []).length < 8);
+      messageDetail = manque.length ? "sans répliques : " + manque.join(", ")
+        : cles.map(k => k + " " + D.COMPERE_PHRASES[k].length).join(", ");
+      return !manque.length && !maigres.length;
+    })());
+
+  verifier("le collègue ne touche à rien",
+    (() => {
+      /* Il déambule au même plan que les clients, et c'est tout : le jour
+         où il attraperait un verre, le niveau deviendrait un autre jeu.
+         Le test le vérifie sur la mécanique, pas sur l'intention — sa
+         mise à jour ne doit toucher ni aux verres ni au score. */
+      D.Jeu.demarrer(3); D.Tournee.lancer(); D.Tournee.introT = 0;
+      const c = D.Tournee.compere;
+      if (!c) return false;
+      D.Tournee.verres.push({ type:"cocktail", x:c.x, etat:D.ETAT_VERRE.POSE,
+                              t:0.2, vie:7.5, barman:"francky" });
+      const avant = D.Tournee.verres.length, pts = D.Score.points;
+      for (let i = 0; i < 120; i++) D.Tournee.majCompere(1 / 60);
+      messageDetail = "il a marché " + Math.abs(c.x - 0.5).toFixed(2) + " du bar";
+      return D.Tournee.verres.length === avant && D.Score.points === pts &&
+        c.x >= 0 && c.x <= 1;
+    })());
+
   verifier("un ennemi EN ATTENTE dit ce qui lui manque, et n'est pas jouable",
     (() => {
       /* Dix-sept sprites découpés, trois poses manquantes. Sans cette
