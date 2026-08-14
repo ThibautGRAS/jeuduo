@@ -5,8 +5,26 @@ prompts/
 ├── reference/   les images à joindre, une par personnage et par tenue
 ├── n1/ n2/ n3/ n4/   ce que la mécanique du niveau demande
 ├── communs/     les personnages qui TRAVERSENT les niveaux
+├── objets/      les objets lancés : pelle, molotov
 └── sup/         en réserve, aucun niveau ne s'en sert
 ```
+
+## Les objets
+
+`objets/` contient un fichier par objet lancé, prêt à coller. Ils étaient
+écrits à la main dans `../PROMPTS.md` — un paragraphe à retrouver et à
+recopier. **Un prompt qu'on recopie est un prompt qu'on modifie en le
+recopiant**, et il finit par diverger de ce que le jeu attend.
+
+Un projectile = TROIS images, et le prompt les nomme toutes les trois :
+`obj_<nom>` au départ du vol, `obj_<nom>_f` après la bascule à 62 % de la
+trajectoire — il arrive alors de face, plus grand — et `imp_<nom>` pour
+l'impact.
+
+**Pas de référence à joindre** : on ne fabrique pas un cocktail Molotov à
+l'identique d'une image existante, on le décrit. Une référence n'a de sens
+que pour un PERSONNAGE, dont l'identité doit se raccorder d'une planche à
+l'autre.
 
 ## Où ranger une nouvelle planche
 
