@@ -11,7 +11,7 @@ Le cadrage se prend depuis le HAUT DU CRÂNE et non depuis la boîte
 englobante — même règle que pour les barmans : une main tendue au-dessus
 de la tête ferait descendre le visage dans la carte.
 """
-import sys, pathlib
+import sys, re, pathlib
 import numpy as np
 from PIL import Image
 from scipy import ndimage
@@ -80,10 +80,16 @@ def portrait(src, dst):
 
 if __name__ == "__main__":
     dossier = pathlib.Path(sys.argv[1])
-    for pref in ("depar", "dsk", "jubi", "abbe", "bruh"):
+    # LA LISTE VIENT DU SOCLE, pas d'une copie : elle était recopiée ici,
+    # et Xavier n'aurait pas eu de portrait sans qu'on s'en aperçoive —
+    # le chargeur, lui, en demande un pour chaque nom d'ENNEMIS_RUELLE.
+    socle = (pathlib.Path(__file__).parent / "parts" / "a_socle.js").read_text(
+        encoding="utf-8")
+    ligne = re.search(r"const ENNEMIS_RUELLE = \[(.*?)\];", socle, re.S).group(1)
+    for pref in re.findall(r'"([a-z0-9_]+)"', ligne):
         src = dossier / f"enn_{pref}_run1.webp"
         if not src.exists():
             sys.exit(f"ABANDON : {src} manquant")
         c = portrait(src, dossier / f"port_{pref}.webp")
         print(f"  port_{pref}  carré source {c} px -> {COTE}x{COTE}")
-    print("5 portraits écrits")
+    print("portraits écrits")

@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.19";
+const VERSION = "7.20";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -930,7 +930,24 @@ const NOMS_NIVEAUX = {
 function nomNiveau(n){ return (NOMS_NIVEAUX[n] || {}).nom || "LES ENQUÊTES DE CALLAGHAN"; }
 function sensNiveau(n){ return (NOMS_NIVEAUX[n] || {}).sens || ""; }
 
-const ENNEMIS_RUELLE = ["depar", "dsk", "jubi", "abbe", "bruh"];
+/* XAVIER est dans la liste de CHARGEMENT mais pas dans ENNEMIS : ses
+   images existent, sa mécanique attend trois poses. Voir
+   ENNEMIS_EN_ATTENTE juste en dessous — c'est la seule façon de garder
+   dix-sept sprites découpés dans le dépôt sans qu'ils soient du poids
+   mort anonyme, et sans le faire apparaître dans une horde où il
+   mourrait sans pose de mort. */
+const ENNEMIS_RUELLE = ["depar", "dsk", "jubi", "abbe", "bruh", "xavier"];
+/* CE QUI MANQUE POUR L'ACTIVER, écrit noir sur blanc. La table
+   ENNEMIS_INCOMPLETS ne pouvait pas le porter : elle exige une entrée
+   dans ENNEMIS, donc une place dans la dernière horde, donc une mort
+   sans pose de mort.
+
+   Le jour où les trois poses arrivent : les déplacer dans les listes
+   normales, vider cette table, ajouter son entrée à ENNEMIS et sa place
+   dans les vagues. Un test récite cette liste. */
+const ENNEMIS_EN_ATTENTE = {
+  xavier: ["chute1", "chute2", "sol"],
+};
 /* Chacun a en plus les poses de SA mécanique. Elles ne sont pas
    communes : Depardiahree trébuche et lance une bouteille, DSKKK
    garde son visage, personne ne fait les deux. La table les déclare
@@ -945,6 +962,11 @@ const POSES_PROPRES = {
      tous les personnages n'ont pas la même richesse. */
   abbe: ["arret", "arme1", "arme2", "lance", "lache", "plie"],
   bruh: ["arret", "arme1", "arme2", "lance", "lache", "plie"],
+  /* Xavier : tout ce qui est découpé sauf `run1`, qui vient de la liste
+     de base. Ses trois manquantes sont dans ENNEMIS_EN_ATTENTE. */
+  xavier: ["run2", "run3", "run4", "run5", "run6",
+           "hit_torse", "hit_epaule", "hit_jambe", "hit_tete",
+           "arret", "arme1", "arme2", "lance", "lache", "plie", "bond"],
 };
 /* Ce qui manque à qui, écrit noir sur blanc : un test le récite, de
    sorte qu'un ennemi à moitié fini ne puisse pas être oublié à
@@ -957,7 +979,10 @@ const ENNEMIS_INCOMPLETS = {};
 /* Plus aucune planche de base ne manque. La table reste : c'est elle qui
    autorise un ennemi à n'avoir que sa pose de course, et le test dit en
    clair lesquels sont incomplets. */
-const POSES_BASE_MANQUANTES = {};
+/* Xavier n'a pas ses trois poses de mort : la liste de base ne lui
+   demande donc que `run1`. Le reste de ce qu'il a est déclaré dans
+   POSES_PROPRES. */
+const POSES_BASE_MANQUANTES = { xavier: true };
 /* REPLI DE POSE. Tous les personnages n'ont pas la même richesse : DSKKK
    a une seconde pose au sol où il s'affaisse, les autres non. Plutôt que
    de conditionner la logique à l'existence d'un fichier, la logique
@@ -977,6 +1002,8 @@ const REPLI_POSE = {
    c'est arrivé deux fois sur ce projet. */
 const PORTRAITS_RUELLE = ENNEMIS_RUELLE.map(e => "port_" + e);
 const OBJETS_RUELLE = [
+  /* la pelle de Xavier : découpée, chargée, pas encore lancée */
+  "obj_pelle", "obj_pelle_f",
   "obj_bouteille", "obj_pave", "obj_encensoir", "obj_conserve", "obj_bouteille_g",
   "obj_bouteille_f", "obj_pave_f", "obj_encensoir_f", "obj_conserve_f", "obj_bouteille_gf",
   "imp_vin", "imp_pierre", "imp_encens", "imp_conserve", "imp_bois",

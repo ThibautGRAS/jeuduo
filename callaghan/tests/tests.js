@@ -5466,11 +5466,53 @@ if (D){
              D.POSES_PROPRES.depar.indexOf("sol2") < 0;
     })());
 
-  verifier("plus aucune planche de base ne manque",
+  verifier("une planche de base manquante est DÉCLARÉE en attente",
     (() => {
+      /* Le test exigeait la table VIDE. Xavier l'a rouverte : ses six
+         poses de course et ses quatre encaissements existent, ses trois
+         poses de MORT non — et la liste de base les demande toutes les
+         treize. Tant qu'il n'est pas jouable, il est légitimement dans
+         cette table.
+
+         La promesse tient donc autrement : celui qui y figure doit être
+         déclaré en attente, avec ce qui lui manque. Un ennemi JOUABLE —
+         donc présent dans ENNEMIS — n'a plus le droit d'y être. */
       const manquants = Object.keys(D.POSES_BASE_MANQUANTES);
-      messageDetail = manquants.length ? "encore attendues : " + manquants.join(", ") : "";
-      return manquants.length === 0;
+      const jouables = manquants.filter(k => D.ENNEMIS[k]);
+      const nonDeclares = manquants.filter(k => !(D.ENNEMIS_EN_ATTENTE || {})[k]);
+      messageDetail = manquants.length
+        ? manquants.map(k => k + " : attend "
+            + ((D.ENNEMIS_EN_ATTENTE || {})[k] || []).join(", ")).join(" | ")
+        : "";
+      return jouables.length === 0 && nonDeclares.length === 0;
+    })());
+
+  verifier("un ennemi EN ATTENTE dit ce qui lui manque, et n'est pas jouable",
+    (() => {
+      /* Dix-sept sprites découpés, trois poses manquantes. Sans cette
+         table ils seraient soit du poids mort anonyme sur le disque, soit
+         un méchant qui apparaît dans la dernière horde et meurt SANS POSE
+         DE MORT — le rendu se replie alors sur `run1` et le cadavre
+         continue de courir.
+         ENNEMIS_INCOMPLETS ne pouvait pas le porter : elle exige une
+         entrée dans ENNEMIS, et la dernière horde exige que tout ENNEMIS
+         y figure. */
+      const att = D.ENNEMIS_EN_ATTENTE || {};
+      const cles = Object.keys(att);
+      messageDetail = cles.length
+        ? cles.map(k => k + " : " + att[k].join(", ")).join(" | ")
+        : "aucun ennemi en attente";
+      return cles.every(k =>
+        /* ses images sont chargées… */
+        D.ENNEMIS_RUELLE.indexOf(k) >= 0 &&
+        /* …il n'est pas jouable… */
+        !D.ENNEMIS[k] &&
+        /* …ce qui lui manque n'est pas déclaré comme présent… */
+        att[k].every(po => (D.POSES_PROPRES[k] || []).indexOf(po) < 0) &&
+        /* …et ce qui lui reste existe vraiment sur le disque */
+        (D.POSES_PROPRES[k] || []).every(po =>
+          fs.existsSync(path.join(RACINE, "img", "n4",
+            "enn_" + k + "_" + po + ".webp"))));
     })());
 
   /* ---- le placement des habitants (niveau 2) ---- */

@@ -1,0 +1,14 @@
+{
+  "_": "Xavier, planche de course et d'encaissement — celle que mechants.txt demande. Original : planches/n4/xavier-course.webp. Dix poses, deux rangées de cinq, la pelle tenue dans TOUTES les poses : c'est ce qui la fait préférer à xavier-course-sans-pelle, où seule une pose sur dix la porte.",
+  "__echelle": "L'ÉCHELLE SE CALE SUR LA TÊTE, pas sur la hauteur du sujet. Mesuré : tête de 58 px sur enn_jubi_run1 et enn_abbe_run1 pour un sujet de 332 px, soit 17 %. Sur cette planche la tête fait 80 px, donc échelle 58/80 = 0,725, donc hauteur_ref = 449 x 0,725 = 326 avec run3 comme témoin. Caler sur la hauteur du sujet donnait un résultat faux de 3 % : les trois planches de Xavier n'ont pas les mêmes proportions — 412 px debout sur l'une contre 510 sur l'autre pour une tête presque identique.",
+  "planche": "planches/n4/xavier-course.webp",
+  "reference": "img/n4/enn_jubi_run1.webp",
+  "hauteur_ref": 326,
+  "sortie": "img/n4",
+  "prefixe": "enn_xavier",
+  "temoin": 3,
+  "rangees": [
+    ["run1", "run2", "run3", "run4", "run5"],
+    ["run6", "hit_torse", "hit_epaule", "hit_jambe", "hit_tete"]
+  ]
+}

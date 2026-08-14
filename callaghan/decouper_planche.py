@@ -73,7 +73,14 @@ def composantes(a, coupures):
     # qui empêche le générateur de les faire déborder l'une sur l'autre.
     # La famille magenta se reconnaît à sa forme : rouge et bleu dominent
     # nettement le vert.
-    magenta = (r > g + 120) & (b > g + 120)
+    # ÉCART DE 120 ET NON DE 150 : mesuré sur les planches de course de
+    # Xavier, les bandes de cadre sont à (95, 1, 85) — un magenta si
+    # sombre que l'écart au vert n'y est que de 94, et onze bandes
+    # pleine hauteur passaient pour des poses. Le rapport MULTIPLICATIF
+    # les attrape sans risque pour les teintes chaudes : une peau ou une
+    # brique a du vert, pas un magenta pur.
+    magenta = ((r > g + 120) & (b > g + 120)) | \
+              ((r > 40) & (b > 30) & (g < 90) & (r + b > 3 * g))
     obj = ndimage.binary_opening(~magenta, np.ones((5, 5)))
     # Les coupures séparent deux poses qui se touchent. Une coupure peut
     # être LIMITÉE EN HAUTEUR : une colonne coupée sur toute la planche
