@@ -1746,6 +1746,77 @@ LE MOLOTOV N'EST DESSINÉ QUE DANS `arret`, `arme1` ET `arme2`. Partout ailleurs
         "entièrement dans sa case sans déborder sur les voisines"),
     ],
   },
+  # XAVIER LE TERRASSIER. Il n'est pas encore dans ENNEMIS_RUELLE : sa
+  # planche de chute manque, et sans elle le rendu se replie sur `run1` —
+  # un mort qui continue de courir. Sa fiche est ici pour que le prompt
+  # existe AVANT les images, et non l'inverse : c'est ce qui a manqué aux
+  # cinq autres, dont les sprites sont arrivés avant qu'on sache ce que le
+  # jeu leur demanderait.
+  #
+  # Trois planches livrées, treize poses découpées, TROIS manquantes —
+  # chute1, chute2, sol. `mechant xavier chute1 chute2 sol` sort le prompt
+  # qui ne demande que celles-là.
+  "xavier": {
+    "nom": "XAVIER LE TERRASSIER",
+    "note": """Sa planche de course et d'encaissement est à part : mechants.txt.""",
+    "blocs": """CE QU'IL TIENT : une PELLE DE TERRASSIER — long manche de bois clair terminé par une poignée en D, fer métallique large en pointe de bouclier, taché de rouge séché. Le même objet, dessiné à l'identique, dans `arret`, `arme1`, `arme2` et `bond`.
+
+LA POSE `arme2` EST CELLE QUE LE JOUEUR VISE. Le jeu peint une cible ronde sur l'objet brandi, à une position MESURÉE sur le sprite : elle est solidaire du dessin. La pelle doit donc être levée HAUT au-dessus de la tête, écartée de la silhouette, entièrement lisible, et être le point le plus haut de la pose. Collée au corps ou masquée par le crâne, la cible devient injouable.
+
+LA PELLE N'EST DESSINÉE QUE DANS `arret`, `arme1`, `arme2` ET `bond`. Partout ailleurs les mains sont VIDES : le jeu dessine le projectile lui-même dès qu'il a quitté la main, et un homme qui tombe lâche sa pelle.""",
+    "poses": [
+      ("arret",
+        "IL S'ARRÊTE NET : les deux pieds au sol, buste tourné vers "
+        "nous, la pelle tenue à une main le long du corps, fer vers le "
+        "bas. Il regarde le joueur. Aucun élan, aucune foulée"),
+      ("arme1",
+        "IL VISE : la pelle ramenée en arrière à hauteur de hanche, fer "
+        "vers l'arrière, tandis que l'autre bras se tend vers nous pour "
+        "pointer la cible. Poids sur la jambe arrière, buste ouvert"),
+      ("arme2",
+        "IL BRANDIT LA PELLE AU-DESSUS DE LA TÊTE : bras tendu à la "
+        "verticale, la pelle entièrement dégagée du crâne et du buste, "
+        "poignée en haut, prête à être jetée. C'est le point le plus "
+        "haut de la pose et celui que le joueur vise"),
+      ("lance",
+        "IL A LANCÉ : le bras se détend vers NOUS, main OUVERTE et "
+        "VIDE — la pelle vient de partir et n'est PAS dessinée. Buste "
+        "projeté en avant, épaule du bras lanceur en avant, jambe "
+        "arrière décollée"),
+      ("lache",
+        "LE JET A ÉTÉ COUPÉ : les deux mains sont vides, les bras "
+        "retombent en travers du corps, une main se referme sur "
+        "l'avant-bras de l'autre. Il regarde ses mains vides, buste "
+        "encore tourné vers nous"),
+      ("plie",
+        "PLIÉ EN DEUX, TÊTE OFFERTE : il se casse en avant, les deux "
+        "avant-bras remontés devant la poitrine, mains vides et "
+        "ouvertes. La NUQUE et le haut du crâne sont au point le plus "
+        "haut de la silhouette et parfaitement dégagés"),
+      ("bond",
+        "IL FRAPPE LA BARRICADE : les deux pieds écartés, plantés, la "
+        "pelle traverse l'image à l'horizontale devant lui, à deux "
+        "mains, fer vers la gauche. Buste vrillé, tout le poids dans "
+        "le coup. Il ne saute pas : il abat"),
+      ("chute1",
+        "IL PERD L'ÉQUILIBRE : un genou vient de toucher le sol, "
+        "l'autre jambe encore tendue en arrière, une main cherche le "
+        "sol devant lui, l'autre bras part en arrière. La pelle n'est "
+        "PLUS dans ses mains et n'est pas dessinée — il l'a lâchée. "
+        "Buste effondré vers l'avant, tête basse"),
+      ("chute2",
+        "IL S'AFFAISSE : le corps part sur le côté, hanche et épaule "
+        "presque au sol, les deux jambes se dérobent, les bras "
+        "n'accompagnent plus rien. Mains vides et ouvertes, tête "
+        "rejetée. Plus aucune tension musculaire"),
+      ("sol",
+        "AU SOL, IMMOBILE : allongé sur le côté, membres relâchés, un "
+        "bras sous le corps, lunettes encore sur le nez, visage tourné "
+        "vers nous. Mains vides, aucune pelle. La pose est COUCHÉE "
+        "donc large et basse : elle doit tenir entièrement dans sa "
+        "case sans déborder sur les voisines"),
+    ],
+  },
 }
 
 MECHANT_NOTE_COMMUNE = """Cette planche est la MÊME pour les cinq méchants du niveau 4 : seule
@@ -1843,9 +1914,16 @@ haut de la planche. Le texte blanc laisse un halo qui se mélange au fond.
 
 
 def rangees(n):
-    """Comment n poses se répartissent sur DEUX rangées : 10 donne 5 et 5,
-    9 donne 5 et 4, 8 donne 4 et 4. La rangée du haut ne dépasse jamais
-    RANGEE_MAX, et c'est ce qui plafonne une planche à dix poses."""
+    """Comment n poses se répartissent : 10 donne 5 et 5, 9 donne 5 et 4,
+    8 donne 4 et 4. La rangée du haut ne dépasse jamais RANGEE_MAX, et
+    c'est ce qui plafonne une planche à dix poses.
+
+    JUSQU'À QUATRE POSES, UNE SEULE RANGÉE — la règle commune le dit
+    depuis le début, et un complément de trois poses annoncé « deux
+    rangées de 2 et 1 » laissait une case vide au milieu du magenta, sans
+    voisine pour juger de l'échelle."""
+    if n <= 4:
+        return n, 0
     haut = (n + 1) // 2
     if haut > RANGEE_MAX:
         sys.exit(f"ABANDON : {n} poses ne tiennent pas sur deux rangées de "
@@ -1853,9 +1931,15 @@ def rangees(n):
     return haut, n - haut
 
 
-def fabriquer_mechant(cle=None):
+def fabriquer_mechant(cle=None, seulement=None):
     """Le prompt d'une planche de méchant. `cle` à None = la planche
-    COMMUNE aux cinq, celle où seule l'image jointe change."""
+    COMMUNE aux cinq, celle où seule l'image jointe change.
+
+    `seulement` réduit la planche à quelques poses NOMMÉES. Une planche
+    livrée est rarement complète : celle de Xavier a donné treize poses
+    sur seize, et redemander les treize pour obtenir les trois qui
+    manquent redessine le personnage à l'identique — donc jamais tout à
+    fait à l'identique. On ne redemande que le trou."""
     if cle is None:
         poses = POSES_MECHANT_COMMUNES
         note, blocs = MECHANT_NOTE_COMMUNE, MECHANT_BLOCS_COMMUNS
@@ -1867,16 +1951,42 @@ def fabriquer_mechant(cle=None):
         mc = MECHANTS[cle]
         poses, note, blocs = mc["poses"], mc["note"], mc["blocs"]
         sujet, ref = "de " + mc["nom"], cle
+    if seulement:
+        connues = [p[0] for p in poses]
+        inconnues = [p for p in seulement if p not in connues]
+        if inconnues:
+            sys.exit(f"ABANDON : pose(s) inconnue(s) « {', '.join(inconnues)} ».\n"
+                     f"Cette planche connaît : {', '.join(connues)}")
+        poses = [p for p in poses if p[0] in seulement]
+        # UN BLOC QUI NE PARLE QUE DES POSES ÉCARTÉES DEVIENT FAUX. « La
+        # pelle n'est dessinée que dans arret, arme1, arme2 » n'a rien à
+        # faire sur une planche de chutes où elle n'apparaît jamais : on
+        # garde les paragraphes qui ne nomment aucune pose, et ceux qui
+        # nomment au moins une pose retenue.
+        gardes = []
+        for para in blocs.split("\n\n"):
+            nommees = [c for c, _ in MECHANTS[cle]["poses"]
+                       if "`" + c + "`" in para]
+            if not nommees or any(c in seulement for c in nommees):
+                gardes.append(para)
+        blocs = "\n\n".join(gardes)
     n = len(poses)
     haut, bas = rangees(n)
     cles = [p[0] for p in poses]
-    dispo = REGLES_MECHANT_DISPO.format(
-        n=n, haut=", ".join(cles[:haut]), bas=", ".join(cles[haut:]))
+    dispo = (REGLES_MECHANT_DISPO.format(
+                 n=n, haut=", ".join(cles[:haut]), bas=", ".join(cles[haut:]))
+             if bas else
+             f"DISPOSITION — {n} POSES, UNE SEULE RANGÉE, de gauche à droite :\n"
+             f"{', '.join(cles)}.")
     details = "\n".join(f"{i}. [{p[0]}] {p[1]}"
                         for i, p in enumerate(poses, 1))
     regles = (REGLES_MECHANT_AVANT + "\n\n" + dispo + "\n"
               + REGLES_MECHANT_APRES.format(n=n))
-    return f"""Planche de {n} poses {sujet}, sur DEUX RANGÉES de {haut} et {bas}.
+    ordre = ("dans l'ordre de lecture (rangée du haut puis rangée du bas)"
+             if bas else "de gauche à droite")
+    dispo_titre = (f"sur DEUX RANGÉES de {haut} et {bas}" if bas
+                   else "côte à côte sur UNE SEULE RANGÉE")
+    return f"""Planche de {n} poses {sujet}, {dispo_titre}.
 Image de référence à joindre : reference/{ref}.png
 {note}
 
@@ -1884,7 +1994,7 @@ VUE : {VUE_MECHANT}
 
 {MODES["poses"]}
 
-LES POSES, dans l'ordre de lecture (rangée du haut puis rangée du bas) :
+LES POSES, {ordre} :
 {details}
 
 {blocs}
@@ -1942,11 +2052,13 @@ def tout():
     # huit poses nommées [course1] à [chute2] quand le jeu en charge dix-huit
     # à dix-neuf, sous d'autres noms. Leur fabrique tire la liste du besoin
     # réel du niveau, et un test la compare aux listes du code.
+    # XAVIER est dans la table, comme les cinq autres : son prompt sortait
+    # du catalogue générique et demandait donc [course1] à [chute2] quand
+    # le jeu attend `run1`, `hit_tete`, `arme2`… Ses deux fichiers
+    # `xavier-1` et `xavier-2` disparaissent au profit d'un `xavier.txt`.
+    for f in d.glob("xavier-*.txt"):
+        if MARQUE in f.read_text(encoding="utf-8"): f.unlink()
     ecrire_mechants(d)
-    # XAVIER a les mêmes poses de base que les autres — treize, imposées
-    # par POSES_ENNEMI — plus les trois du LANCER, qu'il partage avec
-    # l'Abbé et BruHell. 
-    ecrire_jeu(d, "xavier", ["course", "touche", "chute", "lancer_objet"], VUE_MECHANT)
     # les mouvements de réserve : un prompt commun aux deux héros, comme
     # partout ailleurs. Ils n'étaient dupliqués que parce que le rappel
     # écrit les distinguait — et il n'existe plus.
@@ -2069,8 +2181,10 @@ def main():
             sys.exit("usage : planches.py reference <personnage>")
         reference(sys.argv[2])
     elif cmd == "mechant":
-        # sans argument : la planche COMMUNE aux cinq
-        print(fabriquer_mechant(sys.argv[2] if len(sys.argv) > 2 else None))
+        # sans argument : la planche COMMUNE aux cinq. Les arguments qui
+        # suivent le nom réduisent la planche à ces poses-là.
+        qui = sys.argv[2] if len(sys.argv) > 2 else None
+        print(fabriquer_mechant(qui, sys.argv[3:] or None))
     elif cmd == "mouvements":
         for k, v in sorted(MOUVEMENTS.items()):
             print(f"  {k:10s} {len(v['phases'])} phase(s)  {v['titre']}")

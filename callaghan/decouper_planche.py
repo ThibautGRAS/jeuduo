@@ -185,6 +185,20 @@ def main(cfg):
     al = np.asarray(imref.convert("RGBA"))[..., 3]
     ys = np.nonzero(al.max(axis=1) > 16)[0]
     haut_ref = int(ys.max() - ys.min() + 1)
+    # DEUX PLANCHES DU MÊME PERSONNAGE PEUVENT NE PAS AVOIR LA MÊME
+    # ÉCHELLE. Mesuré sur Xavier : 412 px debout sur la planche de base
+    # contre 510 sur celle du lancer, soit 1,24 fois plus grand pour le
+    # même homme. Caler les deux sur la même hauteur de référence lui
+    # aurait fait changer de taille en jeu selon qu'il court ou qu'il
+    # lance.
+    #
+    # `hauteur_ref` corrige l'écart sans toucher au canevas : on garde la
+    # taille d'image du personnage de référence, et on ne change que la
+    # hauteur de sujet visée. Le calcul est à faire une fois, à la main,
+    # et il s'écrit dans la config — c'est une MESURE, elle doit rester
+    # relisible.
+    if cfg.get("hauteur_ref"):
+        haut_ref = int(cfg["hauteur_ref"])
 
     # le témoin est la première pose de la première rangée
     # LE TÉMOIN SE CHOISIT. Il était figé sur la première pose de la

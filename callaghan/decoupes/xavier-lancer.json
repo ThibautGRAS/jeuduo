@@ -1,0 +1,14 @@
+{
+  "_": "Xavier, planche du lancer. Original : planches/n4/xavier-lancer.webp. Sept figures et la pelle en vol, huit composantes. La pelle est cueillie à part (obj_pelle) : ce n'est pas une pose, c'est le projectile.",
+  "__echelle": "Cette planche est dessinée 1,24 fois plus grande que celle de base : 510 px debout contre 412. Témoin = arret (511 px) et hauteur_ref = 340 au lieu de 332, ce qui donne 0,6654 au lieu de 0,8238 — sans quoi Xavier grandissait d'un quart en armant son bras.",
+  "__arme2": "arme2 est la pelle BRANDIE AU-DESSUS DE LA TÊTE, pas la pelle ramenée au bas du dos : c'est la pose qui dure 0,85 s et qui porte la cible. Collée au corps, la cible devenait injouable. Position mesurée sur le sprite : x 0,457 y 0,103.",
+  "planche": "planches/n4/xavier-lancer.webp",
+  "reference": "img/n4/enn_jubi_run1.webp",
+  "hauteur_ref": 340,
+  "sortie": "img/n4",
+  "prefixe": "enn_xavier",
+  "temoin": 1,
+  "rangees": [
+    ["arret", "arme2", "arme1", "lance", null, "lache", "plie", null]
+  ]
+}

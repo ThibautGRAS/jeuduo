@@ -5722,14 +5722,53 @@ if (D){
          ordinaire. Il n'est PAS encore dans ENNEMIS — le déclarer avant
          que ses images existent ferait échouer le chargeur, qui exige que
          chaque pose annoncée soit sur le disque. */
+      /* Le compte de planches était figé à DEUX, ce qui n'était pas une
+         exigence mais le reste du découpage automatique du catalogue
+         générique. Il en a une seule maintenant — sa mécanique et sa
+         chute — plus la planche commune aux méchants pour sa course. Ce
+         qui compte n'est pas le nombre de fichiers, c'est que son prompt
+         demande les poses que le jeu attend. */
       const d = path.join(RACINE, "prompts");
       const ref = fs.existsSync(path.join(d, "reference", "xavier.png"));
-      const pl = fs.readdirSync(path.join(d, "n4"))
-        .filter(n => n.startsWith("xavier"));
+      const f = path.join(d, "n4", "xavier.txt");
       const fiche = fs.readFileSync(
         path.join(RACINE, "PERSONNAGES.md"), "utf8");
-      messageDetail = pl.length + " planche(s), référence " + (ref ? "oui" : "NON");
-      return ref && pl.length >= 2 && /XAVIER LE TERRASSIER/.test(fiche);
+      const poses = fs.existsSync(f)
+        ? (fs.readFileSync(f, "utf8").match(/^\d+\. \[[a-z0-9_]+\]/gm) || [])
+            .map(x => x.slice(x.indexOf("[") + 1, -1))
+        : [];
+      /* les trois qui manquaient au moment du découpage : sans elles, un
+         Xavier abattu se replie sur `run1` et continue de courir */
+      const chute = ["chute1", "chute2", "sol"].every(p2 => poses.indexOf(p2) >= 0);
+      messageDetail = poses.length + " poses demandées, référence "
+        + (ref ? "oui" : "NON");
+      return ref && chute && poses.length >= 10 &&
+        /XAVIER LE TERRASSIER/.test(fiche);
+    })());
+
+  verifier("la découpe de Xavier se REJOUE d'une commande",
+    (() => {
+      /* Treize sprites découpés d'une main pendant une session : les
+         coordonnées, l'échelle et le choix des poses ne vivaient que dans
+         la conversation. Elles vivent maintenant dans deux configs, et
+         les planches d'origine sont archivées — la découpe se rejoue le
+         jour où les trois poses de chute arrivent.
+
+         La mesure qui justifie deux configs : les deux planches ne sont
+         PAS à la même échelle. 412 px debout sur celle de base contre 510
+         sur celle du lancer, soit 1,24 fois plus grand pour le même
+         homme. Une seule config lui aurait fait changer de taille en
+         armant son bras. */
+      const d = path.join(RACINE, "decoupes");
+      if (!fs.existsSync(d)) return false;
+      const cfgs = ["xavier-base.json", "xavier-lancer.json"]
+        .map(n => path.join(d, n));
+      if (!cfgs.every(f => fs.existsSync(f))) return false;
+      const lus = cfgs.map(f => JSON.parse(fs.readFileSync(f, "utf8")));
+      messageDetail = lus.map(c => path.basename(c.planche)).join(", ");
+      return lus.every(c => fs.existsSync(path.join(RACINE, c.planche))) &&
+        /hauteur_ref/.test(fs.readFileSync(path.join(RACINE, "decouper_planche.py"), "utf8")) &&
+        lus.some(c => c.hauteur_ref);
     })());
 
   verifier("le projectile de BruHell est signalé comme À CORRIGER",

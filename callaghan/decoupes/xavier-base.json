@@ -1,0 +1,12 @@
+{
+  "_": "Xavier, planche de base. Original : planches/n4/xavier-base.webp. Douze poses dessinées, six retenues : le jeu n'a pas d'état pour un doigt pointé ni pour une pelle traînée au sol. Témoin = run1 (403 px sur la planche) contre 332 px sur enn_jubi_run1, donc échelle 0,8238 : Xavier fait la taille des autres méchants.",
+  "planche": "planches/n4/xavier-base.webp",
+  "reference": "img/n4/enn_jubi_run1.webp",
+  "sortie": "img/n4",
+  "prefixe": "enn_xavier",
+  "temoin": 1,
+  "rangees": [
+    ["run1", "run2", "run3", "run4", "hit_tete", "hit_torse"],
+    [null, null, null, "bond", null, null]
+  ]
+}
