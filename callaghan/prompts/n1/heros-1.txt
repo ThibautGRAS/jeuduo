@@ -82,7 +82,8 @@ haut de la planche. Le texte blanc laisse un halo qui se mélange au fond.
   entre chaque case. Échelle et taille de tête IDENTIQUES sur toutes les
   figures.
 - DISPOSITION : jusqu'à quatre poses, UNE SEULE RANGÉE. À partir de
-  cinq, DEUX RANGÉES de taille égale — par exemple 4 + 4 pour huit poses,
+  cinq, DEUX RANGÉES de taille égale et CINQ POSES AU MAXIMUM PAR
+  RANGÉE — 5 + 5 pour dix poses, 5 + 4 pour neuf, 4 + 4 pour huit,
   3 + 2 pour cinq. Une rangée de huit oblige à rétrécir chaque sujet pour
   tout faire tenir, et les têtes cessent d'être de la même taille : c'est
   le défaut le plus coûteux, il ne se rattrape pas au découpage.

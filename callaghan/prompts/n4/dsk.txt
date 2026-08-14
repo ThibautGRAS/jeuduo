@@ -1,8 +1,6 @@
-Planche de 10 poses d'un même personnage, sur DEUX RANGÉES de 5 et 5.
-Image de référence à joindre : reference/<le méchant voulu>.png
-Cette planche est la MÊME pour les cinq méchants du niveau 4 : seule
-l'image jointe change. Chacun a ensuite sa planche propre — depar.txt,
-dsk.txt, jubi.txt, abbe.txt, bruh.txt — pour sa chute et sa mécanique.
+Planche de 9 poses de DSKKK, sur DEUX RANGÉES de 5 et 4.
+Image de référence à joindre : reference/dsk.png
+Sa planche de course et d'encaissement est à part : mechants.txt.
 
 VUE : de TROIS QUARTS FACE, le personnage tourné vers le spectateur et remontant la ruelle DANS SA DIRECTION. On voit son visage, sa poitrine, et ses jambes qui avancent vers nous. Surtout PAS de profil : il ne traverse pas l'écran, il vient sur nous.
 
@@ -27,25 +25,17 @@ vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
 LES POSES, dans l'ordre de lecture (rangée du haut puis rangée du bas) :
-1. [run1] COURSE, APPUI GAUCHE : tout le poids sur la jambe GAUCHE, pied à plat sous le corps ; la jambe DROITE est lancée vers nous, genou haut, cuisse vue en raccourci. Bras opposés, coudes pliés
-2. [run2] COURSE, SUSPENSION : les DEUX pieds sont décollés du sol. La jambe DROITE descend vers le sol devant lui, la jambe GAUCHE part loin en arrière, semelle visible. Buste penché en avant
-3. [run3] COURSE, CONTACT DROIT : la jambe DROITE vient de se poser devant, genou légèrement fléchi ; la jambe GAUCHE est encore tendue loin en arrière, talon décollé
-4. [run4] COURSE, APPUI DROIT : l'exact inverse de la première pose. Tout le poids sur la jambe DROITE, et c'est la jambe GAUCHE qui est lancée vers nous, genou haut
-5. [run5] COURSE, SUSPENSION INVERSE : les deux pieds décollés, mais c'est la jambe GAUCHE qui descend devant et la DROITE qui part en arrière. Si on superposait cette pose et la seconde, les jambes ne coïncideraient pas
-6. [run6] COURSE, CONTACT GAUCHE : la jambe GAUCHE vient de se poser devant, la DROITE tendue loin en arrière. Le cycle boucle ensuite sur la première pose
-7. [hit_torse] IL ENCAISSE EN PLEINE POITRINE : le buste est rejeté en arrière, les deux épaules remontent, les deux bras s'écartent vers l'arrière, la tête bascule. Les jambes sont encore en foulée — il ralentit, il ne tombe pas
-8. [hit_epaule] IL ENCAISSE À L'ÉPAULE : une seule épaule est chassée en arrière, le buste pivote de ce côté, ce bras part en arrière et pend ; l'autre main monte vers l'épaule touchée. Tête inclinée vers l'épaule. Il reste debout
-9. [hit_jambe] IL ENCAISSE À LA JAMBE : un genou se dérobe vers l'intérieur, il se casse à la hanche, une main descend vers la cuisse touchée, l'autre bras cherche l'équilibre. Le buste reste tourné vers nous. Il ne tombe pas
-10. [hit_tete] IL ENCAISSE À LA TÊTE : la tête part violemment en arrière, menton levé, les deux mains montent vers le visage sans le toucher, les épaules remontent. Aucune blessure dessinée
+1. [garde1] EN GARDE, PREMIER TEMPS : il AVANCE en se protégeant — les deux avant-bras serrés et relevés DEVANT LE VISAGE, coudes collés, le visage entièrement caché derrière la garde, seuls les yeux dépassent. Le bas du corps marche : jambe GAUCHE en avant, pied posé
+2. [garde2] EN GARDE, SECOND TEMPS : le HAUT du corps est identique à la pose précédente, garde inchangée devant le visage. Seules les jambes changent : c'est la jambe DROITE qui est en avant. Ces deux poses s'alternent pour faire la marche, elles doivent donc se distinguer UNIQUEMENT par les pieds
+3. [garde_casse] SA GARDE SE BRISE : les deux avant-bras sont chassés violemment vers l'extérieur, le visage est exposé pour la première fois, bouche ouverte, sourcils hauts. Il est encore debout, jambes écartées
+4. [sonne] IL EST SONNÉ : il ne se protège plus DU TOUT. Les deux bras pendent le long du corps, épaules basses, genoux légèrement fléchis, tête ballante en avant, regard vide. Arrêté, offert
+5. [bond] IL BONDIT SUR NOUS : les deux pieds ont quitté le sol très haut, les jambes se détendent vers le spectateur, les deux bras sont levés au-dessus de la tête, bouche ouverte. Vu en légère contre-plongée — il arrive droit sur la caméra. C'est la pose la plus haute de la planche
+6. [chute1] IL S'EFFONDRE, PREMIER TEMPS : le corps part en arrière et de côté, un genou touche le sol, une main cherche le sol, l'autre bras est encore en l'air, tête basse. Il est encore tendu
+7. [chute2] IL S'EFFONDRE, SECOND TEMPS : à mi-chemin du sol, hanche et épaule presque posées, les membres se relâchent, la tête part en arrière. Plus aucune tension
+8. [sol] AU SOL, IMMOBILE : allongé sur le côté, membres relâchés, un bras sous le corps, visage visible et tourné vers nous. La pose est COUCHÉE donc large et basse : elle doit tenir entièrement dans sa case sans déborder sur les voisines
+9. [sol2] AU SOL, AFFAISSÉ : la même position couchée que la pose précédente, mais TOUT s'est relâché — la tête a retombé, les épaules se sont écrasées, les membres sont plus étalés. Elle doit être visiblement PLUS MOLLE que `sol`, sinon les deux poses se ressemblent et l'affaissement ne se voit pas
 
-AVERTISSEMENT SUR LE CYCLE DE COURSE. Les six phases doivent différer sur
-le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à
-l'autre. Une planche où toutes les poses ont le même pied en avant est
-INUTILISABLE — l'animation semble bloquée sur place. Ne pas se contenter
-de changer la position des bras.
-Repère simple, valable pour toute la planche : « jambe GAUCHE » désigne la
-jambe qui apparaît du côté gauche de la case, « jambe DROITE » celle qui
-apparaît du côté droit. La planche se relit en suivant les pieds.
+IL NE TIENT JAMAIS RIEN. DSKKK ne lance aucun objet : ses deux mains sont vides dans les neuf poses.
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
 
@@ -69,12 +59,12 @@ Ces bandes ne gênent pas : le découpage les reconnaît comme du fond et
 les retire. Elles servent à VOIR l'espace que chaque pose a le droit
 d'occuper.
 
-DISPOSITION — 10 POSES, DEUX RANGÉES, CINQ POSES AU MAXIMUM PAR RANGÉE.
-Rangée du HAUT, de gauche à droite : run1, run2, run3, run4, run5.
-Rangée du BAS, de gauche à droite : run6, hit_torse, hit_epaule, hit_jambe, hit_tete.
+DISPOSITION — 9 POSES, DEUX RANGÉES, CINQ POSES AU MAXIMUM PAR RANGÉE.
+Rangée du HAUT, de gauche à droite : garde1, garde2, garde_casse, sonne, bond.
+Rangée du BAS, de gauche à droite : chute1, chute2, sol, sol2.
 Les deux rangées ont la MÊME échelle : un personnage de la rangée du bas
 fait exactement la même taille qu'un de la rangée du haut. Une rangée de
-10 obligerait à rétrécir chaque sujet pour tout faire tenir, et les têtes
+9 obligerait à rétrécir chaque sujet pour tout faire tenir, et les têtes
 cesseraient d'être de la même taille : c'est le défaut le plus coûteux,
 il ne se rattrape pas au découpage.
 

@@ -4147,6 +4147,68 @@ if (D){
       return !absents.length;
     })());
 
+  verifier("les prompts des MÉCHANTS demandent exactement les poses du jeu",
+    (() => {
+      /* QUATRIÈME fois que ce défaut est cherché — n2 (5 poses demandées
+         sur 11), n3 (9 sur 16), n4 pour les héros (5 sur 14), et
+         maintenant les méchants : UN prompt générique pour cinq, huit
+         poses nommées [course1] à [chute2], quand le jeu en charge
+         dix-huit à dix-neuf par méchant sous d'autres noms.
+
+         Le test précédent ne regardait que les fichiers `heros*` : il
+         annonçait donc une couverture parfaite sur un niveau dont il
+         ignorait la moitié des planches. La liste attendue est tirée du
+         CODE, pas recopiée — ajouter une pose à POSES_PROPRES fait
+         tomber ce test tant que le prompt ne la demande pas. */
+      const d = path.join(RACINE, "prompts", "n4");
+      const tags = f => {
+        const s = fs.readFileSync(path.join(d, f), "utf8");
+        return (s.match(/^\d+\. \[[a-z0-9_]+\]/gm) || [])
+          .map(x => x.slice(x.indexOf("[") + 1, -1));
+      };
+      /* la planche COMMUNE aux cinq : seule l'image jointe la distingue */
+      const communes = tags("mechants.txt");
+      const trous = [], enTrop = [], gros = [];
+      for (const e of D.ENNEMIS_RUELLE){
+        const f = e + ".txt";
+        if (!fs.existsSync(path.join(d, f))){ trous.push(f + " absent"); continue; }
+        const propres = tags(f);
+        /* CINQ POSES PAR RANGÉE, DEUX RANGÉES : dix par planche au plus.
+           C'est la largeur d'une rangée qui décide, pas le total — au-delà
+           le générateur rétrécit les sujets et les têtes cessent d'être
+           égales. */
+        for (const [nom, l] of [["mechants.txt", communes.length], [f, propres.length]])
+          if (l > 10) gros.push(nom + " : " + l);
+        const attendu = new Set(D.POSES_ENNEMI.concat(D.POSES_PROPRES[e] || []));
+        const couvert = new Set(communes.concat(propres));
+        for (const po of attendu) if (!couvert.has(po)) trous.push(e + "/" + po);
+        for (const po of couvert) if (!attendu.has(po)) enTrop.push(e + "/" + po);
+      }
+      messageDetail = [
+        trous.length ? "jamais demandées : " + trous.join(", ") : "",
+        enTrop.length ? "demandées pour rien : " + enTrop.join(", ") : "",
+        gros.length ? "planche trop chargée : " + gros.join(", ") : "",
+      ].filter(Boolean).join(" ; ") ||
+        D.ENNEMIS_RUELLE.map(e =>
+          e + " " + (D.POSES_ENNEMI.length + (D.POSES_PROPRES[e] || []).length)).join(", ");
+      return !trous.length && !enTrop.length && !gros.length;
+    })());
+
+  verifier("un prompt de méchant n'est pas tenu à la main",
+    (() => {
+      /* `planches.py tout` supprime les prompts portant la marque du
+         générateur avant de les réécrire. Les six planches de méchants la
+         portent : tant qu'elles n'étaient pas DANS le script, une seule
+         commande les effaçait pour remettre la version générique à huit
+         poses. Le piège avait déjà coûté une image de référence. */
+      const s = fs.readFileSync(path.join(RACINE, "planches.py"), "utf8");
+      return /^MECHANTS = \{/m.test(s) &&
+        /^POSES_MECHANT_COMMUNES = \[/m.test(s) &&
+        /def fabriquer_mechant/.test(s) &&
+        /ecrire_mechants\(d\)/.test(s) &&
+        !/ecrire_jeu\(d, "mechants"/.test(s);
+    })());
+
   verifier("entrer dans un niveau réévalue l'orientation",
     /entrerJeu\(\)\{[\s\S]{0,900}?this\.pensePivot\(\)/.test(source),
     "sans ça, on passe du titre en paysage à la ruelle sans rien vérifier");

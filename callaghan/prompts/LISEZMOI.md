@@ -46,11 +46,18 @@ de ce niveau. Un dossier « personnages » pour tout le monde aurait rangé
 selon une distinction qui n'existe pas.
 
 
-**Onze prompts.** Il y en avait dix-sept : les cinq méchants partageaient
-un texte identique à quatre lignes près, et les mouvements de réserve
-étaient dupliqués par héros. Ce qui les distinguait était un « rappel »
-écrit — qui contredisait l'image dès qu'un niveau changeait de tenue.
-Il a disparu, et les doublons avec lui.
+**Vingt-et-un prompts.** Il y en avait dix-sept avant qu'on retire les
+doublons, onze après : les cinq méchants partageaient un texte identique
+à quatre lignes près, et les mouvements de réserve étaient dupliqués par
+héros. Ce qui les distinguait était un « rappel » écrit — qui
+contredisait l'image dès qu'un niveau changeait de tenue. Il a disparu,
+et les doublons avec lui.
+
+Le compte est remonté à vingt-et-un, et c'est l'inverse d'une rechute :
+les cinq méchants ont chacun retrouvé une planche PROPRE, parce que leurs
+mécaniques n'ont rien de commun — une garde, un bond, un encensoir, un
+pavé, un trébuchement. Ce qu'il fallait supprimer était le texte écrit
+deux fois, pas le fichier.
 
 **Un prompt sert à PLUSIEURS personnages.** Le texte est le même ; ce qui
 change est l'image jointe. Le prompt écrit en tête
@@ -64,7 +71,7 @@ change est l'image jointe. Le prompt écrit en tête
 | `thibaut-flic.png` `pf-flic.png` | policier | n2 **et** n4 |
 | `thibaut-muscle.png` `pf-muscle.png` | civil, au bar | n3, sup |
 | `hortense.png` | — | communs |
-| `depar` `dsk` `jubi` `abbe` `bruh` | — | n4/mechants |
+| `depar` `dsk` `jubi` `abbe` `bruh` | — | n4/mechants **et** n4/<lui> |
 
 **Les tenues portent des NOMS, plus des numéros.** `-2` et `-3` ne
 disaient rien : il fallait ouvrir l'image pour savoir laquelle joindre.
@@ -96,11 +103,43 @@ contrôle : fond, quatre bords, rangées, poses séparables, écart, égalité
 des têtes, alignement des pieds, bord rosi, et **alternance des jambes**
 pour un cycle.
 
-## Neuf poses par planche, pas plus
+## Dix poses par planche, DEUX RANGÉES DE CINQ
 
-Au-delà, le générateur rétrécit les sujets et les têtes cessent d'être
-égales. Le générateur refuse. Les scènes plus longues sont scindées, et
-chaque planche dit de joindre la MÊME référence.
+Ce qui limite n'est pas le nombre, c'est la largeur d'une RANGÉE : c'est
+en alignant les sujets sur une seule rangée que le générateur les
+rétrécit et que les têtes cessent d'être égales. À cinq par rangée,
+chaque case fait 360 px sur une planche de 1800 — l'espacement qu'on
+n'obtenait jamais en le redemandant. Au-delà de dix, le script refuse.
+Les scènes plus longues sont scindées, et chaque planche dit de joindre
+la MÊME référence : c'est elle qui les raccorde.
+
+## Les cinq méchants : deux planches chacun
+
+Dix-neuf poses ne tiennent pas sur dix, et la coupure suit le sens.
+
+| fichier | poses | pour qui |
+|---|---|---|
+| `n4/mechants.txt` | 10 — course ×6, quatre encaissements | les CINQ, seule l'image jointe change |
+| `n4/depar.txt` | 8 — chute, sol, trébuchement, ramassage, jet | Depardiahree |
+| `n4/dsk.txt` | 9 — chute, sol, sol2, garde, garde cassée, sonné, bond | DSKKK |
+| `n4/jubi.txt` | 8 — chute, sol, arrêt, armement, jet, lâcher | Jubilar |
+| `n4/abbe.txt` | 9 — les mêmes, plus la pose pliée | l'Abbé |
+| `n4/bruh.txt` | 9 — les mêmes, plus la pose pliée | BruHell |
+
+Les noms de poses sont ceux du CODE — `run1`, `hit_tete`, `arme2`… — et
+un test les compare à `POSES_ENNEMI` et `POSES_PROPRES`. Une pose ajoutée
+au jeu fait tomber le test tant que le prompt ne la demande pas.
+
+Leur vue est de trois quarts FACE : ils remontent la ruelle vers le
+joueur. La consigne « toutes les poses regardent vers la droite » ne vaut
+donc PAS pour eux — le rendu ne retourne jamais un sprite d'ennemi.
+
+Pour en sortir un seul sans tout régénérer :
+
+```
+python3 callaghan/planches.py mechant depar
+python3 callaghan/planches.py mechant          (la planche commune)
+```
 
 ## Ce qui n'est pas ici
 

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """planches.py — fabriquer et contrôler les planches d'images.
 
-Deux commandes :
+Les commandes :
 
     python3 callaghan/planches.py prompt thibaut course marche
+    python3 callaghan/planches.py mechant depar     (sans nom : la commune)
     python3 callaghan/planches.py verifier planche.png 6
+    python3 callaghan/planches.py tout
 
 POURQUOI CE SCRIPT EXISTE
 
@@ -74,7 +76,15 @@ import sys, pathlib, json
 #
 # Le prompt demande donc explicitement deux rangées à partir de cinq
 # poses. Sans cette consigne, le générateur alignait tout.
-MAX_POSES = 8
+#
+# DIX, SOIT DEUX RANGÉES DE CINQ. La consigne de Thibaut, et elle tient
+# au même raisonnement que ci-dessus : ce qui compte est la largeur d'une
+# RANGÉE, pas le nombre total. Cinq sujets par rangée laissent 360 px de
+# case sur une planche de 1800 — l'espacement qu'on n'obtenait jamais en
+# le redemandant. Deux rangées de cinq permettent aux méchants de tenir
+# en deux planches au lieu de trois : la planche commune fait exactement
+# dix poses.
+MAX_POSES = 10
 
 MOUVEMENTS = {
     "idle": {
@@ -261,7 +271,8 @@ haut de la planche. Le texte blanc laisse un halo qui se mélange au fond.
   entre chaque case. Échelle et taille de tête IDENTIQUES sur toutes les
   figures.
 - DISPOSITION : jusqu'à quatre poses, UNE SEULE RANGÉE. À partir de
-  cinq, DEUX RANGÉES de taille égale — par exemple 4 + 4 pour huit poses,
+  cinq, DEUX RANGÉES de taille égale et CINQ POSES AU MAXIMUM PAR
+  RANGÉE — 5 + 5 pour dix poses, 5 + 4 pour neuf, 4 + 4 pour huit,
   3 + 2 pour cinq. Une rangée de huit oblige à rétrécir chaque sujet pour
   tout faire tenir, et les têtes cessent d'être de la même taille : c'est
   le défaut le plus coûteux, il ne se rattrape pas au découpage.
@@ -708,10 +719,10 @@ identique à celui de la référence une fois le fond mis de côté.""",
 # caméra. C'est la mécanique du niveau — ils remontent la ruelle vers le
 # joueur — et un profil les ferait courir en travers de l'écran.
 VUE_MECHANT = ("de TROIS QUARTS FACE, le personnage tourné vers le "
-               "spectateur et courant DANS SA DIRECTION. Il remonte la "
-               "ruelle vers le joueur : on voit son visage, sa poitrine, et "
-               "ses jambes qui avancent vers nous. Surtout PAS de profil — "
-               "il ne traverse pas l'écran, il vient vers nous.")
+               "spectateur et remontant la ruelle DANS SA DIRECTION. On voit "
+               "son visage, sa poitrine, et ses jambes qui avancent vers "
+               "nous. Surtout PAS de profil : il ne traverse pas l'écran, il "
+               "vient sur nous.")
 
 def fabriquer(perso, mouvements, mode="texte", part=None, parts=None, vue=None):
     """`perso` à None = un prompt commun, où seule l'image jointe change."""
@@ -1377,6 +1388,517 @@ def ecrire_prompt(chemin, texte):
     return True
 
 
+
+# ─────────────────────────────────────────────────────────────────────
+# LES MÉCHANTS DE LA RUELLE
+#
+# Ils avaient UN prompt pour cinq, tiré du catalogue générique :
+# `course` + `touche` + `chute`, soit huit poses nommées [course1] à
+# [chute2]. Le code, lui, en charge DIX-HUIT à DIX-NEUF par méchant, et
+# sous d'autres noms — `run1` à `run6`, `hit_torse`, `hit_epaule`,
+# `hit_jambe`, `hit_tete`, `chute1`, `chute2`, `sol`, plus les poses de
+# SA mécanique. Le prompt demandait donc des images que le jeu ne charge
+# pas et taisait celles qu'il charge : TROISIÈME fois que ce défaut est
+# trouvé, après le n2 (5 poses sur 11) et le n3 (9 sur 16).
+#
+# Les noms de poses viennent maintenant du CODE, et un test les compare à
+# POSES_ENNEMI et POSES_PROPRES : une pose ajoutée au jeu fait tomber le
+# test tant que le prompt ne la demande pas.
+#
+# DEUX PLANCHES PAR MÉCHANT, et c'est arithmétique : dix-neuf poses ne
+# tiennent pas sur une planche de dix. La coupure suit le SENS — ce qui
+# est commun aux cinq d'un côté, ce qui n'appartient qu'à lui de l'autre.
+#   `mechants.txt`  la course et les quatre encaissements. Une silhouette
+#                   ne distingue pas un méchant d'un autre : le texte est
+#                   le MÊME pour les cinq, seule l'image jointe change.
+#                   Dix poses.
+#   `<lui>.txt`     sa chute, son corps au sol et sa mécanique propre,
+#                   décrites dans SES termes — le tank ne s'écroule pas
+#                   comme le coureur. Huit ou neuf poses.
+#
+# La vue est celle de VUE_MECHANT : ils remontent la ruelle vers le
+# joueur. La consigne « toutes les poses regardent vers la DROITE » des
+# règles communes ne s'applique donc PAS ici, et le bloc de règles des
+# méchants ne la porte pas : vérifié dans le rendu, un sprite d'ennemi
+# n'est jamais retourné, seuls les héros le sont (SENS_NATIF).
+# ─────────────────────────────────────────────────────────────────────
+# CINQ POSES PAR RANGÉE, DEUX RANGÉES. Ce qui limite n'est pas le nombre
+# mais la LARGEUR : c'est en alignant les sujets sur UNE rangée que le
+# générateur les rétrécit et que les têtes cessent d'être égales.
+RANGEE_MAX = 5
+
+POSES_MECHANT_COMMUNES = [
+  ("run1",
+    "COURSE, APPUI GAUCHE : tout le poids sur la jambe GAUCHE, pied "
+    "à plat sous le corps ; la jambe DROITE est lancée vers nous, "
+    "genou haut, cuisse vue en raccourci. Bras opposés, coudes "
+    "pliés"),
+  ("run2",
+    "COURSE, SUSPENSION : les DEUX pieds sont décollés du sol. La "
+    "jambe DROITE descend vers le sol devant lui, la jambe GAUCHE "
+    "part loin en arrière, semelle visible. Buste penché en avant"),
+  ("run3",
+    "COURSE, CONTACT DROIT : la jambe DROITE vient de se poser "
+    "devant, genou légèrement fléchi ; la jambe GAUCHE est encore "
+    "tendue loin en arrière, talon décollé"),
+  ("run4",
+    "COURSE, APPUI DROIT : l'exact inverse de la première pose. "
+    "Tout le poids sur la jambe DROITE, et c'est la jambe GAUCHE "
+    "qui est lancée vers nous, genou haut"),
+  ("run5",
+    "COURSE, SUSPENSION INVERSE : les deux pieds décollés, mais "
+    "c'est la jambe GAUCHE qui descend devant et la DROITE qui part "
+    "en arrière. Si on superposait cette pose et la seconde, les "
+    "jambes ne coïncideraient pas"),
+  ("run6",
+    "COURSE, CONTACT GAUCHE : la jambe GAUCHE vient de se poser "
+    "devant, la DROITE tendue loin en arrière. Le cycle boucle "
+    "ensuite sur la première pose"),
+  ("hit_torse",
+    "IL ENCAISSE EN PLEINE POITRINE : le buste est rejeté en "
+    "arrière, les deux épaules remontent, les deux bras s'écartent "
+    "vers l'arrière, la tête bascule. Les jambes sont encore en "
+    "foulée — il ralentit, il ne tombe pas"),
+  ("hit_epaule",
+    "IL ENCAISSE À L'ÉPAULE : une seule épaule est chassée en "
+    "arrière, le buste pivote de ce côté, ce bras part en arrière "
+    "et pend ; l'autre main monte vers l'épaule touchée. Tête "
+    "inclinée vers l'épaule. Il reste debout"),
+  ("hit_jambe",
+    "IL ENCAISSE À LA JAMBE : un genou se dérobe vers l'intérieur, "
+    "il se casse à la hanche, une main descend vers la cuisse "
+    "touchée, l'autre bras cherche l'équilibre. Le buste reste "
+    "tourné vers nous. Il ne tombe pas"),
+  ("hit_tete",
+    "IL ENCAISSE À LA TÊTE : la tête part violemment en arrière, "
+    "menton levé, les deux mains montent vers le visage sans le "
+    "toucher, les épaules remontent. Aucune blessure dessinée"),
+]
+
+MECHANTS = {
+  "depar": {
+    "nom": "DEPARDIAHREE",
+    "note": """Sa planche de course et d'encaissement est à part : mechants.txt.""",
+    "blocs": """LA BOUTEILLE N'EXISTE QUE DANS `ramasse` ET `arme`. Dans toutes les autres poses, les mains sont VIDES : le jeu dessine le projectile lui-même dès qu'il a quitté la main.""",
+    "poses": [
+      ("ramasse",
+        "IL S'ARRÊTE ET RAMASSE : les deux pieds au sol, buste penché "
+        "en avant, une main descend jusqu'au sol et se referme sur une "
+        "BOUTEILLE DE VIN VIDE tenue par le goulot ; l'autre bras part "
+        "en arrière pour l'équilibre. Aucun sol dessiné : la main est "
+        "simplement en bas"),
+      ("arme",
+        "IL ARME LE JET : debout, arrêté, la bouteille ramenée LOIN en "
+        "arrière au-dessus de l'épaule, coude haut, buste ouvert vers "
+        "nous, poids sur la jambe arrière. La bouteille est nettement "
+        "détachée de la silhouette et bien lisible. C'est la pose que "
+        "le joueur voit le plus longtemps"),
+      ("lance",
+        "IL A LANCÉ : le bras se détend vers NOUS, la main est OUVERTE "
+        "et VIDE — la bouteille vient de partir et n'est PAS dessinée. "
+        "Buste projeté en avant, épaule du bras lanceur en avant, jambe "
+        "arrière décollée"),
+      ("trebuche1",
+        "IL TRÉBUCHE, PREMIER TEMPS : touché aux jambes en pleine "
+        "course, il perd l'équilibre — buste qui plonge vers nous, les "
+        "deux bras en avant pour se rattraper, un pied en travers de "
+        "l'autre. Il ne tombe PAS"),
+      ("trebuche2",
+        "IL TRÉBUCHE, SECOND TEMPS : il se rétablit, plié à la taille, "
+        "une main appuyée sur le genou, l'autre bras écarté, tête "
+        "basse. Il va repartir"),
+      ("chute1",
+        "IL S'EFFONDRE, PREMIER TEMPS : le corps part en arrière et de "
+        "côté, un genou touche le sol, une main cherche le sol, l'autre "
+        "bras est encore en l'air, tête basse. Il est encore tendu"),
+      ("chute2",
+        "IL S'EFFONDRE, SECOND TEMPS : à mi-chemin du sol, hanche et "
+        "épaule presque posées, les membres se relâchent, la tête part "
+        "en arrière. Plus aucune tension"),
+      ("sol",
+        "AU SOL, IMMOBILE : allongé sur le côté, membres relâchés, un "
+        "bras sous le corps, visage visible et tourné vers nous. La "
+        "pose est COUCHÉE donc large et basse : elle doit tenir "
+        "entièrement dans sa case sans déborder sur les voisines"),
+    ],
+  },
+  "dsk": {
+    "nom": "DSKKK",
+    "note": """Sa planche de course et d'encaissement est à part : mechants.txt.""",
+    "blocs": """IL NE TIENT JAMAIS RIEN. DSKKK ne lance aucun objet : ses deux mains sont vides dans les neuf poses.""",
+    "poses": [
+      ("garde1",
+        "EN GARDE, PREMIER TEMPS : il AVANCE en se protégeant — les "
+        "deux avant-bras serrés et relevés DEVANT LE VISAGE, coudes "
+        "collés, le visage entièrement caché derrière la garde, seuls "
+        "les yeux dépassent. Le bas du corps marche : jambe GAUCHE en "
+        "avant, pied posé"),
+      ("garde2",
+        "EN GARDE, SECOND TEMPS : le HAUT du corps est identique à la "
+        "pose précédente, garde inchangée devant le visage. Seules les "
+        "jambes changent : c'est la jambe DROITE qui est en avant. Ces "
+        "deux poses s'alternent pour faire la marche, elles doivent "
+        "donc se distinguer UNIQUEMENT par les pieds"),
+      ("garde_casse",
+        "SA GARDE SE BRISE : les deux avant-bras sont chassés "
+        "violemment vers l'extérieur, le visage est exposé pour la "
+        "première fois, bouche ouverte, sourcils hauts. Il est encore "
+        "debout, jambes écartées"),
+      ("sonne",
+        "IL EST SONNÉ : il ne se protège plus DU TOUT. Les deux bras "
+        "pendent le long du corps, épaules basses, genoux légèrement "
+        "fléchis, tête ballante en avant, regard vide. Arrêté, offert"),
+      ("bond",
+        "IL BONDIT SUR NOUS : les deux pieds ont quitté le sol très "
+        "haut, les jambes se détendent vers le spectateur, les deux "
+        "bras sont levés au-dessus de la tête, bouche ouverte. Vu en "
+        "légère contre-plongée — il arrive droit sur la caméra. C'est "
+        "la pose la plus haute de la planche"),
+      ("chute1",
+        "IL S'EFFONDRE, PREMIER TEMPS : le corps part en arrière et de "
+        "côté, un genou touche le sol, une main cherche le sol, l'autre "
+        "bras est encore en l'air, tête basse. Il est encore tendu"),
+      ("chute2",
+        "IL S'EFFONDRE, SECOND TEMPS : à mi-chemin du sol, hanche et "
+        "épaule presque posées, les membres se relâchent, la tête part "
+        "en arrière. Plus aucune tension"),
+      ("sol",
+        "AU SOL, IMMOBILE : allongé sur le côté, membres relâchés, un "
+        "bras sous le corps, visage visible et tourné vers nous. La "
+        "pose est COUCHÉE donc large et basse : elle doit tenir "
+        "entièrement dans sa case sans déborder sur les voisines"),
+      ("sol2",
+        "AU SOL, AFFAISSÉ : la même position couchée que la pose "
+        "précédente, mais TOUT s'est relâché — la tête a retombé, les "
+        "épaules se sont écrasées, les membres sont plus étalés. Elle "
+        "doit être visiblement PLUS MOLLE que `sol`, sinon les deux "
+        "poses se ressemblent et l'affaissement ne se voit pas"),
+    ],
+  },
+  "jubi": {
+    "nom": "JUBILAR LE FUMIER",
+    "note": """Sa planche de course et d'encaissement est à part : mechants.txt.""",
+    "blocs": """CE QU'IL TIENT : un PAVÉ de rue — un gros bloc de pierre taillée, tenu à deux mains. Le même objet, dessiné à l'identique, dans toutes les poses où il apparaît.
+
+LA POSE `arme2` EST CELLE QUE LE JOUEUR VISE. Le jeu peint une cible ronde sur l'objet brandi, à une position MESURÉE sur le sprite : elle est solidaire du dessin. L'objet doit donc être levé HAUT, écarté de la silhouette, entièrement lisible, et il doit être le point le plus haut de la pose. S'il est collé au corps ou masqué par la tête, la cible devient injouable.
+
+LE PAVÉ N'EST DESSINÉ QUE DANS `arret`, `arme1` ET `arme2`. Partout ailleurs les mains sont VIDES : le jeu dessine le projectile lui-même dès qu'il a quitté la main.""",
+    "poses": [
+      ("arret",
+        "IL S'ARRÊTE NET : freinage en pleine course, talons plantés, "
+        "buste rejeté en arrière, bras écartés pour l'équilibre. Il "
+        "tient déjà le pavé, bras baissé le long du corps. C'est le "
+        "premier signal que le joueur lit"),
+      ("arme1",
+        "IL COMMENCE À ARMER : le pavé monte, coudes qui se lèvent, "
+        "buste qui se tourne, regard fixé sur nous. Le geste est engagé "
+        "mais pas achevé — cette pose doit se distinguer clairement de "
+        "la suivante"),
+      ("arme2",
+        "IL EST ARMÉ, POSE TENUE : le pavé est levé au PLUS HAUT, bras "
+        "tendu au-dessus et en arrière de l'épaule, entièrement dégagé "
+        "de la silhouette et de la tête. Le pavé est lourd : les deux "
+        "mains le tiennent, les épaules montent. Composition mesurée "
+        "sur le sprite en jeu : il doit tomber vers x ≈ 0,14 de la "
+        "largeur et y ≈ 0,05 de la hauteur — tiers GAUCHE, tout en haut "
+        "de la case — c'est là que le jeu peint sa cible"),
+      ("lance",
+        "IL A LANCÉ : le bras se détend vers NOUS, la main est OUVERTE "
+        "et VIDE — l'objet vient de partir et n'est PAS dessiné. Buste "
+        "projeté en avant, jambe arrière décollée"),
+      ("lache",
+        "ON LUI A TIRÉ DANS LE BRAS : le pavé lui échappe et n'est PAS "
+        "dessiné. La main s'ouvre, doigts écartés ; l'autre main serre "
+        "l'avant-bras touché, grimace de douleur, buste replié de ce "
+        "côté"),
+      ("chute1",
+        "IL S'EFFONDRE, PREMIER TEMPS : le corps part en arrière et de "
+        "côté, un genou touche le sol, une main cherche le sol, l'autre "
+        "bras est encore en l'air, tête basse. Il est encore tendu"),
+      ("chute2",
+        "IL S'EFFONDRE, SECOND TEMPS : à mi-chemin du sol, hanche et "
+        "épaule presque posées, les membres se relâchent, la tête part "
+        "en arrière. Plus aucune tension"),
+      ("sol",
+        "AU SOL, IMMOBILE : allongé sur le côté, membres relâchés, un "
+        "bras sous le corps, visage visible et tourné vers nous. La "
+        "pose est COUCHÉE donc large et basse : elle doit tenir "
+        "entièrement dans sa case sans déborder sur les voisines"),
+    ],
+  },
+  "abbe": {
+    "nom": "L'ABBÉ FORCEUR",
+    "note": """Sa planche de course et d'encaissement est à part : mechants.txt.""",
+    "blocs": """CE QU'IL TIENT : un ENCENSOIR d'église — une boule de métal ajourée au bout d'une CHAÎNE. Le même objet, dessiné à l'identique, dans toutes les poses où il apparaît.
+
+LA POSE `arme2` EST CELLE QUE LE JOUEUR VISE. Le jeu peint une cible ronde sur l'objet brandi, à une position MESURÉE sur le sprite : elle est solidaire du dessin. L'objet doit donc être levé HAUT, écarté de la silhouette, entièrement lisible, et il doit être le point le plus haut de la pose. S'il est collé au corps ou masqué par la tête, la cible devient injouable.
+
+L'ENCENSOIR N'EST DESSINÉ QUE DANS `arret`, `arme1` ET `arme2`. Partout ailleurs les mains sont VIDES : le jeu dessine le projectile lui-même dès qu'il a quitté la main.""",
+    "poses": [
+      ("arret",
+        "IL S'ARRÊTE NET : freinage en pleine course, talons plantés, "
+        "buste rejeté en arrière, bras écartés pour l'équilibre. Il "
+        "tient déjà l'encensoir, bras baissé le long du corps. C'est le "
+        "premier signal que le joueur lit"),
+      ("arme1",
+        "IL COMMENCE À ARMER : l'encensoir monte, coudes qui se lèvent, "
+        "buste qui se tourne, regard fixé sur nous. Le geste est engagé "
+        "mais pas achevé — cette pose doit se distinguer clairement de "
+        "la suivante"),
+      ("arme2",
+        "IL EST ARMÉ, POSE TENUE : l'encensoir est levé au PLUS HAUT, "
+        "bras tendu au-dessus et en arrière de l'épaule, entièrement "
+        "dégagé de la silhouette et de la tête. La chaîne est TENDUE, "
+        "l'encensoir décollé au-dessus de la tête, prêt à partir en "
+        "cloche. Aucune fumée, aucune braise dessinée. Composition "
+        "mesurée sur le sprite en jeu : il doit tomber vers x ≈ 0,34 de "
+        "la largeur et y ≈ 0,06 de la hauteur — un peu à gauche du "
+        "centre, tout en haut de la case — c'est là que le jeu peint sa "
+        "cible"),
+      ("lance",
+        "IL A LANCÉ : le bras se détend vers NOUS, la main est OUVERTE "
+        "et VIDE — l'objet vient de partir et n'est PAS dessiné. Buste "
+        "projeté en avant, jambe arrière décollée"),
+      ("lache",
+        "ON LUI A TIRÉ DANS LE BRAS : l'encensoir lui échappe et n'est "
+        "PAS dessiné. La main s'ouvre, doigts écartés ; l'autre main "
+        "serre l'avant-bras touché, grimace de douleur, buste replié de "
+        "ce côté"),
+      ("plie",
+        "IL EST PLIÉ EN DEUX : son jet a été annulé, les deux mains "
+        "sont vides et pressées sur le ventre, dos rond, genoux "
+        "fléchis. LA TÊTE RESTE ENTIÈREMENT VISIBLE et dégagée, penchée "
+        "vers le sol mais jamais cachée par les bras ni par les épaules "
+        ": c'est la fenêtre où le joueur vise le crâne, et une tête "
+        "masquée rend la pose inutile"),
+      ("chute1",
+        "IL S'EFFONDRE, PREMIER TEMPS : le corps part en arrière et de "
+        "côté, un genou touche le sol, une main cherche le sol, l'autre "
+        "bras est encore en l'air, tête basse. Il est encore tendu"),
+      ("chute2",
+        "IL S'EFFONDRE, SECOND TEMPS : à mi-chemin du sol, hanche et "
+        "épaule presque posées, les membres se relâchent, la tête part "
+        "en arrière. Plus aucune tension"),
+      ("sol",
+        "AU SOL, IMMOBILE : allongé sur le côté, membres relâchés, un "
+        "bras sous le corps, visage visible et tourné vers nous. La "
+        "pose est COUCHÉE donc large et basse : elle doit tenir "
+        "entièrement dans sa case sans déborder sur les voisines"),
+    ],
+  },
+  "bruh": {
+    "nom": "BRUHELL L'ENFOIRÉ",
+    "note": """Sa planche de course et d'encaissement est à part : mechants.txt.""",
+    "blocs": """CE QU'IL TIENT : un COCKTAIL MOLOTOV — une bouteille de verre au goulot bouché par un chiffon. Le même objet, dessiné à l'identique, dans toutes les poses où il apparaît.
+
+LA POSE `arme2` EST CELLE QUE LE JOUEUR VISE. Le jeu peint une cible ronde sur l'objet brandi, à une position MESURÉE sur le sprite : elle est solidaire du dessin. L'objet doit donc être levé HAUT, écarté de la silhouette, entièrement lisible, et il doit être le point le plus haut de la pose. S'il est collé au corps ou masqué par la tête, la cible devient injouable.
+
+LE MOLOTOV N'EST DESSINÉ QUE DANS `arret`, `arme1` ET `arme2`. Partout ailleurs les mains sont VIDES : le jeu dessine le projectile lui-même dès qu'il a quitté la main.""",
+    "poses": [
+      ("arret",
+        "IL S'ARRÊTE NET : freinage en pleine course, talons plantés, "
+        "buste rejeté en arrière, bras écartés pour l'équilibre. Il "
+        "tient déjà le Molotov, bras baissé le long du corps. C'est le "
+        "premier signal que le joueur lit"),
+      ("arme1",
+        "IL COMMENCE À ARMER : le Molotov monte, coudes qui se lèvent, "
+        "buste qui se tourne, regard fixé sur nous. Le geste est engagé "
+        "mais pas achevé — cette pose doit se distinguer clairement de "
+        "la suivante"),
+      ("arme2",
+        "IL EST ARMÉ, POSE TENUE : le Molotov est levé au PLUS HAUT, "
+        "bras tendu au-dessus et en arrière de l'épaule, entièrement "
+        "dégagé de la silhouette et de la tête. Son geste est TENDU, "
+        "pas en cloche : l'épaule est alignée sur nous, le bras part "
+        "droit vers l'avant. Aucune flamme, aucune mèche allumée. "
+        "Composition mesurée sur le sprite en jeu : il doit tomber vers "
+        "x ≈ 0,33 de la largeur et y ≈ 0,05 de la hauteur — un peu à "
+        "gauche du centre, tout en haut de la case — c'est là que le "
+        "jeu peint sa cible"),
+      ("lance",
+        "IL A LANCÉ : le bras se détend vers NOUS, la main est OUVERTE "
+        "et VIDE — l'objet vient de partir et n'est PAS dessiné. Buste "
+        "projeté en avant, jambe arrière décollée"),
+      ("lache",
+        "ON LUI A TIRÉ DANS LE BRAS : le Molotov lui échappe et n'est "
+        "PAS dessiné. La main s'ouvre, doigts écartés ; l'autre main "
+        "serre l'avant-bras touché, grimace de douleur, buste replié de "
+        "ce côté"),
+      ("plie",
+        "IL EST PLIÉ EN DEUX : son jet a été annulé, les deux mains "
+        "sont vides et pressées sur le ventre, dos rond, genoux "
+        "fléchis. LA TÊTE RESTE ENTIÈREMENT VISIBLE et dégagée, penchée "
+        "vers le sol mais jamais cachée par les bras ni par les épaules "
+        ": c'est la fenêtre où le joueur vise le crâne, et une tête "
+        "masquée rend la pose inutile"),
+      ("chute1",
+        "IL S'EFFONDRE, PREMIER TEMPS : le corps part en arrière et de "
+        "côté, un genou touche le sol, une main cherche le sol, l'autre "
+        "bras est encore en l'air, tête basse. Il est encore tendu"),
+      ("chute2",
+        "IL S'EFFONDRE, SECOND TEMPS : à mi-chemin du sol, hanche et "
+        "épaule presque posées, les membres se relâchent, la tête part "
+        "en arrière. Plus aucune tension"),
+      ("sol",
+        "AU SOL, IMMOBILE : allongé sur le côté, membres relâchés, un "
+        "bras sous le corps, visage visible et tourné vers nous. La "
+        "pose est COUCHÉE donc large et basse : elle doit tenir "
+        "entièrement dans sa case sans déborder sur les voisines"),
+    ],
+  },
+}
+
+MECHANT_NOTE_COMMUNE = """Cette planche est la MÊME pour les cinq méchants du niveau 4 : seule
+l'image jointe change. Chacun a ensuite sa planche propre — depar.txt,
+dsk.txt, jubi.txt, abbe.txt, bruh.txt — pour sa chute et sa mécanique."""
+MECHANT_BLOCS_COMMUNS = """AVERTISSEMENT SUR LE CYCLE DE COURSE. Les six phases doivent différer sur
+le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à
+l'autre. Une planche où toutes les poses ont le même pied en avant est
+INUTILISABLE — l'animation semble bloquée sur place. Ne pas se contenter
+de changer la position des bras.
+Repère simple, valable pour toute la planche : « jambe GAUCHE » désigne la
+jambe qui apparaît du côté gauche de la case, « jambe DROITE » celle qui
+apparaît du côté droit. La planche se relit en suivant les pieds."""
+REGLES_MECHANT_AVANT = """CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
+
+LA PLUS IMPORTANTE, ET LA PLUS SOUVENT RATÉE : L'ESPACEMENT.
+Chaque pose doit être séparée de sa voisine par au moins 80 pixels de
+fond VIDE. Un bras tendu, un coude, un pied de course, un objet brandi :
+RIEN ne doit entrer dans la case d'à côté. Deux poses qui se touchent,
+même par un seul doigt, ne peuvent pas être séparées automatiquement, et
+toute la planche est à refaire.
+Test à faire mentalement : entre deux poses voisines, peut-on tracer un
+trait vertical du haut en bas de l'image sans jamais toucher un
+personnage ? Si non, écarter davantage.
+Dans le doute, ÉCARTER PLUS. Une planche trop aérée se découpe très bien.
+
+DESSINER UN CADRE AUTOUR DE CHAQUE POSE. Tracer une bande d'un MAGENTA
+PLUS FONCÉ (par exemple #8C008C) autour de chaque case, comme les cases
+d'une planche de bande dessinée. Chaque personnage doit tenir
+ENTIÈREMENT dans sa case, bras tendus et objets compris, sans jamais
+toucher une bande.
+Ces bandes ne gênent pas : le découpage les reconnaît comme du fond et
+les retire. Elles servent à VOIR l'espace que chaque pose a le droit
+d'occuper."""
+REGLES_MECHANT_DISPO = """DISPOSITION — {n} POSES, DEUX RANGÉES, CINQ POSES AU MAXIMUM PAR RANGÉE.
+Rangée du HAUT, de gauche à droite : {haut}.
+Rangée du BAS, de gauche à droite : {bas}."""
+REGLES_MECHANT_APRES = """Les deux rangées ont la MÊME échelle : un personnage de la rangée du bas
+fait exactement la même taille qu'un de la rangée du haut. Une rangée de
+{n} obligerait à rétrécir chaque sujet pour tout faire tenir, et les têtes
+cesseraient d'être de la même taille : c'est le défaut le plus coûteux,
+il ne se rattrape pas au découpage.
+
+LA VUE NE CHANGE JAMAIS D'UNE POSE À L'AUTRE. Toutes les poses sont de
+trois quarts FACE, tournées vers le spectateur. Aucune pose de profil,
+aucune pose de dos, aucune pose retournée vers l'autre côté. Le jeu ne
+retourne JAMAIS ces images : ce qui est dessiné est exactement ce qui
+s'affiche à l'écran.
+
+AUCUNE POSE N'INTERAGIT AVEC SA VOISINE. Chaque pose est un personnage
+SEUL, qui sera découpé en image indépendante. Si une pose lance un objet,
+se protège ou s'adresse à quelqu'un, ce quelqu'un est INVISIBLE et n'est
+pas dessiné — surtout pas la pose d'à côté. Deux poses qui se répondent
+forment une illustration, et une illustration ne se découpe pas.
+
+AUCUN PROJECTILE EN VOL, AUCUN IMPACT, AUCUNE BALLE, AUCUN ÉCLAT, AUCUNE
+FLAMME, AUCUNE GERBE DE SANG. Le jeu dessine lui-même les objets qui
+volent, les impacts et les alertes. Un objet n'est dessiné que lorsqu'il
+est TENU EN MAIN.
+
+AUCUNE OMBRE PORTÉE AU SOL, aucune ellipse sombre sous les pieds : le jeu
+dessine l'ombre lui-même, et celle de la planche viendrait s'y ajouter.
+
+AUCUN TITRE, AUCUNE LÉGENDE, AUCUN NUMÉRO. Ni au-dessus des poses, ni en
+haut de la planche. Le texte blanc laisse un halo qui se mélange au fond.
+
+- Fond MAGENTA PUR uni #FF00FF sur toute l'image. Aucun dégradé, aucune
+  ombre portée, aucun décor, aucun élément de mobilier, aucun sol
+  dessiné, aucune bordure d'image.
+- AUCUN TEXTE, aucun chiffre, aucune légende, aucun numéro de pose.
+- GRILLE RÉGULIÈRE : rangées de taille égale, cases de largeur égale, un
+  large écart de fond entre chaque figure. Échelle et taille de tête
+  IDENTIQUES sur toutes les figures — c'est le défaut le plus fréquent.
+- Au moins 80 pixels de fond magenta VIDE entre deux poses voisines, et
+  au moins 60 pixels de magenta vide sur les QUATRE bords de l'image.
+  Une lueur ou un vêtement coupé par le bord ne peut pas être détouré
+  proprement.
+- ANCRAGE PAR LES PIEDS. Le jeu aligne toutes les poses d'un personnage
+  par les PIEDS et prend la première pose de course comme étalon. Les
+  pieds de toutes les poses DEBOUT reposent donc sur la même ligne
+  horizontale imaginaire, sauf pour les phases explicitement en l'air.
+  Un objet brandi peut dépasser vers le HAUT — jamais vers le bas.
+- Aucune lueur, aucun halo, aucun effet lumineux qui déborde de la
+  silhouette. Mesuré sur une planche livrée : une bande rose de 15 à
+  30 px de couleur (134, 58, 116) tout autour du sujet — du magenta
+  délavé, que rien ne sait retirer puisqu'on ignore la couleur qui était
+  dessous. Le bord doit être FRANC.
+- Le fond magenta ne teinte RIEN. Aucun reflet rose ou violet sur la
+  peau, les cheveux, les vêtements ou les contours : l'éclairage du
+  personnage est neutre.
+- Style : bande dessinée aux couleurs franches, contours nets, éclairage
+  neutre et identique pour toutes les poses. Corps entier, de la tête aux
+  pieds.
+"""
+
+
+def rangees(n):
+    """Comment n poses se répartissent sur DEUX rangées : 10 donne 5 et 5,
+    9 donne 5 et 4, 8 donne 4 et 4. La rangée du haut ne dépasse jamais
+    RANGEE_MAX, et c'est ce qui plafonne une planche à dix poses."""
+    haut = (n + 1) // 2
+    if haut > RANGEE_MAX:
+        sys.exit(f"ABANDON : {n} poses ne tiennent pas sur deux rangées de "
+                 f"{RANGEE_MAX}. Découper en deux planches.")
+    return haut, n - haut
+
+
+def fabriquer_mechant(cle=None):
+    """Le prompt d'une planche de méchant. `cle` à None = la planche
+    COMMUNE aux cinq, celle où seule l'image jointe change."""
+    if cle is None:
+        poses = POSES_MECHANT_COMMUNES
+        note, blocs = MECHANT_NOTE_COMMUNE, MECHANT_BLOCS_COMMUNS
+        sujet, ref = "d'un même personnage", "<le méchant voulu>"
+    else:
+        if cle not in MECHANTS:
+            sys.exit(f"ABANDON : méchant inconnu « {cle} ».\n"
+                     f"Connus : {', '.join(MECHANTS)}")
+        mc = MECHANTS[cle]
+        poses, note, blocs = mc["poses"], mc["note"], mc["blocs"]
+        sujet, ref = "de " + mc["nom"], cle
+    n = len(poses)
+    haut, bas = rangees(n)
+    cles = [p[0] for p in poses]
+    dispo = REGLES_MECHANT_DISPO.format(
+        n=n, haut=", ".join(cles[:haut]), bas=", ".join(cles[haut:]))
+    details = "\n".join(f"{i}. [{p[0]}] {p[1]}"
+                        for i, p in enumerate(poses, 1))
+    regles = (REGLES_MECHANT_AVANT + "\n\n" + dispo + "\n"
+              + REGLES_MECHANT_APRES.format(n=n))
+    return f"""Planche de {n} poses {sujet}, sur DEUX RANGÉES de {haut} et {bas}.
+Image de référence à joindre : reference/{ref}.png
+{note}
+
+VUE : {VUE_MECHANT}
+
+{MODES["poses"]}
+
+LES POSES, dans l'ordre de lecture (rangée du haut puis rangée du bas) :
+{details}
+
+{blocs}
+
+{regles}"""
+
+
+def ecrire_mechants(dossier):
+    """La planche commune, puis une planche par méchant."""
+    ecrire_prompt(dossier / "mechants.txt", fabriquer_mechant())
+    for cle in MECHANTS:
+        ecrire_prompt(dossier / f"{cle}.txt", fabriquer_mechant(cle))
+
+
 def tout():
     """Régénère TOUT : références et prompts, pour tous les niveaux.
 
@@ -1416,9 +1938,11 @@ def tout():
     # les méchants n'appartiennent qu'à la ruelle
     d = base / "n4"
     for f in d.glob("mechant_*.txt"): f.unlink()
-    # les méchants aussi passent au découpage : huit poses, donc deux
-    # planches de quatre. Même raison que pour les héros.
-    ecrire_jeu(d, "mechants", ["course", "touche", "chute"], VUE_MECHANT)
+    # LES MÉCHANTS NE PASSENT PLUS PAR LE CATALOGUE GÉNÉRIQUE. Il donnait
+    # huit poses nommées [course1] à [chute2] quand le jeu en charge dix-huit
+    # à dix-neuf, sous d'autres noms. Leur fabrique tire la liste du besoin
+    # réel du niveau, et un test la compare aux listes du code.
+    ecrire_mechants(d)
     # XAVIER a les mêmes poses de base que les autres — treize, imposées
     # par POSES_ENNEMI — plus les trois du LANCER, qu'il partage avec
     # l'Abbé et BruHell. 
@@ -1544,6 +2068,9 @@ def main():
         if len(sys.argv) < 3:
             sys.exit("usage : planches.py reference <personnage>")
         reference(sys.argv[2])
+    elif cmd == "mechant":
+        # sans argument : la planche COMMUNE aux cinq
+        print(fabriquer_mechant(sys.argv[2] if len(sys.argv) > 2 else None))
     elif cmd == "mouvements":
         for k, v in sorted(MOUVEMENTS.items()):
             print(f"  {k:10s} {len(v['phases'])} phase(s)  {v['titre']}")

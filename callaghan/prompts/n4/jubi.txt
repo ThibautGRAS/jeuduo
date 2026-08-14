@@ -1,8 +1,6 @@
-Planche de 10 poses d'un même personnage, sur DEUX RANGÉES de 5 et 5.
-Image de référence à joindre : reference/<le méchant voulu>.png
-Cette planche est la MÊME pour les cinq méchants du niveau 4 : seule
-l'image jointe change. Chacun a ensuite sa planche propre — depar.txt,
-dsk.txt, jubi.txt, abbe.txt, bruh.txt — pour sa chute et sa mécanique.
+Planche de 8 poses de JUBILAR LE FUMIER, sur DEUX RANGÉES de 4 et 4.
+Image de référence à joindre : reference/jubi.png
+Sa planche de course et d'encaissement est à part : mechants.txt.
 
 VUE : de TROIS QUARTS FACE, le personnage tourné vers le spectateur et remontant la ruelle DANS SA DIRECTION. On voit son visage, sa poitrine, et ses jambes qui avancent vers nous. Surtout PAS de profil : il ne traverse pas l'écran, il vient sur nous.
 
@@ -27,25 +25,20 @@ vêtements ou les contours. L'éclairage du personnage doit rester neutre,
 identique à celui de la référence une fois le fond mis de côté.
 
 LES POSES, dans l'ordre de lecture (rangée du haut puis rangée du bas) :
-1. [run1] COURSE, APPUI GAUCHE : tout le poids sur la jambe GAUCHE, pied à plat sous le corps ; la jambe DROITE est lancée vers nous, genou haut, cuisse vue en raccourci. Bras opposés, coudes pliés
-2. [run2] COURSE, SUSPENSION : les DEUX pieds sont décollés du sol. La jambe DROITE descend vers le sol devant lui, la jambe GAUCHE part loin en arrière, semelle visible. Buste penché en avant
-3. [run3] COURSE, CONTACT DROIT : la jambe DROITE vient de se poser devant, genou légèrement fléchi ; la jambe GAUCHE est encore tendue loin en arrière, talon décollé
-4. [run4] COURSE, APPUI DROIT : l'exact inverse de la première pose. Tout le poids sur la jambe DROITE, et c'est la jambe GAUCHE qui est lancée vers nous, genou haut
-5. [run5] COURSE, SUSPENSION INVERSE : les deux pieds décollés, mais c'est la jambe GAUCHE qui descend devant et la DROITE qui part en arrière. Si on superposait cette pose et la seconde, les jambes ne coïncideraient pas
-6. [run6] COURSE, CONTACT GAUCHE : la jambe GAUCHE vient de se poser devant, la DROITE tendue loin en arrière. Le cycle boucle ensuite sur la première pose
-7. [hit_torse] IL ENCAISSE EN PLEINE POITRINE : le buste est rejeté en arrière, les deux épaules remontent, les deux bras s'écartent vers l'arrière, la tête bascule. Les jambes sont encore en foulée — il ralentit, il ne tombe pas
-8. [hit_epaule] IL ENCAISSE À L'ÉPAULE : une seule épaule est chassée en arrière, le buste pivote de ce côté, ce bras part en arrière et pend ; l'autre main monte vers l'épaule touchée. Tête inclinée vers l'épaule. Il reste debout
-9. [hit_jambe] IL ENCAISSE À LA JAMBE : un genou se dérobe vers l'intérieur, il se casse à la hanche, une main descend vers la cuisse touchée, l'autre bras cherche l'équilibre. Le buste reste tourné vers nous. Il ne tombe pas
-10. [hit_tete] IL ENCAISSE À LA TÊTE : la tête part violemment en arrière, menton levé, les deux mains montent vers le visage sans le toucher, les épaules remontent. Aucune blessure dessinée
+1. [arret] IL S'ARRÊTE NET : freinage en pleine course, talons plantés, buste rejeté en arrière, bras écartés pour l'équilibre. Il tient déjà le pavé, bras baissé le long du corps. C'est le premier signal que le joueur lit
+2. [arme1] IL COMMENCE À ARMER : le pavé monte, coudes qui se lèvent, buste qui se tourne, regard fixé sur nous. Le geste est engagé mais pas achevé — cette pose doit se distinguer clairement de la suivante
+3. [arme2] IL EST ARMÉ, POSE TENUE : le pavé est levé au PLUS HAUT, bras tendu au-dessus et en arrière de l'épaule, entièrement dégagé de la silhouette et de la tête. Le pavé est lourd : les deux mains le tiennent, les épaules montent. Composition mesurée sur le sprite en jeu : il doit tomber vers x ≈ 0,14 de la largeur et y ≈ 0,05 de la hauteur — tiers GAUCHE, tout en haut de la case — c'est là que le jeu peint sa cible
+4. [lance] IL A LANCÉ : le bras se détend vers NOUS, la main est OUVERTE et VIDE — l'objet vient de partir et n'est PAS dessiné. Buste projeté en avant, jambe arrière décollée
+5. [lache] ON LUI A TIRÉ DANS LE BRAS : le pavé lui échappe et n'est PAS dessiné. La main s'ouvre, doigts écartés ; l'autre main serre l'avant-bras touché, grimace de douleur, buste replié de ce côté
+6. [chute1] IL S'EFFONDRE, PREMIER TEMPS : le corps part en arrière et de côté, un genou touche le sol, une main cherche le sol, l'autre bras est encore en l'air, tête basse. Il est encore tendu
+7. [chute2] IL S'EFFONDRE, SECOND TEMPS : à mi-chemin du sol, hanche et épaule presque posées, les membres se relâchent, la tête part en arrière. Plus aucune tension
+8. [sol] AU SOL, IMMOBILE : allongé sur le côté, membres relâchés, un bras sous le corps, visage visible et tourné vers nous. La pose est COUCHÉE donc large et basse : elle doit tenir entièrement dans sa case sans déborder sur les voisines
 
-AVERTISSEMENT SUR LE CYCLE DE COURSE. Les six phases doivent différer sur
-le BAS DU CORPS : ce n'est pas la même jambe qui est devant d'une phase à
-l'autre. Une planche où toutes les poses ont le même pied en avant est
-INUTILISABLE — l'animation semble bloquée sur place. Ne pas se contenter
-de changer la position des bras.
-Repère simple, valable pour toute la planche : « jambe GAUCHE » désigne la
-jambe qui apparaît du côté gauche de la case, « jambe DROITE » celle qui
-apparaît du côté droit. La planche se relit en suivant les pieds.
+CE QU'IL TIENT : un PAVÉ de rue — un gros bloc de pierre taillée, tenu à deux mains. Le même objet, dessiné à l'identique, dans toutes les poses où il apparaît.
+
+LA POSE `arme2` EST CELLE QUE LE JOUEUR VISE. Le jeu peint une cible ronde sur l'objet brandi, à une position MESURÉE sur le sprite : elle est solidaire du dessin. L'objet doit donc être levé HAUT, écarté de la silhouette, entièrement lisible, et il doit être le point le plus haut de la pose. S'il est collé au corps ou masqué par la tête, la cible devient injouable.
+
+LE PAVÉ N'EST DESSINÉ QUE DANS `arret`, `arme1` ET `arme2`. Partout ailleurs les mains sont VIDES : le jeu dessine le projectile lui-même dès qu'il a quitté la main.
 
 CONTRAINTES TECHNIQUES — elles priment sur tout le reste.
 
@@ -69,12 +62,12 @@ Ces bandes ne gênent pas : le découpage les reconnaît comme du fond et
 les retire. Elles servent à VOIR l'espace que chaque pose a le droit
 d'occuper.
 
-DISPOSITION — 10 POSES, DEUX RANGÉES, CINQ POSES AU MAXIMUM PAR RANGÉE.
-Rangée du HAUT, de gauche à droite : run1, run2, run3, run4, run5.
-Rangée du BAS, de gauche à droite : run6, hit_torse, hit_epaule, hit_jambe, hit_tete.
+DISPOSITION — 8 POSES, DEUX RANGÉES, CINQ POSES AU MAXIMUM PAR RANGÉE.
+Rangée du HAUT, de gauche à droite : arret, arme1, arme2, lance.
+Rangée du BAS, de gauche à droite : lache, chute1, chute2, sol.
 Les deux rangées ont la MÊME échelle : un personnage de la rangée du bas
 fait exactement la même taille qu'un de la rangée du haut. Une rangée de
-10 obligerait à rétrécir chaque sujet pour tout faire tenir, et les têtes
+8 obligerait à rétrécir chaque sujet pour tout faire tenir, et les têtes
 cesseraient d'être de la même taille : c'est le défaut le plus coûteux,
 il ne se rattrape pas au découpage.
 

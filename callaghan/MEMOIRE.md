@@ -2260,6 +2260,44 @@ se demander de quoi elle dépend : ici, du fait qu'une foulée ne se lit que
 de profil. La vue se déclare maintenant par scène, et l'oubli est une
 erreur bruyante.
 
+#### Un prompt tiré du CATALOGUE demande d'autres poses que le jeu
+
+Quatrième fois que le même défaut est trouvé, et chaque fois par Thibaut.
+Le n2 demandait 5 poses sur 11, le n3 en demandait 9 sur 16, le n4 pour
+les héros 5 sur 14 — et les cinq méchants partageaient un prompt tiré du
+catalogue générique : `course` + `touche` + `chute`, huit poses nommées
+`[course1]` à `[chute2]`.
+
+Le code, lui, en charge dix-huit à dix-neuf par méchant, et sous d'autres
+noms : `run1` à `run6`, `hit_torse`, `hit_epaule`, `hit_jambe`,
+`hit_tete`, `chute1`, `chute2`, `sol`, plus les poses de SA mécanique —
+`garde1`/`garde2`/`garde_casse`/`sonne`/`bond`/`sol2` pour DSKKK,
+`arret`/`arme1`/`arme2`/`lance`/`lache`/`plie` pour les bombardiers,
+`trebuche1`/`trebuche2`/`ramasse`/`arme`/`lance` pour Depardiahree. Le
+prompt demandait donc des images que le jeu ne charge pas, et taisait
+celles qu'il charge.
+
+Le test qui devait l'attraper ne lisait que les fichiers `heros*` : il
+annonçait une couverture parfaite sur un niveau dont il ignorait la
+moitié des planches. **Un test générique qui filtre sur un nom de fichier
+n'est générique qu'en apparence.**
+
+Deux effets de bord mesurés en corrigeant :
+- la règle « toutes les poses regardent vers la DROITE » du bloc commun
+  est FAUSSE pour les méchants : vérifié dans le rendu, seuls les héros
+  sont retournés (`SENS_NATIF`), un sprite d'ennemi ne l'est jamais.
+- `planches.py tout` détruisait les six planches réécrites : il supprime
+  les prompts portant la marque du générateur avant de les réécrire.
+  Un prompt qui n'est pas DANS le script n'existe qu'en attendant la
+  prochaine commande.
+
+**Dix-neuf poses ne tiennent pas sur une planche de dix**, donc deux
+planches par méchant, coupées selon le sens : `mechants.txt` pour la
+course et les quatre encaissements — une silhouette ne distingue pas un
+méchant d'un autre, le texte est le même pour les cinq et seule l'image
+jointe change — puis `<lui>.txt` pour sa chute et sa mécanique, décrites
+dans SES termes.
+
 #### Un prompt qu'on RECOPIE est un prompt qui dérive
 
 Les prompts d'objets étaient écrits à la main dans `PROMPTS.md`, au milieu
