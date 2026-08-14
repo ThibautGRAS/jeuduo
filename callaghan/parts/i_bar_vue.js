@@ -590,20 +590,27 @@ const BarVue = {
                || Images.table[m.ref.sprite];
       if (!spr || !spr.naturalWidth) continue;
       /* UN HABITUÉ ASSIS EST AU COMPTOIR, PAS AU PREMIER PLAN. Il monte
-         donc sur la ligne des tabourets — plus haute que celle de la
-         foule — et rapetisse d'autant : c'est la même perspective que
-         pour les clients qui longent le bar.
+         sur la ligne des tabourets — plus haute que celle de la foule —
+         et rapetisse d'autant : c'est la même perspective que pour les
+         clients qui longent le bar.
          Sa pose n'a PAS de tabouret dessiné : le décor a les siens, et
-         c'est celui-là qu'il faut voir sous lui. */
-      const assis = m.etat === "assis";
+         c'est celui-là qu'il faut voir sous lui.
+
+         LE PASSAGE SE FAIT EN CONTINU. `m.assise` va de 0 à 1 pendant
+         qu'il s'installe, et les TROIS grandeurs suivent ensemble : la
+         ligne de sol, l'échelle et l'abscisse. Sauter les trois d'un
+         coup, c'était le voir apparaître sur le tabouret. */
+      const a2 = borne(m.assise || 0, 0, 1);
+      const assis = a2 > 0;
       const sh = H * FOULE_TAILLE * m.ref.taille * echellePerso(m.ref.id)
-               * (assis ? FOULE_ASSIS_ECH : 1);
+               * melange(1, FOULE_ASSIS_ECH, a2);
       const sl = sh * spr.naturalWidth / spr.naturalHeight;
       /* `ex` convertit une position DU MONDE en position d'écran : la
          grappe reste sur place quand le champion se déplace, et on la
          dépasse. Hors champ, on ne la dessine pas. */
-      const x = this.ex(assis ? m.xAssis + FOULE_ASSIS_DECALE : m.x);
-      const y = H * (assis ? BAR_TAB_PIEDS : FOULE_PIEDS);
+      const x = this.ex(assis ? melange(m.x, m.xAssis + FOULE_ASSIS_DECALE, a2)
+                              : m.x);
+      const y = H * melange(FOULE_PIEDS, BAR_TAB_PIEDS, a2);
       if (x < -L * 0.25 || x > L * 1.25) continue;
       ctx.save();
       /* un cran plus sombre que le champion : ils sont du décor vivant,

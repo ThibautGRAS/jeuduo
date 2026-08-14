@@ -5766,6 +5766,44 @@ if (D){
         (vus.titube || vus.danse);
     })());
 
+  verifier("on MARCHE jusqu'au tabouret, on n'y apparaît pas",
+    (() => {
+      /* Vu en jeu : même x, même ligne de sol, même taille — tout
+         changeait sur une image, et l'habitué se matérialisait assis.
+         Une assise se joue en trois temps : il marche jusqu'au tabouret
+         (`vers_assise`), il s'installe (`assise` de 0 à 1), il se relève
+         (`leve`). Le test suit un habitué du début à la fin. */
+      const T = unBar();
+      const m = T.foule[0];
+      m.etat = "grappe"; m.x = 0.20;
+      m.tabouret = 8; m.xAssis = D.BAR_TABOURETS[8].x;
+      m.etat = "vers_assise"; m.assise = 0; m.humeur = 3;
+      const etapes = [];
+      let saut = null, precX = m.x, precA = 0;
+      for (let i = 0; i < 60 * 30; i++){
+        T.majFoule(1 / 60);
+        if (etapes[etapes.length - 1] !== m.etat) etapes.push(m.etat);
+        /* aucun bond : ni en abscisse, ni dans l'installation */
+        if (Math.abs(m.x - precX) > 0.02) saut = "x " + m.x.toFixed(3);
+        if (Math.abs((m.assise || 0) - precA) > 0.1) saut = "assise";
+        precX = m.x; precA = m.assise || 0;
+        if (m.etat === "grappe" && etapes.length > 2) break;
+      }
+      messageDetail = (saut ? "bond : " + saut + " | " : "") + etapes.join(" -> ");
+      return !saut && etapes.indexOf("assis") > 0 &&
+        etapes.indexOf("leve") > etapes.indexOf("assis");
+    })());
+
+  verifier("un tabouret reste PRIS tant que personne ne s'en est relevé",
+    (() => {
+      /* La place se libérait dès que l'humeur tombait, donc pendant qu'il
+         se levait encore : deux habitués se retrouvaient sur le même
+         tabouret le temps d'une seconde. */
+      const src = fs.readFileSync(path.join(RACINE, "parts", "k_foule.js"), "utf8");
+      return /q\.etat === "assis" \|\| q\.etat === "vers_assise" \|\| q\.etat === "leve"/
+        .test(src);
+    })());
+
   verifier("le verre change la pose de l'assis, pas son siège",
     (() => {
       /* Le canapé du bar a été retiré : il ne plaisait pas, et deux
@@ -5835,7 +5873,7 @@ if (D){
       messageDetail = D.FOULE_PLACES.length + " grappes, étendue " + etendue.toFixed(2);
       return D.FOULE_PLACES.length >= 4 && etendue > 0.7 &&
         D.FOULE_PLACES.every(p => T.grappe(p.id).length > 0) &&
-        /const x = this\.ex\(assis \? m\.xAssis \+ FOULE_ASSIS_DECALE : m\.x\)/.test(source);
+        /const x = this\.ex\(assis \? melange\(m\.x, m\.xAssis \+ FOULE_ASSIS_DECALE, a2\)/.test(source);
     })());
 
   verifier("une grappe hors champ n'est pas dessinée",

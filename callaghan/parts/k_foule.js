@@ -332,8 +332,18 @@ const FOULE_CADENCE_DANSE = 3.4;
    moitié — mesuré sur le décor, un tabouret fait 0,245 de la hauteur
    d'écran et un homme debout dans les trois quarts d'un mètre quatre-
    vingts, soit deux fois et demie le tabouret. À 0,74 il flottait
-   au-dessus de l'assise comme un enfant sur un tabouret d'adulte. */
-const FOULE_ASSIS_ECH = 0.98;
+   au-dessus de l'assise comme un enfant sur un tabouret d'adulte.
+
+   0,84 ET NON 0,98. Vu en jeu : à 0,98 l'assis faisait DEUX FOIS la
+   hauteur du tabouret, là où un homme assis en fait 1,75 — il écrasait
+   son siège et paraissait posé dessus plutôt qu'assis dedans. */
+const FOULE_ASSIS_ECH = 0.84;
+/* LE TEMPS DE S'ASSEOIR. Ils apparaissaient D'UN COUP sur le tabouret :
+   même x, même ligne de sol, même taille, tout changeait sur une image.
+   Une assise se joue en trois temps — il marche jusqu'au tabouret, il
+   s'installe, il se relève — et c'est le deuxième qui manquait. */
+const FOULE_ASSISE_DUREE = 0.40;
+const FOULE_VERS_ASSISE = 0.16;   /* fraction de monde par seconde */
 /* IL S'ASSOIT À CÔTÉ, PAS DESSUS. Le tabouret est dessiné AVANT la foule,
    donc un habitué posé exactement sur son abscisse le recouvre
    entièrement — il est plus large que lui — et on obtient un homme assis
@@ -543,7 +553,24 @@ Object.assign(Tournee, {
         m.foulee += dt * FOULE_CADENCE_DANSE;
         continue;
       }
-      if (m.etat === "assis") continue;
+      /* il marche jusqu'à son tabouret, il ne s'y téléporte pas */
+      if (m.etat === "vers_assise"){
+        m.foulee += dt * 6;
+        m.dir = m.xAssis > m.x ? 1 : -1;
+        m.x += m.dir * dt * FOULE_VERS_ASSISE;
+        if (Math.abs(m.x - m.xAssis) < 0.012){ m.etat = "assis"; m.assise = 0; }
+        continue;
+      }
+      if (m.etat === "assis"){
+        m.assise = Math.min(1, m.assise + dt / FOULE_ASSISE_DUREE);
+        continue;
+      }
+      if (m.etat === "leve"){
+        m.foulee += dt * 6;
+        m.assise = Math.max(0, m.assise - dt / FOULE_ASSISE_DUREE);
+        if (m.assise <= 0){ m.etat = "grappe"; m.t = 0; m.verre = false; }
+        continue;
+      }
       if (m.etat === "grappe"){
         /* il rejoint doucement sa place : après un départ voisin, les
            rangs se resserrent au lieu de sauter */
@@ -598,8 +625,15 @@ Object.assign(Tournee, {
        même homme assis, mais penché sur son verre. `assis_canape` ne sert
        plus au bar — il n'y a plus de canapé — mais la pose reste
        découpée et chargée : elle attend le canapé du niveau 2. */
-    if (m.etat === "assis")
+    if (m.etat === "vers_assise" || m.etat === "leve")
+      return "marche" + (1 + (Math.floor(m.foulee) % 2));
+    if (m.etat === "assis"){
+      /* IL RESTE DEBOUT LE TEMPS DE S'ASSEOIR. La pose bascule à
+         mi-parcours : plus tôt, il s'assoit avant d'être arrivé sur le
+         tabouret ; plus tard, il reste planté dessus. */
+      if (m.assise < 0.5) return "marche1";
       return (m.verre && dispo("assis_verre")) || dispo("assis_tabouret") || "idle";
+    }
     if (m.etat === "danse")
       /* DEUX TEMPS SI LA PLANCHE LES A, UN SEUL SINON. Six habitués sur
          sept n'ont que `danse1` : alterner avec une pose absente les
@@ -621,10 +655,18 @@ Object.assign(Tournee, {
   majHumeurs(dt){
     this.humeurT -= dt;
     for (const m of this.foule){
-      if (m.humeur > 0){
+      /* LE COMPTE À REBOURS NE COURT PAS PENDANT LE TRAJET. Il partait à
+         la seconde où l'habitué était envoyé vers un tabouret : sur un
+         trajet de trois secondes et une envie de s'asseoir de quatre, il
+         faisait demi-tour à mi-chemin sans s'être assis une seule fois.
+         L'envie compte le temps ASSIS, pas le temps de marcher. */
+      if (m.humeur > 0 && m.etat !== "vers_assise"){
         m.humeur -= dt;
         if (m.humeur <= 0){
-          m.etat = "grappe"; m.t = 0; m.verre = false;
+          /* on ne quitte pas un tabouret en disparaissant : on se lève,
+             et la place ne se libère qu'une fois debout */
+          if (m.etat === "assis"){ m.etat = "leve"; }
+          else { m.etat = "grappe"; m.t = 0; m.verre = false; }
         }
       }
     }
@@ -635,12 +677,14 @@ Object.assign(Tournee, {
     const m = piocher(dispos);
     /* UN TABOURET LIBRE, ET UN SEUL PAR PLACE. Deux habitués sur le même
        tabouret, ça s'est vu à l'écran avant qu'on le compte. */
-    const pris = this.foule.filter(q => q.etat === "assis").map(q => q.tabouret);
+    const pris = this.foule
+      .filter(q => q.etat === "assis" || q.etat === "vers_assise" || q.etat === "leve")
+      .map(q => q.tabouret);
     const libres = BAR_TABOURETS.filter((t, i) => pris.indexOf(i) < 0);
     if (libres.length && Math.random() < FOULE_CHANCE_ASSIS){
       const i = BAR_TABOURETS.indexOf(piocher(libres));
-      m.etat = "assis"; m.tabouret = i; m.xAssis = BAR_TABOURETS[i].x;
-      m.verre = Math.random() < 0.5;
+      m.etat = "vers_assise"; m.tabouret = i; m.xAssis = BAR_TABOURETS[i].x;
+      m.assise = 0; m.verre = Math.random() < 0.5;
       m.humeur = melange(FOULE_ASSIS_DUREE[0], FOULE_ASSIS_DUREE[1], Math.random());
       return;
     }

@@ -723,6 +723,9 @@ function jouerJusqua(D, condition, limite){
         const t2 = i === 2 ? 4 : 6;
         m.tabouret = t2; m.xAssis = D.BAR_TABOURETS[t2].x;
         m.verre = i !== 2;
+        /* installé pour de bon : c'est la taille assise qu'on veut juger,
+           et elle ne vaut que quand `assise` est à 1 */
+        m.assise = 1; m.x = m.xAssis;
       }
     });
     /* Solène et le Maire, les deux dernières planches arrivées */
