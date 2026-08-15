@@ -41,9 +41,13 @@
    Mesuré sur l'image livrée : la plinthe s'arrête à 0,79, le sol
    praticable court jusqu'en bas, et les pieds se posent à 0,80. */
 const SOIREE_SOL = 0.80;
-/* 0,235 et non 0,30 : mesuré à l'écran, un invité de 0,30 dépassait la
-   plinthe et faisait deux têtes de plus que la porte des toilettes. */
-const SOIREE_TAILLE = 0.235;
+/* LA TAILLE SE MESURE SUR LA PORTE, pas au jugé. Deux essais ratés dans
+   les deux sens : 0,30 sur un décor étiré donnait des géants, 0,235 sur
+   le décor corrigé donnait des figurines. L'étalon est l'ouverture des
+   toilettes — 0,44 de la hauteur d'écran sur cette image — et un homme
+   fait à peu près 0,85 de la hauteur d'une porte. Soit 0,37 une fois la
+   taille propre au personnage appliquée, donc 0,41 avant. */
+const SOIREE_TAILLE = 0.41;
 const SOIREE_MARCHE = 0.115;     /* le joueur                              */
 const SOIREE_LENT = 0.026;       /* les invités                            */
 const SOIREE_PORTEE = 0.060;     /* à quelle distance on parle             */
