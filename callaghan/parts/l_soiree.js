@@ -72,6 +72,17 @@ const SOIREE_COINS = [
 
 /* CE QU'ILS CACHAIENT. Le couple est toujours un couple ; le MOTIF, lui,
    change — et c'est le motif qui fait la chute. */
+/* LES TROIS CRÉNEAUX. C'est le coeur du nouveau système : chacun a un
+   PARCOURS — où il était à 22 h, à 23 h, à minuit — et un témoignage
+   porte toujours sur UN créneau. Avant, chacun répondait « j'étais là
+   avec X » sans dire QUAND : rien ne pouvait se recouper, et l'enquête
+   se réduisait à repérer qui citait qui.
+
+   Maintenant deux personnes qui se disent ensemble à 23 h alors qu'un
+   troisième en a vu une ailleurs au même moment, c'est une CONTRADICTION
+   datée — et c'est vérifiable dans le carnet. */
+const SOIREE_CRENEAUX = ["22 h", "23 h", "minuit"];
+
 const SOIREE_MOTIFS = [
   { cle:"tromperie", titre:"Ils se voient en cachette.",
     chute:"Tout le bar le savait. Sauf toi." },
@@ -215,6 +226,32 @@ const Soiree = {
     this.couple = paires.length ? piocher(paires) : this.invites.slice(0, 2);
     for (const q of this.couple) q.coupable = true;
     this.motif = piocher(SOIREE_MOTIFS);
+
+    /* LE PARCOURS DE CHACUN : trois coins, un par créneau. C'est la
+       VÉRITÉ de la soirée, et tout le reste en découle. */
+    const publics = SOIREE_COINS.filter(c => !c.discret);
+    for (const q of this.invites)
+      q.parcours = SOIREE_CRENEAUX.map(() => piocher(publics));
+
+    /* LE CRÉNEAU DU RENDEZ-VOUS. Les deux coupables sont ensemble dans un
+       coin DISCRET, sur un seul créneau — pas toute la soirée. C'est ce
+       qui rend l'affaire trouvable : ils ont un trou commun, pas un
+       comportement suspect permanent. */
+    this.creneau = Math.floor(Math.random() * SOIREE_CRENEAUX.length);
+    const cachette = piocher(SOIREE_COINS.filter(c => c.discret));
+    for (const q of this.couple) q.parcours[this.creneau] = cachette;
+
+    /* UN FAUX TÉMOIN. Un innocent couvre quelqu'un — par amitié, par
+       erreur, ou parce qu'il a mal vu. Sans lui, tout recoupement était
+       une preuve : le joueur qui croise deux témoignages avait gagné.
+       Avec lui, il faut TROIS sources concordantes, et se tromper devient
+       possible sans que ce soit injuste. */
+    const innocents = this.invites.filter(q => !q.coupable);
+    this.fauxTemoin = innocents.length ? piocher(innocents) : null;
+    if (this.fauxTemoin){
+      const couvre = piocher(innocents.filter(q => q !== this.fauxTemoin) || []);
+      this.fauxTemoin.couvre = couvre || null;
+    }
   },
 
   loin(iv){ return Math.abs(this.x - iv.x) > 0.22; },
@@ -349,6 +386,44 @@ const Soiree = {
      referment l'un sur l'autre sont la seule preuve du niveau. */
   temoignage(iv){
     const autres = this.invites.filter(q => q !== iv);
+    /* ON RÉPOND SUR UN CRÉNEAU, et on avance dans la soirée à chaque
+       question : réinterroger quelqu'un ne redonne pas la même phrase,
+       ça donne l'heure suivante. C'est ce qui fait qu'insister a un sens. */
+    iv.creneau = ((iv.creneau == null) ? Math.floor(Math.random() * 3)
+                                       : (iv.creneau + 1) % 3);
+    const c = iv.creneau, heure = SOIREE_CRENEAUX[c];
+    const ou = q => ((q.parcours && q.parcours[c]) || SOIREE_COINS[0]).nom;
+
+    if (iv.coupable){
+      const autre = this.couple[0] === iv ? this.couple[1] : this.couple[0];
+      if (c === this.creneau){
+        /* LE CRÉNEAU QU'IL DOIT COUVRIR. Il ment, et il ment BIEN : un
+           lieu public, et son complice comme témoin. Les deux racontent
+           la même chose — c'est vérifiable, et c'est leur seule faute. */
+        iv.presse = (iv.presse || 0) + 1;
+        if (iv.presse > 2 && Math.random() < 0.5) return piocher(SOIREE_DITS.gene);
+        return "À " + heure + ", j'étais "
+             + piocher(SOIREE_COINS.filter(q2 => !q2.discret)).nom
+             + ", avec " + autre.ref.nom + ".";
+      }
+      /* sur les autres créneaux il dit vrai : un coupable n'est pas un
+         menteur permanent, et c'est ce qui rend le trou repérable */
+      return "À " + heure + ", j'étais " + ou(iv) + ".";
+    }
+
+    /* LE FAUX TÉMOIN couvre quelqu'un, sans savoir qu'il brouille tout. */
+    if (this === Soiree && this.fauxTemoin === iv && iv.couvre && Math.random() < 0.5)
+      return "À " + heure + ", " + iv.couvre.ref.nom + " était avec moi, "
+           + ou(iv) + ".";
+
+    /* UN INNOCENT DIT VRAI. Trois façons : où il était, où il a vu
+       quelqu'un, ou rien du tout. */
+    const r0 = Math.random();
+    if (r0 < 0.45) return "À " + heure + ", j'étais " + ou(iv) + ".";
+    if (r0 < 0.80){
+      const vu = piocher(autres);
+      return "À " + heure + ", j'ai vu " + vu.ref.nom + " " + ou(vu) + ".";
+    }
     const remplir = t => t
       .replace("{ou}", piocher(SOIREE_COINS).nom)
       .replace("{a}", (piocher(autres) || iv).ref.nom)
@@ -367,9 +442,8 @@ const Soiree = {
       return piocher(SOIREE_DITS.gene);
     }
 
-    /* UN INNOCENT NE RÉPOND PAS TOUJOURS LA MÊME CHOSE. Les proportions
-       comptent : trop d'alibis et le niveau est un tableur, trop de
-       soupçons et tout le monde a l'air coupable. */
+    /* et parfois, rien d'utile : c'est le bruit de fond, et une soirée
+       où tout le monde a quelque chose à dire n'est pas une soirée. */
     const r = Math.random();
     const seau = r < 0.30 ? "alibi" : r < 0.55 ? "vu" : r < 0.70 ? "soupcon"
                : r < 0.85 ? "detail" : "rien";
@@ -549,8 +623,8 @@ const SoireeVue = {
   dessinerCarnet(){
     const H = Camera.H, L = Camera.L;
     const marge = H * 0.028;
-    const l = Math.min(L * 0.42, H * 0.62);
-    const lignes = Soiree.notes.slice(-5);
+    const l = Math.min(L * 0.48, H * 0.78);
+    const lignes = Soiree.notes.slice(-6);
     const haut = H * 0.10 + lignes.length * H * 0.038;
     ctx.save();
     ctx.fillStyle = "rgba(12,10,22,.62)";
@@ -577,8 +651,10 @@ const SoireeVue = {
     ctx.font = "600 " + Math.round(H * 0.022) + "px 'Baloo 2', system-ui, sans-serif";
     lignes.forEach((n, i) => {
       ctx.fillStyle = "rgba(246,242,255,.86)";
-      const t = n.nom + " : " + n.txt;
-      ctx.fillText(t.length > 46 ? t.slice(0, 45) + "…" : t,
+      /* la phrase porte déjà l'heure : « À 23 h, j'étais... ». C'est ce
+         qui permet d'aligner deux notes et de voir la contradiction. */
+      const t = n.nom + " — " + n.txt;
+      ctx.fillText(t.length > 52 ? t.slice(0, 51) + "…" : t,
                    marge + H * 0.016, marge + H * 0.122 + i * H * 0.036);
     });
     ctx.restore();

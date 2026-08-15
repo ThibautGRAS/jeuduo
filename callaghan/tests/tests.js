@@ -5884,6 +5884,51 @@ if (D){
       return dort > 200 && dort < 380 && T.poseFoule({ ...m, etat:"dort" }) === "dort";
     })());
 
+  verifier("l'enquête du niveau 5 se recoupe par CRÉNEAU",
+    (() => {
+      /* Avant, chacun répondait « j'étais là avec X » sans dire QUAND :
+         rien ne pouvait se recouper et l'enquête se réduisait à repérer
+         qui citait qui. Chaque invité a maintenant un PARCOURS — trois
+         coins, un par créneau — et le couple partage un coin DISCRET sur
+         UN seul créneau. Ils ont un trou commun, pas un comportement
+         suspect permanent, et c'est ce trou qu'on cherche. */
+      for (const n of D.IMG_PAR_DOSSIER.n3)
+        D.Images.table[n] = { naturalWidth:1, naturalHeight:1 };
+      D.Jeu.demarrer(5);
+      const S = D.Soiree;
+      const parcours = S.invites.every(q => q.parcours && q.parcours.length === 3);
+      /* le rendez-vous est dans un coin discret, et sur un seul créneau */
+      const rdv = S.couple.every(q => q.parcours[S.creneau].discret);
+      const ailleurs = S.couple.every(q =>
+        q.parcours.filter((c, i) => i !== S.creneau).every(c => !c.discret));
+      /* et sur ce créneau-là, ils racontent tous les deux un lieu PUBLIC */
+      const menteurs = S.couple.map(q => { q.creneau = S.creneau - 1; return S.temoignage(q); });
+      const couvre = menteurs.every(t =>
+        S.couple.some(q => t.indexOf(q.ref.nom) >= 0));
+      messageDetail = "rendez-vous à " + D.SOIREE_CRENEAUX[S.creneau]
+        + (S.fauxTemoin ? ", faux témoin " + S.fauxTemoin.ref.nom : "");
+      return parcours && rdv && ailleurs && couvre &&
+        D.SOIREE_CRENEAUX.length === 3;
+    })());
+
+  verifier("un FAUX TÉMOIN empêche qu'un seul recoupement suffise",
+    (() => {
+      /* Sans lui, deux témoignages concordants valaient preuve : le
+         joueur qui en croisait deux avait gagné. Avec lui, il en faut
+         trois, et se tromper devient possible sans que ce soit injuste —
+         il couvre quelqu'un par amitié, pas par malice. */
+      for (const n of D.IMG_PAR_DOSSIER.n3)
+        D.Images.table[n] = { naturalWidth:1, naturalHeight:1 };
+      let vus = 0;
+      for (let i = 0; i < 20; i++){
+        D.Jeu.demarrer(5);
+        const S = D.Soiree;
+        if (S.fauxTemoin && !S.fauxTemoin.coupable) vus++;
+      }
+      messageDetail = vus + " parties sur 20 avec un faux témoin innocent";
+      return vus >= 18;
+    })());
+
   verifier("le verre change la pose de l'assis, pas son siège",
     (() => {
       /* Le canapé du bar a été retiré : il ne plaisait pas, et deux
