@@ -99,13 +99,17 @@ const SOIREE_MOTIFS = [
    `gene`, et c'est ça qui se remarque au bout de deux questions. */
 const SOIREE_DITS = {
   alibi: [
-    "J'étais {ou}, avec {a}.",
-    "{ou}, tout le temps. Demande à {a}.",
-    "Avec {a}, {ou}. On a pas bougé.",
-    "Moi ? {ou}. {a} peut le dire.",
+    "J'étais {ou}, avec {a}. Tout le temps.",
+    "{ou}. Demande à {a}, elle était collée à moi.",
+    "Avec {a}. On a pas bougé de la soirée.",
+    "Moi ? {ou}. {a} peut te le dire.",
+    "{a} et moi, {ou}. On refaisait le monde.",
+    "J'ai passé la soirée {ou}. Ambiance.",
   ],
   vu: [
-    "J'ai vu {a} filer {ou}.",
+    "J'ai vu {a} filer {ou}, l'air pressé.",
+    "{a} a disparu vingt minutes. Vingt.",
+    "{a} est revenu {ou} en se recoiffant.",
     "{a} est passé par le couloir. Deux fois.",
     "{a} et {b} se sont croisés {ou}.",
     "{a} cherchait quelqu'un, ça se voyait.",
@@ -126,12 +130,16 @@ const SOIREE_DITS = {
   ],
   soupcon: [
     "{a} est bizarre ce soir. Vraiment bizarre.",
+    "{a} a rangé son téléphone quand je suis arrivé.",
+    "{a} rit trop fort. C'est mauvais signe.",
     "{a} a changé de sujet trois fois.",
     "Si j'étais toi, je regarderais {a}.",
     "{a} a pas décroché un mot de la soirée.",
   ],
   gene: [
     "Moi ? Nulle part. Enfin, ici.",
+    "Écoute, j'ai pas que ça à faire.",
+    "Tu me fatigues avec tes questions.",
     "J'étais là. Puis ailleurs. Puis là.",
     "Pourquoi tu demandes ça ?",
     "C'est un interrogatoire ou une soirée ?",
@@ -267,8 +275,13 @@ const Soiree = {
         }
       }
 
+      /* HYSTÉRÉSIS : on se met en marche au-delà de 0,018 et on ne
+         s'arrête qu'en dessous de 0,008. Un seul seuil faisait vibrer
+         ceux qui arrivaient pile dessus — un pas en avant, un pas en
+         arrière, indéfiniment. */
       const d = iv.cible - iv.x;
-      if (Math.abs(d) > 0.010){
+      iv.bouge = Math.abs(d) > (iv.bouge ? 0.008 : 0.018);
+      if (iv.bouge){
         iv.dir = d > 0 ? 1 : -1;
         iv.x = borne(iv.x + iv.dir * dt * SOIREE_LENT, 0.03, 0.97);
         iv.foulee += dt * 3.4;
@@ -286,6 +299,12 @@ const Soiree = {
           const pousse = (mini - Math.abs(d)) * 0.5 * (d >= 0 ? 1 : -1);
           p1.x = borne(p1.x - pousse, 0.03, 0.97);
           p2.x = borne(p2.x + pousse, 0.03, 0.97);
+          /* LA POUSSÉE DÉPLACE AUSSI LA CIBLE. Sans ça, deux invités
+             serrés se repoussaient pendant que chacun revenait vers son
+             point : ils oscillaient sur place et l'alternance
+             marche1/marche2 les faisait CLIGNOTER, l'air bloqués. C'est
+             le défaut vu en jeu, et il ne se voyait pas à l'arrêt. */
+          p1.cible = p1.x; p2.cible = p2.x;
         }
       }
 
@@ -391,7 +410,7 @@ const Soiree = {
      changent en même temps, ce qui se voit encore plus. */
   pose(iv){
     const p = iv.ref.prefixe, dispo = n => Images.table[p + "_" + n] ? n : null;
-    if (Math.abs(iv.cible - iv.x) > 0.010)
+    if (iv.bouge)
       return dispo("marche" + (1 + (Math.floor(iv.foulee) % 2)))
           || dispo("marche1") || "idle";
     if (iv.coin && iv.coin.cle === "piste")
