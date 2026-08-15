@@ -687,6 +687,25 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "36b_bar_collegue");
   }
 
+  /* 40. LA RUE, le niveau 5. Trois ivrognes en pleine dérive et le
+     champion entre deux : la seule image qui dise si on lit le troupeau
+     d'un coup d'oeil, et si le décor tient sous les personnages. */
+  {
+    const { D, canevas } = await preparer(844, 390);
+    D.amorcer(); D.Camera.mesurer(844, 390, 1);
+    D.Jeu.demarrer(5);
+    for (let i = 0; i < 30; i++) D.Jeu.pas(1 / 60);
+    D.Rue.x = 0.42;
+    D.Rue.ivrognes.forEach((iv, i) => {
+      iv.x = 0.22 + i * 0.20;
+      iv.derive = D.RUE_DERIVES[i % 3];
+      iv.etat = iv.derive.cle;
+      iv.dit = iv.derive.dit[0]; iv.ditT = 2.0; iv.foulee = 1.4;
+    });
+    D.RueVue.dessiner();
+    ecrire(canevas, "40_rue_troupeau");
+  }
+
   /* 36d. LES HUMEURS DES HABITUÉS. Tristan est le premier à avoir les six
      poses de figurant-2 : on le met quatre fois dans la même image, une
      par état. C'est la seule façon de voir si l'assis tombe SUR le

@@ -657,6 +657,12 @@ function dessiner(){
 
 function dessinerScene(){
   if (!ctx) return;
+  if (Jeu.niveau === 5 && Jeu.phase !== "titre"){
+    const dpr5 = Math.min(2, globalThis.devicePixelRatio || 1);
+    ctx.setTransform(dpr5, 0, 0, dpr5, 0, 0);
+    RueVue.dessiner();
+    return;
+  }
   if (Jeu.niveau === 4 && Jeu.phase !== "titre"){
     const dpr4 = Math.min(2, globalThis.devicePixelRatio || 1);
     ctx.setTransform(dpr4, 0, 0, dpr4, 0, 0);

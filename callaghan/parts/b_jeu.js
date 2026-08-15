@@ -389,6 +389,17 @@ const Jeu = {
 
   demarrer(niveau){
     if (niveau) this.niveau = niveau;
+    if (this.niveau === 5){
+      Score.raz(); Effets.raz(); razHeros(); File.raz(); Foule.raz();
+      this.temps = 0; this.vies = 1; this.finChrono = 0; this.phase = "jeu";
+      /* le champion du bar sert de joueur : c'est le même homme, deux
+         heures plus tard */
+      if (!Tournee.champion) Tournee.champion = BAR_CHAMPIONS[0];
+      Rue.demarrer();
+      Interface.entrerJeu();
+      Sons.reveiller();
+      return;
+    }
     if (this.niveau === 4){
       Score.raz(); Effets.raz(); razHeros(); File.raz(); Foule.raz();
       this.temps = 0; this.vies = 1; this.finChrono = 0; this.phase = "jeu";
@@ -459,6 +470,13 @@ const Jeu = {
 
   /* --------- boucle logique, pas fixe --------- */
   pas(dt){
+    if (this.niveau === 5){
+      if (this.phase === "jeu" || this.phase === "fin"){
+        this.temps += dt;
+        Rue.pas(dt);
+      }
+      return;
+    }
     if (this.niveau === 4){
       if (this.phase === "jeu" || this.phase === "fin"){
         this.temps += dt;

@@ -139,9 +139,16 @@ titre("L'écran titre");
   verifier("chaque tuile porte son numéro et sa vignette",
     (() => {
       if (!bloc) return false;
-      /* Quatre niveaux depuis la v6.35 : la ruelle a rejoint le menu. */
-      return (bloc[1].match(/class="num"/g) || []).length === 4 &&
-        [1, 2, 3, 4].every(k => new RegExp('id="vign' + k + '"').test(bloc[1]));
+      /* Le compte n'est plus figé : il vient de NOMS_NIVEAUX. Il valait
+         quatre, puis cinq, et le figer une fois de plus reviendrait à
+         relire ce test au prochain niveau. Ce qui compte est que CHAQUE
+         niveau déclaré ait sa tuile, son numéro et sa vignette. */
+      /* Le test tourne AVANT que le jeu soit évalué : la liste se lit
+         donc dans le source, pas dans D. */
+      const niveaux = [...html.matchAll(/^  (\d): \{ nom:"/gm)].map(m => Number(m[1]));
+      return (bloc[1].match(/class="num"/g) || []).length === niveaux.length &&
+        niveaux.every(k => new RegExp('id="vign' + k + '"').test(bloc[1])) &&
+        niveaux.every(k => new RegExp('data-niv="' + k + '"').test(bloc[1]));
     })());
   verifier("chaque niveau a sa couleur",
     [["n1", "#37AC48"], ["n2", "#2A8AE4"], ["n3", "#F7B32B"]]

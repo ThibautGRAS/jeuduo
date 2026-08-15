@@ -35,7 +35,7 @@ function accrocher(){
    qu'alignées, et c'est la façon dont on prend son téléphone. On demande
    ensuite de tourner à l'entrée des trois premiers niveaux — jamais
    avant d'avoir choisi. Le quatrième reste debout. */
-const ORIENTATION = { 0:"portrait", 1:"paysage", 2:"paysage", 3:"paysage", 4:"portrait" };
+const ORIENTATION = { 0:"portrait", 1:"paysage", 2:"paysage", 3:"paysage", 4:"portrait", 5:"paysage" };
 function orientationVoulue(niv){ return ORIENTATION[niv] || "paysage"; }
 function paysageOk(L, H){ return L >= H * 1.02; }
 function portraitOk(L, H){ return H >= L * 1.02; }
@@ -885,10 +885,12 @@ const Entrees = {
       if (e.repeat && t !== "arrowleft" && t !== "arrowright" && t !== "q") return;
       if (t === "arrowleft" || t === "q"){
         e.preventDefault();
-        if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp - 1); else Tournee.marcher(-1);
+        if (Jeu.niveau === 5) Rue.marcher(-1);
+        else if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp - 1); else Tournee.marcher(-1);
       } else if (t === "arrowright"){
         e.preventDefault();
-        if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp + 1); else Tournee.marcher(1);
+        if (Jeu.niveau === 5) Rue.marcher(1);
+        else if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp + 1); else Tournee.marcher(1);
       } else if (t === "e" || t === "enter" || t === " "){
         e.preventDefault(); Sons.reveiller();
         if (Tournee.enChoix) Tournee.lancer(); else Tournee.boire();
@@ -909,7 +911,9 @@ const Entrees = {
     globalThis.addEventListener("keyup", e => {
       if (Jeu.niveau !== 3) return;
       const t = e.key.toLowerCase();
-      if (t === "arrowleft" || t === "arrowright" || t === "q") Tournee.marcher(0);
+      if (t === "arrowleft" || t === "arrowright" || t === "q"){
+        Tournee.marcher(0); Rue.marcher(0);
+      }
     });
 
     globalThis.addEventListener("keydown", e => {
@@ -1273,7 +1277,7 @@ globalThis.DTOUR = {
   Transition, nomNiveau, sensNiveau, NOMS_NIVEAUX,
   ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, IA_REUSSITE, IA_CADENCE, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, RUELLE_DEGAT_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
-  Tournee, BarVue, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
+  Tournee, BarVue, Rue, RueVue, RUE_SOL, RUE_ARRIVEE, RUE_DERIVES, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
   POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE, BAR_TAILLE_BARMAN, BAR_TAILLE_HEROS, BAR_COPIES,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, ENQ_ESQUIVE_FENETRE, SUJETS, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,
