@@ -83,13 +83,63 @@ const SOIREE_COINS = [
    datée — et c'est vérifiable dans le carnet. */
 const SOIREE_CRENEAUX = ["22 h", "23 h", "minuit"];
 
+/* TROIS MOTIFS QUI SE JOUENT DIFFÉREMMENT. Ils ne changeaient que la
+   phrase finale : les trois parties étaient identiques et le motif
+   n'était qu'une chute. Chacun porte maintenant ses propres SCÈNES, ses
+   propres excuses quand on les surprend, et un COIN qui les attire —
+   c'est ce coin qui trahit l'intrigue avant même qu'on ait un nom.
+
+   `coin`    où ils traînent quand ils ne sont pas à leur rendez-vous. Le
+             joueur qui remarque que deux personnes reviennent toujours
+             vers la table aux cadeaux n'a plus besoin d'interroger.
+   `scenes`  les indices sensibles propres à l'affaire. Un paquet de trop
+             ne veut rien dire dans une histoire de dette.
+   `surpris` ce qu'ils inventent quand on les trouve ensemble. Une
+             mauvaise excuse dit de quoi on se cache. */
 const SOIREE_MOTIFS = [
-  { cle:"tromperie", titre:"Ils se voient en cachette.",
-    chute:"Tout le bar le savait. Sauf toi." },
-  { cle:"cadeau", titre:"Ils préparaient une surprise.",
-    chute:"Le cadeau était pour toi. Bravo." },
-  { cle:"dette", titre:"L'un devait de l'argent à l'autre.",
-    chute:"Trois cents balles. Depuis deux ans." },
+  { cle:"tromperie", coin:"couloir",
+    titre:"Ils se voient en cachette.",
+    chute:"Tout le bar le savait. Sauf toi.",
+    scenes:[
+      ["Le rideau des toilettes a bougé.", "Y'a personne.", "Y'avait."],
+      ["Elle s'est recoiffée trois fois.", "Et alors ?", "Trois FOIS."],
+      ["Ils s'évitent trop bien.", "C'est-à-dire ?",
+       "Personne s'évite aussi bien par hasard."],
+      ["Y'a une odeur de parfum dans le couloir.", "Sur qui ?",
+       "Sur les deux. C'est ça le problème."],
+    ],
+    surpris:["On parlait de la déco.", "Je cherchais les toilettes.",
+             "C'est pas ce que tu crois."] },
+
+  { cle:"cadeau", coin:"cadeaux",
+    titre:"Ils préparaient une surprise.",
+    chute:"Le cadeau était pour toi. Bravo.",
+    scenes:[
+      ["Y'a un paquet de plus qu'hier.", "Compte encore.", "J'ai compté deux fois."],
+      ["Quelqu'un a caché un truc sous les manteaux.", "Un cadeau ?",
+       "Un truc qu'on cache, en tout cas."],
+      ["Ils chuchotent près de la table.", "Ils s'engueulent ?",
+       "Non. Ils s'organisent."],
+      ["Y'a du ruban par terre.", "Et alors ?",
+       "Personne emballe pendant une soirée. Sauf si c'est urgent."],
+    ],
+    surpris:["On regardait les cadeaux !", "Rien ! On fait rien !",
+             "Tu peux pas être là. Pas maintenant."] },
+
+  { cle:"dette", coin:"fumoir",
+    titre:"L'un devait de l'argent à l'autre.",
+    chute:"Trois cents balles. Depuis deux ans.",
+    scenes:[
+      ["Ils sont sortis fumer. Aucun des deux fume.", "Ah.", "Voilà."],
+      ["J'ai vu un billet changer de main.", "Combien ?",
+       "Assez pour qu'ils regardent autour d'eux."],
+      ["Il lui a demandé si je pouvais dépanner.", "Toi ?",
+       "Moi. J'ai dit non. Il a pas insisté."],
+      ["Ils comptent quelque chose dehors.", "Les étoiles ?",
+       "Sûrement pas les étoiles."],
+    ],
+    surpris:["On prenait l'air.", "On réglait un truc. Rien de grave.",
+             "C'est entre nous, ça."] },
 ];
 
 /* Ce qu'on répond quand on n'a rien à cacher : un lieu, une heure, et
@@ -354,7 +404,13 @@ const Soiree = {
        qui rend l'affaire trouvable : ils ont un trou commun, pas un
        comportement suspect permanent. */
     this.creneau = Math.floor(Math.random() * SOIREE_CRENEAUX.length);
-    const cachette = piocher(SOIREE_COINS.filter(c => c.discret));
+    /* LE COIN DU MOTIF SERT DE CACHETTE quand il est discret — le fumoir
+       pour la dette — et sinon le rendez-vous reste au couloir mais ils
+       DÉRIVENT vers le coin du motif le reste du temps. Dans les deux cas
+       l'endroit raconte l'affaire. */
+    const duMotif = SOIREE_COINS.find(c => c.cle === this.motif.coin);
+    const cachette = (duMotif && duMotif.discret) ? duMotif
+                   : piocher(SOIREE_COINS.filter(c => c.discret));
     for (const q of this.couple) q.parcours[this.creneau] = cachette;
 
     /* UN FAUX TÉMOIN. Un innocent couvre quelqu'un — par amitié, par
@@ -398,7 +454,9 @@ const Soiree = {
         const autre = this.couple[0] === iv ? this.couple[1] : this.couple[0];
         const discret = SOIREE_COINS.filter(c => c.discret);
         if (this.loin(iv) && this.loin(autre)){
-          const coin = discret[0];
+          const coin = (Math.random() < 0.35 &&
+                        SOIREE_COINS.find(c => c.cle === this.motif.coin))
+                     || discret[0];
           iv.cible = coin.x + (this.couple[0] === iv ? -0.02 : 0.02);
           iv.coin = coin;
         } else if (Math.abs(this.x - iv.x) < 0.30 && Math.abs(iv.x - autre.x) < 0.12){
@@ -406,7 +464,8 @@ const Soiree = {
           const fuite = piocher(SOIREE_COINS.filter(c => !c.discret));
           iv.cible = fuite.x; iv.coin = fuite;
           if (!iv.dit){
-            iv.dit = piocher(SOIREE_SURPRIS); iv.ditT = 2.6;
+            iv.dit = piocher(this.motif.surpris.concat(SOIREE_SURPRIS));
+            iv.ditT = 2.6;
           }
         }
       } else if (iv.t <= 0){
@@ -537,7 +596,11 @@ const Soiree = {
          difficulté, elle ne le désigne pas. */
       if (vise === a) this.scene = null;
     } else {
-      lignes = piocher(Math.random() < 0.45 ? SOIREE_SCENES.objet
+      /* LES SCÈNES DU MOTIF PASSENT AVANT LES GÉNÉRIQUES : c'est par
+         elles qu'on comprend de quoi il retourne, et une affaire de
+         cadeau ne doit pas se raconter avec de la buée sur un miroir. */
+      const objets = this.motif.scenes.concat(SOIREE_SCENES.objet);
+      lignes = piocher(Math.random() < 0.50 ? objets
                                             : SOIREE_SCENES.piste).slice();
     }
     /* on place toujours le questionneur en `a` */

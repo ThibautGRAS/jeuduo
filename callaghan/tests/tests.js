@@ -5911,6 +5911,25 @@ if (D){
         D.SOIREE_CRENEAUX.length === 3;
     })());
 
+  verifier("chaque motif se JOUE différemment, il ne change pas que la chute",
+    (() => {
+      /* Les trois motifs ne changeaient que la phrase finale : les trois
+         parties etaient identiques et le motif n'était qu'une chute.
+         Chacun porte maintenant son COIN — où le couple traîne, et c'est
+         ce qui trahit l'affaire avant qu'on ait un nom —, ses SCÈNES
+         propres, et ses excuses quand on les surprend. Un paquet de trop
+         ne veut rien dire dans une histoire de dette. */
+      const m = D.SOIREE_MOTIFS;
+      const coins = new Set(m.map(x => x.coin));
+      const scenes = m.reduce((n, x) => n + (x.scenes || []).length, 0);
+      const excuses = m.every(x => (x.surpris || []).length >= 3);
+      const connus = m.every(x => D.SOIREE_COINS.some(c => c.cle === x.coin));
+      messageDetail = m.length + " motifs, " + coins.size + " coins distincts, "
+        + scenes + " scènes propres";
+      return m.length >= 3 && coins.size === m.length && connus &&
+        excuses && scenes >= 12;
+    })());
+
   verifier("un FAUX TÉMOIN empêche qu'un seul recoupement suffise",
     (() => {
       /* Sans lui, deux témoignages concordants valaient preuve : le
