@@ -789,7 +789,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v7.45</div>
+  <div id="version">CALLAGHAN v7.46</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -861,7 +861,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.45";
+const VERSION = "7.46";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -14070,6 +14070,42 @@ const SOIREE_AMBIANCE = [
   "J'ai froid. Qui a ouvert la porte du fumoir ?",
   "On remet de la musique ?",
   "C'est qui qui a pris ma veste ?",
+  "Le baby-foot est cassé. Comme d'hab.",
+  "Qui a mis ce morceau ? Sérieux, qui ?",
+  "J'ai emballé mon cadeau dans du journal. Assumé.",
+  "Y'a plus de verres propres. Y'a plus de verres du tout.",
+  "MAX a encore triché au baby.",
+  "L'horloge est arrêtée. Donc il est jamais trop tard.",
+  "Attendez, on chante quand ?",
+  "Deux parts de gâteau ont disparu. DEUX.",
+  "Je connais personne ici. Je reste.",
+  "Y'a un mec qui dort dans les manteaux.",
+  "Quelqu'un a vu mon téléphone ? Non ? Tant mieux.",
+  "Le fumoir, c'est dehors. Dehors, c'est l'hiver.",
+];
+
+/* PRIS SUR LE FAIT. Quand le joueur arrive pendant que les deux sont
+   ensemble, ils se séparent — et ils DISENT quelque chose. C'est la
+   récompense de la bonne lecture : on ne gagne pas encore, mais on SAIT,
+   et on l'entend. Sans ça, la meilleure action du jeu était silencieuse. */
+const SOIREE_SURPRIS = [
+  "Ah ! Tiens ! Salut !",
+  "On parlait de la déco.",
+  "Je... je cherchais les toilettes.",
+  "C'est pas ce que tu crois.",
+  "On se connaît à peine, hein.",
+  "Quelle coïncidence, non ?",
+];
+
+/* CE QU'ILS RÉPONDENT QUAND ON LES DÉSIGNE. Accuser était muet : un
+   anneau rouge et rien d'autre. */
+const SOIREE_ACCUSE = [
+  "MOI ?!",
+  "Non mais tu t'entends ?",
+  "J'ai rien fait !",
+  "Ça se passe comme ça, alors.",
+  "Tu vas le regretter.",
+  "Bon. D'accord. Enfin, non.",
 ];
 
 const SOIREE_GENE = [
@@ -14107,6 +14143,10 @@ const Soiree = {
        assez peu pour qu'on les distingue de loin. */
     for (let i = 0; i < 8 && dispo.length; i++){
       const ref = dispo.splice(Math.floor(Math.random() * dispo.length), 1)[0];
+      /* CHACUN SON COIN AU DÉPART, et on tourne dans la liste : huit
+         invités sur cinq coins remplissent la salle au lieu de s'agglutiner
+         au centre. Vu en jeu : cinq personnes entre les cadeaux et le
+         couloir, la moitié droite vide. */
       const coin = SOIREE_COINS[i % SOIREE_COINS.length];
       this.invites.push({
         ref, x:coin.x + (Math.random() - 0.5) * 0.05, coin,
@@ -14192,8 +14232,8 @@ const Soiree = {
           /* on approche : il s'écarte, un peu trop naturellement */
           const fuite = piocher(SOIREE_COINS.filter(c => !c.discret));
           iv.cible = fuite.x; iv.coin = fuite;
-          if (!iv.dit && Math.random() < 0.03){
-            iv.dit = piocher(SOIREE_GENE); iv.ditT = 2.2;
+          if (!iv.dit){
+            iv.dit = piocher(SOIREE_SURPRIS); iv.ditT = 2.6;
           }
         }
       } else if (iv.t <= 0){
@@ -14202,7 +14242,7 @@ const Soiree = {
            soirée. Une fois sur trois, il reste où il est et il parle. */
         if (Math.random() < 0.34){
           iv.cible = iv.x;
-          if (Math.random() < 0.5){
+          if (Math.random() < 0.8){
             const autres = this.invites.filter(q => q !== iv);
             iv.dit = piocher(SOIREE_AMBIANCE)
               .replace("{a}", (piocher(autres) || iv).ref.nom);
@@ -14211,7 +14251,7 @@ const Soiree = {
           iv.t = hasard(4, 10);
         } else {
           const coin = piocher(SOIREE_COINS);
-          iv.coin = coin; iv.cible = coin.x + (Math.random() - 0.5) * 0.06;
+          iv.coin = coin; iv.cible = coin.x + (Math.random() - 0.5) * 0.10;
           iv.t = hasard(5, 12);
         }
       }
@@ -14220,6 +14260,14 @@ const Soiree = {
          s'arrête qu'en dessous de 0,008. Un seul seuil faisait vibrer
          ceux qui arrivaient pile dessus — un pas en avant, un pas en
          arrière, indéfiniment. */
+      /* ILS SE TOURNENT VERS CELUI QUI PARLE. Une salle où tout le monde
+         regarde du même côté n'a pas de groupes : c'est le détail le plus
+         cheap et le plus payant de tout le niveau. */
+      if (!iv.bouge){
+        const voisin = this.invites.find(q =>
+          q !== iv && q.dit && Math.abs(q.x - iv.x) < 0.10);
+        if (voisin) iv.dir = voisin.x > iv.x ? 1 : -1;
+      }
       const d = iv.cible - iv.x;
       iv.bouge = Math.abs(d) > (iv.bouge ? 0.008 : 0.018);
       if (iv.bouge){
@@ -14377,6 +14425,7 @@ const Soiree = {
       return;
     }
     this.accuses.push(iv);
+    iv.dit = piocher(SOIREE_ACCUSE); iv.ditT = 2.4;
   },
 
   /* LE SEUL GESTE IRRÉVERSIBLE DU NIVEAU, et il faut le vouloir : un
@@ -14418,6 +14467,9 @@ const Soiree = {
     if (iv.bouge)
       return dispo("marche" + (1 + (Math.floor(iv.foulee) % 2)))
           || dispo("marche1") || "idle";
+    /* SUR LA PISTE, ON DANSE. C'est le seul endroit de la salle où le
+       décor promet quelque chose — boule à facettes, spots au sol — et
+       personne n'y faisait rien. */
     if (iv.coin && iv.coin.cle === "piste")
       return dispo("danse" + (1 + (Math.floor(Soiree.temps * 2.2 + iv.decalage) % 2)))
           || dispo("danse1") || "idle";
