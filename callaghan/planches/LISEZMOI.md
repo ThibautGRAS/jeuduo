@@ -68,6 +68,7 @@ Rangées par `archiver.py`, jamais à la main.
 | `n3` | `gabi-figurant.webp` | 103 Ko |
 | `n3` | `gautier-base.webp` | 146 Ko |
 | `n3` | `gautier-figurant.webp` | 153 Ko |
+| `n3` | `gigi-base.webp` | 150 Ko |
 | `n3` | `heros_pf_deplacement-v2.webp` | 101 Ko |
 | `n3` | `heros_pf_deplacement.webp` | 98 Ko |
 | `n3` | `heros_pf_verre.webp` | 109 Ko |
@@ -96,7 +97,7 @@ Rangées par `archiver.py`, jamais à la main.
 | `n4` | `xavier-pelle.webp` | 72 Ko |
 | `n4` | `xavier_reference.webp` | 111 Ko |
 
-**10.7 Mo au total.**
+**10.9 Mo au total.**
 
 ## 24 planches à identifier
 

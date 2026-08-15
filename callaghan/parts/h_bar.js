@@ -191,6 +191,12 @@ const BAR_CLIENTS = [
     prefixe:"bar_gautier", gestes:true },
   { id:"capucine", sprite:"bar_capucine_idle", nom:"CAPUCINE", taille:0.89,
     prefixe:"bar_capucine", gestes:true },
+  /* GIGI LA DORMEUSE. `gestes:false` : elle ne chipe jamais un verre, et
+     ce n'est pas une limite technique — c'est le personnage. Une mamie
+     qui pique du nez sur son tabouret ne tend pas le bras vers le
+     comptoir. Sa taille est la plus petite du bar. */
+  { id:"gigi", sprite:"bar_gigi_idle", nom:"GIGI", taille:0.82,
+    prefixe:"bar_gigi", gestes:false },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;

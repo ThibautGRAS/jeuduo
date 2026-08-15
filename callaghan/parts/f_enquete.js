@@ -677,7 +677,7 @@ const PLACES_FIXES = {
 const LIENS = {
   teo:      { pf:true,  th:false, amis:["gabi", "hortense", "remy"] },
   gabi:     { pf:true,  th:false, amis:["solene", "teo", "charles"] },
-  charles:  { pf:true,  th:false, amis:["gabi"] },
+  charles:  { pf:true,  th:false, amis:["gabi", "gigi"] },
   mathilde: { pf:false, th:true,  amis:["solene", "remy", "kevin", "tristan"] },
   tristan:  { pf:true,  th:true,  amis:["solene", "kevin", "remy", "mathilde", "bobito", "gautier"] },
   solene:   { pf:false, th:false, amis:["tristan", "mathilde", "kevin", "gabi", "bobito", "capucine"] },
@@ -694,7 +694,10 @@ const LIENS = {
      intéressant — Thibaut a une prise sur lui que PF n'aura jamais.
      Capucine est sa compagne ; elle l'appelle Gogo. */
   gautier:  { pf:false, th:true,  amis:["capucine", "tristan", "kevin"] },
-  capucine: { pf:false, th:true,  amis:["gautier", "solene", "bobito"] },
+  capucine: { pf:false, th:true,  amis:["gautier", "solene", "bobito", "gigi"] },
+  /* GIGI connaît tout le monde et personne : elle est là depuis toujours,
+     elle dort, et on la laisse dormir. */
+  gigi:     { pf:true,  th:true,  amis:["charles", "capucine"] },
   marini:   { pf:false, th:false, amis:[] },
   martin:   { pf:false, th:false, amis:[] },
   francky:  { pf:false, th:false, amis:["mathilde"] },

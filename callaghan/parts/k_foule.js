@@ -148,6 +148,12 @@ const FOULE_PHRASES = {
              "BOBITO ! Tu bois quoi ?"],
   /* MATHILDE BOBITO. Ses trois sujets, et elle y revient : le chien, ses
      élèves, et la piste de danse. */
+  /* GIGI. Elle parle peu, et toujours au réveil. */
+  gigi:     ["Hein ? Oui. Non. Oui.",
+             "Je fermais juste les yeux.",
+             "J'écoutais, j'écoutais.",
+             "Quelqu'un a parlé de moi ?",
+             "Il est quelle heure ? Non, dis pas."],
   gautier:  ["Ce soir je joue pas. Enfin, presque pas.",
              "J'ai tout perdu. Enfin, presque tout.",
              "À Malte il fait beau. Ici aussi, ça va.",
@@ -210,6 +216,17 @@ const FOULE_DISCUSSIONS = {
      "On a tous hoché la tête."],
     ["Elle veut un deuxième chien.", "Rémy sait ?",
      "Rémy l'apprend là, en fait."],
+    ["Gigi dort.", "Depuis quand ?", "Aucune idée. Elle était déjà là."],
+    ["Faut la réveiller ?", "Surtout pas.", "Elle va rater la tournée.",
+     "Elle rate jamais la tournée. Regarde."],
+    ["Elle dort ou elle écoute ?", "Les deux.",
+     "C'est bien ça qui fait peur."],
+    ["Gigi la dormeuse.", "Elle déteste qu'on l'appelle comme ça.",
+     "Elle dort, elle entend pas.", "Elle entend TOUT."],
+    ["J'ai vu Gigi danser une fois.", "Non ?", "Si.", "Et ?",
+     "Et j'en parle encore."],
+    ["Elle s'est endormie debout.", "C'est possible ?",
+     "Pour elle, oui. Depuis vingt ans."],
     ["Le petit frère de Thibaut est là.", "Gautier ?", "Gautier.",
      "Alors la soirée va être longue."],
     ["Il vit à Malte, maintenant.", "Pour le soleil ?",
@@ -775,11 +792,15 @@ Object.assign(Tournee, {
       return dispo("danse" + (1 + (Math.floor(m.foulee) % 2)))
           || dispo("danse1") || "idle";
     if (m.etat === "titube") return dispo("titube") || "idle";
+    if (m.etat === "dort") return dispo("dort") || "idle";
     if (m.etat === "grappe")
       /* `idle2` respire : on alterne LENTEMENT, une fois toutes les deux
          secondes et demie, sinon le repos se met à clignoter */
       return (Math.floor(m.t / 2.5) % 2 && dispo("idle2")) || "idle";
-    return "marche" + (1 + (Math.floor(m.foulee) % 2));
+    /* UNE MARCHE À UN SEUL TEMPS NE CLIGNOTE PAS NON PLUS. Gigi n'a que
+       `marche1` — même repli que pour la danse. */
+    return dispo("marche" + (1 + (Math.floor(m.foulee) % 2)))
+        || dispo("marche1") || "idle";
   },
 
   /* Un habitué change d'humeur : il se met à danser, il tangue, ou il va
@@ -810,6 +831,18 @@ Object.assign(Tournee, {
     const m = piocher(dispos);
     /* UN TABOURET LIBRE, ET UN SEUL PAR PLACE. Deux habitués sur le même
        tabouret, ça s'est vu à l'écran avant qu'on le compte. */
+    /* GIGI DORT. Elle a une pose pour ça et une seule envie : la reprendre.
+       Deux fois sur trois elle repique du nez au lieu de danser — et les
+       fois où elle danse valent le détour, justement parce qu'elles sont
+       rares. Le repli est le sien : sans la pose `dort`, elle reste
+       simplement immobile, ce qui lui ressemble aussi. */
+    if (Images.table[m.ref.prefixe + "_dort"] && Math.random() < 0.68){
+      m.etat = "dort";
+      m.humeur = melange(FOULE_HUMEUR_DUREE[0] * 2.5,
+                         FOULE_HUMEUR_DUREE[1] * 2.5, Math.random());
+      m.t = 0;
+      return;
+    }
     const pris = this.foule
       .filter(q => q.etat === "assis" || q.etat === "vers_assise" || q.etat === "leve")
       .map(q => q.tabouret);

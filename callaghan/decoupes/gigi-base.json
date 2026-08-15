@@ -1,0 +1,11 @@
+{
+  "_": "Gigi la dormeuse. Six poses seulement : elle n'a ni marche2 ni boit, et c'est cohérent avec le personnage — elle ne fait pas grand-chose. `dort` est sa pose propre : debout, la main à la tête, entre deux sommes.",
+  "__echelle": "Nouveau personnage, aucun sprite d'origine : canevas et échelle empruntés à Solène. Gigi est une petite mamie, sa taille se règle par `taille` dans BAR_CLIENTS et non par la découpe.",
+  "planche": "planches/n3/gigi-base.webp",
+  "reference": "img/n3/bar_solene_idle.webp",
+  "sortie": "img/n3",
+  "prefixe": "bar_gigi",
+  "temoin": 1,
+  "rangees": [["idle", "idle2", "marche1"],
+              ["attrape", "dort", "vide"]]
+}

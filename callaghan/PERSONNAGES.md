@@ -482,6 +482,31 @@ d'un type d'homme se défend, le récit d'un fait divers non.
 
 - **Qui elle connaît** : Gautier, puis Solène et Bobito.
 
+### GIGI — la dormeuse
+
+- **Elle dort.** C'est tout le personnage, et le code le dit : deux fois
+  sur trois, quand les autres partent danser, elle repique du nez — et
+  elle y reste deux fois et demie plus longtemps qu'un danseur ne danse.
+
+- **Les fois où elle danse valent le détour**, justement parce qu'elles
+  sont rares. *« J'ai vu Gigi danser une fois. — Non ? — Si. — Et ? — Et
+  j'en parle encore. »*
+
+- **On l'appelle Gigi la dormeuse.** Elle déteste ça. Elle dort, elle
+  n'entend pas — sauf qu'elle entend tout.
+
+- **Elle ne se sert jamais.** `gestes:false`, et ce n'est pas une limite
+  technique : une mamie qui pique du nez sur son tabouret ne tend pas le
+  bras vers le comptoir.
+
+- **Six poses seulement**, dont une qui n'appartient qu'à elle : `dort`.
+  Pas de `marche2`, pas de `boit` — elle ne traverse presque jamais la
+  salle et elle ne boit pas. Le rendu se replie sur `marche1`, ce qui lui
+  donne un pas raide qui lui va bien.
+
+- **Qui elle connaît** : Charles, Capucine. Et les deux inspecteurs, parce
+  qu'elle est là depuis toujours.
+
 ### XAVIER LE TERRASSIER — le lanceur de pelle
 
 - **Personnage FICTIF**, contrairement aux cinq autres. C'est le premier du

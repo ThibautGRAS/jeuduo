@@ -3557,7 +3557,13 @@ if (D){
       return D.BAR_CLIENTS.every(c => {
         if (!commun.has(c.sprite) && !n3.has(c.sprite)) return false;
         if (!c.prefixe) return true;
-        const base = ["idle", "marche1", "marche2"];
+        /* `marche2` N'EST PLUS EXIGÉE. Gigi n'a qu'un temps de marche, et
+           c'est le personnage qui le veut : elle ne traverse presque
+           jamais la salle. Le rendu se replie sur `marche1`, ce qui donne
+           un pas raide plutôt qu'un clignotement — et l'exiger revenait à
+           refuser un habitué pour une pose qu'on ne lui verra pas faire.
+           `idle` et `marche1`, en revanche, sont le minimum vital. */
+        const base = ["idle", "marche1"];
         const plus = c.gestes ? ["attrape", "boit", "vide"] : [];
         return base.concat(plus).every(po => n3.has(c.prefixe + "_" + po));
       });
@@ -5843,6 +5849,32 @@ if (D){
       return debut < 0.05 && fin > 0.9 && seaux.has("ivres") &&
         (D.FOULE_DISCUSSIONS.ivres || []).length >= 10 &&
         (D.FOULE_PHRASES.fin_de_soiree || []).length >= 6;
+    })());
+
+  verifier("Gigi dort plus qu'elle ne danse",
+    (() => {
+      /* Elle a une pose pour ça et une seule envie : la reprendre. Deux
+         fois sur trois elle repique du nez au lieu de danser, et elle y
+         reste deux fois et demie plus longtemps que les autres n'y
+         dansent. Les fois où elle danse valent le détour, justement
+         parce qu'elles sont rares. */
+      const T = unBar();
+      /* tout le monde est Gigi : la table des humeurs pioche au hasard
+         parmi ceux qui sont en grappe, et on veut mesurer SA statistique */
+      for (const q of T.foule)
+        q.ref = D.BAR_CLIENTS.find(c => c.id === "gigi") || q.ref;
+      D.Images.table["bar_gigi_dort"] = { naturalWidth:1, naturalHeight:1 };
+      const vus = {};
+      for (let i = 0; i < 400; i++){
+        for (const q of T.foule){ q.etat = "grappe"; q.humeur = 0; }
+        T.humeurT = 0; T.majHumeurs(0.001);
+        for (const q of T.foule)
+          if (q.etat !== "grappe") vus[q.etat] = (vus[q.etat] || 0) + 1;
+      }
+      const m = T.foule[0];
+      const dort = vus.dort || 0;
+      messageDetail = Object.keys(vus).map(k => k + " " + vus[k]).join(", ");
+      return dort > 200 && dort < 380 && T.poseFoule({ ...m, etat:"dort" }) === "dort";
     })());
 
   verifier("le verre change la pose de l'assis, pas son siège",

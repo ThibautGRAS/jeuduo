@@ -783,7 +783,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v7.33</div>
+  <div id="version">CALLAGHAN v7.34</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -855,7 +855,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.33";
+const VERSION = "7.34";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -1936,6 +1936,10 @@ const IMAGES_NIVEAU3 = [
   "bar_bobito_idle", "bar_bobito_idle2", "bar_bobito_marche1", "bar_bobito_marche2", "bar_bobito_attrape", "bar_bobito_boit", "bar_bobito_vide", "bar_bobito_titube", "bar_bobito_danse1", "bar_bobito_danse2", "bar_bobito_assis_tabouret", "bar_bobito_assis_canape", "bar_bobito_assis_verre",
   "bar_gautier_idle", "bar_gautier_idle2", "bar_gautier_marche1", "bar_gautier_marche2", "bar_gautier_attrape", "bar_gautier_boit", "bar_gautier_vide", "bar_gautier_titube", "bar_gautier_danse1", "bar_gautier_danse2", "bar_gautier_assis_tabouret", "bar_gautier_assis_canape", "bar_gautier_assis_verre",
   "bar_capucine_idle", "bar_capucine_idle2", "bar_capucine_marche1", "bar_capucine_marche2", "bar_capucine_attrape", "bar_capucine_boit", "bar_capucine_vide", "bar_capucine_titube", "bar_capucine_danse1", "bar_capucine_danse2", "bar_capucine_assis_tabouret", "bar_capucine_assis_canape", "bar_capucine_assis_verre",
+  /* GIGI n'a que six poses, et c'est le personnage qui le veut : elle
+     ne marche presque pas, elle ne sert jamais, elle dort. */
+  "bar_gigi_idle", "bar_gigi_idle2", "bar_gigi_marche1",
+  "bar_gigi_attrape", "bar_gigi_dort", "bar_gigi_vide",
   "bar_remy_titube", "bar_remy_danse1", "bar_remy_assis_tabouret",
   "bar_hortense_marche1", "bar_hortense_marche2", "bar_hortense_tarte",
 ].concat(PREFIXES_BAR.flatMap(pr => POSES_BAR.map(po => pr + "_" + po)));
@@ -4752,7 +4756,7 @@ const PLACES_FIXES = {
 const LIENS = {
   teo:      { pf:true,  th:false, amis:["gabi", "hortense", "remy"] },
   gabi:     { pf:true,  th:false, amis:["solene", "teo", "charles"] },
-  charles:  { pf:true,  th:false, amis:["gabi"] },
+  charles:  { pf:true,  th:false, amis:["gabi", "gigi"] },
   mathilde: { pf:false, th:true,  amis:["solene", "remy", "kevin", "tristan"] },
   tristan:  { pf:true,  th:true,  amis:["solene", "kevin", "remy", "mathilde", "bobito", "gautier"] },
   solene:   { pf:false, th:false, amis:["tristan", "mathilde", "kevin", "gabi", "bobito", "capucine"] },
@@ -4769,7 +4773,10 @@ const LIENS = {
      intéressant — Thibaut a une prise sur lui que PF n'aura jamais.
      Capucine est sa compagne ; elle l'appelle Gogo. */
   gautier:  { pf:false, th:true,  amis:["capucine", "tristan", "kevin"] },
-  capucine: { pf:false, th:true,  amis:["gautier", "solene", "bobito"] },
+  capucine: { pf:false, th:true,  amis:["gautier", "solene", "bobito", "gigi"] },
+  /* GIGI connaît tout le monde et personne : elle est là depuis toujours,
+     elle dort, et on la laisse dormir. */
+  gigi:     { pf:true,  th:true,  amis:["charles", "capucine"] },
   marini:   { pf:false, th:false, amis:[] },
   martin:   { pf:false, th:false, amis:[] },
   francky:  { pf:false, th:false, amis:["mathilde"] },
@@ -8448,6 +8455,12 @@ const BAR_CLIENTS = [
     prefixe:"bar_gautier", gestes:true },
   { id:"capucine", sprite:"bar_capucine_idle", nom:"CAPUCINE", taille:0.89,
     prefixe:"bar_capucine", gestes:true },
+  /* GIGI LA DORMEUSE. `gestes:false` : elle ne chipe jamais un verre, et
+     ce n'est pas une limite technique — c'est le personnage. Une mamie
+     qui pique du nez sur son tabouret ne tend pas le bras vers le
+     comptoir. Sa taille est la plus petite du bar. */
+  { id:"gigi", sprite:"bar_gigi_idle", nom:"GIGI", taille:0.82,
+    prefixe:"bar_gigi", gestes:false },
 ];
 const BAR_ESQUIVE_FENETRE = 0.62;   /* même fenêtre qu'au niveau 2 : un pouce, pas une souris */
 const BAR_ESQUIVE_PTS = 200;
@@ -10332,6 +10345,12 @@ const FOULE_PHRASES = {
              "BOBITO ! Tu bois quoi ?"],
   /* MATHILDE BOBITO. Ses trois sujets, et elle y revient : le chien, ses
      élèves, et la piste de danse. */
+  /* GIGI. Elle parle peu, et toujours au réveil. */
+  gigi:     ["Hein ? Oui. Non. Oui.",
+             "Je fermais juste les yeux.",
+             "J'écoutais, j'écoutais.",
+             "Quelqu'un a parlé de moi ?",
+             "Il est quelle heure ? Non, dis pas."],
   gautier:  ["Ce soir je joue pas. Enfin, presque pas.",
              "J'ai tout perdu. Enfin, presque tout.",
              "À Malte il fait beau. Ici aussi, ça va.",
@@ -10394,6 +10413,17 @@ const FOULE_DISCUSSIONS = {
      "On a tous hoché la tête."],
     ["Elle veut un deuxième chien.", "Rémy sait ?",
      "Rémy l'apprend là, en fait."],
+    ["Gigi dort.", "Depuis quand ?", "Aucune idée. Elle était déjà là."],
+    ["Faut la réveiller ?", "Surtout pas.", "Elle va rater la tournée.",
+     "Elle rate jamais la tournée. Regarde."],
+    ["Elle dort ou elle écoute ?", "Les deux.",
+     "C'est bien ça qui fait peur."],
+    ["Gigi la dormeuse.", "Elle déteste qu'on l'appelle comme ça.",
+     "Elle dort, elle entend pas.", "Elle entend TOUT."],
+    ["J'ai vu Gigi danser une fois.", "Non ?", "Si.", "Et ?",
+     "Et j'en parle encore."],
+    ["Elle s'est endormie debout.", "C'est possible ?",
+     "Pour elle, oui. Depuis vingt ans."],
     ["Le petit frère de Thibaut est là.", "Gautier ?", "Gautier.",
      "Alors la soirée va être longue."],
     ["Il vit à Malte, maintenant.", "Pour le soleil ?",
@@ -10959,11 +10989,15 @@ Object.assign(Tournee, {
       return dispo("danse" + (1 + (Math.floor(m.foulee) % 2)))
           || dispo("danse1") || "idle";
     if (m.etat === "titube") return dispo("titube") || "idle";
+    if (m.etat === "dort") return dispo("dort") || "idle";
     if (m.etat === "grappe")
       /* `idle2` respire : on alterne LENTEMENT, une fois toutes les deux
          secondes et demie, sinon le repos se met à clignoter */
       return (Math.floor(m.t / 2.5) % 2 && dispo("idle2")) || "idle";
-    return "marche" + (1 + (Math.floor(m.foulee) % 2));
+    /* UNE MARCHE À UN SEUL TEMPS NE CLIGNOTE PAS NON PLUS. Gigi n'a que
+       `marche1` — même repli que pour la danse. */
+    return dispo("marche" + (1 + (Math.floor(m.foulee) % 2)))
+        || dispo("marche1") || "idle";
   },
 
   /* Un habitué change d'humeur : il se met à danser, il tangue, ou il va
@@ -10994,6 +11028,18 @@ Object.assign(Tournee, {
     const m = piocher(dispos);
     /* UN TABOURET LIBRE, ET UN SEUL PAR PLACE. Deux habitués sur le même
        tabouret, ça s'est vu à l'écran avant qu'on le compte. */
+    /* GIGI DORT. Elle a une pose pour ça et une seule envie : la reprendre.
+       Deux fois sur trois elle repique du nez au lieu de danser — et les
+       fois où elle danse valent le détour, justement parce qu'elles sont
+       rares. Le repli est le sien : sans la pose `dort`, elle reste
+       simplement immobile, ce qui lui ressemble aussi. */
+    if (Images.table[m.ref.prefixe + "_dort"] && Math.random() < 0.68){
+      m.etat = "dort";
+      m.humeur = melange(FOULE_HUMEUR_DUREE[0] * 2.5,
+                         FOULE_HUMEUR_DUREE[1] * 2.5, Math.random());
+      m.t = 0;
+      return;
+    }
     const pris = this.foule
       .filter(q => q.etat === "assis" || q.etat === "vers_assise" || q.etat === "leve")
       .map(q => q.tabouret);
