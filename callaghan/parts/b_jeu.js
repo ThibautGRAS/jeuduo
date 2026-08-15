@@ -474,6 +474,12 @@ const Jeu = {
       if (this.phase === "jeu" || this.phase === "fin"){
         this.temps += dt;
         Soiree.pas(dt);
+        /* SANS CET APPEL, CONFIRMER N'APPARAÎT JAMAIS. Le pupitre est
+           rafraîchi par `majActionBar`, appelée uniquement dans la branche
+           du niveau 3 : les libellés posés à l'entrée du niveau restaient
+           figés, et le bouton qui devait naître une fois les deux noms
+           choisis n'existait pas. On pouvait accuser, jamais valider. */
+        Interface.majActionBar();
       }
       return;
     }

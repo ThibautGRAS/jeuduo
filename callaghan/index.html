@@ -789,7 +789,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v7.46</div>
+  <div id="version">CALLAGHAN v7.47</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -861,7 +861,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.46";
+const VERSION = "7.47";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -2554,6 +2554,12 @@ const Jeu = {
       if (this.phase === "jeu" || this.phase === "fin"){
         this.temps += dt;
         Soiree.pas(dt);
+        /* SANS CET APPEL, CONFIRMER N'APPARAÎT JAMAIS. Le pupitre est
+           rafraîchi par `majActionBar`, appelée uniquement dans la branche
+           du niveau 3 : les libellés posés à l'entrée du niveau restaient
+           figés, et le bouton qui devait naître une fois les deux noms
+           choisis n'existait pas. On pouvait accuser, jamais valider. */
+        Interface.majActionBar();
       }
       return;
     }
