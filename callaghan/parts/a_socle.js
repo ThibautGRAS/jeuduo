@@ -18,7 +18,7 @@
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.37";
+const VERSION = "7.38";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -926,7 +926,7 @@ const NOMS_NIVEAUX = {
   2: { nom:"L'ENQUÊTE DE LA PIZZA", sens:"l'appartement se lit en entier" },
   3: { nom:"LA TOURNÉE DU D'TOUR",  sens:"le comptoir est long" },
   4: { nom:"LA RUELLE",             sens:"sa profondeur a besoin de hauteur" },
-  5: { nom:"LE RACCOMPAGNAGE",      sens:"la rue est longue" },
+  5: { nom:"LE COUPLE MYSTÈRE",     sens:"la salle se lit en entier" },
 };
 function nomNiveau(n){ return (NOMS_NIVEAUX[n] || {}).nom || "LES ENQUÊTES DE CALLAGHAN"; }
 function sensNiveau(n){ return (NOMS_NIVEAUX[n] || {}).sens || ""; }
@@ -1114,11 +1114,11 @@ const IMAGES_NIVEAU3 = [
    déclaré ICI, une seule fois ; le chargeur et la suite de tests le
    lisent tous les deux — un fichier déplacé sans mise à jour se voit
    au premier lancement. */
-/* Le niveau 5 n'a qu'UNE image à lui : la rue. Tout le reste — les
+/* Le niveau 5 n'a qu'UNE image à lui : la salle. Tout le reste — les
    habitués qui titubent, le champion qui marche — sort du bar. Un niveau
    qui ne coûte qu'un décor est un niveau qu'on peut essayer avant d'y
    croire. */
-const IMAGES_NIVEAU5 = ["fond_rue"];
+const IMAGES_NIVEAU5 = ["fond_salle"];
 const IMG_PAR_DOSSIER = {
   commun: ["logo", "face_thibaut", "face_pierre"]
     .concat(EFFETS, SPRITES_HORTENSE, SPRITES_TARTE, PERSONNAGES_MAISON),

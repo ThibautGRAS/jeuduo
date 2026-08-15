@@ -89,6 +89,7 @@ Rangées par `archiver.py`, jamais à la main.
 | `n4` | `heros_pf_tir.webp` | 82 Ko |
 | `n4` | `heros_th_recharge.webp` | 95 Ko |
 | `n4` | `heros_th_tir.webp` | 94 Ko |
+| `n4` | `salle-fete.webp` | 282 Ko |
 | `n4` | `xavier-base.webp` | 147 Ko |
 | `n4` | `xavier-chute.webp` | 75 Ko |
 | `n4` | `xavier-course-sans-pelle.webp` | 172 Ko |
@@ -97,7 +98,7 @@ Rangées par `archiver.py`, jamais à la main.
 | `n4` | `xavier-pelle.webp` | 72 Ko |
 | `n4` | `xavier_reference.webp` | 111 Ko |
 
-**10.9 Mo au total.**
+**11.2 Mo au total.**
 
 ## 24 planches à identifier
 

@@ -687,28 +687,27 @@ function jouerJusqua(D, condition, limite){
     ecrire(canevas, "36b_bar_collegue");
   }
 
-  /* 40. LA RUE, le niveau 5. Trois ivrognes en pleine dérive et le
-     champion entre deux : la seule image qui dise si on lit le troupeau
-     d'un coup d'oeil, et si le décor tient sous les personnages. */
+  /* 40. LA SOIRÉE, le niveau 5. Le couple dans le couloir pendant que
+     les autres sont ailleurs, un invité déjà interrogé, un accusé : les
+     trois lectures du niveau dans une seule image. */
   {
-    const { D, canevas } = await preparer(844, 390);
-    D.amorcer(); D.Camera.mesurer(844, 390, 1);
+    const { D, canevas } = await preparer(844, 466);
+    D.amorcer(); D.Camera.mesurer(844, 466, 1);
     D.Jeu.demarrer(5);
     for (let i = 0; i < 30; i++) D.Jeu.pas(1 / 60);
-    D.Rue.x = 0.42;
-    /* un tenu, un sur la route, un qui dérive : les trois situations du
-       niveau dans une seule image */
-    D.Rue.ivrognes.forEach((iv, i) => {
-      iv.x = 0.30 + i * 0.22; iv.foulee = 1.4;
-      if (i === 0){ iv.tenu = true; D.Rue.tenu = iv; iv.x = 0.38;
-                    iv.dit = "Ah bah voilà."; iv.ditT = 2.0; }
-      else if (i === 1){ iv.route = 1.4; iv.etat = "plante";
-                         iv.dit = "Je coupe."; iv.ditT = 2.0; }
-      else { iv.derive = D.RUE_DERIVES[2]; iv.etat = "danse";
-             iv.dit = iv.derive.dit[0]; iv.ditT = 2.0; }
+    D.Soiree.x = 0.16;
+    D.Soiree.invites.forEach((iv, i) => {
+      iv.x = 0.10 + i * 0.105; iv.cible = iv.x; iv.foulee = 1.2;
     });
-    D.RueVue.dessiner();
-    ecrire(canevas, "40_rue_troupeau");
+    /* le couple, ensemble, dans le couloir */
+    D.Soiree.couple[0].x = 0.51; D.Soiree.couple[0].cible = 0.51;
+    D.Soiree.couple[1].x = 0.56; D.Soiree.couple[1].cible = 0.56;
+    D.Soiree.invites[1].interroge = true;
+    D.Soiree.invites[1].dit = "J'ai vu quelqu'un partir vers le couloir.";
+    D.Soiree.invites[1].ditT = 2.4;
+    D.Soiree.accuses.push(D.Soiree.invites[3]);
+    D.SoireeVue.dessiner();
+    ecrire(canevas, "40_soiree");
   }
 
   /* 36d. LES HUMEURS DES HABITUÉS. Tristan est le premier à avoir les six

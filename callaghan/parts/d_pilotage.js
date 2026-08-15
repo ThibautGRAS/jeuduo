@@ -399,11 +399,11 @@ const Interface = {
     /* LA RUE EMPRUNTE LE PUPITRE DU BAR — mais pas ses boutons d'action.
        JETER et BOIRE n'y font rien : deux boutons morts sur un écran où
        le joueur cherche déjà quoi faire, et c'est ça qui rendait le
-       niveau incompréhensible avant même la question du jeu. BOIRE
-       devient PRENDRE, JETER se range. */
-    const rue5 = Jeu.niveau === 5;
-    if (E.c3J) E.c3J.style.display = rue5 ? "none" : "";
-    if (E.c3B) E.c3B.textContent = rue5 ? "PRENDRE" : "BOIRE";
+       niveau incompréhensible avant même la question du jeu. Au niveau 5
+       les deux boutons servent : PARLER et ACCUSER. */
+    const soir = Jeu.niveau === 5;
+    if (E.c3J) E.c3J.textContent = soir ? "ACCUSER" : "JETER";
+    if (E.c3B) E.c3B.textContent = soir ? "PARLER" : "BOIRE";
     if (E.pupitre3) E.pupitre3.classList.toggle("on",
       Jeu.niveau === 5 ||
       (Jeu.niveau === 3 && !Tournee.enChoix && Tournee.introT <= 0));
@@ -499,7 +499,7 @@ const Interface = {
     if (Tournee.enChoix || Tournee.introT > 0) return;
     const pret = Tournee.actif && Tournee.verreAPortee() >= 0 && Tournee.boitT <= 0;
     if (E.c3B) E.c3B.classList.toggle("eteint", !pret);
-    if (E.c3J) E.c3J.classList.toggle("eteint", !pret);
+    if (E.c3J) E.c3J.classList.toggle("eteint", Jeu.niveau === 5 ? false : !pret);
     /* ESQUIVER apparaît dès qu'une tarte est en l'air — pas seulement
        pendant la fenêtre — et il n'est JAMAIS éteint : c'est une invite
        à agir, et une invite éteinte ne se presse pas (l'esquive du
@@ -894,11 +894,11 @@ const Entrees = {
       if (e.repeat && t !== "arrowleft" && t !== "arrowright" && t !== "q") return;
       if (t === "arrowleft" || t === "q"){
         e.preventDefault();
-        if (Jeu.niveau === 5) Rue.marcher(-1);
+        if (Jeu.niveau === 5) Soiree.marcher(-1);
         else if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp - 1); else Tournee.marcher(-1);
       } else if (t === "arrowright"){
         e.preventDefault();
-        if (Jeu.niveau === 5) Rue.marcher(1);
+        if (Jeu.niveau === 5) Soiree.marcher(1);
         else if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp + 1); else Tournee.marcher(1);
       } else if (t === "e" || t === "enter" || t === " "){
         e.preventDefault(); Sons.reveiller();
@@ -920,9 +920,10 @@ const Entrees = {
     globalThis.addEventListener("keyup", e => {
       if (Jeu.niveau !== 3) return;
       const t = e.key.toLowerCase();
-      if (Jeu.niveau === 5 && (t === " " || t === "e")) Rue.prendre();
+      if (Jeu.niveau === 5 && (t === " " || t === "e")) Soiree.parler();
+      if (Jeu.niveau === 5 && (t === "a")) Soiree.accuser();
       if (t === "arrowleft" || t === "arrowright" || t === "q"){
-        Tournee.marcher(0); Rue.marcher(0);
+        Tournee.marcher(0); Soiree.marcher(0);
       }
     });
 
@@ -1005,13 +1006,13 @@ const Entrees = {
            les deux mêmes flèches, et rien n'avait été branché côté
            TACTILE : au clavier ça marchait, sur téléphone on ne bougeait
            pas d'un pouce. Le seul endroit où le jeu se joue vraiment. */
-        if (Jeu.niveau === 5) Rue.marcher(d);
+        if (Jeu.niveau === 5) Soiree.marcher(d);
         else if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp + d);
         else Tournee.marcher(d);
         el.classList.add("pressee");
       });
       const rel3 = () => {
-        Tournee.marcher(0); Rue.marcher(0); el.classList.remove("pressee");
+        Tournee.marcher(0); Soiree.marcher(0); el.classList.remove("pressee");
       };
       el.addEventListener("pointerup", rel3);
       el.addEventListener("pointercancel", rel3);
@@ -1021,14 +1022,15 @@ const Entrees = {
     tenir3(E.c3D, 1);
     if (E.c3B) E.c3B.addEventListener("pointerdown", ev => {
       if (Jeu.niveau === 5){
-        ev.preventDefault(); Sons.reveiller(); Rue.prendre();
-        if (E.c3B) E.c3B.textContent = Rue.tenu ? "LÂCHER" : "PRENDRE";
-        return;
+        ev.preventDefault(); Sons.reveiller(); Soiree.parler(); return;
       }
       ev.preventDefault(); Sons.reveiller();
       if (Tournee.enChoix) Tournee.lancer(); else Tournee.boire();
     });
     if (E.c3J) E.c3J.addEventListener("pointerdown", ev => {
+      if (Jeu.niveau === 5){
+        ev.preventDefault(); Sons.reveiller(); Soiree.accuser(); return;
+      }
       ev.preventDefault(); Sons.reveiller();
       if (!Tournee.enChoix) Tournee.jeter();
     });
@@ -1299,7 +1301,7 @@ globalThis.DTOUR = {
   Transition, nomNiveau, sensNiveau, NOMS_NIVEAUX,
   ENNEMIS_RUELLE, IMAGES_NIVEAU4, Ruelle, RuelleVue, ARMES, ENNEMIS, ZONES_CORPS, VISEE_RECUL, VISEE_VITESSE, RELEVE_TH, RELEVE_PF, IA_REUSSITE, IA_CADENCE, POSES_RUEL_TH, POSES_RUEL_PF, RUELLE_COULOIRS, RUELLE_HORIZON, RUELLE_BARRICADE, RUELLE_DEGAT_BARRICADE, Enquete, EnqVue, Affaire, Dossier, LIENS, conseilInspecteur, PLACES, DEBOUT_APPART, ASSIS_APPART, HortenseApp, Visiteurs, VISITEURS, SUSPECTS, SUSPECTS_BANQUE, PLACES_FIXES, composerSuspects, INDICES, ZONES,
   Heros, Interface, Pause, ECHELLE_PERSO, echellePerso, imagesEssentielles, imagesDifferees, dossierPret, charger, ECHOS, PIECES, BAVARDAGES, SCENARIOS, RIEN, ENQ_TAILLE, ENQ_ACCUSATIONS, remplir, decouperLignes, IMG_CHEMIN, IMG_PAR_DOSSIER, cheminImage, listeImages,
-  Tournee, BarVue, Rue, RueVue, RUE_SOL, RUE_ARRIVEE, RUE_DERIVES, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
+  Tournee, BarVue, Soiree, SoireeVue, SOIREE_COINS, SOIREE_MOTIFS, BAR_CHAMPIONS, BOISSONS, BARMANS, BAR_EXPIRE, BAR_MARCHE, BAR_PORTEE, BAR_AMBIANCE_BUT, BAR_TOURNEE_FINALE, ETAT_VERRE,
   POSES_BAR, poseBar, BAR_CLIENTS, BAR_DUREE, BAR_AMBIANCE_DEBUT, BAR_AMBIANCE_FUITE, BAR_SUR_LE_COUP, BAR_DEBORDE, BAR_MULT_MAX, BAR_AMBIANCE_GAIN, BAR_PRIME_COUP, BAR_CLIENT_SEUIL, BAR_ESQUIVE_PTS, BAR_ESQUIVE_FENETRE, BAR_TARTE_CHANCE, BAR_TAILLE_BARMAN, BAR_TAILLE_HEROS, BAR_COPIES,
   ENQ_DUREE, ENQ_OBJECTIF, ENQ_PORTEE, ENQ_PORTEE_GENS, ENQ_ESQUIVE_FENETRE, SUJETS, Progres, Intro,
   Hortense, Tartes, Esquive, Tarte, ETAT_H, ETAT_TARTE,

@@ -395,7 +395,7 @@ const Jeu = {
       /* le champion du bar sert de joueur : c'est le même homme, deux
          heures plus tard */
       if (!Tournee.champion) Tournee.champion = BAR_CHAMPIONS[0];
-      Rue.demarrer();
+      Soiree.demarrer();
       Interface.entrerJeu();
       Sons.reveiller();
       return;
@@ -473,7 +473,7 @@ const Jeu = {
     if (this.niveau === 5){
       if (this.phase === "jeu" || this.phase === "fin"){
         this.temps += dt;
-        Rue.pas(dt);
+        Soiree.pas(dt);
       }
       return;
     }
