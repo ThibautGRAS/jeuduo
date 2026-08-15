@@ -696,11 +696,16 @@ function jouerJusqua(D, condition, limite){
     D.Jeu.demarrer(5);
     for (let i = 0; i < 30; i++) D.Jeu.pas(1 / 60);
     D.Rue.x = 0.42;
+    /* un tenu, un sur la route, un qui dérive : les trois situations du
+       niveau dans une seule image */
     D.Rue.ivrognes.forEach((iv, i) => {
-      iv.x = 0.22 + i * 0.20;
-      iv.derive = D.RUE_DERIVES[i % 3];
-      iv.etat = iv.derive.cle;
-      iv.dit = iv.derive.dit[0]; iv.ditT = 2.0; iv.foulee = 1.4;
+      iv.x = 0.30 + i * 0.22; iv.foulee = 1.4;
+      if (i === 0){ iv.tenu = true; D.Rue.tenu = iv; iv.x = 0.38;
+                    iv.dit = "Ah bah voilà."; iv.ditT = 2.0; }
+      else if (i === 1){ iv.route = 1.4; iv.etat = "plante";
+                         iv.dit = "Je coupe."; iv.ditT = 2.0; }
+      else { iv.derive = D.RUE_DERIVES[2]; iv.etat = "danse";
+             iv.dit = iv.derive.dit[0]; iv.ditT = 2.0; }
     });
     D.RueVue.dessiner();
     ecrire(canevas, "40_rue_troupeau");

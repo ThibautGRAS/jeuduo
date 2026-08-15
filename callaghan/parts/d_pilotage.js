@@ -396,9 +396,14 @@ const Interface = {
     /* Le pupitre reste rangé pendant l'AFFICHE aussi, pas seulement
        pendant le choix : il se dessinait par-dessus l'écran de
        présentation, avec ses boutons éteints en travers du titre. */
-    /* LA RUE EMPRUNTE LE PUPITRE DU BAR. Deux flèches et rien d'autre :
-       lui en fabriquer un à elle aurait été trois boutons de plus à
-       tenir, pour la même chose. */
+    /* LA RUE EMPRUNTE LE PUPITRE DU BAR — mais pas ses boutons d'action.
+       JETER et BOIRE n'y font rien : deux boutons morts sur un écran où
+       le joueur cherche déjà quoi faire, et c'est ça qui rendait le
+       niveau incompréhensible avant même la question du jeu. BOIRE
+       devient PRENDRE, JETER se range. */
+    const rue5 = Jeu.niveau === 5;
+    if (E.c3J) E.c3J.style.display = rue5 ? "none" : "";
+    if (E.c3B) E.c3B.textContent = rue5 ? "PRENDRE" : "BOIRE";
     if (E.pupitre3) E.pupitre3.classList.toggle("on",
       Jeu.niveau === 5 ||
       (Jeu.niveau === 3 && !Tournee.enChoix && Tournee.introT <= 0));
@@ -915,6 +920,7 @@ const Entrees = {
     globalThis.addEventListener("keyup", e => {
       if (Jeu.niveau !== 3) return;
       const t = e.key.toLowerCase();
+      if (Jeu.niveau === 5 && (t === " " || t === "e")) Rue.prendre();
       if (t === "arrowleft" || t === "arrowright" || t === "q"){
         Tournee.marcher(0); Rue.marcher(0);
       }
@@ -1014,6 +1020,11 @@ const Entrees = {
     tenir3(E.c3G, -1);
     tenir3(E.c3D, 1);
     if (E.c3B) E.c3B.addEventListener("pointerdown", ev => {
+      if (Jeu.niveau === 5){
+        ev.preventDefault(); Sons.reveiller(); Rue.prendre();
+        if (E.c3B) E.c3B.textContent = Rue.tenu ? "LÂCHER" : "PRENDRE";
+        return;
+      }
       ev.preventDefault(); Sons.reveiller();
       if (Tournee.enChoix) Tournee.lancer(); else Tournee.boire();
     });

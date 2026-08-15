@@ -33,6 +33,20 @@ const RUE_DUREE = 150;
    0,07 de monde, deux silhouettes se recouvrent assez pour qu'on ne sache
    plus laquelle parle. */
 const RUE_ECART = 0.075;
+/* CE QUI FAIT LE JEU : on n'en tient qu'UN. Le tenir est confortable — il
+   avance à votre pas, droit, sans dériver — et c'est justement pour ça
+   que le lâcher coûte quelque chose. Sans cette contrainte, marcher à
+   côté d'eux suffisait et il n'y avait aucune décision à prendre : c'est
+   le défaut qu'on corrige ici, et il n'était pas visible avant d'y jouer.
+
+   LA ROUTE DONNE L'ENJEU. Un ivrogne qui dérive trop longtemps descend du
+   trottoir. Il reste RUE_ROUTE_DELAI secondes sur la chaussée, et si
+   personne ne vient le chercher, une voiture passe : vingt secondes de
+   moins au chrono, et il remonte tout seul, secoué. */
+const RUE_ROUTE_DELAI = 4.0;
+const RUE_ROUTE_PEINE = 20;
+const RUE_ROUTE_BAS = 0.115;   /* de combien il descend, en fraction d'écran */
+const RUE_TENU_ECART = 0.045;  /* à quelle distance il vous suit           */
 /* Combien de temps ils tiennent avant de dériver, et combien de temps la
    dérive dure. Mesuré à la main : en dessous de quatre secondes on ne
    peut pas s'occuper des trois, au-dessus de dix le niveau s'endort. */
@@ -41,6 +55,13 @@ const RUE_DERIVE_DUREE = [3.0, 6.0];
 
 /* Les trois dérives. Chacune a sa pose, sa réplique et son remède — et
    c'est le remède qui fait le jeu : on ne les traite pas pareil. */
+const RUE_PRIS = ["Ah bah voilà.", "Tu me tiens ? Tu me tiens.",
+                  "On va où ?", "Doucement, doucement."];
+const RUE_ROUTE_DIT = ["Y'a une route, là ?", "Je coupe.",
+                       "C'est plus court par là.", "Attends, je traverse."];
+const RUE_KLAXON = ["PUTAIN.", "Il m'a klaxonné.", "J'ai rien fait, moi.",
+                    "Bon. Je remonte."];
+
 const RUE_DERIVES = [
   { cle:"demi_tour", pose:"marche", sens:-1,
     dit:["Je vais rentrer.", "J'ai oublié un truc.", "Une dernière."] },
@@ -53,13 +74,15 @@ const RUE_DERIVES = [
 ];
 
 const Rue = {
-  actif:false, temps:0, fini:0, x:0.10, dir:1, foulee:0, marche:0,
+  actif:false, temps:0, fini:0, x:0.10, dir:1, foulee:0, marche:0, tenu:null,
+  peine:0, klaxon:0,
   ivrognes:[], bulle:null, bulleT:0,
 
   raz(){
     this.actif = false; this.temps = 0; this.fini = 0;
     this.x = RUE_DEPART; this.dir = 1; this.foulee = 0;
-    this.ivrognes.length = 0; this.bulle = null; this.bulleT = 0; this.marche = 0;
+    this.ivrognes.length = 0; this.bulle = null; this.bulleT = 0; this.marche = 0; this.tenu = null;
+    this.peine = 0; this.klaxon = 0;
   },
 
   demarrer(){
@@ -80,6 +103,26 @@ const Rue = {
   },
 
   marcher(d){ if (this.actif && !this.fini) this.marche = d; },
+
+  /* PRENDRE OU LÂCHER, un seul bouton. Prendre attrape le plus proche à
+     portée ; s'il n'y a personne, il ne se passe rien — un bouton qui
+     répond dans le vide vaut mieux qu'un bouton grisé qu'on regarde. */
+  prendre(){
+    if (!this.actif || this.fini) return;
+    if (this.tenu){ this.tenu.tenu = false; this.tenu = null; return; }
+    let meilleur = null, dist = RUE_PORTEE;
+    for (const iv of this.ivrognes){
+      if (iv.arrive) continue;
+      const d = Math.abs(iv.x - this.x);
+      if (d < dist){ dist = d; meilleur = iv; }
+    }
+    if (meilleur){
+      meilleur.tenu = true; meilleur.derive = null; meilleur.route = 0;
+      meilleur.etat = "marche";
+      meilleur.dit = piocher(RUE_PRIS); meilleur.ditT = 2.2;
+      this.tenu = meilleur;
+    }
+  },
 
   /* Tous rentrés, ou le temps écoulé. */
   gagne(){ return this.ivrognes.length > 0 && this.ivrognes.every(i => i.arrive); },
@@ -118,11 +161,12 @@ const Rue = {
         iv.t = hasard(RUE_DERIVE_DUREE[0], RUE_DERIVE_DUREE[1]);
         iv.dit = piocher(iv.derive.dit); iv.ditT = 2.6;
       } else if (iv.derive && iv.t <= 0){
-        /* une dérive s'arrête toute seule au bout d'un moment : sans ça,
-           celui qu'on n'a pas rattrapé finissait la partie contre la
-           porte du bar */
-        iv.derive = null; iv.etat = "marche";
-        iv.t = hasard(RUE_AVANT_DERIVE[0], RUE_AVANT_DERIVE[1]);
+        /* une dérive qui dure finit SUR LA ROUTE. C'est ce qui remplace
+           l'ancien retour à la marche : sans conséquence, laisser dériver
+           ne coûtait rien et le niveau n'avait pas de tension. */
+        iv.route = RUE_ROUTE_DELAI;
+        iv.etat = "plante";
+        iv.dit = piocher(RUE_ROUTE_DIT); iv.ditT = 2.6;
       }
 
       const sens = iv.derive ? iv.derive.sens : 1;
@@ -152,7 +196,8 @@ const Rue = {
       }
 
     if (this.gagne() && !this.fini){ this.fini = 0.001; Score.ajouter(500); }
-    else if (this.temps >= RUE_DUREE && !this.fini) this.fini = 0.001;
+    else if (this.temps + this.peine >= RUE_DUREE && !this.fini) this.fini = 0.001;
+    if (this.klaxon > 0) this.klaxon -= dt;
   },
 
   /* La pose se déduit de l'état, comme au bar. Tout se replie sur `idle` :
@@ -203,7 +248,10 @@ const RueVue = {
     if (!spr || !spr.naturalWidth) return;
     const sh = H * RUE_TAILLE * (iv.ref.taille || 1);
     const sl = sh * spr.naturalWidth / spr.naturalHeight;
-    const x = this.ex(iv.x), y = H * RUE_SOL + H * 0.012;
+    /* IL DESCEND VRAIMENT DU TROTTOIR : il change de ligne de sol, et
+       c'est ce qui se voit de loin — plus que n'importe quelle icône. */
+    const bas = iv.route > 0 ? RUE_ROUTE_BAS * borne((RUE_ROUTE_DELAI - iv.route) * 2, 0, 1) : 0;
+    const x = this.ex(iv.x), y = H * (RUE_SOL + bas) + H * 0.012;
     ctx.save();
     ctx.globalAlpha = iv.arrive ? 0.45 : 1;
     ctx.fillStyle = "rgba(0,0,0,.30)";
@@ -214,6 +262,23 @@ const RueVue = {
        hauteur et les phrases se recouvraient : on lisait « Attends.
        Attends. ATTE » et rien d'autre. Chacun a son étage, tiré de son
        rang dans le troupeau. */
+    if (iv.route > 0){
+      /* le compte à rebours se lit SOUS LUI, là où on regarde déjà */
+      ctx.save();
+      ctx.globalAlpha = 0.55 + 0.45 * Math.sin(Rue.temps * 9);
+      ctx.fillStyle = "#FF5A4A";
+      ctx.fillRect(x - sl * 0.30, y + H * 0.012,
+                   sl * 0.60 * (iv.route / RUE_ROUTE_DELAI), H * 0.008);
+      ctx.restore();
+    }
+    if (iv.tenu){
+      ctx.save();
+      ctx.globalAlpha = 0.75;
+      ctx.fillStyle = "#7CFFB2";
+      ctx.beginPath(); ctx.ellipse(x, y, sl * 0.26, H * 0.010, 0, 0, 6.283);
+      ctx.stroke ? (ctx.strokeStyle = "#7CFFB2", ctx.lineWidth = 2, ctx.stroke()) : ctx.fill();
+      ctx.restore();
+    }
     if (iv.dit){
       const etage = Rue.ivrognes.indexOf(iv) % 3;
       BarVue.bulle(iv.dit, x, y - sh - H * (0.010 + etage * 0.055),
@@ -250,7 +315,12 @@ const RueVue = {
     ctx.textAlign = "center"; ctx.textBaseline = "top";
     ctx.font = "800 " + Math.round(H * 0.042) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillStyle = "#F6F2FF";
-    const s = Math.max(0, Math.ceil(RUE_DUREE - Rue.temps));
+    const s = Math.max(0, Math.ceil(RUE_DUREE - Rue.temps - Rue.peine));
+    if (Rue.klaxon > 0){
+      ctx.fillStyle = "rgba(255,90,74," + borne(Rue.klaxon, 0, 1) * 0.30 + ")";
+      ctx.fillRect(0, 0, L, H);
+      ctx.fillStyle = "#F6F2FF";
+    }
     ctx.fillText(reste + " À RAMENER — " + Math.floor(s / 60) + ":"
                  + String(s % 60).padStart(2, "0"), L / 2, H * 0.03);
     ctx.restore();
