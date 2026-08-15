@@ -695,13 +695,13 @@ function jouerJusqua(D, condition, limite){
     D.amorcer(); D.Camera.mesurer(844, 466, 1);
     D.Jeu.demarrer(5);
     for (let i = 0; i < 30; i++) D.Jeu.pas(1 / 60);
-    D.Soiree.x = 0.16;
+    D.Soiree.x = 0.40;
     D.Soiree.invites.forEach((iv, i) => {
-      iv.x = 0.10 + i * 0.105; iv.cible = iv.x; iv.foulee = 1.2;
+      iv.x = 0.14 + i * 0.095; iv.cible = iv.x; iv.foulee = 1.2;
     });
     /* le couple, ensemble, dans le couloir */
-    D.Soiree.couple[0].x = 0.51; D.Soiree.couple[0].cible = 0.51;
-    D.Soiree.couple[1].x = 0.56; D.Soiree.couple[1].cible = 0.56;
+    D.Soiree.couple[0].x = 0.50; D.Soiree.couple[0].cible = 0.50;
+    D.Soiree.couple[1].x = 0.545; D.Soiree.couple[1].cible = 0.545;
     D.Soiree.invites[1].interroge = true;
     D.Soiree.invites[1].dit = "J'ai vu quelqu'un partir vers le couloir.";
     D.Soiree.invites[1].ditT = 2.4;

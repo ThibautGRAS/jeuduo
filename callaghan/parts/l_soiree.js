@@ -34,8 +34,16 @@
    Vu en jeu : tout le monde flottait, debout sur le buffet et sur le
    banc. Le sol praticable commence là où le carrelage prend toute la
    largeur, soit 0,80 ; les pieds se posent un peu plus bas encore. */
-const SOIREE_SOL = 0.84;
-const SOIREE_TAILLE = 0.30;
+/* LE DÉCOR EST PLUS LARGE QUE L'ÉCRAN : il DÉFILE au lieu d'être écrasé.
+   Le premier essai le tirait sur toute la largeur — 1,81 de rapport
+   étiré vers 2,16 — et tout se déformait : personne ne touchait le sol,
+   les tailles étaient fausses. On garde son rapport et on suit le joueur.
+   Mesuré sur l'image livrée : la plinthe s'arrête à 0,79, le sol
+   praticable court jusqu'en bas, et les pieds se posent à 0,80. */
+const SOIREE_SOL = 0.80;
+/* 0,235 et non 0,30 : mesuré à l'écran, un invité de 0,30 dépassait la
+   plinthe et faisait deux têtes de plus que la porte des toilettes. */
+const SOIREE_TAILLE = 0.235;
 const SOIREE_MARCHE = 0.115;     /* le joueur                              */
 const SOIREE_LENT = 0.026;       /* les invités                            */
 const SOIREE_PORTEE = 0.060;     /* à quelle distance on parle             */
@@ -177,6 +185,7 @@ const Soiree = {
         ref, x:coin.x + (Math.random() - 0.5) * 0.05, coin,
         cible:coin.x, foulee:Math.random() * 4, dir:1,
         t:hasard(3, 8), dit:null, ditT:0, interroge:false, coupable:false,
+        decalage:Math.random() * 6,
       });
     }
     /* LE COUPLE EST VRAISEMBLABLE OU IL N'EST RIEN. On évite deux
@@ -255,7 +264,7 @@ const Soiree = {
       }
 
       const d = iv.cible - iv.x;
-      if (Math.abs(d) > 0.006){
+      if (Math.abs(d) > 0.010){
         iv.dir = d > 0 ? 1 : -1;
         iv.x = borne(iv.x + iv.dir * dt * SOIREE_LENT, 0.03, 0.97);
         iv.foulee += dt * 3.4;
@@ -369,25 +378,47 @@ const Soiree = {
     if (bon) Score.ajouter(400 + this.questions * 50);
   },
 
+  /* LES POSES SCINTILLAIENT, et deux causes se cumulaient :
+     1. la foulée avançait MÊME À L'ARRÊT, donc `idle` et `idle2`
+        alternaient plusieurs fois par seconde ;
+     2. la marche continuait d'alterner quand il était presque arrêté.
+     La foulée ne tourne plus que quand il avance, et le repos change de
+     pose sur une horloge LENTE, propre à chacun — sinon les huit
+     changent en même temps, ce qui se voit encore plus. */
   pose(iv){
     const p = iv.ref.prefixe, dispo = n => Images.table[p + "_" + n] ? n : null;
-    if (Math.abs(iv.cible - iv.x) > 0.006)
+    if (Math.abs(iv.cible - iv.x) > 0.010)
       return dispo("marche" + (1 + (Math.floor(iv.foulee) % 2)))
           || dispo("marche1") || "idle";
     if (iv.coin && iv.coin.cle === "piste")
-      return dispo("danse" + (1 + (Math.floor(iv.foulee) % 2)))
-          || dispo("danse1") || dispo("idle") || "idle";
-    return (Math.floor(iv.foulee / 3) % 2 && dispo("idle2")) || "idle";
+      return dispo("danse" + (1 + (Math.floor(Soiree.temps * 2.2 + iv.decalage) % 2)))
+          || dispo("danse1") || "idle";
+    return (Math.floor((Soiree.temps + iv.decalage) / 3.5) % 2 && dispo("idle2"))
+        || "idle";
   },
 };
 
 const SoireeVue = {
-  ex(x){ return Camera.L * x; },
+  /* LA SALLE EST PLUS LARGE QUE L'ÉCRAN. Sa largeur en pixels vient de
+     son RAPPORT, pas de l'écran : c'est ce qui empêche la déformation.
+     La caméra suit le joueur et se borne aux deux bouts — on ne voit
+     jamais le vide au-delà du décor. */
+  larg(){
+    const f = Images.table["fond_salle"];
+    const r = (f && f.naturalWidth) ? f.naturalWidth / f.naturalHeight : 2.55;
+    return Math.max(Camera.L, Camera.H * r);
+  },
+  origine(){
+    return borne(Camera.L / 2 - Soiree.x * this.larg(),
+                 Camera.L - this.larg(), 0);
+  },
+  ex(x){ return this.origine() + x * this.larg(); },
 
   dessiner(){
     const H = Camera.H, L = Camera.L;
     const fond = Images.table["fond_salle"];
-    if (fond && fond.naturalWidth) ctx.drawImage(fond, 0, 0, L, H);
+    if (fond && fond.naturalWidth)
+      ctx.drawImage(fond, this.origine(), 0, this.larg(), H);
     else { ctx.fillStyle = "#2a1c10"; ctx.fillRect(0, 0, L, H); }
 
     const gens = Soiree.invites.slice().sort((a, b) => a.x - b.x);
