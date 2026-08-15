@@ -789,7 +789,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v7.35</div>
+  <div id="version">CALLAGHAN v7.36</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -861,7 +861,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.35";
+const VERSION = "7.36";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -13932,6 +13932,10 @@ const RUE_MARCHE = 0.115;       /* le joueur, en fraction de monde par seconde  
 const RUE_IVRE = 0.030;         /* eux, quand ils avancent                      */
 const RUE_PORTEE = 0.055;       /* à quelle distance on les relance             */
 const RUE_DUREE = 150;
+/* L'écart minimal entre deux ivrognes. Mesuré à l'écran : en dessous de
+   0,07 de monde, deux silhouettes se recouvrent assez pour qu'on ne sache
+   plus laquelle parle. */
+const RUE_ECART = 0.075;
 /* Combien de temps ils tiennent avant de dériver, et combien de temps la
    dérive dure. Mesuré à la main : en dessous de quatre secondes on ne
    peut pas s'occuper des trois, au-dessus de dix le niveau s'endort. */
@@ -14034,6 +14038,22 @@ const Rue = {
       if (iv.x >= RUE_ARRIVEE - 0.001){ iv.arrive = true; iv.dit = null; }
     }
 
+    /* ILS NE SE MARCHENT PAS DESSUS. Vu en jeu : les trois finissaient
+       superposés au même endroit, et on ne savait plus qui dérivait. Ils
+       se repoussent doucement dès qu'ils sont à moins d'un demi-pas —
+       assez pour rester lisibles, pas assez pour qu'on voie une force. */
+    for (let a = 0; a < this.ivrognes.length; a++)
+      for (let b = a + 1; b < this.ivrognes.length; b++){
+        const p1 = this.ivrognes[a], p2 = this.ivrognes[b];
+        if (p1.arrive || p2.arrive) continue;
+        const d2 = p2.x - p1.x;
+        if (Math.abs(d2) < RUE_ECART){
+          const pousse = (RUE_ECART - Math.abs(d2)) * 0.5 * (d2 >= 0 ? 1 : -1);
+          p1.x = borne(p1.x - pousse, 0.02, RUE_ARRIVEE);
+          p2.x = borne(p2.x + pousse, 0.02, RUE_ARRIVEE);
+        }
+      }
+
     if (this.gagne() && !this.fini){ this.fini = 0.001; Score.ajouter(500); }
     else if (this.temps >= RUE_DUREE && !this.fini) this.fini = 0.001;
   },
@@ -14093,8 +14113,15 @@ const RueVue = {
     ctx.beginPath(); ctx.ellipse(x, y, sl * 0.22, H * 0.008, 0, 0, 6.283); ctx.fill();
     ctx.drawImage(spr, x - sl / 2, y - sh, sl, sh);
     ctx.restore();
-    if (iv.dit) BarVue.bulle(iv.dit, x, y - sh - H * 0.010, L * 0.52, 0.030,
-                             borne(iv.ditT / 0.4, 0, 1));
+    /* LES BULLES S'ÉTAGENT. Trois personnes proches parlaient à la même
+       hauteur et les phrases se recouvraient : on lisait « Attends.
+       Attends. ATTE » et rien d'autre. Chacun a son étage, tiré de son
+       rang dans le troupeau. */
+    if (iv.dit){
+      const etage = Rue.ivrognes.indexOf(iv) % 3;
+      BarVue.bulle(iv.dit, x, y - sh - H * (0.010 + etage * 0.055),
+                   L * 0.46, 0.028, borne(iv.ditT / 0.4, 0, 1));
+    }
   },
 
   dessinerJoueur(){
@@ -14530,8 +14557,12 @@ const Interface = {
     /* Le pupitre reste rangé pendant l'AFFICHE aussi, pas seulement
        pendant le choix : il se dessinait par-dessus l'écran de
        présentation, avec ses boutons éteints en travers du titre. */
+    /* LA RUE EMPRUNTE LE PUPITRE DU BAR. Deux flèches et rien d'autre :
+       lui en fabriquer un à elle aurait été trois boutons de plus à
+       tenir, pour la même chose. */
     if (E.pupitre3) E.pupitre3.classList.toggle("on",
-      Jeu.niveau === 3 && !Tournee.enChoix && Tournee.introT <= 0);
+      Jeu.niveau === 5 ||
+      (Jeu.niveau === 3 && !Tournee.enChoix && Tournee.introT <= 0));
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
     if (E.pleinBtn) E.pleinBtn.classList.add("on");
     if (E.pauseBtn) E.pauseBtn.classList.add("on");
@@ -15125,11 +15156,18 @@ const Entrees = {
       if (!el) return;
       el.addEventListener("pointerdown", ev => {
         ev.preventDefault(); Sons.reveiller();
-        if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp + d);
+        /* LE PUPITRE DU BAR SERT AUSSI À LA RUE. Le niveau 5 se joue avec
+           les deux mêmes flèches, et rien n'avait été branché côté
+           TACTILE : au clavier ça marchait, sur téléphone on ne bougeait
+           pas d'un pouce. Le seul endroit où le jeu se joue vraiment. */
+        if (Jeu.niveau === 5) Rue.marcher(d);
+        else if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp + d);
         else Tournee.marcher(d);
         el.classList.add("pressee");
       });
-      const rel3 = () => { Tournee.marcher(0); el.classList.remove("pressee"); };
+      const rel3 = () => {
+        Tournee.marcher(0); Rue.marcher(0); el.classList.remove("pressee");
+      };
       el.addEventListener("pointerup", rel3);
       el.addEventListener("pointercancel", rel3);
       el.addEventListener("pointerleave", rel3);

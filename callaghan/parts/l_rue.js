@@ -29,6 +29,10 @@ const RUE_MARCHE = 0.115;       /* le joueur, en fraction de monde par seconde  
 const RUE_IVRE = 0.030;         /* eux, quand ils avancent                      */
 const RUE_PORTEE = 0.055;       /* à quelle distance on les relance             */
 const RUE_DUREE = 150;
+/* L'écart minimal entre deux ivrognes. Mesuré à l'écran : en dessous de
+   0,07 de monde, deux silhouettes se recouvrent assez pour qu'on ne sache
+   plus laquelle parle. */
+const RUE_ECART = 0.075;
 /* Combien de temps ils tiennent avant de dériver, et combien de temps la
    dérive dure. Mesuré à la main : en dessous de quatre secondes on ne
    peut pas s'occuper des trois, au-dessus de dix le niveau s'endort. */
@@ -131,6 +135,22 @@ const Rue = {
       if (iv.x >= RUE_ARRIVEE - 0.001){ iv.arrive = true; iv.dit = null; }
     }
 
+    /* ILS NE SE MARCHENT PAS DESSUS. Vu en jeu : les trois finissaient
+       superposés au même endroit, et on ne savait plus qui dérivait. Ils
+       se repoussent doucement dès qu'ils sont à moins d'un demi-pas —
+       assez pour rester lisibles, pas assez pour qu'on voie une force. */
+    for (let a = 0; a < this.ivrognes.length; a++)
+      for (let b = a + 1; b < this.ivrognes.length; b++){
+        const p1 = this.ivrognes[a], p2 = this.ivrognes[b];
+        if (p1.arrive || p2.arrive) continue;
+        const d2 = p2.x - p1.x;
+        if (Math.abs(d2) < RUE_ECART){
+          const pousse = (RUE_ECART - Math.abs(d2)) * 0.5 * (d2 >= 0 ? 1 : -1);
+          p1.x = borne(p1.x - pousse, 0.02, RUE_ARRIVEE);
+          p2.x = borne(p2.x + pousse, 0.02, RUE_ARRIVEE);
+        }
+      }
+
     if (this.gagne() && !this.fini){ this.fini = 0.001; Score.ajouter(500); }
     else if (this.temps >= RUE_DUREE && !this.fini) this.fini = 0.001;
   },
@@ -190,8 +210,15 @@ const RueVue = {
     ctx.beginPath(); ctx.ellipse(x, y, sl * 0.22, H * 0.008, 0, 0, 6.283); ctx.fill();
     ctx.drawImage(spr, x - sl / 2, y - sh, sl, sh);
     ctx.restore();
-    if (iv.dit) BarVue.bulle(iv.dit, x, y - sh - H * 0.010, L * 0.52, 0.030,
-                             borne(iv.ditT / 0.4, 0, 1));
+    /* LES BULLES S'ÉTAGENT. Trois personnes proches parlaient à la même
+       hauteur et les phrases se recouvraient : on lisait « Attends.
+       Attends. ATTE » et rien d'autre. Chacun a son étage, tiré de son
+       rang dans le troupeau. */
+    if (iv.dit){
+      const etage = Rue.ivrognes.indexOf(iv) % 3;
+      BarVue.bulle(iv.dit, x, y - sh - H * (0.010 + etage * 0.055),
+                   L * 0.46, 0.028, borne(iv.ditT / 0.4, 0, 1));
+    }
   },
 
   dessinerJoueur(){

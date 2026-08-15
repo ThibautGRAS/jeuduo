@@ -396,8 +396,12 @@ const Interface = {
     /* Le pupitre reste rangé pendant l'AFFICHE aussi, pas seulement
        pendant le choix : il se dessinait par-dessus l'écran de
        présentation, avec ses boutons éteints en travers du titre. */
+    /* LA RUE EMPRUNTE LE PUPITRE DU BAR. Deux flèches et rien d'autre :
+       lui en fabriquer un à elle aurait été trois boutons de plus à
+       tenir, pour la même chose. */
     if (E.pupitre3) E.pupitre3.classList.toggle("on",
-      Jeu.niveau === 3 && !Tournee.enChoix && Tournee.introT <= 0);
+      Jeu.niveau === 5 ||
+      (Jeu.niveau === 3 && !Tournee.enChoix && Tournee.introT <= 0));
     if (E.outilsBtn && Debug.autorise) E.outilsBtn.classList.add("on");
     if (E.pleinBtn) E.pleinBtn.classList.add("on");
     if (E.pauseBtn) E.pauseBtn.classList.add("on");
@@ -991,11 +995,18 @@ const Entrees = {
       if (!el) return;
       el.addEventListener("pointerdown", ev => {
         ev.preventDefault(); Sons.reveiller();
-        if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp + d);
+        /* LE PUPITRE DU BAR SERT AUSSI À LA RUE. Le niveau 5 se joue avec
+           les deux mêmes flèches, et rien n'avait été branché côté
+           TACTILE : au clavier ça marchait, sur téléphone on ne bougeait
+           pas d'un pouce. Le seul endroit où le jeu se joue vraiment. */
+        if (Jeu.niveau === 5) Rue.marcher(d);
+        else if (Tournee.enChoix) Tournee.choisir(Tournee.choixChamp + d);
         else Tournee.marcher(d);
         el.classList.add("pressee");
       });
-      const rel3 = () => { Tournee.marcher(0); el.classList.remove("pressee"); };
+      const rel3 = () => {
+        Tournee.marcher(0); Rue.marcher(0); el.classList.remove("pressee");
+      };
       el.addEventListener("pointerup", rel3);
       el.addEventListener("pointercancel", rel3);
       el.addEventListener("pointerleave", rel3);
