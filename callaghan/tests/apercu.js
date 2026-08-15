@@ -705,7 +705,12 @@ function jouerJusqua(D, condition, limite){
     D.Soiree.invites[1].interroge = true;
     D.Soiree.invites[1].dit = "J'ai vu quelqu'un partir vers le couloir.";
     D.Soiree.invites[1].ditT = 2.4;
-    D.Soiree.accuses.push(D.Soiree.invites[3]);
+    /* le carnet rempli : deux noms posés et trois réponses notées */
+    D.Soiree.accuses.push(D.Soiree.invites[3], D.Soiree.invites[6]);
+    D.Soiree.notes.push(
+      { nom:D.Soiree.invites[0].ref.nom, txt:"J'étais au buffet, avec RÉMY." },
+      { nom:D.Soiree.invites[1].ref.nom, txt:"J'ai vu quelqu'un filer vers le couloir." },
+      { nom:D.Soiree.invites[3].ref.nom, txt:"Pourquoi tu demandes ça ?" });
     D.SoireeVue.dessiner();
     ecrire(canevas, "40_soiree");
   }

@@ -175,13 +175,14 @@ const Soiree = {
   actif:false, temps:0, fini:0, verdict:null,
   x:0.20, dir:1, foulee:0, marche:0,
   invites:[], couple:[], motif:null, questions:SOIREE_QUESTIONS,
-  accuses:[], bulle:null,
+  accuses:[], bulle:null, notes:[], confirme:false,
 
   raz(){
     this.actif = false; this.temps = 0; this.fini = 0; this.verdict = null;
     this.x = 0.20; this.dir = 1; this.foulee = 0; this.marche = 0;
     this.invites.length = 0; this.couple.length = 0; this.accuses.length = 0;
     this.motif = null; this.questions = SOIREE_QUESTIONS; this.bulle = null;
+    this.notes = []; this.confirme = false;
   },
 
   demarrer(){
@@ -334,6 +335,13 @@ const Soiree = {
     }
     if (!iv.interroge){ iv.interroge = true; this.questions--; }
     iv.dit = this.temoignage(iv); iv.ditT = 3.4;
+    /* LE CARNET RETIENT À NOTRE PLACE. Sans lui il fallait mémoriser huit
+       alibis en écoutant, ce que personne ne fait sur un téléphone : le
+       niveau était une devinette. Avec, deux alibis qui se citent l'un
+       l'autre sautent aux yeux, et ça devient une déduction. */
+    const note = { nom:iv.ref.nom, txt:iv.dit };
+    const i = this.notes.findIndex(n => n.nom === iv.ref.nom);
+    if (i >= 0) this.notes[i] = note; else this.notes.push(note);
   },
 
   /* CE QU'IL RÉPOND. Un innocent dit où il était et cite quelqu'un au
@@ -383,9 +391,28 @@ const Soiree = {
     const iv = this.proche();
     if (!iv) return;
     const i = this.accuses.indexOf(iv);
-    if (i >= 0){ this.accuses.splice(i, 1); return; }
+    if (i >= 0){ this.accuses.splice(i, 1); this.confirme = false; return; }
+    /* ON N'ACCUSE PLUS QUE DEUX PERSONNES, et rien ne se déclenche tout
+       seul. Avant, le second nom lançait le verdict sans prévenir : on ne
+       savait ni qu'il en fallait deux, ni qu'on venait de conclure. */
+    if (this.accuses.length >= 2){
+      this.bulle = { txt:"Deux noms, c'est déjà beaucoup.", t:2.0 };
+      return;
+    }
     this.accuses.push(iv);
-    if (this.accuses.length >= 2) this.terminer(true);
+  },
+
+  /* LE SEUL GESTE IRRÉVERSIBLE DU NIVEAU, et il faut le vouloir : un
+     bouton à part, qui n'apparaît qu'une fois les deux noms posés. */
+  confirmer(){
+    if (!this.actif || this.fini || this.accuses.length < 2) return;
+    if (!this.confirme){
+      this.confirme = true;
+      this.bulle = { txt:"Tu accuses " + this.accuses[0].ref.nom + " et "
+                        + this.accuses[1].ref.nom + ". Sûr ?", t:4.0 };
+      return;
+    }
+    this.terminer(true);
   },
 
   terminer(accuse){
@@ -395,6 +422,7 @@ const Soiree = {
     this.verdict = {
       bon,
       couple:this.couple.map(q => q.ref.nom).join(" et "),
+      accuses:this.accuses.map(q => q.ref.nom).join(" et "),
       motif:this.motif,
       restant:this.questions,
     };
@@ -514,6 +542,49 @@ const SoireeVue = {
     ctx.restore();
   },
 
+  /* LE CARNET, ouvert en permanence en haut à gauche. Il dit trois
+     choses d'un coup d'oeil : ce qu'on cherche (DEUX noms), où on en est,
+     et ce qu'on a appris. C'est ce qui manquait pour que le niveau se
+     comprenne sans explication. */
+  dessinerCarnet(){
+    const H = Camera.H, L = Camera.L;
+    const marge = H * 0.028;
+    const l = Math.min(L * 0.42, H * 0.62);
+    const lignes = Soiree.notes.slice(-5);
+    const haut = H * 0.10 + lignes.length * H * 0.038;
+    ctx.save();
+    ctx.fillStyle = "rgba(12,10,22,.62)";
+    arrondi(marge, marge, l, haut, H * 0.016); ctx.fill();
+    ctx.textAlign = "left"; ctx.textBaseline = "top";
+
+    ctx.font = "800 " + Math.round(H * 0.030) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.fillStyle = "#FFD98A";
+    ctx.fillText("QUI SE VOIT EN CACHETTE ?", marge + H * 0.016, marge + H * 0.014);
+
+    /* LES DEUX CASES SONT TOUJOURS LÀ, vides ou pleines : c'est comme ça
+       qu'on apprend qu'il en faut deux sans qu'on nous le dise. */
+    ctx.font = "800 " + Math.round(H * 0.026) + "px 'Baloo 2', system-ui, sans-serif";
+    for (let i = 0; i < 2; i++){
+      const q = Soiree.accuses[i];
+      ctx.fillStyle = q ? "#FF8A6A" : "rgba(246,242,255,.42)";
+      ctx.fillText((i + 1) + ". " + (q ? q.ref.nom : "— — —"),
+                   marge + H * 0.016, marge + H * 0.050 + i * H * 0.032);
+    }
+
+    /* CE QU'ILS ONT DIT, les cinq dernières réponses. Au-delà l'encadré
+       mange l'écran, et les cinq dernières suffisent : on interroge par
+       petits groupes, pas au hasard. */
+    ctx.font = "600 " + Math.round(H * 0.022) + "px 'Baloo 2', system-ui, sans-serif";
+    lignes.forEach((n, i) => {
+      ctx.fillStyle = "rgba(246,242,255,.86)";
+      const t = n.nom + " : " + n.txt;
+      ctx.fillText(t.length > 46 ? t.slice(0, 45) + "…" : t,
+                   marge + H * 0.016, marge + H * 0.122 + i * H * 0.036);
+    });
+    ctx.restore();
+    ctx.textAlign = "left";
+  },
+
   dessinerHud(){
     const H = Camera.H, L = Camera.L;
     ctx.save();
@@ -524,6 +595,7 @@ const SoireeVue = {
     ctx.fillText(Soiree.questions + " QUESTIONS — " + Math.floor(s / 60) + ":"
                  + String(s % 60).padStart(2, "0"), L / 2, H * 0.03);
     ctx.restore();
+    this.dessinerCarnet();
     if (Soiree.bulle)
       BarVue.bulle(Soiree.bulle.txt, L / 2, H * 0.16, L * 0.6, 0.030,
                    borne(Soiree.bulle.t / 0.4, 0, 1));
@@ -546,6 +618,12 @@ const SoireeVue = {
     ctx.font = "600 " + Math.round(H * 0.034) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillText(v.motif.titre, L / 2, H * 0.57);
     ctx.fillText(v.motif.chute, L / 2, H * 0.65);
+    /* CE QU'ON AVAIT DIT, pour mesurer de combien on s'est planté. */
+    if (!v.bon && v.accuses){
+      ctx.fillStyle = "rgba(246,242,255,.62)";
+      ctx.font = "600 " + Math.round(H * 0.028) + "px 'Baloo 2', system-ui, sans-serif";
+      ctx.fillText("Tu avais dit " + v.accuses + ".", L / 2, H * 0.75);
+    }
     ctx.restore();
   },
 };

@@ -404,6 +404,14 @@ const Interface = {
     const soir = Jeu.niveau === 5;
     if (E.c3J) E.c3J.textContent = soir ? "ACCUSER" : "JETER";
     if (E.c3B) E.c3B.textContent = soir ? "PARLER" : "BOIRE";
+    /* CONFIRMER n'apparaît qu'une fois les DEUX noms posés : un bouton
+       qui n'existe pas encore ne se presse pas par erreur, et son
+       apparition dit au joueur qu'il a fini de désigner. */
+    if (E.c3E){
+      const pret = soir && Soiree.accuses.length >= 2 && !Soiree.fini;
+      E.c3E.style.display = soir && !pret ? "none" : "";
+      if (soir) E.c3E.textContent = Soiree.confirme ? "SÛR ?" : "CONFIRMER";
+    }
     if (E.pupitre3) E.pupitre3.classList.toggle("on",
       Jeu.niveau === 5 ||
       (Jeu.niveau === 3 && !Tournee.enChoix && Tournee.introT <= 0));
@@ -505,7 +513,12 @@ const Interface = {
        à agir, et une invite éteinte ne se presse pas (l'esquive du
        niveau 2 en est morte pendant une version). */
     const tarte = !!Tournee.tarte && Tournee.tarte.etat === "vol";
-    if (E.c3E){
+    if (E.c3E && Jeu.niveau === 5){
+      /* au niveau 5 ce bouton est CONFIRMER : il est toujours allumé
+         quand il est visible, et sa visibilité suffit à le dire */
+      E.c3E.classList.add("on");
+      E.c3E.classList.remove("eteint", "alerte");
+    } else if (E.c3E){
       E.c3E.classList.toggle("on", tarte);
       E.c3E.classList.toggle("alerte", !!Tournee.esquiveOuverte);
       E.c3E.classList.remove("eteint");
@@ -1035,6 +1048,9 @@ const Entrees = {
       if (!Tournee.enChoix) Tournee.jeter();
     });
     if (E.c3E) E.c3E.addEventListener("pointerdown", ev => {
+      if (Jeu.niveau === 5){
+        ev.preventDefault(); Sons.reveiller(); Soiree.confirmer(); return;
+      }
       ev.preventDefault(); Sons.reveiller(); Tournee.esquiver();
     });
     for (const b of [E.c3G, E.c3D, E.c3B, E.c3J, E.c3E]) if (b) b.addEventListener("click", ev => ev.preventDefault());
