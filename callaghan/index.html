@@ -789,7 +789,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v7.38</div>
+  <div id="version">CALLAGHAN v7.39</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -861,7 +861,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.38";
+const VERSION = "7.39";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -13932,11 +13932,22 @@ RuelleVue.dessinerIntro = function(){
    empêche le niveau d'être une seule blague répétée.
    ================================================================== */
 
-const SOIREE_SOL = 0.615;        /* la ligne de sol, mesurée sur le décor  */
+/* LA LIGNE DE SOL. Mesurée à 0,615 la première fois — c'était la
+   jonction MUR/PLINTHE derrière les meubles, pas la ligne où l'on marche.
+   Vu en jeu : tout le monde flottait, debout sur le buffet et sur le
+   banc. Le sol praticable commence là où le carrelage prend toute la
+   largeur, soit 0,80 ; les pieds se posent un peu plus bas encore. */
+const SOIREE_SOL = 0.84;
 const SOIREE_TAILLE = 0.30;
 const SOIREE_MARCHE = 0.115;     /* le joueur                              */
 const SOIREE_LENT = 0.026;       /* les invités                            */
 const SOIREE_PORTEE = 0.060;     /* à quelle distance on parle             */
+/* ILS NE SE MARCHENT PAS DESSUS. Vu en jeu : sept invités empilés dans
+   l'embrasure des toilettes, impossible de savoir qui parlait. Ils se
+   repoussent doucement sous cet écart — le couple, lui, a le droit de se
+   rapprocher jusqu'à 0,05, sinon on ne le verrait jamais ensemble. */
+const SOIREE_ECART = 0.085;
+const SOIREE_ECART_COUPLE = 0.048;
 const SOIREE_DUREE = 210;
 const SOIREE_QUESTIONS = 8;      /* on ne peut pas interroger tout le monde */
 
@@ -13965,6 +13976,71 @@ const SOIREE_MOTIFS = [
    quelqu'un pour le confirmer. Les coupables, eux, se citent l'un
    l'autre — et deux alibis qui se referment l'un sur l'autre, c'est tout
    ce que le joueur a besoin de voir. */
+/* CE QU'ILS RÉPONDENT. Une seule tournure — « j'étais là, avec X » —
+   revenait à chaque question et le niveau devenait un formulaire. Six
+   familles maintenant, et chacune dit quelque chose de DIFFÉRENT sur
+   l'enquête :
+     alibi     un lieu et un témoin. La brique de base
+     vu        il a vu quelqu'un ailleurs. Contredit un alibi
+     rien      il n'a rien vu, et ça arrive
+     detail    un détail vrai mais inutile. Le bruit de fond
+     soupcon   il trouve que quelqu'un est bizarre. Une piste, pas une preuve
+     gene      il élude. Les coupables y viennent quand on insiste
+   Un innocent pioche partout ; un coupable ne sort JAMAIS de `alibi` et
+   `gene`, et c'est ça qui se remarque au bout de deux questions. */
+const SOIREE_DITS = {
+  alibi: [
+    "J'étais {ou}, avec {a}.",
+    "{ou}, tout le temps. Demande à {a}.",
+    "Avec {a}, {ou}. On a pas bougé.",
+    "Moi ? {ou}. {a} peut le dire.",
+  ],
+  vu: [
+    "J'ai vu {a} filer {ou}.",
+    "{a} est passé par le couloir. Deux fois.",
+    "{a} et {b} se sont croisés {ou}.",
+    "{a} cherchait quelqu'un, ça se voyait.",
+    "{a} avait son téléphone en mode avion.",
+  ],
+  rien: [
+    "J'ai rien vu, moi. J'ai le dos tourné.",
+    "Je regardais le gâteau. Toute la soirée.",
+    "Demande à quelqu'un qui boit moins.",
+    "Aucune idée. Sincèrement aucune.",
+  ],
+  detail: [
+    "Y'a plus de glaçons. C'est tout ce que je sais.",
+    "L'horloge est arrêtée depuis mars.",
+    "{a} a ramené un cadeau emballé dans du journal.",
+    "Le gâteau, il en manque DEUX parts.",
+    "Quelqu'un a écrit sur le miroir.",
+  ],
+  soupcon: [
+    "{a} est bizarre ce soir. Vraiment bizarre.",
+    "{a} a changé de sujet trois fois.",
+    "Si j'étais toi, je regarderais {a}.",
+    "{a} a pas décroché un mot de la soirée.",
+  ],
+  gene: [
+    "Moi ? Nulle part. Enfin, ici.",
+    "J'étais là. Puis ailleurs. Puis là.",
+    "Pourquoi tu demandes ça ?",
+    "C'est un interrogatoire ou une soirée ?",
+    "On peut parler d'autre chose ?",
+  ],
+};
+
+/* Ce qu'ils lâchent tout seuls, sans qu'on demande. C'est le bruit de la
+   salle : ça ne prouve rien et ça oriente le regard. */
+const SOIREE_AMBIANCE = [
+  "Quelqu'un a vu {a} ?",
+  "Il est où, le gâteau ?",
+  "{a} danse tout seul depuis dix minutes.",
+  "J'ai froid. Qui a ouvert la porte du fumoir ?",
+  "On remet de la musique ?",
+  "C'est qui qui a pris ma veste ?",
+];
+
 const SOIREE_GENE = [
   "Moi ? Nulle part. Enfin, ici.",
   "J'étais là. Puis ailleurs. Puis là.",
@@ -14062,9 +14138,23 @@ const Soiree = {
           }
         }
       } else if (iv.t <= 0){
-        const coin = piocher(SOIREE_COINS);
-        iv.coin = coin; iv.cible = coin.x + (Math.random() - 0.5) * 0.06;
-        iv.t = hasard(5, 12);
+        /* CERTAINS NE BOUGENT PAS. Une salle où tout le monde marche tout
+           le temps n'a pas de groupes, et c'est aux groupes qu'on lit une
+           soirée. Une fois sur trois, il reste où il est et il parle. */
+        if (Math.random() < 0.34){
+          iv.cible = iv.x;
+          if (Math.random() < 0.5){
+            const autres = this.invites.filter(q => q !== iv);
+            iv.dit = piocher(SOIREE_AMBIANCE)
+              .replace("{a}", (piocher(autres) || iv).ref.nom);
+            iv.ditT = 2.8;
+          }
+          iv.t = hasard(4, 10);
+        } else {
+          const coin = piocher(SOIREE_COINS);
+          iv.coin = coin; iv.cible = coin.x + (Math.random() - 0.5) * 0.06;
+          iv.t = hasard(5, 12);
+        }
       }
 
       const d = iv.cible - iv.x;
@@ -14074,6 +14164,20 @@ const Soiree = {
         iv.foulee += dt * 3.4;
       }
     }
+
+    /* l'anti-empilement, après tous les déplacements */
+    for (let a = 0; a < this.invites.length; a++)
+      for (let b = a + 1; b < this.invites.length; b++){
+        const p1 = this.invites[a], p2 = this.invites[b];
+        const ensemble = p1.coupable && p2.coupable;
+        const mini = ensemble ? SOIREE_ECART_COUPLE : SOIREE_ECART;
+        const d = p2.x - p1.x;
+        if (Math.abs(d) < mini){
+          const pousse = (mini - Math.abs(d)) * 0.5 * (d >= 0 ? 1 : -1);
+          p1.x = borne(p1.x - pousse, 0.03, 0.97);
+          p2.x = borne(p2.x + pousse, 0.03, 0.97);
+        }
+      }
 
     if (this.temps >= SOIREE_DUREE && !this.fini) this.terminer(false);
   },
@@ -14107,21 +14211,40 @@ const Soiree = {
      hasard. Un coupable cite SON COMPLICE — et deux alibis qui se
      referment l'un sur l'autre sont la seule preuve du niveau. */
   temoignage(iv){
-    if (iv.coupable){
-      const autre = this.couple[0] === iv ? this.couple[1] : this.couple[0];
-      return "J'étais " + piocher(SOIREE_COINS.filter(c => !c.discret)).nom
-           + ", avec " + autre.ref.nom + ".";
-    }
     const autres = this.invites.filter(q => q !== iv);
-    const temoin = autres.length ? piocher(autres) : iv;
-    if (Math.random() < 0.45){
-      const a = piocher(autres), b = piocher(autres);
-      return piocher(SOIREE_RAGOTS)
-        .replace("{a}", a.ref.nom).replace("{b}", b.ref.nom)
-        .replace("{ou}", piocher(SOIREE_COINS).nom);
+    const remplir = t => t
+      .replace("{ou}", piocher(SOIREE_COINS).nom)
+      .replace("{a}", (piocher(autres) || iv).ref.nom)
+      .replace("{b}", (piocher(autres) || iv).ref.nom);
+
+    if (iv.coupable){
+      /* IL SE COUVRE, ET IL S'ÉNERVE. La première fois il donne son alibi
+         — celui qui cite son complice. Aux suivantes il élude, et c'est
+         l'insistance qui le trahit autant que le contenu. */
+      iv.presse = (iv.presse || 0) + 1;
+      const autre = this.couple[0] === iv ? this.couple[1] : this.couple[0];
+      if (iv.presse === 1 || Math.random() < 0.35)
+        return remplir(piocher(SOIREE_DITS.alibi))
+          .replace(/avec [A-ZÉÈÀÎ' ]+\./, "avec " + autre.ref.nom + ".")
+          .replace(/Demande à [A-ZÉÈÀÎ' ]+\./, "Demande à " + autre.ref.nom + ".");
+      return piocher(SOIREE_DITS.gene);
     }
-    return "J'étais " + (iv.coin || SOIREE_COINS[0]).nom
-         + ", avec " + temoin.ref.nom + ".";
+
+    /* UN INNOCENT NE RÉPOND PAS TOUJOURS LA MÊME CHOSE. Les proportions
+       comptent : trop d'alibis et le niveau est un tableur, trop de
+       soupçons et tout le monde a l'air coupable. */
+    const r = Math.random();
+    const seau = r < 0.30 ? "alibi" : r < 0.55 ? "vu" : r < 0.70 ? "soupcon"
+               : r < 0.85 ? "detail" : "rien";
+    let t = remplir(piocher(SOIREE_DITS[seau]));
+    /* CE QU'IL A VRAIMENT VU. Une fois sur quatre, celui qui parle d'un
+       autre parle du COUPLE : c'est la seule façon d'avancer sans les
+       suivre soi-même, et c'est assez rare pour que ça se mérite. */
+    if ((seau === "vu" || seau === "soupcon") && Math.random() < 0.35){
+      const vrai = piocher(this.couple);
+      t = t.replace(/\b[A-ZÉÈÀÎ][A-ZÉÈÀÎ' .]+\b/, vrai.ref.nom);
+    }
+    return t;
   },
 
   /* ACCUSER SE FAIT EN DEUX FOIS : on désigne quelqu'un, puis l'autre. Un
