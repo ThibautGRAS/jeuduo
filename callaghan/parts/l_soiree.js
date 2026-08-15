@@ -218,11 +218,86 @@ const SOIREE_RAGOTS = [
   "{a} est passé par le couloir. Deux fois.",
 ];
 
+/* ================= LES SCÈNES À DEUX VOIX =================
+   Le défaut de fond du niveau : les invités répondaient à des questions
+   et ne se parlaient JAMAIS entre eux. On récoltait des fiches d'alibi.
+   Or ce qui fait vivre le bar, c'est qu'on SURPREND des conversations —
+   et une contradiction qu'on entend vaut dix qu'on calcule.
+
+   Une scène se déclenche quand deux invités sont proches L'UN DE L'AUTRE
+   et que le joueur est à portée d'oreille : il faut être là pour
+   l'entendre, c'est ce qui récompense la traversée de la salle.
+
+   TROIS FAMILLES, et la proportion fait tout :
+     `piste`   du bruit. La fête, les méchants, le baby-foot. Ça ne sert à
+               rien et c'est ce qui rend les vraies pistes précieuses.
+     `objet`   un indice SENSIBLE — un froid, un paquet, une odeur. Il
+               désigne un lieu ou un moment, jamais un nom.
+     `accroc`  la contradiction : l'un reprend l'autre sur ce qu'il a dit.
+               Elle est TIRÉE DE LA VÉRITÉ du scénario, donc elle vaut
+               preuve — et c'est la seule chose qu'on n'obtient pas en
+               interrogeant. */
+const SOIREE_SCENES = {
+  piste: [
+    ["Y'a plus de glaçons.", "Y'a plus rien depuis 23 h."],
+    ["Tu as vu le gâteau ?", "Il en manque deux parts.", "J'en ai pris qu'une."],
+    ["MAX a triché au baby.", "MAX triche depuis 2016."],
+    ["Ils ont relaxé l'acteur, tu as vu ?", "Bien sûr qu'ils l'ont relaxé.",
+     "Un jour y'en aura un qui paiera.", "Pas celui-là."],
+    ["Le chanteur remet une tournée d'adieu.", "La cinquième.",
+     "Il part jamais, ce con."],
+    ["Le banquier donne des cours, maintenant.", "De quoi ?", "De morale.",
+     "Putain."],
+    ["Qui a mis ce morceau ?", "Moi.", "Ah. Il est bien."],
+    ["J'ai emballé mon cadeau dans du journal.", "Ça se voit.",
+     "C'est le geste qui compte.", "Non."],
+    ["Y'a un mec qui dort dans les manteaux.", "Laisse-le.",
+     "C'est mon manteau."],
+  ],
+  objet: [
+    ["Y'a un courant d'air.", "La porte du fumoir est restée ouverte.",
+     "Quelqu'un est sorti et pas revenu."],
+    ["Ça sent la clope ici.", "Personne fume dans la salle.",
+     "Alors quelqu'un rentre du dehors."],
+    ["Le rideau des toilettes bouge tout seul.", "Y'a du monde derrière.",
+     "Y'avait du monde. Plus maintenant."],
+    ["Deux verres pleins sur le rebord.", "Abandonnés ?",
+     "Posés. Par des gens qui comptaient revenir."],
+    ["Y'a une veste par terre depuis tout à l'heure.", "À qui ?",
+     "Quelqu'un l'a lâchée en vitesse."],
+    ["Le miroir est plein de buée.", "En novembre ?", "Voilà."],
+  ],
+};
+
+/* La contradiction, montée à partir du VRAI parcours. `{a}` est celui
+   qu'on reprend, `{heure}` le créneau du rendez-vous, `{ou}` où il
+   prétendait être. */
+const SOIREE_ACCROCS = [
+  ["Attends. Tu as dit que tu étais {ou} à {heure} ?",
+   "Oui. Pourquoi ?",
+   "Parce que j'y étais aussi. Et je t'ai pas vu."],
+  ["{a}, à {heure}, tu étais où déjà ?",
+   "{ou}. Comme tout le monde.",
+   "Tout le monde était pas {ou}."],
+  ["On t'a cherché à {heure}.", "J'étais {ou}.",
+   "On t'a cherché {ou}, justement."],
+  ["Tu es passé où, à {heure} ?", "Nulle part.",
+   "Nulle part, c'est un endroit maintenant ?"],
+];
+
+/* Le rythme des scènes. Toutes les 7 à 14 secondes, une scène s'ouvre
+   quelque part dans la salle — pas forcément là où on est. C'est ce qui
+   donne envie de bouger. */
+const SOIREE_SCENE_DELAI = [7.0, 14.0];
+const SOIREE_SCENE_LIGNE = 2.4;
+const SOIREE_OREILLE = 0.26;   /* jusqu'où on entend une conversation */
+
 const Soiree = {
   actif:false, temps:0, fini:0, verdict:null,
   x:0.20, dir:1, foulee:0, marche:0,
   invites:[], couple:[], motif:null, questions:SOIREE_QUESTIONS,
   accuses:[], bulle:null, notes:[], confirme:false,
+  scene:null, sceneT:0,
 
   raz(){
     this.actif = false; this.temps = 0; this.fini = 0; this.verdict = null;
@@ -230,6 +305,7 @@ const Soiree = {
     this.invites.length = 0; this.couple.length = 0; this.accuses.length = 0;
     this.motif = null; this.questions = SOIREE_QUESTIONS; this.bulle = null;
     this.notes = []; this.confirme = false;
+    this.scene = null; this.sceneT = hasard(3, 7);
   },
 
   demarrer(){
@@ -374,6 +450,8 @@ const Soiree = {
       }
     }
 
+    this.majScenes(dt);
+
     /* l'anti-empilement, après tous les déplacements */
     for (let a = 0; a < this.invites.length; a++)
       for (let b = a + 1; b < this.invites.length; b++){
@@ -398,6 +476,75 @@ const Soiree = {
   },
 
   marcher(d){ if (this.actif && !this.fini) this.marche = d; },
+
+  /* Une scène se joue réplique par réplique, en alternant les deux voix.
+     Elle s'interrompt si l'un des deux s'éloigne : une conversation dont
+     un des participants est parti n'existe pas. */
+  majScenes(dt){
+    if (this.scene){
+      this.scene.t -= dt;
+      if (this.scene.t <= 0){
+        const sc = this.scene;
+        if (!sc.lignes.length || Math.abs(sc.a.x - sc.b.x) > 0.16){
+          this.scene = null;
+        } else {
+          const qui = sc.tour ? sc.b : sc.a;
+          qui.dit = sc.lignes.shift(); qui.ditT = SOIREE_SCENE_LIGNE;
+          qui.dir = (qui === sc.a ? sc.b.x : sc.a.x) > qui.x ? 1 : -1;
+          sc.tour = !sc.tour;
+          sc.t = SOIREE_SCENE_LIGNE * 0.82;
+        }
+      }
+      return;
+    }
+    this.sceneT -= dt;
+    if (this.sceneT > 0) return;
+    this.sceneT = melange(SOIREE_SCENE_DELAI[0], SOIREE_SCENE_DELAI[1], Math.random());
+    this.ouvrirScene();
+  },
+
+  ouvrirScene(){
+    /* DEUX VOISINS, et le joueur ASSEZ PRÈS pour entendre. Une scène qui
+       se joue à l'autre bout de la salle est perdue pour tout le monde. */
+    const paires = [];
+    for (let i = 0; i < this.invites.length; i++)
+      for (let j = i + 1; j < this.invites.length; j++){
+        const a = this.invites[i], b = this.invites[j];
+        if (a.dit || b.dit) continue;
+        if (Math.abs(a.x - b.x) > 0.14) continue;
+        if (Math.abs((a.x + b.x) / 2 - this.x) > SOIREE_OREILLE) continue;
+        paires.push([a, b]);
+      }
+    if (!paires.length) return;
+    const [a, b] = piocher(paires);
+
+    /* UNE FOIS SUR QUATRE, C'EST UN ACCROC — et seulement si l'un des
+       deux est coupable : on ne fabrique pas de fausse piste, le faux
+       témoin s'en charge déjà. */
+    /* UN ACCROC SE JOUE ENTRE UN COUPABLE ET UN INNOCENT. Les deux
+       coupables entre eux se seraient repris l'un l'autre sur leur propre
+       mensonge — ils sont d'accord, c'est tout le problème. C'est
+       l'innocent qui pose la question, et le coupable qui répond mal. */
+    const vise = (a.coupable !== b.coupable) ? (a.coupable ? a : b) : null;
+    let lignes;
+    if (vise && Math.random() < 0.55){
+      const ou = piocher(SOIREE_COINS.filter(c => !c.discret)).nom;
+      lignes = piocher(SOIREE_ACCROCS).map(t => t
+        .replace("{a}", vise.ref.nom)
+        .replace(/{heure}/g, SOIREE_CRENEAUX[this.creneau])
+        .replace(/{ou}/g, ou));
+      /* L'INNOCENT PARLE EN PREMIER : la scène met le coupable en
+         difficulté, elle ne le désigne pas. */
+      if (vise === a) this.scene = null;
+    } else {
+      lignes = piocher(Math.random() < 0.45 ? SOIREE_SCENES.objet
+                                            : SOIREE_SCENES.piste).slice();
+    }
+    /* on place toujours le questionneur en `a` */
+    const q1 = (vise && vise === a) ? b : a;
+    const q2 = (q1 === a) ? b : a;
+    this.scene = { a:q1, b:q2, lignes:lignes.slice(), tour:false, t:0.01 };
+  },
 
   /* Celui qui est à portée, s'il y en a un. Tout le niveau passe par là :
      parler, accuser, tout se fait EN ÉTANT À CÔTÉ. */
