@@ -789,7 +789,7 @@ kbd{
     <div class="lecture" id="dLecture"></div>
   </div>
 
-  <div id="version">CALLAGHAN v7.44</div>
+  <div id="version">CALLAGHAN v7.45</div>
 
   <div id="pupitre2">
     <button class="cmd2" id="c2G" aria-label="Aller à gauche">◀</button>
@@ -861,7 +861,7 @@ kbd{
      UIManager         -> Interface
 ================================================================== */
 
-const VERSION = "7.44";
+const VERSION = "7.45";
 
 /* ---------- géométrie ----------
    Tout est exprimé en « unités monde », où un personnage mesure
@@ -14525,40 +14525,47 @@ const SoireeVue = {
      comprenne sans explication. */
   dessinerCarnet(){
     const H = Camera.H, L = Camera.L;
-    const marge = H * 0.028;
-    const l = Math.min(L * 0.48, H * 0.78);
-    const lignes = Soiree.notes.slice(-6);
-    const haut = H * 0.10 + lignes.length * H * 0.038;
+    /* IL MANGEAIT L'ÉCRAN. Six notes, un fond à peine teinté, du texte
+       coupé au milieu des mots : on ne voyait plus ni la salle ni le
+       carnet. Trois décisions, toutes prises en le regardant :
+       1. TROIS notes, pas six. Ce sont les trois dernières qui servent
+          au recoupement ; au-delà, on relit au lieu de jouer.
+       2. UN FOND OPAQUE. Un panneau translucide sur un décor chargé n'est
+          lisible ni comme panneau ni comme décor.
+       3. LE TEXTE EST COUPÉ SUR SA LARGEUR RÉELLE, mesurée, et pas à un
+          nombre de signes au jugé — c'est ce qui produisait « au buf... »
+          alors qu'il restait la place. */
+    const marge = H * 0.024;
+    const police = t => Math.round(H * t) + "px 'Baloo 2', system-ui, sans-serif";
+    const lignes = Soiree.notes.slice(-3);
+    const l = Math.min(L * 0.40, H * 0.90);
+    const haut = H * 0.088 + lignes.length * H * 0.030;
     ctx.save();
-    ctx.fillStyle = "rgba(12,10,22,.62)";
-    arrondi(marge, marge, l, haut, H * 0.016); ctx.fill();
+    ctx.fillStyle = "rgba(10,8,18,.90)";
+    arrondi(marge, marge, l, haut, H * 0.012); ctx.fill();
     ctx.textAlign = "left"; ctx.textBaseline = "top";
 
-    ctx.font = "800 " + Math.round(H * 0.030) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.font = "800 " + police(0.023);
     ctx.fillStyle = "#FFD98A";
-    ctx.fillText("QUI SE VOIT EN CACHETTE ?", marge + H * 0.016, marge + H * 0.014);
+    ctx.fillText("QUI SE VOIT EN CACHETTE ?", marge + H * 0.012, marge + H * 0.010);
 
-    /* LES DEUX CASES SONT TOUJOURS LÀ, vides ou pleines : c'est comme ça
-       qu'on apprend qu'il en faut deux sans qu'on nous le dise. */
-    ctx.font = "800 " + Math.round(H * 0.026) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.font = "800 " + police(0.022);
     for (let i = 0; i < 2; i++){
       const q = Soiree.accuses[i];
-      ctx.fillStyle = q ? "#FF8A6A" : "rgba(246,242,255,.42)";
+      ctx.fillStyle = q ? "#FF8A6A" : "rgba(246,242,255,.38)";
       ctx.fillText((i + 1) + ". " + (q ? q.ref.nom : "— — —"),
-                   marge + H * 0.016, marge + H * 0.050 + i * H * 0.032);
+                   marge + H * 0.012 + i * l * 0.5, marge + H * 0.040);
     }
 
-    /* CE QU'ILS ONT DIT, les cinq dernières réponses. Au-delà l'encadré
-       mange l'écran, et les cinq dernières suffisent : on interroge par
-       petits groupes, pas au hasard. */
-    ctx.font = "600 " + Math.round(H * 0.022) + "px 'Baloo 2', system-ui, sans-serif";
+    ctx.font = "600 " + police(0.019);
+    const large = l - H * 0.024;
     lignes.forEach((n, i) => {
-      ctx.fillStyle = "rgba(246,242,255,.86)";
-      /* la phrase porte déjà l'heure : « À 23 h, j'étais... ». C'est ce
-         qui permet d'aligner deux notes et de voir la contradiction. */
-      const t = n.nom + " — " + n.txt;
-      ctx.fillText(t.length > 52 ? t.slice(0, 51) + "…" : t,
-                   marge + H * 0.016, marge + H * 0.122 + i * H * 0.036);
+      ctx.fillStyle = "rgba(246,242,255,.88)";
+      let t = n.nom + " — " + n.txt;
+      while (ctx.measureText(t).width > large && t.length > 8)
+        t = t.slice(0, t.length - 2);
+      if (t !== n.nom + " — " + n.txt) t += "…";
+      ctx.fillText(t, marge + H * 0.012, marge + H * 0.072 + i * H * 0.030);
     });
     ctx.restore();
     ctx.textAlign = "left";
@@ -14571,8 +14578,13 @@ const SoireeVue = {
     ctx.font = "800 " + Math.round(H * 0.040) + "px 'Baloo 2', system-ui, sans-serif";
     ctx.fillStyle = "#F6F2FF";
     const s = Math.max(0, Math.ceil(SOIREE_DUREE - Soiree.temps));
+    /* LE CHRONO PASSE À DROITE. Au centre il se retrouvait sous le
+       carnet — « 8 Q_ESTIONS » — et deux informations superposées n'en
+       font aucune. */
+    ctx.textAlign = "right";
     ctx.fillText(Soiree.questions + " QUESTIONS — " + Math.floor(s / 60) + ":"
-                 + String(s % 60).padStart(2, "0"), L / 2, H * 0.03);
+                 + String(s % 60).padStart(2, "0"), L - H * 0.11, H * 0.03);
+    ctx.textAlign = "center";
     ctx.restore();
     this.dessinerCarnet();
     if (Soiree.bulle)
